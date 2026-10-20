@@ -49,6 +49,7 @@ def load_emulator():
         lib.cpcemu_ticks.argtypes = [ctypes.c_void_p]
         lib.cpcemu_ticks.restype = ctypes.c_uint64
         lib.cpcemu_crtc.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint8)]
+        lib.cpcemu_set_adj_mode.argtypes = [ctypes.c_void_p, ctypes.c_int]
         lib.cpcemu_fb_ptr.argtypes = [ctypes.c_void_p]
         lib.cpcemu_fb_ptr.restype = ctypes.c_void_p
         cpc._lib = lib
@@ -134,27 +135,6 @@ class Game:
     def shot(self, path):
         self.c.screenshot(path, aspect=True)
 
-    def screen_pens(self):
-        """The displayed buffer decoded to pens, through the CRTC layout."""
-        from cpcgfx import m0_decode
-        front = self.byte("FRONT_BUF")
-        rows = []
-        for y in range(272):
-            row, ras = y >> 3, y & 7
-            if row < 20:
-                base = 0x4000 if front == 0 else 0xC000
-                a = base + 0x80 + ras * 0x800 + row * 96
-            else:
-                base = 0x8000 if front == 0 else 0x0000
-                a = base + ras * 0x800 + (row - 20) * 96
-            data = self.c.read_ram(a, 96)
-            pens = []
-            for b in data:
-                pens += m0_decode(b)
-            rows.append(pens)
-        return rows
-
-
 def fps(g, seconds=10):
     v0 = g.byte("VBL_COUNT")
     f0 = g.word("FRAMES_DRAWN")
@@ -172,45 +152,76 @@ def fps(g, seconds=10):
 
 
 def cmd_shots():
-    """Screenshots of the three road shapes, taken at a VSYNC so the picture
-    is whole: flat, behind the top of a crest (road down to 1/3 of the
-    screen, ground showing) and in a dip (road up to 2/5)."""
+    """Screenshots of the road's shapes, taken at a VSYNC so the picture is
+    whole: flat and straight, behind the top of a crest (road down to 1/3 of
+    the screen, ground showing) bending right, in a dip (road up to 2/5)
+    bending left, and the sharpest curve. A shape counts once the curve
+    level has held for 8 VSYNCs, so both buffers were drawn with it."""
     g = Game()
     docs = os.path.join(ROOT, "docs")
     os.makedirs(docs, exist_ok=True)
-    want = {"flat": lambda h: h == 0, "crest": lambda h: 90 <= h <= 127,
-            "dip": lambda h: 0x80 <= h <= 0xAA}
+    want = {"flat": lambda h, k: h == 0 and k == 0,
+            "crest": lambda h, k: 90 <= h <= 127 and k == 5,
+            "dip": lambda h, k: -128 <= h <= -86 and k == -7,
+            "curve": lambda h, k: k == 7}
     taken = {}
-    for _ in range(50 * 120):
+    last, held = None, 0
+    for _ in range(50 * 180):
         g.c.run_frames(1)
         h = g.byte("HILL")
-        speed = g.c.read_ram(g.sym["SPEED"], 2)      # bank 7 is not base RAM:
-        for k, test in want.items():                 # read the gear instead
-            if k in taken or not test(h):
+        h = h - 256 if h > 127 else h
+        k = g.byte("CURVE")
+        k = k - 256 if k > 127 else k
+        held = held + 1 if k == last else 0
+        last = k
+        if held < 8:
+            continue
+        for name, test in want.items():
+            if name in taken or not test(h, k):
                 continue
-            path = os.path.join(docs, "screen-%s.png" % k)
+            path = os.path.join(docs, "screen-%s.png" % name)
+            at_vsync(g)
             g.shot(path)
-            taken[k] = h
-            print("wrote %s (hill %d)" % (path, h if h < 128 else h - 256))
+            taken[name] = h
+            print("wrote %s (hill %d, curve %d)" % (path, h, k))
         if len(taken) == len(want):
             break
 
 
-def buffer_pens(g, buf, y0, y1):
-    """Lines y0..y1-1 of buffer `buf`, decoded to pens."""
+def _pens(data):
     from cpcgfx import m0_decode
-    rows = []
-    for y in range(y0, y1):
-        row, ras = y >> 3, y & 7
-        if row < 20:
-            a = (0x4000 if buf == 0 else 0xC000) + 0x80 + ras * 0x800 + row * 96
-        else:
-            a = (0x8000 if buf == 0 else 0x0000) + ras * 0x800 + (row - 20) * 96
-        pens = []
-        for b in g.c.read_ram(a, 96):
-            pens += m0_decode(b)
-        rows.append(pens)
-    return rows
+    pens = []
+    for b in data:
+        pens += m0_decode(b)
+    return pens
+
+
+def hud_pens(g, buf):
+    """Buffer `buf`'s HUD, lines 0..63: page 1, buffer 1's 768 bytes on."""
+    return [_pens(g.c.read_ram(0x4000 + 768 * buf + (y & 7) * 0x800 + (y >> 3) * 96, 96))
+            for y in range(64)]
+
+
+def sky_pens(g):
+    """The sky part as the CRTC shows it: 11 rows of the ring in page 3,
+    from character ring_w0."""
+    w0 = g.word("RING_W0")
+    out = []
+    for i in range(88):
+        r, ras = i >> 3, i & 7
+        data = []
+        for j in range(48):
+            w = (w0 + 48 * r + j) & 1023
+            data += g.c.read_ram(0xC000 + ras * 0x800 + 2 * w, 2)
+        out.append(_pens(data))
+    return out
+
+
+def road_pens(g, buf, y0=160, y1=272):
+    """Buffer `buf`'s road part, lines y0..y1-1 (160 and on)."""
+    return [_pens(g.c.read_ram((0x8000 if buf == 0 else 0x0000) + (y & 7) * 0x800
+                               + ((y >> 3) - 20) * 96, 96))
+            for y in range(y0, y1)]
 
 
 def road_model(g):
@@ -220,7 +231,9 @@ def road_model(g):
     hill = g.byte("HILL")
     hill = hill - 256 if hill > 127 else hill
     hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
-    return scene.road_lines(hill, zcam), hill, zcam
+    curve = g.byte("CURVE")
+    curve = curve - 256 if curve > 127 else curve
+    return scene.road_lines(hill, zcam, curve), hill, zcam, curve
 
 
 # Where line 0 of the picture is in the emulator's framebuffer (1024 x 312,
@@ -259,22 +272,25 @@ def cmd_check():
     # including the lines road_project decided had not changed.
     bad = 0
     seen = set()
+    curves = set()
     for n in range(240):
         run_to(g.c, g.sym["RENDER_END"])
         buf = g.byte("ROAD_BUF")
-        want, hill, zcam = road_model(g)
-        got = buffer_pens(g, buf, ROAD_Y, SCR_H)
+        want, hill, zcam, curve = road_model(g)
+        got = road_pens(g, buf, ROAD_Y, SCR_H)
         wrong = [ROAD_Y + i for i in range(len(want)) if want[i] != got[i]]
         seen.add(hill)
+        curves.add(curve)
         if wrong:
             bad += 1
             if bad <= 5:
-                print("picture %d (buffer %d, hill %d, zcam %d): %d lines differ, "
-                      "first %d" % (n, buf, hill, zcam, len(wrong), wrong[0]))
+                print("picture %d (buffer %d, hill %d, zcam %d, curve %d): %d lines "
+                      "differ, first %d" % (n, buf, hill, zcam, curve, len(wrong),
+                                            wrong[0]))
         for _ in range(37):              # skip ahead to vary hill and zcam
             run_to(g.c, g.sym["RENDER_END"])
-    print("road check: %d of 240 pictures differ from scene.py; hills seen %s"
-          % (bad, sorted(seen)))
+    print("road check: %d of 240 pictures differ from scene.py; hills seen %s; "
+          "curve levels seen %s" % (bad, sorted(seen), sorted(curves)))
 
     # The HUD, sky and mountains of a freshly drawn buffer.
     from cpcgfx import HUD_H
@@ -297,38 +313,49 @@ def cmd_check():
                     fuel=g.game_byte("SHOWN_FUEL", buf))
         lag = abs(vals["speed_level"] - g.game_byte("SPEED_LEVEL"))
         worst_lag = max(worst_lag, lag)
-        want = scene.memory(**vals)[:ROAD_Y]
-        got = buffer_pens(g, buf, 0, ROAD_Y)
-        wrong = [y for y in range(ROAD_Y) if want[y] != got[y]]
+        want = scene.hud(**vals)
+        got = hud_pens(g, buf)
+        wrong = [y for y in range(64) if want[y] != got[y]]
+        sky_want = scene.sky_lines(g.byte("RING_HEAD"))
+        wrong += [64 + i for i, row in enumerate(sky_pens(g)) if row != sky_want[i]]
         if wrong:
             hud_bad += 1
             if hud_bad <= 3:
                 print("picture %d (buffer %d, %s): lines %s differ"
                       % (n, buf, vals, wrong[:8]))
-    print("HUD and horizon check: %d of 20 pictures differ from scene.py "
+    print("HUD and sky check: %d of 20 pictures differ from scene.py "
           "(speed gauge at most %d segments behind)" % (hud_bad, worst_lag))
 
     # What the CRTC made of the buffer on screen: the split frame, with the
-    # horizon as far down as the buffer's road asked for.
+    # horizon as far down as the buffer's road asked for - the same whatever
+    # the CRTC does in the R5 lines (tools/emu/crtc_patch.py), 100 frames
+    # with each of the three behaviours.
+    import cpc
     scr_bad = 0
     drops = set()
+    heads = set()
     for n in range(300):
+        if n % 100 == 0:
+            cpc._lib.cpcemu_set_adj_mode(g.c._h, n // 100)
         at_vsync(g)
-        buf = 0 if g.byte("RUP_BASE") == g.sym["BUF0_R12"] else 1
+        buf = g.byte("RUP_BUF")
         drop = g.byte("RUP_DROP")
         drops.add(drop)
+        heads.add(g.byte("RING_HEAD"))
         want = [[pen_hw(p) for p in row]
-                for row in scene.shown(buffer_pens(g, buf, 0, SCR_H), drop)]
+                for row in scene.shown(hud_pens(g, buf), sky_pens(g),
+                                       road_pens(g, buf), drop)]
         got = on_screen(g)
         wrong = [y for y in range(FB_LINES) if want[y] != got[y]]
         if wrong:
             scr_bad += 1
             if scr_bad <= 3:
-                print("frame %d (buffer %d, drop %d): lines %s differ"
-                      % (n, buf, drop, wrong[:8]))
+                print("frame %d (R5 model %d, buffer %d, drop %d): lines %s "
+                      "differ" % (n, n // 100, buf, drop, wrong[:8]))
         g.c.run_frames(1)
-    print("screen check: %d of 300 frames differ from the buffer split as "
-          "scene.py says; drops seen %s" % (scr_bad, sorted(drops)))
+    print("screen check: %d of 300 frames (3 R5 models) differ from the parts "
+          "split as scene.py says; drops seen %s; %d headings"
+          % (scr_bad, sorted(drops), len(heads)))
     return 1 if bad or hud_bad or scr_bad else 0
 
 

@@ -71,7 +71,7 @@ boot_crtc_done
 crtc_regs
     defb 0,CRTC_R0, 1,CRTC_R1, 2,CRTC_R2, 3,CRTC_R3
     defb 4,CRTC_R4, 5,CRTC_R5, 6,CRTC_R6, 7,CRTC_R7
-    defb 8,0, 9,CRTC_R9, 12,BUF0_R12, 13,BUF_R13
+    defb 8,0, 9,CRTC_R9, 12,hi(HUD_MA0), 13,lo(HUD_MA0)
     defb #FF
 boot_end
     ASSERT boot_end <= FRAG_STORE

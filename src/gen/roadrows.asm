@@ -5,25 +5,27 @@
 ;; Per row r (1..109; 0 = the ground), page-aligned so a row is an
 ;; index and the next array is INC H away. The stripe or dash a row
 ;; is in is (depth + camera) AND mask, which needs only low bytes.
-;; Near rows: band 1's template is #800 above band 0's, and mask 16
-;; rotated right once is the #08 to add to the high byte. Rows past
-;; FAR_Z: a longer dash, and band 0's or band 2's template.
+;; The templates are the row's group's in the first curve level's set:
+;; a level is TMPL_SET/256 pages further, and near rows' band 1 is
+;; TMPL_B - TMPL_A = #2000 above band 0 - mask 16 rotated left once is
+;; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and
+;; band 0's or band 2's template.
     ALIGN 256
 rr_tlo   ; band 0 template, low byte
-    defb lo(tmpl_ground),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_3),lo(tmpl_0_3)
-    defb lo(tmpl_0_4),lo(tmpl_0_4),lo(tmpl_0_5),lo(tmpl_0_5),lo(tmpl_0_6),lo(tmpl_0_6),lo(tmpl_0_6),lo(tmpl_0_7)
-    defb lo(tmpl_0_7),lo(tmpl_0_8),lo(tmpl_0_8),lo(tmpl_0_9),lo(tmpl_0_9),lo(tmpl_0_10),lo(tmpl_0_10),lo(tmpl_0_11)
-    defb lo(tmpl_0_11),lo(tmpl_0_11),lo(tmpl_0_12),lo(tmpl_0_12),lo(tmpl_0_13),lo(tmpl_0_13),lo(tmpl_0_14),lo(tmpl_0_14)
-    defb lo(tmpl_0_15),lo(tmpl_0_15),lo(tmpl_0_16),lo(tmpl_0_16),lo(tmpl_0_17),lo(tmpl_0_17),lo(tmpl_0_17),lo(tmpl_0_18)
-    defb lo(tmpl_0_18),lo(tmpl_0_19),lo(tmpl_0_19),lo(tmpl_0_20),lo(tmpl_0_20),lo(tmpl_0_21),lo(tmpl_0_21),lo(tmpl_0_22)
-    defb lo(tmpl_0_22),lo(tmpl_0_22),lo(tmpl_0_23),lo(tmpl_0_23),lo(tmpl_0_24),lo(tmpl_0_24),lo(tmpl_0_25),lo(tmpl_0_25)
-    defb lo(tmpl_0_26),lo(tmpl_0_26),lo(tmpl_0_27),lo(tmpl_0_27),lo(tmpl_0_28),lo(tmpl_0_28),lo(tmpl_0_28),lo(tmpl_0_29)
-    defb lo(tmpl_0_29),lo(tmpl_0_30),lo(tmpl_0_30),lo(tmpl_0_31),lo(tmpl_0_31),lo(tmpl_0_32),lo(tmpl_0_32),lo(tmpl_0_33)
-    defb lo(tmpl_0_33),lo(tmpl_0_33),lo(tmpl_0_34),lo(tmpl_0_34),lo(tmpl_0_35),lo(tmpl_0_35),lo(tmpl_0_36),lo(tmpl_0_36)
-    defb lo(tmpl_0_37),lo(tmpl_0_37),lo(tmpl_0_38),lo(tmpl_0_38),lo(tmpl_0_39),lo(tmpl_0_39),lo(tmpl_0_39),lo(tmpl_0_40)
-    defb lo(tmpl_0_40),lo(tmpl_0_41),lo(tmpl_0_41),lo(tmpl_0_42),lo(tmpl_0_42),lo(tmpl_0_43),lo(tmpl_0_43),lo(tmpl_0_44)
-    defb lo(tmpl_0_44),lo(tmpl_0_44),lo(tmpl_0_45),lo(tmpl_0_45),lo(tmpl_0_46),lo(tmpl_0_46),lo(tmpl_0_47),lo(tmpl_0_47)
-    defb lo(tmpl_0_48),lo(tmpl_0_48),lo(tmpl_0_49),lo(tmpl_0_49),lo(tmpl_0_50),lo(tmpl_0_50)
+    defb #00,#06,#0E,#14,#1A,#20,#26,#2E
+    defb #36,#36,#3E,#3E,#46,#46,#46,#4E
+    defb #4E,#56,#56,#5E,#5E,#66,#66,#6E
+    defb #6E,#6E,#76,#76,#7E,#7E,#86,#86
+    defb #8E,#8E,#96,#96,#9E,#9E,#9E,#A4
+    defb #A4,#AA,#AA,#B0,#B0,#B6,#B6,#BC
+    defb #BC,#BC,#C2,#C2,#C8,#C8,#CE,#CE
+    defb #D4,#D4,#DA,#DA,#E0,#E0,#E0,#E6
+    defb #E6,#EC,#EC,#F2,#F2,#F8,#F8,#FE
+    defb #FE,#FE,#04,#04,#0A,#0A,#10,#10
+    defb #16,#16,#1C,#1C,#22,#22,#22,#28
+    defb #28,#30,#30,#38,#38,#40,#40,#48
+    defb #48,#48,#50,#50,#58,#58,#60,#60
+    defb #68,#68,#70,#70,#78,#78
     ALIGN 256
 rr_depth   ; depth, low byte
     defb 0,80,40,27,148,16,13,85
@@ -58,25 +60,25 @@ rr_mask   ; 16; 32, 64, 128 past FAR_Z; 0 for the ground
     defb 16,16,16,16,16,16
     ALIGN 256
 rr_thi   ; band 0 template, high byte
-    defb hi(tmpl_ground),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_3),hi(tmpl_0_3)
-    defb hi(tmpl_0_4),hi(tmpl_0_4),hi(tmpl_0_5),hi(tmpl_0_5),hi(tmpl_0_6),hi(tmpl_0_6),hi(tmpl_0_6),hi(tmpl_0_7)
-    defb hi(tmpl_0_7),hi(tmpl_0_8),hi(tmpl_0_8),hi(tmpl_0_9),hi(tmpl_0_9),hi(tmpl_0_10),hi(tmpl_0_10),hi(tmpl_0_11)
-    defb hi(tmpl_0_11),hi(tmpl_0_11),hi(tmpl_0_12),hi(tmpl_0_12),hi(tmpl_0_13),hi(tmpl_0_13),hi(tmpl_0_14),hi(tmpl_0_14)
-    defb hi(tmpl_0_15),hi(tmpl_0_15),hi(tmpl_0_16),hi(tmpl_0_16),hi(tmpl_0_17),hi(tmpl_0_17),hi(tmpl_0_17),hi(tmpl_0_18)
-    defb hi(tmpl_0_18),hi(tmpl_0_19),hi(tmpl_0_19),hi(tmpl_0_20),hi(tmpl_0_20),hi(tmpl_0_21),hi(tmpl_0_21),hi(tmpl_0_22)
-    defb hi(tmpl_0_22),hi(tmpl_0_22),hi(tmpl_0_23),hi(tmpl_0_23),hi(tmpl_0_24),hi(tmpl_0_24),hi(tmpl_0_25),hi(tmpl_0_25)
-    defb hi(tmpl_0_26),hi(tmpl_0_26),hi(tmpl_0_27),hi(tmpl_0_27),hi(tmpl_0_28),hi(tmpl_0_28),hi(tmpl_0_28),hi(tmpl_0_29)
-    defb hi(tmpl_0_29),hi(tmpl_0_30),hi(tmpl_0_30),hi(tmpl_0_31),hi(tmpl_0_31),hi(tmpl_0_32),hi(tmpl_0_32),hi(tmpl_0_33)
-    defb hi(tmpl_0_33),hi(tmpl_0_33),hi(tmpl_0_34),hi(tmpl_0_34),hi(tmpl_0_35),hi(tmpl_0_35),hi(tmpl_0_36),hi(tmpl_0_36)
-    defb hi(tmpl_0_37),hi(tmpl_0_37),hi(tmpl_0_38),hi(tmpl_0_38),hi(tmpl_0_39),hi(tmpl_0_39),hi(tmpl_0_39),hi(tmpl_0_40)
-    defb hi(tmpl_0_40),hi(tmpl_0_41),hi(tmpl_0_41),hi(tmpl_0_42),hi(tmpl_0_42),hi(tmpl_0_43),hi(tmpl_0_43),hi(tmpl_0_44)
-    defb hi(tmpl_0_44),hi(tmpl_0_44),hi(tmpl_0_45),hi(tmpl_0_45),hi(tmpl_0_46),hi(tmpl_0_46),hi(tmpl_0_47),hi(tmpl_0_47)
-    defb hi(tmpl_0_48),hi(tmpl_0_48),hi(tmpl_0_49),hi(tmpl_0_49),hi(tmpl_0_50),hi(tmpl_0_50)
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41
     ALIGN 256
 rr_tlo2   ; far rows: band 2 template, low byte
-    defb lo(tmpl_ground),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_3),lo(tmpl_2_3)
-    defb lo(tmpl_2_4),lo(tmpl_2_4),lo(tmpl_2_5),lo(tmpl_2_5),lo(tmpl_2_6),lo(tmpl_2_6),lo(tmpl_2_6),lo(tmpl_2_7)
-    defb lo(tmpl_2_7),lo(tmpl_2_8),lo(tmpl_2_8),lo(tmpl_2_9),lo(tmpl_2_9),lo(tmpl_2_10),0,0
+    defb #00,#80,#88,#8E,#94,#9A,#A0,#A8
+    defb #B0,#B0,#B8,#B8,#C0,#C0,#C0,#C8
+    defb #C8,#D0,#D0,#D8,#D8,#E0,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0
@@ -226,9 +228,9 @@ level_near
     defb 84,84,84,84,84,84,84,84,84,84,84,84,84,84,84,84
     ALIGN 256
 rr_thi2   ; far rows: band 2 template, high byte
-    defb hi(tmpl_ground),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_3),hi(tmpl_2_3)
-    defb hi(tmpl_2_4),hi(tmpl_2_4),hi(tmpl_2_5),hi(tmpl_2_5),hi(tmpl_2_6),hi(tmpl_2_6),hi(tmpl_2_6),hi(tmpl_2_7)
-    defb hi(tmpl_2_7),hi(tmpl_2_8),hi(tmpl_2_8),hi(tmpl_2_9),hi(tmpl_2_9),hi(tmpl_2_10),0,0
+    defb #40,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0

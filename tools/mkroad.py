@@ -25,11 +25,16 @@ address of every pair, so a core hanging off the right of the screen is
 entered part-way in, and one hanging off the left is cut short by writing
 JP (HL) (HL' = line_done_shadow) over the first pair that must not be drawn.
 
-Also written here, for road.asm:
-  * a template per (band, half) for the road centred on the screen - the four
-    words road_draw pops for a line (core entry, left grass entry, exit patch
-    address, right grass entry) - see road.asm,
-  * per-row tables: depth, 256/row and the templates of the row's two bands.
+Also written here:
+  * the templates: what road_draw pops for a line (core entry, left grass
+    entry, right grass entry and flags, and the exit patch address when there
+    is one - see common.asm), for every curve level and every group of rows
+    (cpcgfx.curve_group), the road moved sideways as far as the curve takes
+    that group. One template set per level, TMPL_SET bytes; band A's (and
+    band 2's) in bank 4 from TMPL_A, band B's in bank 5 from TMPL_B, at the
+    same offsets - so the bank a template is in is bit 13 of its address;
+  * per-row tables for road.asm: depth, stripe mask and the row's templates
+    in the first level's set.
 """
 
 import os
@@ -38,13 +43,20 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, FAR_Z, far_mask, m0_byte, m0_solid,
                     road_row_pixels, row_half_bytes, row_depth, SCR_BYTES,
-                    ROAD_Y, ROAD_TOP_MAX)
+                    ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src", "gen", "roadcores.asm")
 
 PAIRS = SCR_BYTES // 2          # 48 pairs per line
 CENTRE = SCR_BYTES // 2         # the road is centred on byte 48
+
+TMPL_SET = 512                  # a curve level's templates (two pages)
+TMPL_A = 0x4000                 # bank 4: band A's (and 2's) template sets
+TMPL_B = 0x6000                 # bank 5: band B's, at the same offsets
+CORES_A = 0x6000                # bank 4: band 0 and 2 cores
+CORES_B = 0x4000                # bank 5: band 1 cores
+LEVELS = 2 * CURVE_K + 1
 
 
 def word(lo, hi):
@@ -108,27 +120,58 @@ def halves(band):
     return range(MIN_HALF, (FAR_HALF if band == 2 else HALF_MAX) + 1)
 
 
-def template(variants, band, half):
-    """The four words road_draw pops for a road of `half` centred on the
-    screen (see common.asm)."""
+def template(variants, band, half, shift):
+    """What road_draw pops for a row of `half` moved `shift` bytes right of
+    the centre (see common.asm): core entry (IY), left grass entry (IX), AF
+    (A = right grass entry, Z = no exit patch), then the exit patch address
+    if the core hangs off the left of the screen. Returns the words."""
     code, entry, np_, H = variants[(band, half, 0)]
-    parity = (CENTRE + H) & 1
+    c = CENTRE + shift
+    parity = (c + H) & 1
     code, entry, np_, H = variants[(band, half, parity)]
     name = "rc_%d_%d_%d" % (band, half, parity)
-    u = (CENTRE + H + parity) // 2
+    u = (c + H + parity) // 2
     l = u - np_
     rg = max(0, min(u, PAIRS))
+    patch = None
     if u <= 0 or l >= PAIRS:
         iy = "empty_core"
-        patch = "patch_dummy"
     else:
         iy = "%s+%d" % (name, entry[max(0, u - PAIRS)])
-        patch = "%s+%d" % (name, entry[u]) if l < 0 else "patch_dummy"
+        if l < 0:
+            patch = "%s+%d" % (name, entry[u])
     reg = REG_BAND[band]
     ix = "lgrass%s+%d" % ("ab"[reg], PAIRS - max(0, min(l, PAIRS)))
-    flags = (0x80 if reg else 0) | (0x40 if patch == "patch_dummy" else 0)
-    return "tmpl_%d_%d  defw %s,%s,%s,#%02X%02X" % (band, half, iy, ix, patch,
-                                                   rg, flags)
+    af = "#%02X%02X" % (rg, 0x40 if patch is None else 0)
+    return [iy, ix, af] + ([patch] if patch else [])
+
+
+GROUND = ["empty_core", "lgrassa+%d" % PAIRS, "#0040"]
+
+
+def template_slots(variants):
+    """The layout of a template set: [(kind, group, size, offset)], kind
+    'ground', 'near' (bands 0 and 1) or 'far' (band 2). A slot is 8 bytes if
+    any level's template in it has an exit patch, else 6."""
+    rows = range(1, ROWS + 1)
+    near = list(dict.fromkeys(curve_group(r) for r in rows))
+    far = list(dict.fromkeys(curve_group(r) for r in rows if row_depth(r) > FAR_Z))
+    half = {curve_group(r): row_half_bytes(r) for r in rows}
+    row = {}
+    for r in rows:
+        row.setdefault(curve_group(r), r)
+    slots = [("ground", None, 6)]
+    for kind, groups, bands in (("near", near, (0, 1)), ("far", far, (2,))):
+        for g in groups:
+            words = max(len(template(variants, b, half[g], curve_shift(k, row[g])))
+                        for b in bands for k in range(-CURVE_K, CURVE_K + 1))
+            slots.append((kind, g, 2 * words))
+    out, off = [], 0
+    for kind, g, size in slots:
+        out.append((kind, g, size, off))
+        off += size
+    assert off <= TMPL_SET, "templates: %d bytes a level, %d room" % (off, TMPL_SET)
+    return out, half, row
 
 
 def main():
@@ -144,9 +187,8 @@ def main():
     sizes = {}
     for fname, bands in (("roada.asm", (0, 2)), ("roadb.asm", (1,))):
         lines = [";; Generated by tools/mkroad.py - do not edit.",
-                 ";; Road core variants for stripe band(s) %s." % (bands,),
-                 ";; rc_<band>_<half>_<parity>: the code; _e: one byte per pair,",
-                 ";; the offset of that pair's code, then the offset of the end.", ""]
+                 ";; Road core variants for stripe band(s) %s:" % (bands,),
+                 ";; rc_<band>_<half>_<parity>.", ""]
         emit = lines.append
         size = 0
         for band in bands:
@@ -157,10 +199,7 @@ def main():
                     emit(name)
                     for i in range(0, len(code), 16):
                         emit("    defb " + ",".join("#%02X" % c for c in code[i:i + 16]))
-                    emit(name + "_e")
-                    for i in range(0, len(entry), 16):
-                        emit("    defb " + ",".join(str(e) for e in entry[i:i + 16]))
-                    size += len(code) + len(entry)
+                    size += len(code)
         sizes[fname] = size
         open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
 
@@ -175,35 +214,52 @@ def main():
                                                   m0_solid(b["kerb"]))))
         emit("GRASS%d_PAIR EQU #%04X" % (band, word(m0_solid(b["grass"]),
                                                   m0_solid(b["grass"]))))
+    slots, ghalf, grow = template_slots(variants)
+    soff = {(kind, g): off for kind, g, size, off in slots}
     emit("")
-    emit(";; How wide (pairs) and how far right of the centre (bytes) each")
-    emit(";; variant reaches, for when the road is not centred")
-    for (band, half, parity), (code, entry, np_, H) in sorted(variants.items()):
-        emit("rc_%d_%d_%d_NP EQU %d" % (band, half, parity, np_))
-        emit("rc_%d_%d_%d_H  EQU %d" % (band, half, parity, H))
+    emit(";; the template sets (see tools/mkroad.py): a set per curve level,")
+    emit(";; level k at TMPL_A + (k + CURVE_K) * TMPL_SET; band B's TMPL_B - TMPL_A")
+    emit(";; above band A's, in bank 5")
+    emit("CURVE_K     EQU %d" % CURVE_K)
+    emit("TMPL_SET    EQU %d" % TMPL_SET)
+    emit("TMPL_A      EQU #%04X" % TMPL_A)
+    emit("TMPL_B      EQU #%04X" % TMPL_B)
+    emit("CORES_A     EQU #%04X" % CORES_A)
+    emit("CORES_B     EQU #%04X" % CORES_B)
+    emit(";; a line with no road (the first level's copy; every level has one)")
+    emit("tmpl_ground EQU TMPL_A+%d" % soff[("ground", None)])
     open(os.path.join(ROOT, "src", "gen", "roadconsts.asm"), "w").write(
         "\n".join(lines) + "\n")
 
-    # --- templates: band 0 (and band 2) in fragment 5, band 1 in fragment 6
-    # at the same offsets, #800 on ---
-    head = [";; Generated by tools/mkroad.py - do not edit.",
-            ";; Centred templates, in common memory: what road_draw pops for a",
-            ";; line whose road is centred on byte %d:" % CENTRE,
-            ";;   dw core entry (IY), left grass entry (IX), exit patch address,",
-            ";;   and a word for POP AF: A = right grass entry (low byte),",
-            ";;   F: bit 7 (S) = band B registers, bit 6 (Z) = no exit patch.", ""]
-    for band in range(2):
-        lines = list(head)
-        lines.append("tmpl_band%d" % band)
-        for half in halves(band):
-            lines.append(template(variants, band, half))
-        if band == 0:
-            lines += ["", ";; band 2 - far away: band A's grass and asphalt, band B's",
-                      ";; markings - drawn with band A's registers"]
-            for half in halves(2):
-                lines.append(template(variants, 2, half))
-        open(os.path.join(ROOT, "src", "gen", "roadtmpl%d.asm" % band), "w").write(
-            "\n".join(lines) + "\n")
+    # --- the template sets: band A's and band 2's in bank 4, band B's in
+    # bank 5 at the same offsets ---
+    used = slots[-1][3] + slots[-1][2]
+    for fname, side in (("roadtmpla.asm", "a"), ("roadtmplb.asm", "b")):
+        lines = [";; Generated by tools/mkroad.py - do not edit.",
+                 ";; Road templates, band %s, a set of %d bytes per curve level"
+                 % ("A (and 2)" if side == "a" else "B", TMPL_SET),
+                 ";; (%d used): dw core entry (IY), left grass entry (IX), AF" % used,
+                 ";; (A = right grass entry, F: Z = no exit patch)[, exit patch].", ""]
+        emit = lines.append
+        for k in range(-CURVE_K, CURVE_K + 1):
+            emit(";; curve level %d" % k)
+            for kind, g, size, off in slots:
+                if kind == "ground":
+                    words = GROUND if side == "a" else None
+                elif kind == "near":
+                    words = template(variants, 0 if side == "a" else 1, ghalf[g],
+                                     curve_shift(k, grow[g]))
+                else:
+                    words = (template(variants, 2, ghalf[g], curve_shift(k, grow[g]))
+                             if side == "a" else None)
+                if words is None:
+                    emit("    defs %d,0" % size)
+                    continue
+                emit("    defw " + ",".join(words) + "   ; %s %s" % (kind, g or ""))
+                if 2 * len(words) < size:
+                    emit("    defs %d,0" % (size - 2 * len(words)))
+            emit("    defs %d,0" % (TMPL_SET - used))
+        open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
 
     # --- bank 6: rows, hill tables, line addresses ---
     lines = [";; Generated by tools/mkroad.py - do not edit.",
@@ -220,27 +276,34 @@ def main():
     tl, dp, mk, th, tl2, th2 = [], [], [], [], [], []
     for r in range(ROWS + 1):
         if r == 0:
-            for a in (tl, tl2):
-                a.append("lo(tmpl_ground)")
-            for a in (th, th2):
-                a.append("hi(tmpl_ground)")
+            a = TMPL_A + soff[("ground", None)]
+            tl.append("#%02X" % (a & 0xFF))
+            tl2.append("#%02X" % (a & 0xFF))
+            th.append("#%02X" % (a >> 8))
+            th2.append("#%02X" % (a >> 8))
             dp.append("0")
             mk.append("0")
             continue
-        h = row_half_bytes(r)
-        tl.append("lo(tmpl_0_%d)" % h)
-        th.append("hi(tmpl_0_%d)" % h)
-        far = row_depth(r) > FAR_Z
-        tl2.append("lo(tmpl_2_%d)" % h if far else "0")
-        th2.append("hi(tmpl_2_%d)" % h if far else "0")
+        a = TMPL_A + soff[("near", curve_group(r))]
+        tl.append("#%02X" % (a & 0xFF))
+        th.append("#%02X" % (a >> 8))
+        if row_depth(r) > FAR_Z:
+            a = TMPL_A + soff[("far", curve_group(r))]
+            tl2.append("#%02X" % (a & 0xFF))
+            th2.append("#%02X" % (a >> 8))
+        else:
+            tl2.append("0")
+            th2.append("0")
         dp.append(str(row_depth(r) & 0xFF))
         mk.append(str(far_mask(r)))
     emit(";; Per row r (1..%d; 0 = the ground), page-aligned so a row is an" % ROWS)
     emit(";; index and the next array is INC H away. The stripe or dash a row")
     emit(";; is in is (depth + camera) AND mask, which needs only low bytes.")
-    emit(";; Near rows: band 1's template is #800 above band 0's, and mask 16")
-    emit(";; rotated right once is the #08 to add to the high byte. Rows past")
-    emit(";; FAR_Z: a longer dash, and band 0's or band 2's template.")
+    emit(";; The templates are the row's group's in the first curve level's set:")
+    emit(";; a level is TMPL_SET/256 pages further, and near rows' band 1 is")
+    emit(";; TMPL_B - TMPL_A = #2000 above band 0 - mask 16 rotated left once is")
+    emit(";; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and")
+    emit(";; band 0's or band 2's template.")
     page("rr_tlo", tl, "band 0 template, low byte")
     page("rr_depth", dp, "depth, low byte")
     page("rr_mask", mk, "16; 32, 64, 128 past FAR_Z; 0 for the ground")
@@ -303,8 +366,8 @@ def main():
     open(os.path.join(ROOT, "src", "gen", "roadground.asm"), "w").write(
         "\n".join(g) + "\n")
 
-    print("road cores: bank 4 %d bytes, bank 5 %d bytes (code + entry offsets)"
-          % (sizes["roada.asm"], sizes["roada.asm" if False else "roadb.asm"]))
+    print("road cores: bank 4 %d bytes, bank 5 %d bytes; templates %d bytes a "
+          "level, %d levels" % (sizes["roada.asm"], sizes["roadb.asm"], used, LEVELS))
 
 
 if __name__ == "__main__":

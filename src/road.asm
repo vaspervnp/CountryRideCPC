@@ -11,6 +11,10 @@
 ;; knows its depth and its width, and so its template: the stripe band is
 ;; bit 4 of (depth + zcam).
 ;;
+;; Curves: the templates come in a set per curve level, each with every row
+;; already moved sideways as far as that level bends it (tools/mkroad.py), so
+;; a curve only picks the set - TMPL_SET bytes on per level.
+;;
 ;; Hills: a crest ahead of strength h moves row r down by h/r lines - the
 ;; same h/r a parabolic crest gives in perspective - so the near road hardly
 ;; moves, the far road drops away, and from the row where h/r grows faster
@@ -186,6 +190,13 @@ rp_fs_ok
     ld (rp_zlo+1),a
     ld (rp_zlo2+1),a
     ld (rp_zlo3+1),a
+    ld a,(curve)                        ; the curve level's template set:
+    add a,CURVE_K                       ; this many pages on
+    ASSERT TMPL_SET == 512
+    add a,a
+    ld (rp_lvl+1),a
+    ld (rp_lvl2+1),a
+    ld (rp_lvl3+1),a
     ld de,(rp_slot)
     ld a,(rp_near)
     or a
@@ -193,27 +204,29 @@ rp_fs_ok
 
 ;; BC = line -> row table, DE = template slot of the list entry. Two lines
 ;; per turn of the loop; an odd count starts half way in.
-MACRO RP_LINE zl
+MACRO RP_LINE zl,lv
     ld a,(bc)                           ; the row this line shows (0 = ground)
     inc bc
     ld l,a
     ld h,hi(rr_tlo)
     ld a,(hl)                           ; template, low byte
     ld (de),a
-    inc de
+    inc e                               ; (an entry never crosses a page)
     inc h
     ld a,(hl)                           ; depth, low byte
 {zl}
     add a,0                             ; + zcam (self-modified)
     inc h
     and (hl)                            ; 16 (0 for the ground)
-    rrca                                ; band B is #800 higher
+    rlca                                ; band B is #2000 higher
     inc h
     add a,(hl)                          ; template, high byte
+{lv}
+    add a,0                             ; + the curve level (self-modified)
     ld (de),a
-    inc de
     inc de                              ; next entry's template slot
-    inc de
+    inc e
+    inc e
 MEND
 
     srl a                               ; pairs of lines (A = rp_near)
@@ -227,9 +240,9 @@ MEND
     exx
     jr rp_second
 rp_pair
-    RP_LINE rp_zlo
+    RP_LINE rp_zlo,rp_lvl
 rp_second
-    RP_LINE rp_zlo2
+    RP_LINE rp_zlo2,rp_lvl2
     exx
     dec b
     exx
@@ -250,6 +263,7 @@ rp_far
     pop de
     push hl
     pop ix                              ; IX = far_shown entry of this line
+    ld (rp_tail),de                     ; the end, if no far line is drawn
     ld a,(rp_near)
     ld l,a
     ld a,(rp_count)
@@ -278,6 +292,8 @@ rp_far_a
     inc h
     inc h                               ; rr_thi / rr_thi2
     ld a,(hl)                           ; template, high byte
+rp_lvl3
+    add a,0                             ; + the curve level (self-modified)
     cp (ix+1)
     jr nz,rp_far_new
     ex af,af'
@@ -286,25 +302,28 @@ rp_far_a
     ex af,af'
 rp_far_new                              ; A = high byte, A' = low byte
     ld (ix+1),a
-    inc de
+    inc e
     ld (de),a
-    dec de
+    dec e
     ex af,af'
     ld (ix+0),a
     ld (de),a
+    inc e
+    inc de
+    inc e
+    inc e
+    ld (rp_tail),de                     ; the list goes at least this far
     jr rp_far_next
 rp_far_same
     ld a,lo(tmpl_skip)
     ld (de),a
-    inc de
+    inc e
     ld a,hi(tmpl_skip)
     ld (de),a
-    dec de
+    inc de
+    inc e
+    inc e
 rp_far_next
-    inc de
-    inc de
-    inc de
-    inc de
     inc ix
     inc ix
     exx
@@ -312,11 +331,10 @@ rp_far_next
     exx
     jr nz,rp_far_line
 
+;; The end marker goes after the last line that is drawn: far lines that
+;; are already right at the end of the list are not even looked at.
 rp_done
-    ld a,(rp_count)
-    cp ROAD_LINES
-    ret z                               ; every line: the end is in place
-    ex de,hl                            ; the end marker after the last one
+    ld hl,(rp_tail)
     ld (hl),lo(tmpl_end)
     inc hl
     ld (hl),hi(tmpl_end)
@@ -328,6 +346,7 @@ rp_near     defb 0                     ; of which striped rows
 rp_slot     defw 0
 rp_last_near defb #FF,#FF               ; striped lines each buffer last had
 rp_fs_base  defw 0
+rp_tail     defw 0                      ; where the end marker goes
 
 FAR_SHOWN_LEN EQU 2*ROAD_LINES
 far_shown   EQU FRAG8                   ; per buffer, per line: the template on

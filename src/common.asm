@@ -22,28 +22,37 @@ frag0_start
 vbl_count   defb 0          ; +1 at every VSYNC (50 Hz)
 irq_phase   defb IRQ_LOST   ; interrupts since the last VSYNC (IRQ_LOST + n:
                             ; not in step with the frame yet)
-flip_req    defb 0          ; R12 for the next VSYNC to show, 0 = none
-flip_drop   defb 0          ; ... and how far its horizon is down
+flip_req    defb 0          ; buffer + 1 to show from the next VSYNC, 0 = none
+flip_drop   defb 0          ; ... how far its horizon is down
+flip_head   defb 0          ; ... and where its sky looks (words right)
 flip_last   defb 0          ; vbl_count when the last flip happened
 front_buf   defb 0          ; buffer being shown (0/1)
 
 ;; --- the split of the frame being shown (see rup_frame) ---------------------
-rup_base    defb BUF0_R12   ; R12 of the buffer shown
+rup_buf     defb 0          ; buffer shown
 rup_drop    defb 0          ; lines the horizon is down
-rup_r5a     defb 0          ; R5 of the HUD part
-rup_r5b     defb 0          ; R5 of the sky part
-rup_r4c     defb TOTAL_ROWS-BLOCK_ROW-1 ; R4 of the road part
-rup_r6c     defb CRTC_R7-BLOCK_ROW      ; R6 and R7 of the road part
-rup_c       defw 0          ; R13, R12 of the road part
+rup_r4a     defb HUD_ROWS-1 ; HUD part: rows - 1, its border rows too
+rup_r5a     defb 0          ; HUD part: R5 lines
+rup_late    defb 0          ; HUD part has border rows: the sky part's size
+                            ; waits for line ~118
+rup_r4b     defb SKY_ROWS-1 ; sky part: rows - 1, a border row too
+rup_r5b     defb 0          ; sky part: R5 lines
+rup_r4c     defb TOTAL_ROWS-ROAD_ROW-1 ; road part: rows - 1
+rup_r6c     defb CRTC_R7-ROAD_ROW      ; road part: R6 and R7
+rup_c       defw ROAD_MA0   ; road part: start (R13, R12)
+
+;; --- the sky ring (hw.asm) ------------------------------------------------------
+ring_w0     defw 0          ; the ring character the sky part starts at
+ring_head   defb 0          ; where the sky looks: words right, 0..PANO_WORDS-1
 
 ;; --- road engine inputs ---------------------------------------------------
 zcam        defw 0          ; camera depth, 16 depth units = one stripe
 hill        defb 0          ; signed: + crest ahead, - the road rises ahead
+curve       defb 0          ; signed curve level, -CURVE_K..CURVE_K: + right
 road_buf    defb 0          ; buffer road_project/road_draw work on
 
 ;; --- road_draw state ---------------------------------------------------------
 patch_save  defb 0          ; the byte the exit patch replaced
-patch_dummy defb 0          ; harmless target for lines that need no patch
 line_ptr    defw 0          ; next line list entry
 rd_save_sp  defw 0
 
@@ -105,8 +114,94 @@ isr_sp
     ei
     reti
 
-    defs 24,0
+    defs 40,0
 isr_stack
+
+;; ---------------------------------------------------------------------------
+;; rup_frame - work out the frame's split from the drop of the buffer it
+;; shows, and start its HUD part. (Here for room; see the ruptures in
+;; fragment 1.)
+;; ---------------------------------------------------------------------------
+rup_frame
+    ld a,(rup_drop)
+    ld c,a
+    and 7
+    ld (rup_r5a),a              ; HUD part: drop mod 8 R5 lines ...
+    ld a,c
+    rrca
+    rrca
+    rrca
+    and #1F
+    ld (rup_late),a             ; ... after drop / 8 border rows
+    add a,HUD_ROWS-1
+    ld (rup_r4a),a
+    ld a,c                      ; the road part: from the row the top of the
+    add a,ROAD_Y                ; road is in
+    rrca
+    rrca
+    rrca
+    and #1F
+    ld b,a                      ; B = its row, ROAD_ROW..ROAD_ROW+2
+    add a,a
+    add a,a
+    add a,a
+    sub BLOCK_BOTTOM
+    sub c                       ; green border lines after the sky, 4..11
+    ld l,SKY_ROWS-1
+    cp 8
+    jr c,rup_frame_r5b
+    sub 8                       ; a row of it, then R5 lines
+    inc l
+rup_frame_r5b
+    ld (rup_r5b),a
+    ld a,l
+    ld (rup_r4b),a
+    ld a,TOTAL_ROWS-1
+    sub b
+    ld (rup_r4c),a
+    ld a,CRTC_R7
+    sub b
+    ld (rup_r6c),a
+    ld a,b                      ; start: (row - ROAD_ROW) * 48 into the part
+    sub ROAD_ROW
+    ld l,a
+    ld h,0
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld b,h
+    ld c,l
+    add hl,hl
+    add hl,bc
+    ld bc,ROAD_MA0
+    ld a,(rup_buf)
+    or a
+    jr z,rup_frame_road
+    ld bc,ROAD_MA1
+rup_frame_road
+    add hl,bc
+    ld (rup_c),hl
+
+    ld a,(rup_buf)              ; the HUD part starts with the buffer's HUD
+    or a
+    ld hl,HUD_MA0
+    jr z,rup_frame_hud
+    ld hl,HUD_MA1
+rup_frame_hud
+    ld bc,#BC00+12
+    out (c),c
+    ld b,#BD
+    out (c),h
+    ld bc,#BC00+13
+    out (c),c
+    ld b,#BD
+    out (c),l
+    ld bc,#7F10                 ; navy border for the lines above the sky
+    out (c),c
+    ld c,BORDER_TOP_HW
+    out (c),c
+    ret
 
 frag0_end
     ASSERT frag0_end <= FRAG0+FRAG_LEN
@@ -161,21 +256,23 @@ rup_vsync_in_step
     ld (irq_phase),a
     ld a,(flip_req)             ; a picture waiting, and two frames since the
     or a                        ; last: show it from this frame on
-    jr z,rup_frame
+    jp z,rup_frame
     ld a,(hl)
     ld hl,flip_last
     sub (hl)
     cp 2
-    jr c,rup_frame
+    jp c,rup_frame
     ld a,(vbl_count)
     ld (hl),a
     ld a,(flip_req)
-    ld (rup_base),a
+    dec a
+    ld (rup_buf),a
     ld a,(flip_drop)
     ld (rup_drop),a
     xor a
     ld (flip_req),a
-    jr rup_frame
+    call rup_frame              ; the HUD part's start first: it is near
+    jp ring_turn                ; then turn the sky the new picture looks at
 
 ;; rup_mid - the other five interrupts
 rup_mid
@@ -217,66 +314,24 @@ rup_safe_reg
 rup_safe_regs
     defb 4,CRTC_R4, 5,0, 6,CRTC_R6, 7,CRTC_R7, #FF
 
-;; ---------------------------------------------------------------------------
-;; rup_frame - work out the frame's split from the drop of the buffer it
-;; shows, and start its HUD part.
-;; ---------------------------------------------------------------------------
-rup_frame
-    ld a,(rup_drop)
-    ld (rup_r5a),a              ; the HUD part: R5 = drop lines of border
-    neg
-    and 7
-    ld (rup_r5b),a              ; the sky part: what brings the road onto a row
-    ld a,(rup_drop)
-    add a,7
-    rrca
-    rrca
-    rrca
-    and #1F
-    ld c,a                      ; C = q: the road starts at row BLOCK_ROW + q
-    ld a,TOTAL_ROWS-BLOCK_ROW-1
-    sub c
-    ld (rup_r4c),a
-    ld a,CRTC_R7-BLOCK_ROW
-    sub c
-    ld (rup_r6c),a
-    ld a,c                      ; the road part starts (BLOCK_ROW + q) * 48
-    add a,BLOCK_ROW             ; characters into the buffer
-    ld l,a
-    ld h,0
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    ld b,h
-    ld c,l
-    add hl,hl
-    add hl,bc
-    ld a,l
-    add a,BUF_R13
-    ld (rup_c),a
-    ld a,(rup_base)
-    adc a,h
-    and #3F
-    ld (rup_c+1),a
-
-    ld bc,#BC00+12              ; the HUD part starts with the buffer
+;; CRTC register A = (HL)
+MACRO CRTC_HL reg
+    ld bc,#BC00+{reg}
     out (c),c
-    ld a,(rup_base)
+    ld a,(hl)
     ld b,#BD
     out (c),a
-    ld bc,#BC00+13
+MEND
+;; CRTC register = constant
+MACRO CRTC_N reg,val
+    ld bc,#BC00+{reg}
     out (c),c
-    ld bc,#BD00+BUF_R13
+    ld bc,#BD00+{val}
     out (c),c
-    ld bc,#7F10                 ; navy border for the lines above the sky
-    out (c),c
-    ld c,BORDER_TOP_HW
-    out (c),c
-    ret
+MEND
 
     ASSERT HUD_ROWS*8 == HUD_H
-    ASSERT BLOCK_ROW*8 == BLOCK_BOTTOM
+    ASSERT ROAD_ROW*8 == ROAD_AREA_Y
 
 ;; rup_phase - the other interrupts, A = 1..5
 rup_phase
@@ -290,89 +345,60 @@ rup_phase
     ret z
 
     ; 5, line ~222, in the road part: its size, and the VSYNC at line 272
-    ld bc,#BC00+4
-    out (c),c
-    ld a,(rup_r4c)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC00+5
-    out (c),c
-    ld bc,#BD00
-    out (c),c
-    ld bc,#BC00+6
-    out (c),c
-    ld a,(rup_r6c)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC00+7
-    out (c),c
-    ld b,#BD
-    out (c),a
+    ld hl,rup_r4c
+    CRTC_HL 4
+    CRTC_N 5,0
+    ld hl,rup_r6c
+    CRTC_HL 6
+    CRTC_HL 7
     ret
 
-    ; 1, line ~14, in the HUD part: its size and R5 lines, no VSYNC; where
-    ; the sky part starts
+    ; 1, line ~14, in the HUD part: its size, no VSYNC; where the sky part
+    ; starts in the ring
 rup_hud
-    ld bc,#BC00+4
-    out (c),c
-    ld bc,#BD00+HUD_ROWS-1
-    out (c),c
-    ld bc,#BC00+5
-    out (c),c
-    ld a,(rup_r5a)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC00+6               ; the R5 lines, one row past the last, are
-    out (c),c                   ; border
-    ld bc,#BD00+HUD_ROWS
-    out (c),c
-    ld bc,#BC00+7
-    out (c),c
-    ld bc,#BD7F
-    out (c),c
+    ld hl,rup_r4a
+    CRTC_HL 4
+    ld hl,rup_r5a
+    CRTC_HL 5
+    CRTC_N 6,HUD_ROWS-1         ; the HUD's last row (navy) on is border, so
+    CRTC_N 7,#7F                ; the R5 lines come after a border row
+    ld hl,(ring_w0)
     ld bc,#BC00+12
     out (c),c
-    ld a,(rup_base)
-    add a,hi(HUD_ROWS*48)
+    ld a,h
+    or hi(RING_MA)
     ld b,#BD
     out (c),a
     ld bc,#BC00+13
     out (c),c
-    ld bc,#BD00+BUF_R13+lo(HUD_ROWS*48)
-    out (c),c
+    ld b,#BD
+    out (c),l
     ret
-    ASSERT BUF_R13+lo(HUD_ROWS*48) < 256
 
-    ; 2, line ~66, after the HUD part's last row: the sky part's size
+    ; 2, line ~66, the HUD part's display over: the sky part's rows, and its
+    ; size - unless more border rows follow
 rup_sky
-    ld bc,#BC00+4
-    out (c),c
-    ld bc,#BD00+SKY_ROWS-1
-    out (c),c
-    ld bc,#BC00+6
-    out (c),c
-    ld bc,#BD00+SKY_ROWS
-    out (c),c
+    CRTC_N 6,SKY_ROWS
+    ld a,(rup_late)
+    or a
+    ret nz
+rup_sky_size
+    ld hl,rup_r4b
+    CRTC_HL 4
     ret
 
-    ; 3, line ~118, after the HUD part's R5 lines: the sky part's R5 lines,
-    ; where the road part starts, the border below the mountains
+    ; 3, line ~118, in the sky part: its size if not done yet, its R5
+    ; lines, where the road part starts, the border below the mountains
 rup_road
-    ld bc,#BC00+5
-    out (c),c
-    ld a,(rup_r5b)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC00+12
-    out (c),c
-    ld a,(rup_c+1)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC00+13
-    out (c),c
-    ld a,(rup_c)
-    ld b,#BD
-    out (c),a
+    ld a,(rup_late)
+    or a
+    call nz,rup_sky_size
+    ld hl,rup_r5b
+    CRTC_HL 5
+    ld hl,rup_c+1
+    CRTC_HL 12
+    ld hl,rup_c
+    CRTC_HL 13
     ld bc,#7F10
     out (c),c
     ld c,BORDER_LOW_HW
@@ -392,16 +418,16 @@ frag2_start
 ;; road_draw - draw the lines in the line list of (road_buf).
 ;;
 ;; A line list entry is two words: where SP starts for that line (the end of
-;; the line in the screen) and a template - four more words, popped in turn:
+;; the line in the screen) and a template - three or four more words, popped
+;; in turn (tools/mkroad.py makes them, one set per curve level):
 ;;
 ;;   IY      where to enter the road core (part-way in if it hangs off the
 ;;           right of the screen)
 ;;   IX      where to enter the left grass block (how much grass is left)
-;;   patch   if the core hangs off the left of the screen, the first byte of
-;;           it that must not run: JP (HL) is written over it, and put back
-;;           when the core leaves through it
-;;   AF      A = low byte of the right grass block entry;
-;;           F: S = stripe band B, Z = no patch
+;;   AF      A = low byte of the right grass block entry; F: Z = no patch
+;;   patch   only if NZ: the core hangs off the left of the screen, and this
+;;           is the first byte of it that must not run: JP (HL) is written
+;;           over it, and put back when the core leaves through it
 ;;
 ;; A line then runs: right grass block (PUSH BC x n, main registers) ->
 ;; EXX/EX AF,AF' -> JP (IY) core (shadow registers: PUSH DE asphalt,
@@ -413,8 +439,10 @@ frag2_start
 ;; Registers kept for the whole run:
 ;;   BC  = grass pair         DE' = asphalt pair     AF' = kerb pair
 ;;   HL' = line_done_shadow_<band>                   DE  = patch address
-;; Band A cores are in bank 4 and band B cores in bank 5, so changing band
-;; changes the RAM configuration too - which is why this code is here.
+;; Band A's cores and templates are in bank 4 and band B's in bank 5, so
+;; changing band changes the RAM configuration too - which is why this code
+;; is here. Which bank a template is in is bit 13 of its address (TMPL_A,
+;; TMPL_B), so the bank is switched before the template is read.
 ;;
 ;; Interrupts are off whenever SP points into the screen. Once per line they
 ;; get one instruction's chance, with SP just past the entry being read: an
@@ -457,24 +485,32 @@ line_done_a
     ei                                  ; one instruction's chance for an
     ld (line_ptr),sp                    ; interrupt: its return address then
     di                                  ; lands on the template just read
+    bit 5,d
+    jp nz,to_band_b                     ; a band B template, in bank 5
+line_go_a
     ex de,hl
     ld sp,hl
     pop iy
     pop ix
-    pop hl                              ; patch address
-    pop af                              ; A = right grass entry, S = band B,
-    jp m,to_band_b                      ; Z = no patch
-line_go
+    pop af                              ; A = right grass entry, Z = no patch
+    jr nz,line_patch
+    ex de,hl                            ; HL = screen
+    ld sp,hl
+    ld l,a
+    ld h,hi(rgrass)
+    jp (hl)
+
+;; the core hangs off the left: DE = screen, SP at the patch address
+line_patch
+    pop hl
     ex de,hl                            ; DE = patch address, HL = screen
     ld sp,hl
     ld l,a
     ld h,hi(rgrass)
-    jr z,line_go_now
     ld a,(de)
     ld (patch_save),a
     ld a,#E9                            ; JP (HL)
     ld (de),a
-line_go_now
     jp (hl)
 
 ;; --- band B -------------------------------------------------------------------
@@ -490,31 +526,24 @@ line_done_b
     ei
     ld (line_ptr),sp
     di
+    bit 5,d
+    jp z,to_band_a
+line_go_b
     ex de,hl
     ld sp,hl
     pop iy
     pop ix
-    pop hl
     pop af
-    jp p,to_band_a
+    jr nz,line_patch
     ex de,hl
     ld sp,hl
     ld l,a
     ld h,hi(rgrass)
-    jr z,line_go_now_b
-    ld a,(de)
-    ld (patch_save),a
-    ld a,#E9
-    ld (de),a
-line_go_now_b
     jp (hl)
 
 ;; --- switching band: registers, and the bank the cores are in -----------------
-;; A, F, DE and HL are in use (right grass entry, no-patch flag, screen,
-;; patch address).
+;; DE = template, HL = screen.
 to_band_b
-    ld sp,band_keep+2
-    push af
     ld bc,#7F00+RAM_C5
     out (c),c
     exx
@@ -525,13 +554,9 @@ to_band_b
     pop af
     ex af,af'
     ld bc,GRASS1_PAIR
-    ld sp,band_keep
-    pop af
-    jr line_go
+    jp line_go_b
 
 to_band_a
-    ld sp,band_keep+2
-    push af
     ld bc,#7F00+RAM_C4
     out (c),c
     exx
@@ -542,11 +567,8 @@ to_band_a
     pop af
     ex af,af'
     ld bc,GRASS0_PAIR
-    ld sp,band_keep
-    pop af
-    jr line_go
+    jp line_go_a
 
-band_keep   defw 0
 kerb0_word  defw KERB0_PAIR
 kerb1_word  defw KERB1_PAIR
 
@@ -564,6 +586,14 @@ render_end
     ei
     ret
 
+;; Templates for every frame, here because they are band A's (bit 13 of the
+;; address clear) and must be read in either bank:
+;; the end of the list
+tmpl_end    defw render_end,lgrassa+48,#3040
+;; a line that is already right: nothing pushed
+tmpl_skip   defw 0,0,lo(rgrass_skip)*256+#40
+    ASSERT (tmpl_end & #2000) == 0
+
     ASSERT $ <= #1700
     defs #1700-$,0
 
@@ -577,6 +607,9 @@ rgrass
     exx
     ex af,af'
     jp (iy)
+;; a line that is already right goes straight on to the next
+rgrass_skip
+    jp line_done_a
 
 ;; Left grass, one per band so it knows which line_done to go back to.
 lgrassa
@@ -604,32 +637,14 @@ LIST_LEN    EQU (ROAD_LINES+1)*4
 
     ORG FRAG3,FRAG_STORE+3*FRAG_LEN
     defs LIST_GUARD,0
-list0
+list0                                   ; 4-aligned: road_project steps
+    ASSERT (list0 & 3) == 0             ; within an entry with INC E
     defs LIST_LEN,0
     ASSERT $ <= FRAG3+FRAG_LEN
 
     ORG FRAG4,FRAG_STORE+4*FRAG_LEN
     defs LIST_GUARD,0
 list1
+    ASSERT (list1 & 3) == 0
     defs LIST_LEN,0
     ASSERT $ <= FRAG4+FRAG_LEN
-
-;; ===========================================================================
-;; Fragments 5 and 6: the road templates, band 0 then band 1 at the same
-;; offset #800 further on - road_project relies on that.
-;; ===========================================================================
-    ORG FRAG5,FRAG_STORE+5*FRAG_LEN
-    INCLUDE "gen/roadtmpl0.asm"
-
-;; a line with no road: 48 pairs of band A grass
-tmpl_ground defw empty_core,lgrassa+48,patch_dummy,#0040
-;; the end of the list
-tmpl_end    defw render_end,lgrassa+48,patch_dummy,#3040
-;; a line that is already right: nothing pushed
-tmpl_skip   defw empty_core,lgrassa+48,patch_dummy,#3040
-    ASSERT $ <= FRAG5+FRAG_LEN
-
-    ORG FRAG6,FRAG_STORE+6*FRAG_LEN
-    INCLUDE "gen/roadtmpl1.asm"
-    ASSERT tmpl_band1 == tmpl_band0+#800
-    ASSERT $ <= FRAG6+FRAG_LEN

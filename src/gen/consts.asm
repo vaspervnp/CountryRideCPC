@@ -55,6 +55,9 @@ BAND_SHIFT    EQU 4
 FAR_Z         EQU 360
 FAR_ROW       EQU 21   ; rows 1..FAR_ROW are past FAR_Z
 MOUNT_TOP     EQU 106   ; first line of the mountain strip
+PANO_Y0       EQU 104   ; first line of the panorama (a character row)
+PANO_WORDS    EQU 96   ; panorama width in CRTC words (4 pixels)
+ROAD_AREA_Y   EQU 160   ; first line of the road part's memory
 
 BORDER_HW     EQU #54
 ;; the border where the ruptures show it: above the sky, below the

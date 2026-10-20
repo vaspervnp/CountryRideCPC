@@ -1,32 +1,24 @@
 ;; ===========================================================================
 ;; screen.asm - drawing into one of the two screens (bank 7).
 ;;
-;; select_buf picks the buffer being drawn: it maps that buffer's top half
-;; at #4080 (RAM_C1 or RAM_C3), so line_tab works for both; the bottom halves
-;; differ by #8000, which line_addr takes care of.
+;; With RAM_C1 both HUDs are in page 1 at #4000 (buffer 1's HUD1_OFF on) and
+;; the road parts at #8000 and #0000, so select_buf only notes the buffer and
+;; line_addr does the rest. The sky ring is page 3, drawn once (draw_ring).
 ;; ===========================================================================
 
 tgt_buf     defb 0              ; buffer being drawn into
-tgt_ram     defb RAM_C1         ; its RAM configuration
 
 ;; ---------------------------------------------------------------------------
 ;; select_buf - A = buffer (0/1). Destroys AF, BC.
 ;; ---------------------------------------------------------------------------
 select_buf
     ld (tgt_buf),a
-    or a
-    ld a,RAM_C1
-    jr z,select_buf_set
-    ld a,RAM_C3
-select_buf_set
-    ld (tgt_ram),a
-    ld b,GA_PORT
-    out (c),a
+    SET_RAM RAM_C1
     ret
 
 ;; ---------------------------------------------------------------------------
-;; line_addr - HL = line (0..271) -> HL = its address in the target buffer.
-;; Destroys AF, DE.
+;; line_addr - HL = line (0..63, 160..271) -> HL = its address in the target
+;; buffer. Destroys AF, DE.
 ;; ---------------------------------------------------------------------------
 line_addr
     add hl,hl
@@ -39,8 +31,14 @@ line_addr
     ld a,(tgt_buf)
     or a
     ret z
-    res 7,h                     ; buffer 1's bottom half is #8000 lower;
-    ret                         ; top-half addresses have bit 7 clear anyway
+    bit 7,h
+    jr z,line_addr_hud
+    res 7,h                     ; buffer 1's road part is #8000 lower,
+    ret
+line_addr_hud
+    ld de,HUD1_OFF              ; its HUD HUD1_OFF on
+    add hl,de
+    ret
 
 ;; ---------------------------------------------------------------------------
 ;; fill_lines - fill whole lines with a two-byte pattern.
@@ -71,21 +69,27 @@ fill_lines_byte
     ret
 
 ;; ---------------------------------------------------------------------------
-;; blit - copy a block into the top half of the screen (lines 0..159).
-;;   HL = source, B = x (bytes), C = y, D = width, E = height
+;; blit - copy a block into the HUD (lines 0..63).
+;;   HL = source, B = x (bytes), C = y, D = width (1..BLIT_MAX), E = height
 ;; The line address is worked out once and then stepped: the next line is
-;; #800 on, except at the end of a character row, where it is #3800 back and
-;; one row (96 bytes) on.
+;; #800 on, within a character row; a row's lines are done in one run, then
+;; the address goes #4000 back and one row (96 bytes) on. A line is a run
+;; of LDIs, entered as far in as the width says.
 ;; Destroys everything but IX.
 ;; ---------------------------------------------------------------------------
+BLIT_MAX    EQU 32
+
 blit
-    ld a,d
-    ld (blit_w+1),a
-    ld a,e
-    ld iyh,a                    ; lines to go
+    ld a,BLIT_MAX
+    sub d
+    add a,a                     ; two bytes an LDI
+    ld (blit_jr+1),a
     ld a,c
     and 7
-    ld iyl,a                    ; raster line within the character row
+    sub 8
+    neg
+    ld iyl,a                    ; lines to the end of the first row
+    ld iyh,e                    ; lines to go
     push hl
     push bc
     ld l,c
@@ -99,36 +103,43 @@ blit
     sub e
     ld d,a                      ; DE = destination
     pop hl
+blit_row
+    ld a,iyh
+    cp iyl
+    jr nc,blit_run
+    ld iyl,a                    ; the block ends in this row
+blit_run
+    ld a,iyh
+    sub iyl
+    ld iyh,a                    ; lines left after this row
 blit_line
     push de
-blit_w
-    ld bc,0                     ; width (self-modified)
-    ldir
+blit_jr
+    jr blit_ldi                 ; (self-modified: past BLIT_MAX - width LDIs)
+blit_ldi
+    REPEAT BLIT_MAX
+    ldi
+    REND
     pop de
-    inc iyl
-    ld a,iyl
-    and 7
-    jr z,blit_row
     ld a,d
     add a,8
     ld d,a
-    dec iyh
+    dec iyl
     jr nz,blit_line
-    ret
-blit_row
-    ld iyl,a
-    ld a,d
-    sub #38
+    ld a,iyh
+    or a
+    ret z
+    ld a,d                      ; the next row: 8 lines on is #4000 on
+    sub #40
     ld d,a
     ld a,e
     add a,96
     ld e,a
-    jr nc,blit_next
+    jr nc,blit_next_row
     inc d
-blit_next
-    dec iyh
-    jr nz,blit_line
-    ret
+blit_next_row
+    ld iyl,8
+    jr blit_row
 
 ;; ---------------------------------------------------------------------------
 ;; draw_label - IX = label (defb width, then 8 lines), B = x, C = y.
@@ -142,60 +153,20 @@ draw_label
     jp blit
 
 ;; ---------------------------------------------------------------------------
-;; draw_static - everything that never changes: the HUD ground and its
-;; labels, the sky, the mountains, the ground below them. Draws into the
-;; selected buffer.
+;; draw_static - everything of the selected buffer that never changes: the
+;; HUD ground and its labels, the ground at the top of the road part.
 ;; ---------------------------------------------------------------------------
 draw_static
-    ; the HUD: the top of the sky, in one colour
+    ; the HUD, on the top colour of the sky
     ld hl,0
     ld b,HUD_H
     ld de,SOLID_NAVY*#101
     call fill_lines
 
-    ; the sky: each line one dithered pair of bytes repeated
-    ld ix,sky_pairs
-    ld hl,HUD_H
-    ld b,MOUNT_TOP-HUD_H
-draw_static_sky
-    push bc
-    push hl
-    ld e,(ix+0)
-    ld d,(ix+1)
-    ld b,1
-    call fill_lines
-    pop hl
-    inc hl
-    inc ix
-    inc ix
-    pop bc
-    djnz draw_static_sky
-
-    ; the mountains, a line at a time
-    ld hl,MOUNT_TOP
-    ld (ds_line),hl
-    ld hl,mountains
-    ld (ds_src),hl
-    ld b,BLOCK_BOTTOM-MOUNT_TOP
-draw_static_mount
-    push bc
-    ld hl,(ds_line)
-    call line_addr
-    ex de,hl
-    ld hl,(ds_src)
-    ld bc,SCR_BYTES
-    ldir
-    ld (ds_src),hl
-    ld hl,(ds_line)
-    inc hl
-    ld (ds_line),hl
-    pop bc
-    djnz draw_static_mount
-
     ; the ground between the mountains and the road (the road's own ground
     ; lines go on from it when a crest hides the far road)
-    ld hl,BLOCK_BOTTOM
-    ld b,ROAD_Y-BLOCK_BOTTOM
+    ld hl,ROAD_AREA_Y
+    ld b,ROAD_Y-ROAD_AREA_Y
     ld de,SOLID_GROUND*#101
     call fill_lines
 
@@ -219,6 +190,32 @@ draw_static_mount
     ld bc,(TOTAL_VAL_X+TOTAL_QUOTE_X)*256+TOTAL_VAL_Y
     jp draw_label
 
-ds_line     defw 0
-ds_src      defw 0
+;; ---------------------------------------------------------------------------
+;; draw_ring - the sky ring, shared by both buffers, looking straight on:
+;; the sky part's rows at the start of page 3, a column at a time.
+;; ---------------------------------------------------------------------------
+draw_ring
+    xor a
+    ld (ring_head),a
+    ld hl,0
+    ld (ring_w0),hl
+    ld c,0
+draw_ring_col
+    push bc
+    ld a,c
+    ld (rc_col),a
+    ld l,c
+    ld h,0
+    di                          ; ring_col reads with POP
+    SET_RAM RAM_C3
+    call ring_col
+    SET_RAM RAM_C1
+    ei
+    pop bc
+    inc c
+    ld a,c
+    cp SCR_BYTES/2
+    jr c,draw_ring_col
+    ret
+
 

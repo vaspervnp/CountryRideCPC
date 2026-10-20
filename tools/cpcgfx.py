@@ -189,6 +189,44 @@ def row_depth(r):
 
 
 # ---------------------------------------------------------------------------
+# Curves. The road bends as a whole: at curve level k (-CURVE_K..CURVE_K,
+# positive to the right) row r moves sideways by a parabola in rows - not at
+# all at the bottom, where the car is, most at the horizon, CURVE_TOP bytes
+# (2 pixels each) at the strongest level. The road engine has its templates
+# made for every level, so a curve costs it nothing per line.
+#
+# The engine keeps one template per *group* of rows: a row of its own where
+# the road is narrow (far away, where the bend moves most from row to row),
+# else all the rows of one width. A group moves as its middle row would.
+# ---------------------------------------------------------------------------
+
+CURVE_K = 7
+CURVE_TOP = 64
+CURVE_ROW_GROUPS = 4        # rows narrower than this half-width: one group each
+
+
+def curve_group(r):
+    """The template group of row r: ('row', r) or ('half', half-width)."""
+    h = row_half_bytes(r)
+    return ("row", r) if h < CURVE_ROW_GROUPS else ("half", h)
+
+
+def _group_mid(g):
+    if g[0] == "row":
+        return g[1]
+    rows = [r for r in range(1, ROWS + 1) if row_half_bytes(r) == g[1]]
+    return (rows[0] + rows[-1]) / 2
+
+
+def curve_shift(k, r):
+    """Bytes to the right that row r moves at curve level k."""
+    t = (ROWS - _group_mid(curve_group(r))) / (ROWS - 1)
+    v = abs(k) * CURVE_TOP * t * t / CURVE_K
+    v = int(v + 0.5)
+    return v if k >= 0 else -v
+
+
+# ---------------------------------------------------------------------------
 # Colours per stripe band. Band 0 = A, band 1 = B.
 # ---------------------------------------------------------------------------
 

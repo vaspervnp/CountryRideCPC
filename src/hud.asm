@@ -73,21 +73,28 @@ buf_entry
     ret
 
 ;; ---------------------------------------------------------------------------
-;; hud_update - bring the selected buffer's HUD up to date.
+;; hud_update - bring the selected buffer's HUD up to date, as far as a
+;; picture's share of time allows.
 ;;
-;; The total time changes with every copy and is always redrawn. Of the rest -
-;; the TIME digits, the gear, a segment of either gauge - at most one thing
-;; is drawn per picture, so the HUD never costs a picture more than about
-;; two milliseconds; anything left waits for the next picture of this buffer,
-;; which is 80 ms away, the one after that if a new copy was taken first.
+;; The share is HUD_SHARE units, about 1.1 ms: a small digit or a gauge
+;; segment costs one, a big digit two. The total time's changed digits come
+;; first, then at most one of the rest - the TIME digits, the gear, a segment
+;; of either gauge. Anything left waits for the next picture of this buffer,
+;; 80 ms away; each buffer has two pictures to show a copy before the next.
 ;; ---------------------------------------------------------------------------
+HUD_SHARE   EQU 3
+hud_budget  defb 0
+
 hud_update
     ld hl,hud_done
     call buf_entry
     ld a,(hl)
     or a
     ret nz                      ; nothing new since it was brought up to date
+    ld a,HUD_SHARE
+    ld (hud_budget),a
     call hud_total
+    ret c                       ; out of time already
 
     ; --- time: two big digits, each redrawn only when it changes ---
     ld a,(hv_time)
@@ -105,6 +112,9 @@ hud_time_split
     ld a,e
     cp (hl)
     jr z,hud_time_hi
+    call hud_big_ok
+    ret c
+    ld a,e
     ld (hl),a
     ld b,TIME_VAL_X+BIG_W
     ld c,TIME_VAL_Y
@@ -115,6 +125,9 @@ hud_time_hi
     ld a,c
     cp (hl)
     jr z,hud_gear
+    call hud_big_ok
+    ret c
+    ld a,c
     ld (hl),a
     ld b,TIME_VAL_X
     ld c,TIME_VAL_Y
@@ -127,6 +140,9 @@ hud_gear
     ld a,(hv_gear)
     cp (hl)
     jr z,hud_speed
+    call hud_big_ok
+    ret c
+    ld a,(hv_gear)
     ld (hl),a
     or a
     jr nz,hud_gear_digit
@@ -143,6 +159,10 @@ hud_speed
     ld a,(hv_speed)
     cp (hl)
     jr z,hud_fuel
+    ld a,(hud_budget)
+    or a
+    ret z
+    ld a,(hv_speed)
     ld de,speed_seg
     ld b,SPEED_GAUGE_X
     ld c,SPEED_GAUGE_Y
@@ -155,6 +175,10 @@ hud_fuel
     ld a,(hv_fuel)
     cp (hl)
     jr z,hud_up_to_date
+    ld a,(hud_budget)
+    or a
+    ret z
+    ld a,(hv_fuel)
     ld de,fuel_seg
     ld b,FUEL_GAUGE_X
     ld c,FUEL_GAUGE_Y
@@ -166,21 +190,33 @@ hud_up_to_date
     ld (hl),1
     ret
 
-;; --- total time: five small digits, the changed ones ---
+;; Carry set if the budget left is less than a big digit's two units
+hud_big_ok
+    ld a,(hud_budget)
+    cp 2
+    ret
+
+;; --- total time: five small digits, the changed ones, the hundredths
+;; first. Carry set if the budget ran out before they were all drawn. ---
 hud_total
-    ld hl,shown_total
+    ld hl,shown_total+4
     ld a,(tgt_buf)
     or a
     jr z,hud_total_buf
-    ld hl,shown_total+5
+    ld hl,shown_total+9
 hud_total_buf
-    ld de,hv_total
-    ld ix,total_digit_x
+    ld de,hv_total+4
+    ld ix,total_digit_x+4
     ld b,5
 hud_total_loop
     ld a,(de)
     cp (hl)
     jr z,hud_total_next
+    ld a,(hud_budget)
+    sub 1
+    ret c
+    ld (hud_budget),a
+    ld a,(de)
     ld (hl),a
     push bc
     push de
@@ -195,11 +231,11 @@ hud_total_loop
     pop de
     pop bc
 hud_total_next
-    inc de
-    inc hl
-    inc ix
+    dec de
+    dec hl
+    dec ix
     djnz hud_total_loop
-    ret
+    ret                         ; (carry clear: cp/sub left none)
 
 ;; ---------------------------------------------------------------------------
 ;; draw_big - glyph A (0-9, 10 = N) at B = x bytes, C = y.

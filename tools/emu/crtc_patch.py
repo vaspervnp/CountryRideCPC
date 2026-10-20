@@ -20,6 +20,18 @@ at the end of a row: compare VCC with R4 there, then either the adjust lines,
 a new frame, or the next row, with R6 (display) and R7 (VSYNC) compared at
 the start of each row. Type 1's reloading of R12/R13 on every line of row 0
 is kept.
+
+What a CRTC does in the R5 lines differs between types, and the game must
+not depend on it. mc6845_adj_mode (cpcemu_set_adj_mode) picks one:
+
+  0  VCC = R4 + 1, compared with R6: border when R6 = R4 + 1 (CRTC 0).
+  1  as 0, but past R9 + 1 lines they go on counting rows like the others -
+     VCC steps up, the address moves to the next row - and the display comes
+     back on at such a row if VCC is then below R6.
+  2  VCC stays where it was and is not compared with R6, so the display
+     stays as the last row left it, showing the next row (CRTC 1, separate
+     counter; what Retro Virtual Machine showed: the R5 lines after a
+     displayed row displayed the row after it).
 """
 
 import sys
@@ -58,6 +70,8 @@ rep("""                        case MC6845_VTOTAL:
 old_start = s.index("/* per scanline updates */")
 old_end = s.index("uint64_t mc6845_tick(mc6845_t* c) {")
 s = s[:old_start] + """/* per scanline updates (patched: see tools/emu/crtc_patch.py) */
+int mc6845_adj_mode = 0;
+
 static inline void _mc6845_new_row(mc6845_t* c) {
     if (c->v_ctr == c->v_displayed) {
         c->v_de = false;
@@ -84,6 +98,17 @@ static inline void _mc6845_scanline(mc6845_t* c) {
         if (++c->adj_ctr >= c->v_total_adjust) {
             _mc6845_new_frame(c);
         }
+        else if (mc6845_adj_mode == 1) {
+            _mc6845_co_cmp_raster(c);
+            if (c->co_raster) {
+                c->co_raster = false;
+                c->r_ctr = 0;
+                c->v_ctr = (c->v_ctr + 1) & 0x7F;
+                c->ma_row_start = c->ma_store;
+                c->v_de = c->v_ctr < c->v_displayed;
+                _mc6845_new_row(c);
+            }
+        }
     }
     else {
         _mc6845_co_cmp_raster(c);
@@ -92,13 +117,14 @@ static inline void _mc6845_scanline(mc6845_t* c) {
             c->r_ctr = 0;
             if (c->v_ctr == c->v_total) {
                 if (c->v_total_adjust) {
-                    /* the adjust lines: one row past R4, on from the next
-                       row's address */
+                    /* the adjust lines: on from the next row's address */
                     c->in_adj = true;
                     c->adj_ctr = 0;
-                    c->v_ctr = (c->v_ctr + 1) & 0x7F;
                     c->ma_row_start = c->ma_store;
-                    _mc6845_new_row(c);
+                    if (mc6845_adj_mode != 2) {
+                        c->v_ctr = (c->v_ctr + 1) & 0x7F;
+                        _mc6845_new_row(c);
+                    }
                 }
                 else {
                     _mc6845_new_frame(c);

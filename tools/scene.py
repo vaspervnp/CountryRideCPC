@@ -15,7 +15,7 @@ import math
 import os
 
 from cpcgfx import (PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
-                    HORIZON_Y,
+                    HORIZON_Y, curve_shift,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
                     row_half_bytes, row_depth, road_row_pixels, pen_rgb)
@@ -212,7 +212,8 @@ def sky_pen(x, y):
 
 # ---------------------------------------------------------------------------
 # Mountains: two ranges, snowy, lit from the left. A 384 pixel panorama so
-# the strip can scroll later; the screen shows pixels 0..191 of it.
+# the strip scrolls sideways with the road's heading; the screen shows 192
+# pixels of it.
 # ---------------------------------------------------------------------------
 
 PANORAMA_W = 384
@@ -403,10 +404,11 @@ def road_line(r, band, cx=SCR_W // 2):
     return out
 
 
-def road_lines(hill, zcam):
-    """Lines ROAD_Y..SCR_H-1."""
+def road_lines(hill, zcam, curve=0):
+    """Lines ROAD_Y..SCR_H-1, the road bent by curve level `curve`."""
     rows = project(hill, zcam)
-    return [road_line(r, row_band(r, zcam) if r else 0) for r in rows]
+    return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * curve_shift(curve, r))
+            if r else road_line(None, 0) for r in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -414,36 +416,55 @@ def road_lines(hill, zcam):
 # ---------------------------------------------------------------------------
 
 
-def memory(hill=0, zcam=0, **hudvals):
-    """The picture as it is in a screen buffer: HUD, sky and mountains,
-    the ground band, the road."""
-    pens = hud(**hudvals)
-    top, pano = horizon_panorama()
-    for y in range(HUD_H, BLOCK_BOTTOM):
-        if y < top:
-            pens.append([sky_pen(x, y) for x in range(SCR_W)])
-        else:
-            pens.append(pano[y - top][:SCR_W])
-    pens += [[GROUND_PEN] * SCR_W for _ in range(BLOCK_BOTTOM, ROAD_Y)]
-    pens += road_lines(hill, zcam)
-    assert len(pens) == SCR_H
-    return pens
-
-
 # ---------------------------------------------------------------------------
-# The horizon drops with the road. The screen is split by raster ruptures
-# into three: the HUD, the sky and mountains (lines HUD_H..BLOCK_BOTTOM-1 of
-# the buffer), and the road from a character row on (BLOCK_BOTTOM + 8q). To
-# move the sky and mountains down by `drop` lines, the HUD part gets `drop`
-# more lines, in the border colour - the HUD's navy - and the sky and
-# mountains part gets the lines that bring the road back onto a character
-# row, in the ground colour. With the drop equal to the road's ground, the
-# band of ground between the mountains and the road always has
-# ROAD_Y - BLOCK_BOTTOM lines.
+# The picture is made of three parts, each in its own memory, which the CRTC
+# shows one after the other (raster ruptures, see hw.asm):
+#
+#   the HUD     lines 0..63, one copy per screen buffer;
+#   the sky     the sky and the mountains, lines HUD_H..BLOCK_BOTTOM-1 when
+#               nothing has moved: one copy for both buffers, kept in a ring
+#               the CRTC can scroll sideways a word (4 pixels) at a time;
+#   the road    lines ROAD_AREA_Y..271 (a band of ground, then the road),
+#               one copy per buffer.
+#
+# The horizon drops with the road: for a drop of d lines the sky part starts
+# d lines lower, under d lines of border in the HUD's navy, and is followed by
+# border in the ground's green down to the character row where the road
+# part starts - the row the top of the road is in - so the ground between
+# the mountains and the road always has ROAD_Y - BLOCK_BOTTOM lines.
 # ---------------------------------------------------------------------------
 
+ROAD_AREA_Y = 160               # the road part's memory starts with line 160
 BORDER_TOP = HUD_BG             # border colour above the sky ...
 BORDER_LOW = GROUND_PEN         # ... and below the mountains
+PANO_WORDS = PANORAMA_W // 4    # the panorama in CRTC words (4 pixels)
+
+
+def pano_y0():
+    """First line of the sky part that has mountains in its character row:
+    above it every line is one dither pair repeated."""
+    return mountains_top() // 8 * 8
+
+
+def sky_lines(heading=0):
+    """The sky part, lines HUD_H..BLOCK_BOTTOM-1, looking `heading` words
+    to the right. The dithered sky repeats every word, so only the mountains
+    move."""
+    top, pano = horizon_panorama()
+    out = []
+    for y in range(HUD_H, BLOCK_BOTTOM):
+        if y < top:
+            out.append([sky_pen(x, y) for x in range(SCR_W)])
+        else:
+            row = pano[y - top]
+            out.append([row[(x + 4 * heading) % PANORAMA_W] for x in range(SCR_W)])
+    return out
+
+
+def road_area(hill=0, zcam=0, curve=0):
+    """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road."""
+    return ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
+            + road_lines(hill, zcam, curve))
 
 
 def ground_drop(hill):
@@ -451,37 +472,38 @@ def ground_drop(hill):
     return ground_lines(hill)
 
 
-def rupture_rows(drop):
-    """(lines in the HUD part, lines in the sky part, first road line) for
-    a drop."""
-    q = (drop + 7) // 8
-    return HUD_H + drop, BLOCK_BOTTOM - HUD_H + 8 * q - drop, BLOCK_BOTTOM + 8 * q
+def road_from(drop):
+    """First line of the road part on the screen: the character row with the
+    top of the road in it."""
+    return (ROAD_Y + drop) // 8 * 8
 
 
-def shown(mem, drop):
-    """What the CRTC shows of a buffer for a drop."""
-    hud_end, sky_lines, road_from = rupture_rows(drop)
+def shown(hud_pens, sky, road, drop):
+    """What the CRTC shows: the three parts, split for a drop."""
     out = []
+    first_road = road_from(drop)
     for y in range(SCR_H):
         if y < HUD_H:
-            out.append(mem[y])
-        elif y < hud_end:
+            out.append(hud_pens[y])
+        elif y < HUD_H + drop:
             out.append([BORDER_TOP] * SCR_W)
         elif y < BLOCK_BOTTOM + drop:
-            out.append(mem[y - drop])
-        elif y < road_from:
+            out.append(sky[y - drop - HUD_H])
+        elif y < first_road:
             out.append([BORDER_LOW] * SCR_W)
         else:
-            out.append(mem[y])
+            out.append(road[y - ROAD_AREA_Y])
     return out
 
 
-def screen(hill=0, zcam=0, drop=None, **hudvals):
-    """The picture on the screen, the horizon down by `drop` lines (by
-    default as far as the road's ground goes)."""
+def screen(hill=0, zcam=0, drop=None, heading=0, curve=0, **hudvals):
+    """The picture on the screen: the horizon `drop` lines down (by default
+    as far as the road's ground goes), looking `heading` words right, the
+    road bent by curve level `curve`."""
     if drop is None:
         drop = ground_drop(hill)
-    return shown(memory(hill, zcam, **hudvals), drop)
+    return shown(hud(**hudvals), sky_lines(heading), road_area(hill, zcam, curve),
+                 drop)
 
 
 def to_image(pens, scale=True):

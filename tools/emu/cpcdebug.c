@@ -51,3 +51,6 @@ void cpcemu_crtc(void* h, uint8_t* o) {
     o[2] = c->in_adj ? c->adj_ctr : 0xFF;
     o[3] = c->v_de;
 }
+
+// how the R5 lines behave, 0..2 (see tools/emu/crtc_patch.py)
+void cpcemu_set_adj_mode(void* h, int m) { (void)h; mc6845_adj_mode = m; }

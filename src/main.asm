@@ -5,8 +5,8 @@
 ;; every label is visible everywhere, and writes the four files the BASIC
 ;; loader loads:
 ;;
-;;   ROADA.BIN  bank 4 (#4000)  road cores for stripe band A
-;;   ROADB.BIN  bank 5 (#4000)  road cores for stripe band B
+;;   ROADA.BIN  bank 4 (#4000)  road templates and cores for stripe band A
+;;   ROADB.BIN  bank 5 (#4000)  road cores and templates for stripe band B
 ;;   ROADC.BIN  bank 6 (#4000)  road rows and hill tables
 ;;   GAME.BIN   bank 7 (#C000)  the game: main loop, HUD, graphics
 ;;   BOOT.BIN   base   (#4000)  takes the machine over, then the common
@@ -23,23 +23,30 @@
 FRAG_STORE  EQU #4100           ; where the fragments sit inside BOOT.BIN
 
 ;; ---------------------------------------------------------------------------
-;; bank 4: band A cores
+;; bank 4: band A - the templates in #4000-#5FFF, the cores from #6000
+;; (road_draw tells a band A template from a band B one by bit 13)
 ;; ---------------------------------------------------------------------------
     BANK
-    ORG #4000
+    ORG TMPL_A
 roada_start
+    INCLUDE "gen/roadtmpla.asm"
+    ASSERT $ <= TMPL_A+#2000
+    ORG CORES_A
     INCLUDE "gen/roada.asm"
 roada_end
     ASSERT roada_end <= #8000
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
-;; bank 5: band B cores
+;; bank 5: band B - the cores in #4000-#5FFF, the templates from #6000
 ;; ---------------------------------------------------------------------------
     BANK
-    ORG #4000
+    ORG CORES_B
 roadb_start
     INCLUDE "gen/roadb.asm"
+    ASSERT $ <= TMPL_B
+    ORG TMPL_B
+    INCLUDE "gen/roadtmplb.asm"
 roadb_end
     ASSERT roadb_end <= #8000
     SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"

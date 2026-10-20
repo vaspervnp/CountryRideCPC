@@ -60,6 +60,12 @@ def consts():
     emit("FAR_ROW       EQU %d   ; rows 1..FAR_ROW are past FAR_Z" % far)
     emit("MOUNT_TOP     EQU %d   ; first line of the mountain strip"
          % S.mountains_top())
+    emit("PANO_Y0       EQU %d   ; first line of the panorama (a character row)"
+         % S.pano_y0())
+    emit("PANO_WORDS    EQU %d   ; panorama width in CRTC words (4 pixels)"
+         % S.PANO_WORDS)
+    emit("ROAD_AREA_Y   EQU %d   ; first line of the road part's memory"
+         % S.ROAD_AREA_Y)
     emit("")
     emit("BORDER_HW     EQU #%02X" % (0x40 + G.FIRMWARE[G.BORDER_FW][0]))
     emit(";; the border where the ruptures show it: above the sky, below the")
@@ -165,26 +171,33 @@ def gfx():
     emit("SEG_OFF1 EQU #%02X" % G.m0_byte(G.PEN["BLACK"], S.HUD_BG))
     emit("")
 
-    # sky: per line from HUD_H to MOUNT_TOP-1, a 2-byte repeating pattern
+    # sky: per line from HUD_H to the panorama, a 2-byte repeating pattern
     top = S.mountains_top()
     emit(";; sky lines %d..%d: the two bytes that repeat across each line" %
-         (G.HUD_H, top - 1))
+         (G.HUD_H, S.pano_y0() - 1))
     emit("sky_pairs")
-    for y in range(G.HUD_H, top):
+    for y in range(G.HUD_H, S.pano_y0()):
         p = [S.sky_pen(x, y) for x in range(4)]
         emit("    defb #%02X,#%02X" % (G.m0_byte(p[0], p[1]), G.m0_byte(p[2], p[3])))
     emit("")
 
-    # the screen address of every line, buffer 0 (RAM_C1); buffer 1 is the
-    # same for the top half (with RAM_C3) and #8000 lower for the bottom half
-    emit(";; CPU address of each of the 272 lines, buffer 0 with RAM_C1")
+    # where every line is (hw.asm has the plan)
+    emit(";; CPU address of each of the 272 lines: the HUD (0-63) in page 1")
+    emit(";; with RAM_C1, buffer 0 (buffer 1's is HUD1_OFF on); the sky part")
+    emit(";; (64-151) in page 3 with RAM_C3, as the ring is when it has not")
+    emit(";; turned; 152-159 nowhere; the road part (160-271) in page 2 with")
+    emit(";; RAM_C1, buffer 0 (buffer 1's is #8000 lower)")
     emit("line_tab")
     for y in range(G.SCR_H):
         row, ras = y >> 3, y & 7
-        if row < G.TOP_ROWS:
-            a = 0x4080 + ras * 0x800 + row * 96
+        if y < G.HUD_H:
+            a = 0x4000 + ras * 0x800 + row * 96
+        elif y < G.BLOCK_BOTTOM:
+            a = 0x4000 + ras * 0x800 + (row - G.HUD_H // 8) * 96
+        elif y < S.ROAD_AREA_Y:
+            a = 0
         else:
-            a = 0x8000 + ras * 0x800 + (row - G.TOP_ROWS) * 96
+            a = 0x8000 + ras * 0x800 + (row - S.ROAD_AREA_Y // 8) * 96
         emit("    defw #%04X   ; %d" % (a, y))
     emit("")
 
@@ -208,19 +221,47 @@ def gfx():
         emit("    defb " + ",".join("#%02X" % v for v in prof[i:i + 16]))
     emit("")
 
+    # the demo's curves, on the same track as the hills: a curve level for
+    # each (zcam / 32) mod 256, moving one level an entry towards each
+    # stretch's level, so the road bends into a curve and out of it
+    targets = [(0, 0), (4, 5), (40, 0), (84, -7), (114, 0), (132, 3),
+               (152, -3), (176, 0), (202, 7), (232, 0)]
+    level, curve = 0, []
+    for i in range(256):
+        aim = [t for start, t in targets if start <= i][-1]
+        level += (aim > level) - (aim < level)
+        curve.append(level)
+    assert curve[-1] == 0 and max(map(abs, curve)) <= G.CURVE_K
+    emit(";; demo curve levels, (zcam / 32) mod 256 -> level (signed); must")
+    emit(";; follow hill_profile")
+    emit("curve_profile")
+    for i in range(0, 256, 16):
+        emit("    defb " + ",".join("#%02X" % (v & 0xFF) for v in curve[i:i + 16]))
+    emit("")
+
     lines += horizon(top)
     return lines
 
 
 def horizon(top):
-    """The mountains: the first 192 pixels of the panorama, over the sky."""
+    """The mountains: the whole panorama, from the character row they start
+    in, over the sky - a column (a word wide) at a time, as ring_col writes
+    them."""
     lines = []
     emit = lines.append
     t, rows = S.horizon_panorama()
     assert t == top
-    emit(";; mountain strip, lines %d..%d, 96 bytes each" % (top, G.BLOCK_BOTTOM - 1))
-    emit("mountains")
-    defb_rows(emit, encode_rows([r[:G.SCR_W] for r in rows]))
+    y0 = S.pano_y0()
+    full = [[S.sky_pen(x, y) for x in range(S.PANORAMA_W)] for y in range(y0, top)]
+    full += rows
+    enc = encode_rows(full)
+    emit(";; the panorama, lines %d..%d, by columns: for each of the %d words"
+         % (y0, G.BLOCK_BOTTOM - 1, S.PANO_WORDS))
+    emit(";; across, its two bytes on each line, top to bottom")
+    emit("PANO_COL_BYTES EQU %d" % (2 * len(enc)))
+    emit("panorama_cols")
+    cols = [[b for row in enc for b in row[2 * c:2 * c + 2]] for c in range(S.PANO_WORDS)]
+    defb_rows(emit, cols)
     emit("")
     return lines
 

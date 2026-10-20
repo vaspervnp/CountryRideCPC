@@ -6,8 +6,8 @@
 ;; the next VSYNC that is at least two frames after the last one.
 ;;
 ;; This milestone has no car and no player: it drives a plain four-lane road
-;; over a looping run of crests and dips, and fills the HUD with plausible
-;; numbers, so the screen layout and the frame rate can be judged.
+;; over a looping run of crests, dips and curves, and fills the HUD with
+;; plausible numbers, so the screen layout and the frame rate can be judged.
 ;; ===========================================================================
 
 back_buf    defb 1              ; the buffer being drawn
@@ -19,12 +19,20 @@ speed       defw 0              ; depth units per VSYNC, 8.8
 speed_phase defw 0              ; where in the accelerate/cruise/brake cycle
 time_vbls   defb 50             ; VSYNCs left in the current second
 fuel_vbls   defw 0
+drawn_curve defb 0,0            ; curve level each buffer was drawn with
+pic_bent    defb 0              ; 1: this picture's curve level is new to
+                                ; its buffer
+heading     defb 0              ; where the sky looks: words right
+head_acc    defw 0              ; turning towards the next word, signed
 
 SPEED_MAX   EQU #0540           ; 5.25 depth units per VSYNC: a stripe in ~3
 SPEED_ACC   EQU 5               ; per VSYNC, 8.8 - full speed in ~5.4 s
 SPEED_BRK   EQU 9
 GEAR_STEP   EQU SPEED_MAX/6+1   ; speed per gear
 MAX_STEPS   EQU 4               ; 50 Hz steps caught up per picture at most
+HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
+                                ; turn a word: at the strongest level and
+                                ; full speed, a word every 2 pictures
 
 ;; ---------------------------------------------------------------------------
 ;; game_start - entered from boot.asm with RAM_C1, interrupts on.
@@ -37,6 +45,7 @@ game_start
     ; picture into each, and only then light the palette
     call hud_forget
     call hud_snapshot
+    call draw_ring
     xor a
     call draw_screen
     ld a,1
@@ -85,21 +94,27 @@ main_draw
     dec (hl)
     jr nz,main_hud_kept
     ld (hl),HUD_EVERY
+    call demo_gauges
     call hud_snapshot
 main_hud_kept
     ld a,(back_buf)
     call draw_picture
 
     ; show it at the next VSYNC that keeps the 25 Hz cadence, its horizon
-    ; as far down as its road's top
+    ; as far down as its road's top, its sky looking its way - unless its
+    ; road bent further (draw_picture): the sky then turns with the next
+    ; picture, which has the time
     call picture_drop
     ld (flip_drop),a
+    call picture_heading
+    ld hl,pic_bent
+    bit 0,(hl)
+    jr z,main_head
+    ld a,(ring_head)
+main_head
+    ld (flip_head),a
     ld a,(back_buf)
-    or a
-    ld a,BUF0_R12
-    jr z,main_flip
-    ld a,BUF1_R12
-main_flip
+    inc a
     ld (flip_req),a
 main_wait
     ld a,(flip_req)
@@ -116,12 +131,13 @@ main_wait
 
 ;; ---------------------------------------------------------------------------
 ;; draw_screen - A = buffer: everything but the road, the whole HUD included
-;; (hud_update draws one thing at a time, so it is called until it is done).
+;; (hud_update draws a picture's share at a time, so it is called until it is
+;; done).
 ;; ---------------------------------------------------------------------------
 draw_screen
     call select_buf
     call draw_static
-    ld b,8
+    ld b,16
 draw_screen_hud
     push bc
     call hud_update
@@ -132,11 +148,28 @@ draw_screen_hud
 
 ;; ---------------------------------------------------------------------------
 ;; draw_picture - A = buffer: HUD changes, then the road.
+;;
+;; When the curve level is not the one the buffer was last drawn with, every
+;; far road line moves and is drawn again (~2.5 ms more): the HUD then waits
+;; for the buffer's next picture, and the sky's turn for the next picture
+;; (pic_bent), so the picture keeps to its 40 ms.
 ;; ---------------------------------------------------------------------------
 draw_picture
     push af
     call select_buf
+    ld hl,drawn_curve
+    call buf_entry
+    ld a,(curve)
+    cp (hl)
+    ld (hl),a                   ; (the flags are cp's)
+    ld hl,pic_bent
+    ld (hl),0
+    jr nz,draw_picture_bent
     call hud_update
+    jr draw_picture_road
+draw_picture_bent
+    inc (hl)
+draw_picture_road
     SET_RAM RAM_C1
     pop af
     ld (road_buf),a
@@ -161,6 +194,49 @@ set_palette_loop
     ld a,BORDER_HW
     out (c),a
     ret
+
+;; ---------------------------------------------------------------------------
+;; demo_gauges - the speed gauge and the gear, from the speed: only the HUD
+;; shows them, so they are worked out when it takes its copy.
+;; ---------------------------------------------------------------------------
+demo_gauges
+    ld hl,(speed)
+    ld a,h                      ; speed / (SPEED_MAX/GAUGE_SEGS) -> segments
+    ld b,0
+    ld de,SPEED_MAX/GAUGE_SEGS
+demo_seg
+    or a
+    sbc hl,de
+    jr c,demo_seg_done
+    inc b
+    jr demo_seg
+demo_seg_done
+    ld a,b
+    cp GAUGE_SEGS+1
+    jr c,demo_seg_ok
+    ld a,GAUGE_SEGS
+demo_seg_ok
+    ld (speed_level),a
+    ld hl,(speed)
+    ld a,h
+    or l
+    ld b,0
+    jr z,demo_gear_done         ; standing still: neutral
+    ld de,GEAR_STEP
+demo_gear
+    inc b
+    or a
+    sbc hl,de
+    jr nc,demo_gear
+demo_gear_done
+    ld a,b
+    cp 7
+    jr c,demo_gear_ok
+    ld a,6
+demo_gear_ok
+    ld (gear),a
+    ret
+
 
 ;; ---------------------------------------------------------------------------
 ;; demo_step - one VSYNC of the demo drive.
@@ -218,7 +294,8 @@ demo_speed_set
 demo_z_ok
     ld (zcam),hl
 
-    ; the hill under the camera: hill_profile[(zcam / 32) mod 256]
+    ; the hill and the curve under the camera: hill_profile and
+    ; curve_profile[(zcam / 32) mod 256]
     add hl,hl
     add hl,hl
     add hl,hl                   ; H = zcam / 32
@@ -228,43 +305,54 @@ demo_z_ok
     add hl,de
     ld a,(hl)
     ld (hill),a
+    ld de,curve_profile-hill_profile
+    add hl,de
+    ld a,(hl)
+    ld (curve),a
 
-    ; gauges and gear from the speed
-    ld hl,(speed)
-    ld a,h                      ; speed / (SPEED_MAX/GAUGE_SEGS) -> segments
-    ld b,0
-    ld de,SPEED_MAX/GAUGE_SEGS
-demo_seg
+    ; the sky turns with the road: head_acc += curve x speed (whole depth
+    ; units a VSYNC), a word right or left every HEAD_STEP
+    ld e,a
+    ld d,0
+    rla
+    jr nc,demo_head_pos
+    dec d                       ; DE = curve level, sign extended
+demo_head_pos
+    ld a,(speed+1)
     or a
-    sbc hl,de
-    jr c,demo_seg_done
-    inc b
-    jr demo_seg
-demo_seg_done
-    ld a,b
-    cp GAUGE_SEGS+1
-    jr c,demo_seg_ok
-    ld a,GAUGE_SEGS
-demo_seg_ok
-    ld (speed_level),a
-    ld hl,(speed)
-    ld a,h
-    or l
-    ld b,0
-    jr z,demo_gear_done         ; standing still: neutral
-    ld de,GEAR_STEP
-demo_gear
-    inc b
+    jr z,demo_head_done
+    ld b,a
+    ld hl,(head_acc)
+demo_head_mul
+    add hl,de
+    djnz demo_head_mul
+    ld (head_acc),hl
+    bit 7,h
+    jr nz,demo_head_left
+    ld de,-HEAD_STEP
+    add hl,de
+    jr nc,demo_head_done        ; not a word yet
+    ld (head_acc),hl
+    ld a,(heading)
+    inc a
+    cp PANO_WORDS
+    jr c,demo_head_set
+    xor a
+    jr demo_head_set
+demo_head_left
+    ld de,HEAD_STEP
+    add hl,de
+    jr c,demo_head_done
+    ld (head_acc),hl
+    ld a,(heading)
     or a
-    sbc hl,de
-    jr nc,demo_gear
-demo_gear_done
-    ld a,b
-    cp 7
-    jr c,demo_gear_ok
-    ld a,6
-demo_gear_ok
-    ld (gear),a
+    jr nz,demo_head_dec
+    ld a,PANO_WORDS
+demo_head_dec
+    dec a
+demo_head_set
+    ld (heading),a
+demo_head_done
 
     ; TIME counts down a second at a time, from 60, round and round
     ld hl,time_vbls
