@@ -143,7 +143,8 @@ draw_label
 
 ;; ---------------------------------------------------------------------------
 ;; draw_static - everything that never changes: the HUD ground and its
-;; labels, the sky, the mountains. Draws into the selected buffer.
+;; labels, the sky, the mountains, the ground below them. Draws into the
+;; selected buffer.
 ;; ---------------------------------------------------------------------------
 draw_static
     ; the HUD: the top of the sky, in one colour
@@ -170,12 +171,12 @@ draw_static_sky
     pop bc
     djnz draw_static_sky
 
-    ; the mountains, a line at a time (the last three are in the bottom half)
+    ; the mountains, a line at a time
     ld hl,MOUNT_TOP
     ld (ds_line),hl
     ld hl,mountains
     ld (ds_src),hl
-    ld b,MOUNT_BOTTOM-MOUNT_TOP
+    ld b,BLOCK_BOTTOM-MOUNT_TOP
 draw_static_mount
     push bc
     ld hl,(ds_line)
@@ -190,6 +191,13 @@ draw_static_mount
     ld (ds_line),hl
     pop bc
     djnz draw_static_mount
+
+    ; the ground between the mountains and the road (the road's own ground
+    ; lines go on from it when a crest hides the far road)
+    ld hl,BLOCK_BOTTOM
+    ld b,ROAD_Y-BLOCK_BOTTOM
+    ld de,SOLID_GROUND*#101
+    call fill_lines
 
     ; the labels
     ld ix,lbl_time
@@ -213,3 +221,4 @@ draw_static_mount
 
 ds_line     defw 0
 ds_src      defw 0
+

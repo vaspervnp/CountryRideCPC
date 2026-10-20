@@ -2,7 +2,7 @@
 """Boot build/countryride.dsk on an emulated CPC 6128 and look at it.
 
     tools/run.py shots     screenshots into docs/
-    tools/run.py check     frame rate, and the road compared with scene.py
+    tools/run.py check     frame rate; the buffers and the split screen vs scene.py
     tools/run.py watch N   N seconds, a screenshot every second, in build/
 
 The emulator is floooh/chips' CPC (Z80, gate array, CRTC, PPI, FDC with
@@ -48,6 +48,9 @@ def load_emulator():
                                      ctypes.POINTER(ctypes.c_uint16)]
         lib.cpcemu_ticks.argtypes = [ctypes.c_void_p]
         lib.cpcemu_ticks.restype = ctypes.c_uint64
+        lib.cpcemu_crtc.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint8)]
+        lib.cpcemu_fb_ptr.argtypes = [ctypes.c_void_p]
+        lib.cpcemu_fb_ptr.restype = ctypes.c_void_p
         cpc._lib = lib
         cpc._debug = True
     return cpc
@@ -68,6 +71,15 @@ def regs(c):
 def run_to(c, pc, max_instr=10000000):
     import cpc
     return cpc._lib.cpcemu_run_to(c._h, pc, max_instr)
+
+
+def crtc(c):
+    """The CRTC's VCC, RA, R5 line (None outside the R5 lines), display on."""
+    import ctypes
+    import cpc
+    buf = (ctypes.c_uint8 * 4)()
+    cpc._lib.cpcemu_crtc(c._h, buf)
+    return buf[0], buf[1], None if buf[2] == 0xFF else buf[2], bool(buf[3])
 
 
 def us(c):
@@ -204,7 +216,6 @@ def buffer_pens(g, buf, y0, y1):
 def road_model(g):
     """What scene.py says the road should be for the engine's inputs now."""
     import scene
-    from cpcgfx import MOUNT_BOTTOM
     zcam = g.word("ZCAM")
     hill = g.byte("HILL")
     hill = hill - 256 if hill > 127 else hill
@@ -212,9 +223,34 @@ def road_model(g):
     return scene.road_lines(hill, zcam), hill, zcam
 
 
+# Where line 0 of the picture is in the emulator's framebuffer (1024 x 312,
+# a hardware colour per byte, four bytes to a mode 0 pixel). Its monitor
+# shows 272 lines from 5 above ours, so the last 5 are off its screen.
+FB_X0, FB_Y0 = 0, 5
+FB_LINES = 272 - FB_Y0
+
+
+def on_screen(g):
+    """The picture the emulator last showed: FB_LINES lines of 192 hardware
+    colours."""
+    fb = g.c.framebuffer()
+    return [[fb[(FB_Y0 + y) * 1024 + FB_X0 + 4 * x] for x in range(192)]
+            for y in range(FB_LINES)]
+
+
+def at_vsync(g):
+    """Run to the interrupt inside VSYNC, before it starts the next frame:
+    the framebuffer then holds a whole frame, and rup_base and rup_drop say
+    how it was split."""
+    while True:
+        run_to(g.c, g.sym["ISR"])
+        if g.byte("IRQ_PHASE") == 5:
+            return
+
+
 def cmd_check():
     import scene
-    from cpcgfx import MOUNT_BOTTOM, SCR_H
+    from cpcgfx import ROAD_Y, SCR_H, pen_hw
     g = Game()
     frames, vbls, late = fps(g, 10)
     print("%d pictures in %d VSYNCs: %.2f pictures/s, %d late"
@@ -227,8 +263,8 @@ def cmd_check():
         run_to(g.c, g.sym["RENDER_END"])
         buf = g.byte("ROAD_BUF")
         want, hill, zcam = road_model(g)
-        got = buffer_pens(g, buf, MOUNT_BOTTOM, SCR_H)
-        wrong = [MOUNT_BOTTOM + i for i in range(len(want)) if want[i] != got[i]]
+        got = buffer_pens(g, buf, ROAD_Y, SCR_H)
+        wrong = [ROAD_Y + i for i in range(len(want)) if want[i] != got[i]]
         seen.add(hill)
         if wrong:
             bad += 1
@@ -261,9 +297,9 @@ def cmd_check():
                     fuel=g.game_byte("SHOWN_FUEL", buf))
         lag = abs(vals["speed_level"] - g.game_byte("SPEED_LEVEL"))
         worst_lag = max(worst_lag, lag)
-        want = scene.screen(**vals)[:MOUNT_BOTTOM]
-        got = buffer_pens(g, buf, 0, MOUNT_BOTTOM)
-        wrong = [y for y in range(MOUNT_BOTTOM) if want[y] != got[y]]
+        want = scene.memory(**vals)[:ROAD_Y]
+        got = buffer_pens(g, buf, 0, ROAD_Y)
+        wrong = [y for y in range(ROAD_Y) if want[y] != got[y]]
         if wrong:
             hud_bad += 1
             if hud_bad <= 3:
@@ -271,7 +307,29 @@ def cmd_check():
                       % (n, buf, vals, wrong[:8]))
     print("HUD and horizon check: %d of 20 pictures differ from scene.py "
           "(speed gauge at most %d segments behind)" % (hud_bad, worst_lag))
-    return 1 if bad or hud_bad else 0
+
+    # What the CRTC made of the buffer on screen: the split frame, with the
+    # horizon as far down as the buffer's road asked for.
+    scr_bad = 0
+    drops = set()
+    for n in range(300):
+        at_vsync(g)
+        buf = 0 if g.byte("RUP_BASE") == g.sym["BUF0_R12"] else 1
+        drop = g.byte("RUP_DROP")
+        drops.add(drop)
+        want = [[pen_hw(p) for p in row]
+                for row in scene.shown(buffer_pens(g, buf, 0, SCR_H), drop)]
+        got = on_screen(g)
+        wrong = [y for y in range(FB_LINES) if want[y] != got[y]]
+        if wrong:
+            scr_bad += 1
+            if scr_bad <= 3:
+                print("frame %d (buffer %d, drop %d): lines %s differ"
+                      % (n, buf, drop, wrong[:8]))
+        g.c.run_frames(1)
+    print("screen check: %d of 300 frames differ from the buffer split as "
+          "scene.py says; drops seen %s" % (scr_bad, sorted(drops)))
+    return 1 if bad or hud_bad or scr_bad else 0
 
 
 def cmd_watch(n):

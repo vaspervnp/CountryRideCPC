@@ -20,10 +20,21 @@ frag0_start
 
 ;; --- frame timing -----------------------------------------------------------
 vbl_count   defb 0          ; +1 at every VSYNC (50 Hz)
-irq_phase   defb 0          ; interrupts since the last VSYNC
+irq_phase   defb IRQ_LOST   ; interrupts since the last VSYNC (IRQ_LOST + n:
+                            ; not in step with the frame yet)
 flip_req    defb 0          ; R12 for the next VSYNC to show, 0 = none
+flip_drop   defb 0          ; ... and how far its horizon is down
 flip_last   defb 0          ; vbl_count when the last flip happened
 front_buf   defb 0          ; buffer being shown (0/1)
+
+;; --- the split of the frame being shown (see rup_frame) ---------------------
+rup_base    defb BUF0_R12   ; R12 of the buffer shown
+rup_drop    defb 0          ; lines the horizon is down
+rup_r5a     defb 0          ; R5 of the HUD part
+rup_r5b     defb 0          ; R5 of the sky part
+rup_r4c     defb TOTAL_ROWS-BLOCK_ROW-1 ; R4 of the road part
+rup_r6c     defb CRTC_R7-BLOCK_ROW      ; R6 and R7 of the road part
+rup_c       defw 0          ; R13, R12 of the road part
 
 ;; --- road engine inputs ---------------------------------------------------
 zcam        defw 0          ; camera depth, 16 depth units = one stripe
@@ -55,17 +66,21 @@ frame_vbls   defb 0         ; VSYNCs the last picture took
 ;; isr - six interrupts a frame, one of them inside VSYNC.
 ;;
 ;; The one inside VSYNC is recognised by reading PPI port B, and is the top
-;; of the frame: vbl_count ticks, and a pending flip is made. Writing R12 here
-;; - during VSYNC, below the last displayed row - means the CRTC takes it at
-;; the start of the next frame, on every CRTC type. The flip waits for two
-;; VSYNCs since the last one, which is what holds the game to 25 pictures a
-;; second when it could draw faster.
+;; of the frame: vbl_count ticks, and a pending flip is made. The flip waits
+;; for two VSYNCs since the last one, which is what holds the game to 25
+;; pictures a second when it could draw faster.
+;;
+;; The frame is split into three by raster ruptures (hw.asm), and each
+;; interrupt sets the CRTC up for the parts coming next: rup_frame at the
+;; VSYNC, rup_phase at the five others. The Gate Array's interrupts come at
+;; fixed lines - 2 after the VSYNC starts and every 52 after that - so each
+;; knows where the beam is.
 ;;
 ;; The road renderer runs with interrupts off while SP points into the
-;; screen, and turns them on for a moment between lines, so this can arrive
-;; up to one road line late (~0.3 ms, five scanlines) - still inside the
-;; eight-line VSYNC. In case it ever is not, six interrupts without a VSYNC
-;; count as a frame too.
+;; screen, and turns them on for a moment between lines, so an interrupt can
+;; arrive up to one road line late (~0.3 ms, five scanlines). Every CRTC
+;; write here has more slack than that. In case the VSYNC is ever missed, six
+;; interrupts without one count as a frame too.
 ;; ---------------------------------------------------------------------------
 isr
     ld (isr_sp+1),sp            ; the road renderer may have SP in its line
@@ -77,44 +92,10 @@ isr
     in a,(c)
     rra
     jr nc,isr_mid
-
-    xor a
-    ld (irq_phase),a
-    ld hl,vbl_count
-    inc (hl)
-    ld a,(flip_req)
-    or a
-    jr z,isr_out
-    ld a,(hl)
-    ld hl,flip_last
-    sub (hl)
-    cp 2
-    jr c,isr_out                ; not two frames yet
-    ld a,(vbl_count)
-    ld (hl),a
-    ld bc,#BC0C                 ; R12 = flip_req
-    out (c),c
-    ld a,(flip_req)
-    ld b,#BD
-    out (c),a
-    ld bc,#BC0D                 ; R13 is the same for both buffers
-    out (c),c
-    ld bc,#BD00+BUF_R13
-    out (c),c
-    xor a
-    ld (flip_req),a
+    call rup_vsync
     jr isr_out
-
 isr_mid
-    ld hl,irq_phase
-    inc (hl)
-    ld a,(hl)
-    cp 6
-    jr c,isr_out
-    ld (hl),0                   ; six without a VSYNC: count a frame, but
-    ld hl,vbl_count             ; never flip here - only inside VSYNC is it
-    inc (hl)                    ; known where the beam is
-
+    call rup_mid
 isr_out
     pop hl
     pop bc
@@ -124,7 +105,7 @@ isr_sp
     ei
     reti
 
-    defs 16,0
+    defs 24,0
 isr_stack
 
 frag0_end
@@ -155,6 +136,247 @@ road_reset
     SET_RAM RAM_C6
     call road_init
     SET_RAM RAM_C1
+    ret
+
+;; ---------------------------------------------------------------------------
+;; The raster ruptures (hw.asm has the layout). Called by the interrupt
+;; handler; may use AF, BC and HL only.
+;;
+;; rup_vsync - the interrupt inside VSYNC, line ~274: the top of a frame.
+;; ---------------------------------------------------------------------------
+rup_vsync
+    ld hl,vbl_count
+    inc (hl)
+    ld a,(irq_phase)
+    cp 5
+    jr z,rup_vsync_in_step
+    cp IRQ_LOST
+    jr nc,rup_vsync_in_step     ; the first VSYNC: from here on in step
+    call rup_safe               ; a VSYNC where there should be none: the
+    ld a,IRQ_LOST               ; frame is not what it was set up to be
+    ld (irq_phase),a
+    ret
+rup_vsync_in_step
+    xor a
+    ld (irq_phase),a
+    ld a,(flip_req)             ; a picture waiting, and two frames since the
+    or a                        ; last: show it from this frame on
+    jr z,rup_frame
+    ld a,(hl)
+    ld hl,flip_last
+    sub (hl)
+    cp 2
+    jr c,rup_frame
+    ld a,(vbl_count)
+    ld (hl),a
+    ld a,(flip_req)
+    ld (rup_base),a
+    ld a,(flip_drop)
+    ld (rup_drop),a
+    xor a
+    ld (flip_req),a
+    jr rup_frame
+
+;; rup_mid - the other five interrupts
+rup_mid
+    ld hl,irq_phase
+    inc (hl)
+    ld a,(hl)
+    cp IRQ_LOST
+    jr nc,rup_mid_lost
+    cp 6
+    jp c,rup_phase
+    call rup_safe               ; six without a VSYNC: back to a plain frame
+    ld a,IRQ_LOST
+    ld (irq_phase),a
+rup_mid_count
+    ld hl,vbl_count             ; and count a frame, so the game goes on
+    inc (hl)
+    ret
+rup_mid_lost
+    cp IRQ_LOST+6               ; waiting for a VSYNC: a frame every six
+    ret c
+    ld (hl),IRQ_LOST
+    jr rup_mid_count
+
+;; rup_safe - one plain full frame, whatever the beam is doing
+rup_safe
+    ld hl,rup_safe_regs
+rup_safe_reg
+    ld a,(hl)
+    cp #FF
+    ret z
+    ld b,#BC
+    out (c),a
+    inc hl
+    ld a,(hl)
+    inc hl
+    ld b,#BD
+    out (c),a
+    jr rup_safe_reg
+rup_safe_regs
+    defb 4,CRTC_R4, 5,0, 6,CRTC_R6, 7,CRTC_R7, #FF
+
+;; ---------------------------------------------------------------------------
+;; rup_frame - work out the frame's split from the drop of the buffer it
+;; shows, and start its HUD part.
+;; ---------------------------------------------------------------------------
+rup_frame
+    ld a,(rup_drop)
+    ld (rup_r5a),a              ; the HUD part: R5 = drop lines of border
+    neg
+    and 7
+    ld (rup_r5b),a              ; the sky part: what brings the road onto a row
+    ld a,(rup_drop)
+    add a,7
+    rrca
+    rrca
+    rrca
+    and #1F
+    ld c,a                      ; C = q: the road starts at row BLOCK_ROW + q
+    ld a,TOTAL_ROWS-BLOCK_ROW-1
+    sub c
+    ld (rup_r4c),a
+    ld a,CRTC_R7-BLOCK_ROW
+    sub c
+    ld (rup_r6c),a
+    ld a,c                      ; the road part starts (BLOCK_ROW + q) * 48
+    add a,BLOCK_ROW             ; characters into the buffer
+    ld l,a
+    ld h,0
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld b,h
+    ld c,l
+    add hl,hl
+    add hl,bc
+    ld a,l
+    add a,BUF_R13
+    ld (rup_c),a
+    ld a,(rup_base)
+    adc a,h
+    and #3F
+    ld (rup_c+1),a
+
+    ld bc,#BC00+12              ; the HUD part starts with the buffer
+    out (c),c
+    ld a,(rup_base)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+13
+    out (c),c
+    ld bc,#BD00+BUF_R13
+    out (c),c
+    ld bc,#7F10                 ; navy border for the lines above the sky
+    out (c),c
+    ld c,BORDER_TOP_HW
+    out (c),c
+    ret
+
+    ASSERT HUD_ROWS*8 == HUD_H
+    ASSERT BLOCK_ROW*8 == BLOCK_BOTTOM
+
+;; rup_phase - the other interrupts, A = 1..5
+rup_phase
+    dec a
+    jr z,rup_hud
+    dec a
+    jr z,rup_sky
+    dec a
+    jp z,rup_road
+    dec a
+    ret z
+
+    ; 5, line ~222, in the road part: its size, and the VSYNC at line 272
+    ld bc,#BC00+4
+    out (c),c
+    ld a,(rup_r4c)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+5
+    out (c),c
+    ld bc,#BD00
+    out (c),c
+    ld bc,#BC00+6
+    out (c),c
+    ld a,(rup_r6c)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+7
+    out (c),c
+    ld b,#BD
+    out (c),a
+    ret
+
+    ; 1, line ~14, in the HUD part: its size and R5 lines, no VSYNC; where
+    ; the sky part starts
+rup_hud
+    ld bc,#BC00+4
+    out (c),c
+    ld bc,#BD00+HUD_ROWS-1
+    out (c),c
+    ld bc,#BC00+5
+    out (c),c
+    ld a,(rup_r5a)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+6               ; the R5 lines, one row past the last, are
+    out (c),c                   ; border
+    ld bc,#BD00+HUD_ROWS
+    out (c),c
+    ld bc,#BC00+7
+    out (c),c
+    ld bc,#BD7F
+    out (c),c
+    ld bc,#BC00+12
+    out (c),c
+    ld a,(rup_base)
+    add a,hi(HUD_ROWS*48)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+13
+    out (c),c
+    ld bc,#BD00+BUF_R13+lo(HUD_ROWS*48)
+    out (c),c
+    ret
+    ASSERT BUF_R13+lo(HUD_ROWS*48) < 256
+
+    ; 2, line ~66, after the HUD part's last row: the sky part's size
+rup_sky
+    ld bc,#BC00+4
+    out (c),c
+    ld bc,#BD00+SKY_ROWS-1
+    out (c),c
+    ld bc,#BC00+6
+    out (c),c
+    ld bc,#BD00+SKY_ROWS
+    out (c),c
+    ret
+
+    ; 3, line ~118, after the HUD part's R5 lines: the sky part's R5 lines,
+    ; where the road part starts, the border below the mountains
+rup_road
+    ld bc,#BC00+5
+    out (c),c
+    ld a,(rup_r5b)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+12
+    out (c),c
+    ld a,(rup_c+1)
+    ld b,#BD
+    out (c),a
+    ld bc,#BC00+13
+    out (c),c
+    ld a,(rup_c)
+    ld b,#BD
+    out (c),a
+    ld bc,#7F10
+    out (c),c
+    ld c,BORDER_LOW_HW
+    out (c),c
     ret
 
 frag1_end

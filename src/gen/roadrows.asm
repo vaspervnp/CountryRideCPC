@@ -10,7 +10,7 @@
 ;; FAR_Z: a longer dash, and band 0's or band 2's template.
     ALIGN 256
 rr_tlo   ; band 0 template, low byte
-    defb lo(tmpl_ground),lo(tmpl_0_0),lo(tmpl_0_1),lo(tmpl_0_1),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_3),lo(tmpl_0_3)
+    defb lo(tmpl_ground),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_2),lo(tmpl_0_3),lo(tmpl_0_3)
     defb lo(tmpl_0_4),lo(tmpl_0_4),lo(tmpl_0_5),lo(tmpl_0_5),lo(tmpl_0_6),lo(tmpl_0_6),lo(tmpl_0_6),lo(tmpl_0_7)
     defb lo(tmpl_0_7),lo(tmpl_0_8),lo(tmpl_0_8),lo(tmpl_0_9),lo(tmpl_0_9),lo(tmpl_0_10),lo(tmpl_0_10),lo(tmpl_0_11)
     defb lo(tmpl_0_11),lo(tmpl_0_11),lo(tmpl_0_12),lo(tmpl_0_12),lo(tmpl_0_13),lo(tmpl_0_13),lo(tmpl_0_14),lo(tmpl_0_14)
@@ -58,7 +58,7 @@ rr_mask   ; 16; 32, 64, 128 past FAR_Z; 0 for the ground
     defb 16,16,16,16,16,16
     ALIGN 256
 rr_thi   ; band 0 template, high byte
-    defb hi(tmpl_ground),hi(tmpl_0_0),hi(tmpl_0_1),hi(tmpl_0_1),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_3),hi(tmpl_0_3)
+    defb hi(tmpl_ground),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_2),hi(tmpl_0_3),hi(tmpl_0_3)
     defb hi(tmpl_0_4),hi(tmpl_0_4),hi(tmpl_0_5),hi(tmpl_0_5),hi(tmpl_0_6),hi(tmpl_0_6),hi(tmpl_0_6),hi(tmpl_0_7)
     defb hi(tmpl_0_7),hi(tmpl_0_8),hi(tmpl_0_8),hi(tmpl_0_9),hi(tmpl_0_9),hi(tmpl_0_10),hi(tmpl_0_10),hi(tmpl_0_11)
     defb hi(tmpl_0_11),hi(tmpl_0_11),hi(tmpl_0_12),hi(tmpl_0_12),hi(tmpl_0_13),hi(tmpl_0_13),hi(tmpl_0_14),hi(tmpl_0_14)
@@ -74,7 +74,7 @@ rr_thi   ; band 0 template, high byte
     defb hi(tmpl_0_48),hi(tmpl_0_48),hi(tmpl_0_49),hi(tmpl_0_49),hi(tmpl_0_50),hi(tmpl_0_50)
     ALIGN 256
 rr_tlo2   ; far rows: band 2 template, low byte
-    defb lo(tmpl_ground),lo(tmpl_2_0),lo(tmpl_2_1),lo(tmpl_2_1),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_3),lo(tmpl_2_3)
+    defb lo(tmpl_ground),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_2),lo(tmpl_2_3),lo(tmpl_2_3)
     defb lo(tmpl_2_4),lo(tmpl_2_4),lo(tmpl_2_5),lo(tmpl_2_5),lo(tmpl_2_6),lo(tmpl_2_6),lo(tmpl_2_6),lo(tmpl_2_7)
     defb lo(tmpl_2_7),lo(tmpl_2_8),lo(tmpl_2_8),lo(tmpl_2_9),lo(tmpl_2_9),lo(tmpl_2_10),0,0
     defb 0,0,0,0,0,0,0,0
@@ -226,7 +226,7 @@ level_near
     defb 84,84,84,84,84,84,84,84,84,84,84,84,84,84,84,84
     ALIGN 256
 rr_thi2   ; far rows: band 2 template, high byte
-    defb hi(tmpl_ground),hi(tmpl_2_0),hi(tmpl_2_1),hi(tmpl_2_1),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_3),hi(tmpl_2_3)
+    defb hi(tmpl_ground),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_2),hi(tmpl_2_3),hi(tmpl_2_3)
     defb hi(tmpl_2_4),hi(tmpl_2_4),hi(tmpl_2_5),hi(tmpl_2_5),hi(tmpl_2_6),hi(tmpl_2_6),hi(tmpl_2_6),hi(tmpl_2_7)
     defb hi(tmpl_2_7),hi(tmpl_2_8),hi(tmpl_2_8),hi(tmpl_2_9),hi(tmpl_2_9),hi(tmpl_2_10),0,0
     defb 0,0,0,0,0,0,0,0

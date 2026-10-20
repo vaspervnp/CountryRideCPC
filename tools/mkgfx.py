@@ -52,8 +52,9 @@ def consts():
     emit("")
     emit(";; screen and road geometry")
     for name in ("SCR_W", "SCR_BYTES", "SCR_H", "TOP_ROWS", "HUD_H",
-                 "MOUNT_BOTTOM", "ROAD_TOP_MIN", "ROAD_TOP_MAX", "ROAD_LINES",
-                 "ROWS", "HORIZON_Y", "HALF_MAX", "BAND_SHIFT", "FAR_Z"):
+                 "BLOCK_BOTTOM", "ROAD_Y", "ROAD_TOP_MIN", "ROAD_TOP_MAX",
+                 "ROAD_LINES", "ROWS", "HORIZON_Y", "HALF_MAX", "MIN_HALF",
+                 "BAND_SHIFT", "FAR_Z"):
         emit("%-13s EQU %d" % (name, getattr(G, name)))
     far = max(r for r in range(1, G.ROWS + 1) if G.row_depth(r) > G.FAR_Z)
     emit("FAR_ROW       EQU %d   ; rows 1..FAR_ROW are past FAR_Z" % far)
@@ -61,6 +62,11 @@ def consts():
          % S.mountains_top())
     emit("")
     emit("BORDER_HW     EQU #%02X" % (0x40 + G.FIRMWARE[G.BORDER_FW][0]))
+    emit(";; the border where the ruptures show it: above the sky, below the")
+    emit(";; mountains")
+    emit("BORDER_TOP_HW EQU #%02X" % (0x40 + G.pen_hw(S.BORDER_TOP)))
+    emit("BORDER_LOW_HW EQU #%02X" % (0x40 + G.pen_hw(S.BORDER_LOW)))
+    emit("SOLID_GROUND  EQU #%02X" % G.m0_solid(G.GROUND_PEN))
     return lines
 
 
@@ -202,12 +208,20 @@ def gfx():
         emit("    defb " + ",".join("#%02X" % v for v in prof[i:i + 16]))
     emit("")
 
-    # mountains: the first 192 pixels of the panorama, raw
+    lines += horizon(top)
+    return lines
+
+
+def horizon(top):
+    """The mountains: the first 192 pixels of the panorama, over the sky."""
+    lines = []
+    emit = lines.append
     t, rows = S.horizon_panorama()
     assert t == top
-    emit(";; mountain strip, lines %d..%d, 96 bytes each" % (top, G.MOUNT_BOTTOM - 1))
+    emit(";; mountain strip, lines %d..%d, 96 bytes each" % (top, G.BLOCK_BOTTOM - 1))
     emit("mountains")
     defb_rows(emit, encode_rows([r[:G.SCR_W] for r in rows]))
+    emit("")
     return lines
 
 

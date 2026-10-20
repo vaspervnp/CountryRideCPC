@@ -10,14 +10,6 @@ GRASS1_PAIR EQU #C3C3
 
 ;; How wide (pairs) and how far right of the centre (bytes) each
 ;; variant reaches, for when the road is not centred
-rc_0_0_0_NP EQU 1
-rc_0_0_0_H  EQU 1
-rc_0_0_1_NP EQU 2
-rc_0_0_1_H  EQU 1
-rc_0_1_0_NP EQU 2
-rc_0_1_0_H  EQU 2
-rc_0_1_1_NP EQU 3
-rc_0_1_1_H  EQU 2
 rc_0_2_0_NP EQU 3
 rc_0_2_0_H  EQU 3
 rc_0_2_1_NP EQU 4
@@ -214,14 +206,6 @@ rc_0_50_0_NP EQU 58
 rc_0_50_0_H  EQU 58
 rc_0_50_1_NP EQU 59
 rc_0_50_1_H  EQU 58
-rc_1_0_0_NP EQU 1
-rc_1_0_0_H  EQU 1
-rc_1_0_1_NP EQU 2
-rc_1_0_1_H  EQU 1
-rc_1_1_0_NP EQU 2
-rc_1_1_0_H  EQU 2
-rc_1_1_1_NP EQU 3
-rc_1_1_1_H  EQU 2
 rc_1_2_0_NP EQU 3
 rc_1_2_0_H  EQU 3
 rc_1_2_1_NP EQU 4
@@ -418,14 +402,6 @@ rc_1_50_0_NP EQU 58
 rc_1_50_0_H  EQU 58
 rc_1_50_1_NP EQU 59
 rc_1_50_1_H  EQU 58
-rc_2_0_0_NP EQU 1
-rc_2_0_0_H  EQU 1
-rc_2_0_1_NP EQU 2
-rc_2_0_1_H  EQU 1
-rc_2_1_0_NP EQU 2
-rc_2_1_0_H  EQU 2
-rc_2_1_1_NP EQU 3
-rc_2_1_1_H  EQU 2
 rc_2_2_0_NP EQU 3
 rc_2_2_0_H  EQU 3
 rc_2_2_1_NP EQU 4

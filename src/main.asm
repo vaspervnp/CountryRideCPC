@@ -12,7 +12,7 @@
 ;;   BOOT.BIN   base   (#4000)  takes the machine over, then the common
 ;;                              memory fragments it copies into place
 ;;
-;; Build: make (see Makefile). docs/DESIGN.md describes the memory plan.
+;; Build: make (see Makefile). README.md describes the memory plan.
 ;; ===========================================================================
 
     INCLUDE "hw.asm"
@@ -64,8 +64,10 @@ game_bank_start
     jp game_start
     INCLUDE "gen/consts_data.asm"
     INCLUDE "gen/gfx.asm"
+    INCLUDE "gen/roadground.asm"
     INCLUDE "game.asm"
     INCLUDE "hud.asm"
+    INCLUDE "horizon.asm"
     INCLUDE "screen.asm"
 game_bank_end
     ASSERT game_bank_end <= #10000

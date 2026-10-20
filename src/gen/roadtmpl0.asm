@@ -6,8 +6,6 @@
 ;;   F: bit 7 (S) = band B registers, bit 6 (Z) = no exit patch.
 
 tmpl_band0
-tmpl_0_0  defw rc_0_0_1+0,lgrassa+25,patch_dummy,#1940
-tmpl_0_1  defw rc_0_1_0+0,lgrassa+25,patch_dummy,#1940
 tmpl_0_2  defw rc_0_2_1+0,lgrassa+26,patch_dummy,#1A40
 tmpl_0_3  defw rc_0_3_0+0,lgrassa+26,patch_dummy,#1A40
 tmpl_0_4  defw rc_0_4_1+0,lgrassa+27,patch_dummy,#1B40
@@ -60,8 +58,6 @@ tmpl_0_50  defw rc_0_50_0+5,lgrassa+48,rc_0_50_0+65,#3000
 
 ;; band 2 - far away: band A's grass and asphalt, band B's
 ;; markings - drawn with band A's registers
-tmpl_2_0  defw rc_2_0_1+0,lgrassa+25,patch_dummy,#1940
-tmpl_2_1  defw rc_2_1_0+0,lgrassa+25,patch_dummy,#1940
 tmpl_2_2  defw rc_2_2_1+0,lgrassa+26,patch_dummy,#1A40
 tmpl_2_3  defw rc_2_3_0+0,lgrassa+26,patch_dummy,#1A40
 tmpl_2_4  defw rc_2_4_1+0,lgrassa+27,patch_dummy,#1B40

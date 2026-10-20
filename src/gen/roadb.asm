@@ -3,22 +3,6 @@
 ;; rc_<band>_<half>_<parity>: the code; _e: one byte per pair,
 ;; the offset of that pair's code, then the offset of the end.
 
-rc_1_0_0
-    defb #01,#96,#69,#C5,#D9,#08,#DD,#E9
-rc_1_0_0_e
-    defb 0,4
-rc_1_0_1
-    defb #01,#69,#C3,#C5,#01,#C3,#96,#C5,#D9,#08,#DD,#E9
-rc_1_0_1_e
-    defb 0,4,8
-rc_1_1_0
-    defb #01,#3F,#69,#C5,#01,#96,#3F,#C5,#D9,#08,#DD,#E9
-rc_1_1_0_e
-    defb 0,4,8
-rc_1_1_1
-    defb #01,#69,#C3,#C5,#D5,#01,#C3,#96,#C5,#D9,#08,#DD,#E9
-rc_1_1_1_e
-    defb 0,4,5,9
 rc_1_2_0
     defb #01,#3F,#69,#C5,#D5,#01,#96,#3F,#C5,#D9,#08,#DD,#E9
 rc_1_2_0_e

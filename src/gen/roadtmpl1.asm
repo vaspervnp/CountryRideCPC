@@ -6,8 +6,6 @@
 ;;   F: bit 7 (S) = band B registers, bit 6 (Z) = no exit patch.
 
 tmpl_band1
-tmpl_1_0  defw rc_1_0_1+0,lgrassb+25,patch_dummy,#19C0
-tmpl_1_1  defw rc_1_1_0+0,lgrassb+25,patch_dummy,#19C0
 tmpl_1_2  defw rc_1_2_1+0,lgrassb+26,patch_dummy,#1AC0
 tmpl_1_3  defw rc_1_3_0+0,lgrassb+26,patch_dummy,#1AC0
 tmpl_1_4  defw rc_1_4_1+0,lgrassb+27,patch_dummy,#1BC0

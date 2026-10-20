@@ -15,7 +15,7 @@
 ;; same h/r a parabolic crest gives in perspective - so the near road hardly
 ;; moves, the far road drops away, and from the row where h/r grows faster
 ;; than r shrinks the road is hidden behind the crest. A negative h lifts the
-;; far road instead; it is cut off at MOUNT_BOTTOM, which is never covered.
+;; far road instead; it is cut off at ROAD_Y, the top of the road area.
 ;; Lines no row reaches show the ground. Which row each line shows is worked
 ;; out by tools/mkroad.py for every even h and kept in bank 6: one byte per
 ;; line, so a hill costs road_project nothing that a flat road does not.
@@ -76,9 +76,8 @@ road_init_loop
 ;;
 ;; Lines that cannot have changed since this buffer was last drawn are left
 ;; off the end of the list - it runs from the bottom line up, and what does
-;; not change is at the top: the ground behind a crest, and with the same
-;; hill as last time also the far rows, which have no stripes. The end marker
-;; goes in after the last line that is drawn.
+;; not change is at the top: the ground behind a crest. The end marker goes
+;; in after the last line that is drawn.
 ;; Destroys everything.
 ;; ---------------------------------------------------------------------------
 road_project

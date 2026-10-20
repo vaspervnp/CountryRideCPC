@@ -112,22 +112,25 @@ SCR_BYTES = 96
 SCR_H = 272
 TOP_ROWS = 20               # character rows held in the first 16K page
 
+# As drawn in memory (the screen is split by raster ruptures - see hw.asm -
+# which moves the sky and the mountains down with the road):
 HUD_H = 64                  # lines 0..63: the HUD on its single-colour ground
-MOUNT_BOTTOM = 163          # 3/5 of 272: the mountains always end here
+BLOCK_BOTTOM = 152          # lines 64..151: the sky and the mountains, 11 rows
+ROAD_Y = 163                # lines 152..162: ground; 163..271: the road area
 ROAD_TOP_MIN = 163          # road 2/5 of the screen at most ...
 ROAD_TOP_MAX = 181          # ... and 1/3 at least
-ROAD_LINES = SCR_H - MOUNT_BOTTOM   # 109 scanlines redrawn every frame
+ROAD_LINES = SCR_H - ROAD_Y         # 109 scanlines redrawn every frame
 
 # ---------------------------------------------------------------------------
 # The road.
 #
 # Flat road: screen line y (163..271) shows row r = y - 162, so r runs from
 # 1 (furthest) to 109 (nearest). A row's half-width grows linearly with r.
-# Hills move rows up and down the screen; see src/road/project.asm.
+# Hills move rows up and down the screen; see src/road.asm.
 # ---------------------------------------------------------------------------
 
 ROWS = ROAD_LINES           # 109 rows
-HORIZON_Y = MOUNT_BOTTOM - 1  # row r sits on line HORIZON_Y + r when flat
+HORIZON_Y = ROAD_Y - 1      # row r sits on line HORIZON_Y + r when flat
 
 LANES = 4
 LANE_W_BOTTOM = 50          # pixels per lane on the bottom line (car is 45)
@@ -135,14 +138,16 @@ KERB_BOTTOM = 16            # kerb width on the bottom line, pixels
 LINE_BOTTOM = 3             # lane line width on the bottom line, pixels
 MIN_LINE_ROW = 10           # rows further away than this have no lane lines
 
-# Asphalt half-width in bytes is the variant index of a row: 0..HALF_MAX.
+# Asphalt half-width in bytes is the variant index of a row: MIN_HALF..HALF_MAX.
 HALF_MAX = LANES * LANE_W_BOTTOM // 4      # 50 bytes = 100 pixels
+MIN_HALF = 2                # the road never narrows to a point: 8 pixels of
+                            # asphalt and two 1-pixel kerbs, 10 pixels at least
 
 
 def row_half_bytes(r):
     """Asphalt half-width of row r, in bytes (the road is centred on a byte
     boundary, so a half-width in bytes keeps it symmetric)."""
-    return (HALF_MAX * r + ROWS // 2) // ROWS
+    return max(MIN_HALF, (HALF_MAX * r + ROWS // 2) // ROWS)
 
 
 def kerb_px(half):

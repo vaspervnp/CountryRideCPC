@@ -20,9 +20,9 @@ speed_phase defw 0              ; where in the accelerate/cruise/brake cycle
 time_vbls   defb 50             ; VSYNCs left in the current second
 fuel_vbls   defw 0
 
-SPEED_MAX   EQU #0380           ; 3.5 depth units per VSYNC: a stripe in ~5
-SPEED_ACC   EQU 3               ; per VSYNC, 8.8 - full speed in ~6 s
-SPEED_BRK   EQU 6
+SPEED_MAX   EQU #0540           ; 5.25 depth units per VSYNC: a stripe in ~3
+SPEED_ACC   EQU 5               ; per VSYNC, 8.8 - full speed in ~5.4 s
+SPEED_BRK   EQU 9
 GEAR_STEP   EQU SPEED_MAX/6+1   ; speed per gear
 MAX_STEPS   EQU 4               ; 50 Hz steps caught up per picture at most
 
@@ -90,7 +90,10 @@ main_hud_kept
     ld a,(back_buf)
     call draw_picture
 
-    ; show it at the next VSYNC that keeps the 25 Hz cadence
+    ; show it at the next VSYNC that keeps the 25 Hz cadence, its horizon
+    ; as far down as its road's top
+    call picture_drop
+    ld (flip_drop),a
     ld a,(back_buf)
     or a
     ld a,BUF0_R12

@@ -42,3 +42,12 @@ void cpcemu_trace(void* h, uint32_t n, uint16_t* pcs) {
 
 // 4 MHz ticks spent in cpcemu_run_to/cpcemu_trace so far: timing
 uint64_t cpcemu_ticks(void* h) { (void)h; return dbg_ticks; }
+
+// The CRTC's counters, for checking the raster ruptures:
+// VCC, RA, R5 line count (0xFF when not in the R5 lines), display enable
+void cpcemu_crtc(void* h, uint8_t* o) {
+    mc6845_t* c = &((emu_t*)h)->cpc.crtc;
+    o[0] = c->v_ctr; o[1] = c->r_ctr;
+    o[2] = c->in_adj ? c->adj_ctr : 0xFF;
+    o[3] = c->v_de;
+}

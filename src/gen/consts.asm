@@ -42,16 +42,23 @@ SCR_BYTES     EQU 96
 SCR_H         EQU 272
 TOP_ROWS      EQU 20
 HUD_H         EQU 64
-MOUNT_BOTTOM  EQU 163
+BLOCK_BOTTOM  EQU 152
+ROAD_Y        EQU 163
 ROAD_TOP_MIN  EQU 163
 ROAD_TOP_MAX  EQU 181
 ROAD_LINES    EQU 109
 ROWS          EQU 109
 HORIZON_Y     EQU 162
 HALF_MAX      EQU 50
+MIN_HALF      EQU 2
 BAND_SHIFT    EQU 4
 FAR_Z         EQU 360
 FAR_ROW       EQU 21   ; rows 1..FAR_ROW are past FAR_Z
-MOUNT_TOP     EQU 117   ; first line of the mountain strip
+MOUNT_TOP     EQU 106   ; first line of the mountain strip
 
 BORDER_HW     EQU #54
+;; the border where the ruptures show it: above the sky, below the
+;; mountains
+BORDER_TOP_HW EQU #44
+BORDER_LOW_HW EQU #52
+SOLID_GROUND  EQU #03

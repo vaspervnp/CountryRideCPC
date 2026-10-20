@@ -3,10 +3,10 @@
 This is the reference the Z80 code is checked against and the source the
 generators take their data from:
 
-  * the HUD art (labels, digits, gauges) - tools/mkhud.py encodes it,
-  * the sky and the mountains           - tools/mkhorizon.py encodes them,
+  * the HUD art (labels, digits, gauges) - tools/mkgfx.py encodes it,
+  * the sky and the mountains           - tools/mkgfx.py encodes them,
   * the road                             - tools/mkroad.py compiles it, and
-    tools/check.py compares what the emulator shows with road_lines() here.
+    tools/run.py compares what the emulator shows with screen() here.
 
 Everything works in pen numbers on a 192x272 grid of mode 0 pixels.
 """
@@ -14,7 +14,8 @@ Everything works in pen numbers on a 192x272 grid of mode 0 pixels.
 import math
 import os
 
-from cpcgfx import (PEN, SCR_W, SCR_H, HUD_H, MOUNT_BOTTOM, ROWS, HORIZON_Y,
+from cpcgfx import (PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
+                    HORIZON_Y,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
                     row_half_bytes, row_depth, road_row_pixels, pen_rgb)
@@ -189,12 +190,12 @@ def hud(time_left=60, speed_level=10, gear="4", total_centis=8345, fuel=13):
 # Sky: an ordered dither from the HUD colour down to the haze.
 # ---------------------------------------------------------------------------
 
-SKY_STOPS = [  # (line, pen) - the gradient passes through these
-    (HUD_H, PEN["NAVY"]),
-    (HUD_H + 22, PEN["BLUE"]),
-    (HUD_H + 50, PEN["SKY"]),
-    (HUD_H + 76, PEN["PASTEL"]),
-    (MOUNT_BOTTOM - 4, PEN["HAZE"]),
+SKY_STOPS = [  # (line, pen) - the gradient passes through these. The first
+    (HUD_H + 8, PEN["NAVY"]),       # character row is plain navy, like the
+    (HUD_H + 22, PEN["BLUE"]),      # lines the ruptures put above it
+    (HUD_H + 40, PEN["SKY"]),
+    (HUD_H + 64, PEN["PASTEL"]),
+    (BLOCK_BOTTOM - 4, PEN["HAZE"]),
 ]
 BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
@@ -239,7 +240,7 @@ def _fractal(width, seed, amp):
 
 
 def _ridge(peaks, width, rough):
-    """Height above MOUNT_BOTTOM per x, and which peak owns each x."""
+    """Height above BLOCK_BOTTOM per x, and which peak owns each x."""
     h = [0.0] * width
     owner = [-1] * width
     for k, (px, ph, slope_l, slope_r) in enumerate(peaks):
@@ -281,20 +282,21 @@ def _ranges():
 def mountains_top():
     """First line of the strip that has any mountain in it."""
     hf, _, hn, _, _, _ = _ranges()
-    return MOUNT_BOTTOM - int(max(max(hf), max(hn))) - 2
+    return BLOCK_BOTTOM - int(max(max(hf), max(hn))) - 2
 
 
-def horizon_panorama(pens=None):
-    """Pens for lines mountains_top()..MOUNT_BOTTOM-1 of the panorama."""
+def mountain_rows(pens=None):
+    """The mountains alone, lines mountains_top()..BLOCK_BOTTOM-1 of the
+    panorama: pens, None where the sky shows through."""
     mp = dict(MOUNT_PENS, **(pens or {}))
     top = mountains_top()
     hf, of, hn, on, snow_rough, ridge_rough = _ranges()
     rows = []
-    for y in range(top, MOUNT_BOTTOM):
-        up = MOUNT_BOTTOM - y               # height of this line above the base
+    for y in range(top, BLOCK_BOTTOM):
+        up = BLOCK_BOTTOM - y               # height of this line above the base
         row = []
         for x in range(PANORAMA_W):
-            pen = sky_pen(x, y)
+            pen = None
             # far range: lit and shadowed faces, no snow
             if up <= hf[x]:
                 px, ph = FAR_PEAKS[of[x]][0], FAR_PEAKS[of[x]][1]
@@ -318,6 +320,19 @@ def horizon_panorama(pens=None):
             row.append(pen)
         rows.append(row)
     return top, rows
+
+
+def horizon_panorama(pens=None):
+    """Pens for lines mountains_top()..BLOCK_BOTTOM-1 of the panorama, the
+    mountains over the sky."""
+    top, rows = mountain_rows(pens)
+    return top, [[sky_pen(x, top + s) if p is None else p
+                  for x, p in enumerate(row)] for s, row in enumerate(rows)]
+
+
+def ground_lines(hill):
+    """Road lines at the top that no row reaches."""
+    return sum(1 for r in project(hill) if r is None)
 
 
 # ---------------------------------------------------------------------------
@@ -356,10 +371,10 @@ def level_hill(level):
 
 def project(hill, zcam=0):
     """Which row each road line shows: list of (row or None) for lines
-    MOUNT_BOTTOM..SCR_H-1, top to bottom. None means the distant ground.
+    ROAD_Y..SCR_H-1, top to bottom. None means the distant ground.
     Rows are laid down nearest first; a row that lands on or below the top
     of what is already drawn is hidden behind it."""
-    line_row = [None] * (SCR_H - MOUNT_BOTTOM)
+    line_row = [None] * (SCR_H - ROAD_Y)
     max_y = SCR_H
     for r in range(ROWS, 0, -1):
         y = HORIZON_Y + r + hill_offset(r, hill)
@@ -367,7 +382,7 @@ def project(hill, zcam=0):
             y = ROAD_TOP_MIN
         if y < max_y:
             for yy in range(y, max_y):
-                line_row[yy - MOUNT_BOTTOM] = r
+                line_row[yy - ROAD_Y] = r
             max_y = y
             if y == ROAD_TOP_MIN:
                 break
@@ -389,6 +404,7 @@ def road_line(r, band, cx=SCR_W // 2):
 
 
 def road_lines(hill, zcam):
+    """Lines ROAD_Y..SCR_H-1."""
     rows = project(hill, zcam)
     return [road_line(r, row_band(r, zcam) if r else 0) for r in rows]
 
@@ -398,18 +414,74 @@ def road_lines(hill, zcam):
 # ---------------------------------------------------------------------------
 
 
-def screen(hill=0, zcam=0, scroll=0, **hudvals):
+def memory(hill=0, zcam=0, **hudvals):
+    """The picture as it is in a screen buffer: HUD, sky and mountains,
+    the ground band, the road."""
     pens = hud(**hudvals)
     top, pano = horizon_panorama()
-    for y in range(HUD_H, MOUNT_BOTTOM):
+    for y in range(HUD_H, BLOCK_BOTTOM):
         if y < top:
             pens.append([sky_pen(x, y) for x in range(SCR_W)])
         else:
-            row = pano[y - top]
-            pens.append([row[(x + scroll) % PANORAMA_W] for x in range(SCR_W)])
+            pens.append(pano[y - top][:SCR_W])
+    pens += [[GROUND_PEN] * SCR_W for _ in range(BLOCK_BOTTOM, ROAD_Y)]
     pens += road_lines(hill, zcam)
     assert len(pens) == SCR_H
     return pens
+
+
+# ---------------------------------------------------------------------------
+# The horizon drops with the road. The screen is split by raster ruptures
+# into three: the HUD, the sky and mountains (lines HUD_H..BLOCK_BOTTOM-1 of
+# the buffer), and the road from a character row on (BLOCK_BOTTOM + 8q). To
+# move the sky and mountains down by `drop` lines, the HUD part gets `drop`
+# more lines, in the border colour - the HUD's navy - and the sky and
+# mountains part gets the lines that bring the road back onto a character
+# row, in the ground colour. With the drop equal to the road's ground, the
+# band of ground between the mountains and the road always has
+# ROAD_Y - BLOCK_BOTTOM lines.
+# ---------------------------------------------------------------------------
+
+BORDER_TOP = HUD_BG             # border colour above the sky ...
+BORDER_LOW = GROUND_PEN         # ... and below the mountains
+
+
+def ground_drop(hill):
+    """How far the horizon is down for a hill: the road's ground lines."""
+    return ground_lines(hill)
+
+
+def rupture_rows(drop):
+    """(lines in the HUD part, lines in the sky part, first road line) for
+    a drop."""
+    q = (drop + 7) // 8
+    return HUD_H + drop, BLOCK_BOTTOM - HUD_H + 8 * q - drop, BLOCK_BOTTOM + 8 * q
+
+
+def shown(mem, drop):
+    """What the CRTC shows of a buffer for a drop."""
+    hud_end, sky_lines, road_from = rupture_rows(drop)
+    out = []
+    for y in range(SCR_H):
+        if y < HUD_H:
+            out.append(mem[y])
+        elif y < hud_end:
+            out.append([BORDER_TOP] * SCR_W)
+        elif y < BLOCK_BOTTOM + drop:
+            out.append(mem[y - drop])
+        elif y < road_from:
+            out.append([BORDER_LOW] * SCR_W)
+        else:
+            out.append(mem[y])
+    return out
+
+
+def screen(hill=0, zcam=0, drop=None, **hudvals):
+    """The picture on the screen, the horizon down by `drop` lines (by
+    default as far as the road's ground goes)."""
+    if drop is None:
+        drop = ground_drop(hill)
+    return shown(memory(hill, zcam, **hudvals), drop)
 
 
 def to_image(pens, scale=True):
