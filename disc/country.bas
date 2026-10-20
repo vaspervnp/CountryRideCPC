@@ -1,0 +1,10 @@
+10 REM COUNTRY RIDE - loader
+20 REM The road engine goes in banks 4, 5 and 6, the game in bank 7: each
+30 REM is loaded at &4000 with that bank switched in over it.
+40 MODE 0:BORDER 0:FOR i=0 TO 15:INK i,0:NEXT
+50 MEMORY &3FFF
+60 OUT &7F00,&C4:LOAD"ROADA.BIN",&4000
+70 OUT &7F00,&C5:LOAD"ROADB.BIN",&4000
+75 OUT &7F00,&C6:LOAD"ROADC.BIN",&4000
+80 OUT &7F00,&C7:LOAD"GAME.BIN",&4000
+90 OUT &7F00,&C0:LOAD"BOOT.BIN",&4000:CALL &4000
