@@ -35,11 +35,6 @@ road_init
     ld a,#FF
     ld (rp_level),a
     ld (rp_level+1),a
-    ld hl,far_shown
-    ld de,far_shown+1
-    ld bc,2*FAR_SHOWN_LEN-1
-    ld (hl),a
-    ldir
     ld hl,list0
     ld b,hi(BOT0_BASE)
     call road_init_list
@@ -110,6 +105,8 @@ rp_buf
     ld b,0
     ld a,(hl)                           ; level this buffer was drawn with
     ld (hl),c
+    ld (rp_vars),hl
+    ld (rp_old_level),a
     cp #FF
     jr z,rp_skip_none                   ; nothing known
     ld hl,level_ground                  ; unchanged ground = min(old, new)
@@ -137,47 +134,6 @@ rp_skip_a
 rp_near_ok
     ld (rp_near),a
 
-    ; far_shown: what each far line of this buffer shows, for skipping the
-    ; ones that have not changed. Lines that were drawn as near rows since it
-    ; was written are not known: when the near part shrinks, forget them.
-    push bc
-    ld hl,far_shown
-    ld de,rp_last_near
-    ld a,(road_buf)
-    or a
-    jr z,rp_fs_buf
-    ld hl,far_shown+FAR_SHOWN_LEN
-    inc de
-rp_fs_buf
-    ld (rp_fs_base),hl
-    ld a,(rp_near)
-    ld c,a                              ; near now (as drawn)
-    ld a,(de)                           ; near last time (#FF: unknown -
-    cp ROAD_LINES                       ; then every line is)
-    jr c,rp_fs_known
-    ld a,ROAD_LINES
-rp_fs_known
-    ex de,hl
-    ld (hl),c
-    cp c
-    jr c,rp_fs_ok                       ; grew or the same: nothing turned far
-    jr z,rp_fs_ok
-    sub c
-    ld b,a                              ; lines c .. last-1 turned far
-    ld l,c
-    ld h,0
-    add hl,hl
-    ld de,(rp_fs_base)
-    add hl,de
-rp_fs_forget
-    ld (hl),#FF
-    inc hl
-    ld (hl),#FF
-    inc hl
-    djnz rp_fs_forget
-rp_fs_ok
-    pop bc
-
     ld hl,level_addr                    ; this level's line -> row table
     add hl,bc
     add hl,bc
@@ -190,13 +146,42 @@ rp_fs_ok
     ld (rp_zlo+1),a
     ld (rp_zlo2+1),a
     ld (rp_zlo3+1),a
-    ld a,(curve)                        ; the curve level's template set:
+    ld (rp_zlo4+1),a
+    ld (rp_zlo5+1),a
+    ld (rp_zlo6+1),a
+    ld a,(road_curve)                   ; the curve level's template set:
     add a,CURVE_K                       ; this many pages on
     ASSERT TMPL_SET == 512
     add a,a
     ld (rp_lvl+1),a
     ld (rp_lvl2+1),a
     ld (rp_lvl3+1),a
+    ld (rp_lvl4+1),a
+    ld (rp_lvl5+1),a
+
+    ; this buffer's last picture: its curve set (did it move?) and zcam
+    ld hl,(rp_vars)
+    inc hl
+    inc hl                              ; rp_set
+    ld e,(hl)
+    ld (hl),a
+    sub e
+    ld e,a
+    ld a,(rp_old_level)
+    inc a
+    jr nz,rp_known
+    inc e                               ; nothing known: as if it moved
+rp_known
+    ld a,e
+    ld (rp_moved),a                     ; 0: the same curve
+    inc hl
+    inc hl                              ; rp_zcam
+    ld a,(hl)
+    ld (rp_zold+1),a
+    ld (rp_zold2+1),a
+    ld a,(zcam)
+    ld (hl),a
+
     ld de,(rp_slot)
     ld a,(rp_near)
     or a
@@ -250,72 +235,71 @@ rp_second
 
 ;; Past FAR_Z the grass and the asphalt stay band A's; the kerbs and lane
 ;; dashes go on moving: band 0's template or band 2's, by a longer dash.
-;; Long dashes change seldom, so a far line whose template is what the
-;; buffer already shows gets the skip template - no pushes at all.
+;; Long dashes change seldom. When this buffer's last picture had the same
+;; curve level, a far line that shows the same row as it did then - always,
+;; if the hill is the same too - has changed only if its dash has: the bit
+;; of (depth + zcam) its mask picks is not what it was for the zcam of then.
+;; A line that has not changed gets the skip template - no pushes at all.
+
+;; A = (depth + zcam) AND mask (0: band 0), L = the row: write the line's
+;; template, step DE to the next entry's
+MACRO RP_FAR_TMPL lv
+    or a
+    ld h,hi(rr_tlo)
+    jr z,$+4
+    ld h,hi(rr_tlo2)
+    ld a,(hl)                           ; template, low byte
+    ld (de),a
+    inc e
+    inc h
+    inc h
+    inc h                               ; rr_thi / rr_thi2
+    ld a,(hl)                           ; template, high byte
+{lv}
+    add a,0                             ; + the curve level (self-modified)
+    ld (de),a
+    inc de
+    inc e
+    inc e
+MEND
+
 rp_far
-    ld a,(rp_near)
-    ld l,a
-    ld h,0
-    add hl,hl
-    push de
-    ld de,(rp_fs_base)
-    add hl,de
-    pop de
-    push hl
-    pop ix                              ; IX = far_shown entry of this line
     ld (rp_tail),de                     ; the end, if no far line is drawn
     ld a,(rp_near)
     ld l,a
     ld a,(rp_count)
     sub l
-    jr z,rp_done
+    jp z,rp_done
     exx
     ld b,a
     exx
+    ld a,(rp_moved)
+    or a
+    jp nz,rp_far_all
+    ld hl,(rp_vars)
+    ld a,(rp_old_level)
+    cp (hl)
+    jp nz,rp_far_hill
+
 rp_far_line
-    ld a,(bc)                           ; the row this line shows (0 = ground)
+    ld a,(bc)                           ; the row this line shows
     inc bc
     ld l,a
     ld h,hi(rr_depth)
     ld a,(hl)
+    ld ixl,a
 rp_zlo3
     add a,0                             ; + zcam (self-modified)
     inc h
-    and (hl)                            ; which half of the dash
-    ld h,hi(rr_tlo)
-    jr z,rp_far_a
-    ld h,hi(rr_tlo2)
-rp_far_a
-    ld a,(hl)                           ; template, low byte
-    ex af,af'
-    inc h
-    inc h
-    inc h                               ; rr_thi / rr_thi2
-    ld a,(hl)                           ; template, high byte
-rp_lvl3
-    add a,0                             ; + the curve level (self-modified)
-    cp (ix+1)
+    and (hl)                            ; which half of the dash now ...
+    ld ixh,a
+    ld a,ixl
+rp_zold
+    add a,0                             ; + zcam then (self-modified)
+    and (hl)                            ; ... and then
+    cp ixh
     jr nz,rp_far_new
-    ex af,af'
-    cp (ix+0)
-    jr z,rp_far_same
-    ex af,af'
-rp_far_new                              ; A = high byte, A' = low byte
-    ld (ix+1),a
-    inc e
-    ld (de),a
-    dec e
-    ex af,af'
-    ld (ix+0),a
-    ld (de),a
-    inc e
-    inc de
-    inc e
-    inc e
-    ld (rp_tail),de                     ; the list goes at least this far
-    jr rp_far_next
-rp_far_same
-    ld a,lo(tmpl_skip)
+    ld a,lo(tmpl_skip)                  ; the same
     ld (de),a
     inc e
     ld a,hi(tmpl_skip)
@@ -323,13 +307,108 @@ rp_far_same
     inc de
     inc e
     inc e
-rp_far_next
-    inc ix
-    inc ix
     exx
     dec b
     exx
     jr nz,rp_far_line
+    jp rp_done
+rp_far_new
+    ld a,ixh
+    RP_FAR_TMPL rp_lvl3
+    ld (rp_tail),de                     ; the list goes at least this far
+    exx
+    dec b
+    exx
+    jr nz,rp_far_line
+    jp rp_done
+
+;; the hill moved: a line still showing the row it showed then (by the old
+;; level's line -> row table, in IY) is checked as above, the others drawn
+rp_far_hill
+    ld l,a
+    ld h,0
+    add hl,hl
+    push de
+    ld de,level_addr
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    ld a,(rp_near)
+    ld l,a
+    ld h,0
+    add hl,de
+    push hl
+    pop iy                              ; the old table, at the first far line
+    pop de
+rp_far_hill_line
+    ld a,(bc)                           ; the row this line shows
+    inc bc
+    cp (iy+0)
+    inc iy
+    ld l,a
+    ld h,hi(rr_depth)
+    ld a,(hl)
+    jr nz,rp_far_hill_new               ; not the row of then
+    ld ixl,a
+rp_zlo5
+    add a,0                             ; + zcam (self-modified)
+    inc h
+    and (hl)
+    ld ixh,a
+    ld a,ixl
+rp_zold2
+    add a,0                             ; + zcam then (self-modified)
+    and (hl)
+    cp ixh
+    jr nz,rp_far_hill_dash
+    ld a,lo(tmpl_skip)                  ; the same
+    ld (de),a
+    inc e
+    ld a,hi(tmpl_skip)
+    ld (de),a
+    inc de
+    inc e
+    inc e
+    exx
+    dec b
+    exx
+    jr nz,rp_far_hill_line
+    jp rp_done
+rp_far_hill_new
+rp_zlo6
+    add a,0                             ; + zcam (self-modified)
+    inc h
+    and (hl)
+    jr rp_far_hill_draw
+rp_far_hill_dash
+    ld a,ixh
+rp_far_hill_draw
+    RP_FAR_TMPL rp_lvl5
+    ld (rp_tail),de
+    exx
+    dec b
+    exx
+    jr nz,rp_far_hill_line
+    jp rp_done
+
+;; the curve moved: every far line is drawn
+rp_far_all
+    ld a,(bc)
+    inc bc
+    ld l,a
+    ld h,hi(rr_depth)
+    ld a,(hl)
+rp_zlo4
+    add a,0                             ; + zcam (self-modified)
+    inc h
+    and (hl)
+    RP_FAR_TMPL rp_lvl4
+    exx
+    dec b
+    exx
+    jr nz,rp_far_all
+    ld (rp_tail),de
 
 ;; The end marker goes after the last line that is drawn: far lines that
 ;; are already right at the end of the list are not even looked at.
@@ -341,16 +420,18 @@ rp_done
     ret
 
 rp_level    defb #FF,#FF                ; hill level each buffer was drawn with
+rp_set      defb 0,0                    ; ... curve set (pages on)
+rp_zcam     defb 0,0                    ; ... zcam, low byte
+rp_vars     defw 0                      ; this buffer's rp_level entry
+rp_moved    defb 0                      ; 0: the same curve as then
+rp_old_level defb 0                     ; hill level then (#FF: none)
+    ASSERT rp_set == rp_level+2
+    ASSERT rp_zcam == rp_level+4
 rp_count    defb 0                     ; lines to draw
 rp_near     defb 0                     ; of which striped rows
 rp_slot     defw 0
-rp_last_near defb #FF,#FF               ; striped lines each buffer last had
-rp_fs_base  defw 0
 rp_tail     defw 0                      ; where the end marker goes
 
-FAR_SHOWN_LEN EQU 2*ROAD_LINES
-far_shown   EQU FRAG8                   ; per buffer, per line: the template on
-                                        ; screen if it was a far line, else #FFFF
 
 frag7_end
     ASSERT frag7_end <= FRAG7+FRAG_LEN

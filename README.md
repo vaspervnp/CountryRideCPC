@@ -132,9 +132,11 @@ row count and R5 lines.
   tears. The dithered sky repeats every word, so only the mountains seem to
   move.
 - **Timing.** The Gate Array interrupts come at fixed lines (~274, 14, 66,
-  118, 170, 222). Each register is written with more than five lines to
-  spare. If a frame is ever out of step, the handler falls back to a plain
-  frame until the next VSYNC.
+  118, 170, 222), and each handler sets up the next one's, so none has to
+  work out where the frame is. Each register is written with more than five
+  lines to spare. The VSYNC's handler checks that it is in VSYNC; if a frame
+  is ever out of step, the handler falls back to a plain frame until the
+  next VSYNC.
 
 ### Memory
 
@@ -183,8 +185,9 @@ Each frame:
 2. `road_draw` walks the list with the stack pointer, jumping into the
    generated code for each line.
 3. Lines that cannot have changed are skipped: the ground behind a crest,
-   and far lines whose dash has not moved. The list ends after the last line
-   that changed.
+   and far lines whose dash has not moved - told from the bit of
+   (depth + camera) the dash is, now and when the buffer was last drawn. The
+   list ends after the last line that changed.
 
 Hills move row *r* down (on a crest) or up (in a dip) by *h / r* lines, with
 occlusion behind a crest. The line-to-row mapping is precomputed for 128 hill
@@ -210,28 +213,31 @@ Far away, a row moves a lot from row to row, so the 7 furthest rows have a
 template each; nearer, the rows of one width share one.
 
 When the level changes, every far line moves and is drawn again (~2.5 ms).
-That picture leaves its HUD changes and the sky's turn to the next one, so
-it keeps to its 40 ms.
+That picture leaves its HUD changes and the sky's turn to the next one, and
+a picture that starts with the sky turning keeps its buffer's level for one
+more picture, so the two never fall on the same picture.
 
 ### The HUD
 
 The HUD shows a copy of the game's values, taken every 4 pictures (6.25 times
 a second). The gauges have 8 segments. Each buffer remembers what it shows.
-Only what changed is redrawn, within a share of about 1.1 ms a picture; the
-rest waits for the buffer's next picture. Text and gauges sit on the HUD's
+Only what changed is redrawn, within a share of about 1.1 ms a picture (a
+third of that after a flip that turned the sky); the rest waits for the
+buffer's next picture. Text and gauges sit on the HUD's
 plain background, so drawing is plain copying, never masking.
 
 ### Timing
 
-Measured in the emulator through the demo's crests, dips and curves, a
-picture takes about 33.7 ms of its 40 ms budget (37.7 ms at worst):
+Measured in the emulator through the demo's crests, dips and curves, from
+the flip that starts a picture to the picture being done, a picture takes
+about 33.1 ms of its 40 ms (37.3 ms at worst):
 
-- road drawing: ~27.1 ms (29.7 ms when the curve level changes);
-- road projection: ~4.9 ms;
-- HUD: ~1 ms on average, 2 ms at most;
+- road drawing: ~26.6 ms (~29.6 ms when the curve level changes);
+- road projection: ~4.6 ms;
+- HUD: ~1 ms, within its share (less after a sky turn);
 - game logic: ~0.6 ms;
-- the horizon: nothing for the drop (a few register writes per interrupt),
-  1.4 ms when the sky turns a word, which comes out of the same 40 ms.
+- interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
+  turn, at the flip).
 
 Not one picture was late in two minutes of driving.
 

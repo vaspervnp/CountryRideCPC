@@ -124,7 +124,9 @@ def template(variants, band, half, shift):
     """What road_draw pops for a row of `half` moved `shift` bytes right of
     the centre (see common.asm): core entry (IY), left grass entry (IX), AF
     (A = right grass entry, Z = no exit patch), then the exit patch address
-    if the core hangs off the left of the screen. Returns the words."""
+    if the core hangs off the left of the screen. A core cut short there has
+    no left grass, so IX holds the byte the patch hides instead. Returns the
+    words."""
     code, entry, np_, H = variants[(band, half, 0)]
     c = CENTRE + shift
     parity = (c + H) & 1
@@ -142,6 +144,8 @@ def template(variants, band, half, shift):
             patch = "%s+%d" % (name, entry[u])
     reg = REG_BAND[band]
     ix = "lgrass%s+%d" % ("ab"[reg], PAIRS - max(0, min(l, PAIRS)))
+    if patch:
+        ix = "#%04X" % code[entry[u]]
     af = "#%02X%02X" % (rg, 0x40 if patch is None else 0)
     return [iy, ix, af] + ([patch] if patch else [])
 

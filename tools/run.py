@@ -170,7 +170,7 @@ def cmd_shots():
         g.c.run_frames(1)
         h = g.byte("HILL")
         h = h - 256 if h > 127 else h
-        k = g.byte("CURVE")
+        k = g.byte("ROAD_CURVE")
         k = k - 256 if k > 127 else k
         held = held + 1 if k == last else 0
         last = k
@@ -231,7 +231,7 @@ def road_model(g):
     hill = g.byte("HILL")
     hill = hill - 256 if hill > 127 else hill
     hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
-    curve = g.byte("CURVE")
+    curve = g.byte("ROAD_CURVE")
     curve = curve - 256 if curve > 127 else curve
     return scene.road_lines(hill, zcam, curve), hill, zcam, curve
 
@@ -255,10 +255,7 @@ def at_vsync(g):
     """Run to the interrupt inside VSYNC, before it starts the next frame:
     the framebuffer then holds a whole frame, and rup_base and rup_drop say
     how it was split."""
-    while True:
-        run_to(g.c, g.sym["ISR"])
-        if g.byte("IRQ_PHASE") == 5:
-            return
+    run_to(g.c, g.sym["IRQ_VSYNC"])
 
 
 def cmd_check():
@@ -325,6 +322,8 @@ def cmd_check():
                       % (n, buf, vals, wrong[:8]))
     print("HUD and sky check: %d of 20 pictures differ from scene.py "
           "(speed gauge at most %d segments behind)" % (hud_bad, worst_lag))
+    if worst_lag > 2:                   # the HUD keeps up, a picture or two late
+        hud_bad += 1
 
     # What the CRTC made of the buffer on screen: the split frame, with the
     # horizon as far down as the buffer's road asked for - the same whatever

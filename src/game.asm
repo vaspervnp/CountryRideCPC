@@ -20,6 +20,7 @@ speed_phase defw 0              ; where in the accelerate/cruise/brake cycle
 time_vbls   defb 50             ; VSYNCs left in the current second
 fuel_vbls   defw 0
 drawn_curve defb 0,0            ; curve level each buffer was drawn with
+seen_head   defb 0              ; ring_head when the last picture began
 pic_bent    defb 0              ; 1: this picture's curve level is new to
                                 ; its buffer
 heading     defb 0              ; where the sky looks: words right
@@ -152,16 +153,34 @@ draw_screen_hud
 ;; When the curve level is not the one the buffer was last drawn with, every
 ;; far road line moves and is drawn again (~2.5 ms more): the HUD then waits
 ;; for the buffer's next picture, and the sky's turn for the next picture
-;; (pic_bent), so the picture keeps to its 40 ms.
+;; (pic_bent), so the picture keeps to its 40 ms. When the flip that started
+;; this picture turned the sky (~1.4 ms taken from it), the HUD has a
+;; smaller share and the road keeps the buffer's curve level - the next
+;; picture takes the new one; as a picture that does defers the sky's turn,
+;; the two buffers take it one after the other.
 ;; ---------------------------------------------------------------------------
 draw_picture
     push af
     call select_buf
     ld hl,drawn_curve
-    call buf_entry
-    ld a,(curve)
+    call buf_entry              ; HL = the level this buffer was drawn with
+    ld a,(ring_head)
+    ld de,seen_head
+    ex de,hl
+    cp (hl)                     ; did the sky turn since the last picture?
+    ld (hl),a
+    ex de,hl
+    ld a,(curve)                ; (ld and ex leave cp's flags)
+    ld b,HUD_SHARE
+    jr z,draw_picture_level
+    ld a,(hl)                   ; it did: this buffer's level again
+    ld b,HUD_SHARE_LOW
+draw_picture_level
+    ld (road_curve),a
     cp (hl)
-    ld (hl),a                   ; (the flags are cp's)
+    ld (hl),a
+    ld a,b
+    ld (hud_quota),a            ; (the flags are still the level's)
     ld hl,pic_bent
     ld (hl),0
     jr nz,draw_picture_bent

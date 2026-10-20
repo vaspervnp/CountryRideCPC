@@ -17,18 +17,18 @@
     defs 2,0
     defw empty_core,lgrassb+48,#0040   ; near ('half', 4)
     defs 2,0
-    defw rc_1_5_1+0,lgrassb+48,#0100,rc_1_5_1+4   ; near ('half', 5)
-    defw rc_1_6_0+0,lgrassb+48,#0200,rc_1_6_0+5   ; near ('half', 6)
-    defw rc_1_7_0+0,lgrassb+48,#0400,rc_1_7_0+7   ; near ('half', 7)
-    defw rc_1_8_0+0,lgrassb+48,#0600,rc_1_8_0+9   ; near ('half', 8)
-    defw rc_1_9_1+0,lgrassb+48,#0800,rc_1_9_1+14   ; near ('half', 9)
-    defw rc_1_10_0+0,lgrassb+48,#0900,rc_1_10_0+12   ; near ('half', 10)
-    defw rc_1_11_1+0,lgrassb+48,#0B00,rc_1_11_1+17   ; near ('half', 11)
-    defw rc_1_12_1+0,lgrassb+48,#0D00,rc_1_12_1+19   ; near ('half', 12)
-    defw rc_1_13_1+0,lgrassb+48,#0E00,rc_1_13_1+20   ; near ('half', 13)
-    defw rc_1_14_0+0,lgrassb+48,#0F00,rc_1_14_0+15   ; near ('half', 14)
-    defw rc_1_15_0+0,lgrassb+48,#1100,rc_1_15_0+26   ; near ('half', 15)
-    defw rc_1_16_1+0,lgrassb+48,#1300,rc_1_16_1+22   ; near ('half', 16)
+    defw rc_1_5_1+0,#00D5,#0100,rc_1_5_1+4   ; near ('half', 5)
+    defw rc_1_6_0+0,#00D5,#0200,rc_1_6_0+5   ; near ('half', 6)
+    defw rc_1_7_0+0,#00D5,#0400,rc_1_7_0+7   ; near ('half', 7)
+    defw rc_1_8_0+0,#00D5,#0600,rc_1_8_0+9   ; near ('half', 8)
+    defw rc_1_9_1+0,#00D5,#0800,rc_1_9_1+14   ; near ('half', 9)
+    defw rc_1_10_0+0,#00D5,#0900,rc_1_10_0+12   ; near ('half', 10)
+    defw rc_1_11_1+0,#00D5,#0B00,rc_1_11_1+17   ; near ('half', 11)
+    defw rc_1_12_1+0,#0001,#0D00,rc_1_12_1+19   ; near ('half', 12)
+    defw rc_1_13_1+0,#0001,#0E00,rc_1_13_1+20   ; near ('half', 13)
+    defw rc_1_14_0+0,#00F5,#0F00,rc_1_14_0+15   ; near ('half', 14)
+    defw rc_1_15_0+0,#0001,#1100,rc_1_15_0+26   ; near ('half', 15)
+    defw rc_1_16_1+0,#0001,#1300,rc_1_16_1+22   ; near ('half', 16)
     defw rc_1_17_0+0,lgrassb+48,#1440   ; near ('half', 17)
     defw rc_1_18_0+0,lgrassb+48,#1540   ; near ('half', 18)
     defw rc_1_19_1+0,lgrassb+48,#1740   ; near ('half', 19)
@@ -52,17 +52,17 @@
     defw rc_1_37_1+0,lgrassb+48,#2C40   ; near ('half', 37)
     defw rc_1_38_0+0,lgrassb+48,#2C40   ; near ('half', 38)
     defw rc_1_39_0+0,lgrassb+48,#2D40   ; near ('half', 39)
-    defw rc_1_40_0+0,lgrassb+48,#2E00,rc_1_40_0+55   ; near ('half', 40)
-    defw rc_1_41_0+0,lgrassb+48,#2F00,rc_1_41_0+56   ; near ('half', 41)
-    defw rc_1_42_1+0,lgrassb+48,#3000,rc_1_42_1+51   ; near ('half', 42)
-    defw rc_1_43_1+4,lgrassb+48,#3000,rc_1_43_1+52   ; near ('half', 43)
-    defw rc_1_44_0+1,lgrassb+48,#3000,rc_1_44_0+55   ; near ('half', 44)
-    defw rc_1_45_1+5,lgrassb+48,#3000,rc_1_45_1+53   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_40_0+0,#0001,#2E00,rc_1_40_0+55   ; near ('half', 40)
+    defw rc_1_41_0+0,#0001,#2F00,rc_1_41_0+56   ; near ('half', 41)
+    defw rc_1_42_1+0,#00F5,#3000,rc_1_42_1+51   ; near ('half', 42)
+    defw rc_1_43_1+4,#00F5,#3000,rc_1_43_1+52   ; near ('half', 43)
+    defw rc_1_44_0+1,#00F5,#3000,rc_1_44_0+55   ; near ('half', 44)
+    defw rc_1_45_1+5,#00F5,#3000,rc_1_45_1+53   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -86,14 +86,14 @@
     defw empty_core,lgrassb+48,#0040   ; near ('row', 3)
     defw empty_core,lgrassb+48,#0040   ; near ('row', 4)
     defw empty_core,lgrassb+48,#0040   ; near ('row', 5)
-    defw rc_1_3_0+0,lgrassb+48,#0100,rc_1_3_0+4   ; near ('row', 6)
-    defw rc_1_3_1+0,lgrassb+48,#0200,rc_1_3_1+5   ; near ('row', 7)
-    defw rc_1_4_1+0,lgrassb+48,#0300,rc_1_4_1+6   ; near ('half', 4)
-    defw rc_1_5_0+0,lgrassb+48,#0400,rc_1_5_0+7   ; near ('half', 5)
-    defw rc_1_6_0+0,lgrassb+48,#0600,rc_1_6_0+9   ; near ('half', 6)
-    defw rc_1_7_1+0,lgrassb+48,#0800,rc_1_7_1+11   ; near ('half', 7)
-    defw rc_1_8_1+0,lgrassb+48,#0A00,rc_1_8_1+19   ; near ('half', 8)
-    defw rc_1_9_1+0,lgrassb+48,#0B00,rc_1_9_1+20   ; near ('half', 9)
+    defw rc_1_3_0+0,#00D5,#0100,rc_1_3_0+4   ; near ('row', 6)
+    defw rc_1_3_1+0,#00D5,#0200,rc_1_3_1+5   ; near ('row', 7)
+    defw rc_1_4_1+0,#00D5,#0300,rc_1_4_1+6   ; near ('half', 4)
+    defw rc_1_5_0+0,#00D5,#0400,rc_1_5_0+7   ; near ('half', 5)
+    defw rc_1_6_0+0,#0001,#0600,rc_1_6_0+9   ; near ('half', 6)
+    defw rc_1_7_1+0,#0001,#0800,rc_1_7_1+11   ; near ('half', 7)
+    defw rc_1_8_1+0,#0001,#0A00,rc_1_8_1+19   ; near ('half', 8)
+    defw rc_1_9_1+0,#0001,#0B00,rc_1_9_1+20   ; near ('half', 9)
     defw rc_1_10_0+0,lgrassb+48,#0C40   ; near ('half', 10)
     defs 2,0
     defw rc_1_11_1+0,lgrassb+48,#0E40   ; near ('half', 11)
@@ -131,17 +131,17 @@
     defw rc_1_37_1+0,lgrassb+48,#2C40   ; near ('half', 37)
     defw rc_1_38_1+0,lgrassb+48,#2D40   ; near ('half', 38)
     defw rc_1_39_0+0,lgrassb+48,#2D40   ; near ('half', 39)
-    defw rc_1_40_1+0,lgrassb+48,#2F00,rc_1_40_1+50   ; near ('half', 40)
-    defw rc_1_41_0+0,lgrassb+48,#2F00,rc_1_41_0+56   ; near ('half', 41)
-    defw rc_1_42_0+0,lgrassb+48,#3000,rc_1_42_0+57   ; near ('half', 42)
-    defw rc_1_43_1+4,lgrassb+48,#3000,rc_1_43_1+52   ; near ('half', 43)
-    defw rc_1_44_0+1,lgrassb+48,#3000,rc_1_44_0+55   ; near ('half', 44)
-    defw rc_1_45_1+5,lgrassb+48,#3000,rc_1_45_1+53   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_40_1+0,#0001,#2F00,rc_1_40_1+50   ; near ('half', 40)
+    defw rc_1_41_0+0,#0001,#2F00,rc_1_41_0+56   ; near ('half', 41)
+    defw rc_1_42_0+0,#0001,#3000,rc_1_42_0+57   ; near ('half', 42)
+    defw rc_1_43_1+4,#00F5,#3000,rc_1_43_1+52   ; near ('half', 43)
+    defw rc_1_44_0+1,#00F5,#3000,rc_1_44_0+55   ; near ('half', 44)
+    defw rc_1_45_1+5,#00F5,#3000,rc_1_45_1+53   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -159,7 +159,7 @@
     defs 24,0
 ;; curve level -5
     defs 6,0
-    defw rc_1_2_1+0,lgrassb+48,#0300,rc_1_2_1+6   ; near ('row', 1)
+    defw rc_1_2_1+0,#0001,#0300,rc_1_2_1+6   ; near ('row', 1)
     defw rc_1_2_0+0,lgrassb+48,#0340   ; near ('row', 2)
     defw rc_1_2_1+0,lgrassb+48,#0440   ; near ('row', 3)
     defw rc_1_2_0+0,lgrassb+47,#0440   ; near ('row', 4)
@@ -217,17 +217,17 @@
     defw rc_1_37_0+0,lgrassb+47,#2C40   ; near ('half', 37)
     defw rc_1_38_1+0,lgrassb+48,#2D40   ; near ('half', 38)
     defw rc_1_39_1+0,lgrassb+48,#2E40   ; near ('half', 39)
-    defw rc_1_40_1+0,lgrassb+48,#2F00,rc_1_40_1+50   ; near ('half', 40)
-    defw rc_1_41_1+0,lgrassb+48,#3000,rc_1_41_1+51   ; near ('half', 41)
-    defw rc_1_42_0+0,lgrassb+48,#3000,rc_1_42_0+57   ; near ('half', 42)
-    defw rc_1_43_1+4,lgrassb+48,#3000,rc_1_43_1+52   ; near ('half', 43)
-    defw rc_1_44_0+1,lgrassb+48,#3000,rc_1_44_0+55   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_40_1+0,#0001,#2F00,rc_1_40_1+50   ; near ('half', 40)
+    defw rc_1_41_1+0,#0001,#3000,rc_1_41_1+51   ; near ('half', 41)
+    defw rc_1_42_0+0,#0001,#3000,rc_1_42_0+57   ; near ('half', 42)
+    defw rc_1_43_1+4,#00F5,#3000,rc_1_43_1+52   ; near ('half', 43)
+    defw rc_1_44_0+1,#00F5,#3000,rc_1_44_0+55   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -306,16 +306,16 @@
     defw rc_1_39_1+0,lgrassb+48,#2E40   ; near ('half', 39)
     defw rc_1_40_0+0,lgrassb+48,#2F40   ; near ('half', 40)
     defs 2,0
-    defw rc_1_41_1+0,lgrassb+48,#3000,rc_1_41_1+51   ; near ('half', 41)
-    defw rc_1_42_0+0,lgrassb+48,#3000,rc_1_42_0+57   ; near ('half', 42)
-    defw rc_1_43_1+4,lgrassb+48,#3000,rc_1_43_1+52   ; near ('half', 43)
-    defw rc_1_44_0+1,lgrassb+48,#3000,rc_1_44_0+55   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_41_1+0,#0001,#3000,rc_1_41_1+51   ; near ('half', 41)
+    defw rc_1_42_0+0,#0001,#3000,rc_1_42_0+57   ; near ('half', 42)
+    defw rc_1_43_1+4,#00F5,#3000,rc_1_43_1+52   ; near ('half', 43)
+    defw rc_1_44_0+1,#00F5,#3000,rc_1_44_0+55   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -394,16 +394,16 @@
     defw rc_1_39_0+0,lgrassb+47,#2E40   ; near ('half', 39)
     defw rc_1_40_0+0,lgrassb+48,#2F40   ; near ('half', 40)
     defs 2,0
-    defw rc_1_41_1+0,lgrassb+48,#3000,rc_1_41_1+51   ; near ('half', 41)
-    defw rc_1_42_0+0,lgrassb+48,#3000,rc_1_42_0+57   ; near ('half', 42)
-    defw rc_1_43_1+4,lgrassb+48,#3000,rc_1_43_1+52   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_41_1+0,#0001,#3000,rc_1_41_1+51   ; near ('half', 41)
+    defw rc_1_42_0+0,#0001,#3000,rc_1_42_0+57   ; near ('half', 42)
+    defw rc_1_43_1+4,#00F5,#3000,rc_1_43_1+52   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -482,16 +482,16 @@
     defw rc_1_39_0+0,lgrassb+47,#2E40   ; near ('half', 39)
     defw rc_1_40_0+0,lgrassb+48,#2F40   ; near ('half', 40)
     defs 2,0
-    defw rc_1_41_1+0,lgrassb+48,#3000,rc_1_41_1+51   ; near ('half', 41)
-    defw rc_1_42_1+4,lgrassb+48,#3000,rc_1_42_1+52   ; near ('half', 42)
-    defw rc_1_43_0+1,lgrassb+48,#3000,rc_1_43_0+55   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_41_1+0,#0001,#3000,rc_1_41_1+51   ; near ('half', 41)
+    defw rc_1_42_1+4,#0001,#3000,rc_1_42_1+52   ; near ('half', 42)
+    defw rc_1_43_0+1,#00F5,#3000,rc_1_43_0+55   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -572,15 +572,15 @@
     defs 2,0
     defw rc_1_41_0+0,lgrassb+48,#3040   ; near ('half', 41)
     defs 2,0
-    defw rc_1_42_1+4,lgrassb+48,#3000,rc_1_42_1+52   ; near ('half', 42)
-    defw rc_1_43_0+1,lgrassb+48,#3000,rc_1_43_0+55   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_42_1+4,#0001,#3000,rc_1_42_1+52   ; near ('half', 42)
+    defw rc_1_43_0+1,#00F5,#3000,rc_1_43_0+55   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -661,15 +661,15 @@
     defs 2,0
     defw rc_1_41_0+0,lgrassb+48,#3040   ; near ('half', 41)
     defs 2,0
-    defw rc_1_42_1+4,lgrassb+48,#3000,rc_1_42_1+52   ; near ('half', 42)
-    defw rc_1_43_0+1,lgrassb+48,#3000,rc_1_43_0+55   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_42_1+4,#0001,#3000,rc_1_42_1+52   ; near ('half', 42)
+    defw rc_1_43_0+1,#00F5,#3000,rc_1_43_0+55   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -750,15 +750,15 @@
     defs 2,0
     defw rc_1_41_0+0,lgrassb+48,#3040   ; near ('half', 41)
     defs 2,0
-    defw rc_1_42_1+4,lgrassb+48,#3000,rc_1_42_1+52   ; near ('half', 42)
-    defw rc_1_43_0+1,lgrassb+48,#3000,rc_1_43_0+55   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_42_1+4,#0001,#3000,rc_1_42_1+52   ; near ('half', 42)
+    defw rc_1_43_0+1,#00F5,#3000,rc_1_43_0+55   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -839,15 +839,15 @@
     defs 2,0
     defw rc_1_41_1+4,lgrassb+48,#3040   ; near ('half', 41)
     defs 2,0
-    defw rc_1_42_1+4,lgrassb+48,#3000,rc_1_42_1+52   ; near ('half', 42)
-    defw rc_1_43_0+1,lgrassb+48,#3000,rc_1_43_0+55   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_42_1+4,#0001,#3000,rc_1_42_1+52   ; near ('half', 42)
+    defw rc_1_43_0+1,#00F5,#3000,rc_1_43_0+55   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -930,14 +930,14 @@
     defs 2,0
     defw rc_1_42_0+4,lgrassb+48,#3040   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_1+5,lgrassb+48,#3000,rc_1_43_1+53   ; near ('half', 43)
-    defw rc_1_44_1+5,lgrassb+48,#3000,rc_1_44_1+53   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_43_1+5,#0001,#3000,rc_1_43_1+53   ; near ('half', 43)
+    defw rc_1_44_1+5,#00F5,#3000,rc_1_44_1+53   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -1020,14 +1020,14 @@
     defs 2,0
     defw rc_1_42_0+4,lgrassb+48,#3040   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_1+5,lgrassb+48,#3000,rc_1_43_1+53   ; near ('half', 43)
-    defw rc_1_44_0+2,lgrassb+48,#3000,rc_1_44_0+56   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_43_1+5,#0001,#3000,rc_1_43_1+53   ; near ('half', 43)
+    defw rc_1_44_0+2,#00F5,#3000,rc_1_44_0+56   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -1110,14 +1110,14 @@
     defs 2,0
     defw rc_1_42_0+4,lgrassb+48,#3040   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_1+5,lgrassb+48,#3000,rc_1_43_1+53   ; near ('half', 43)
-    defw rc_1_44_0+2,lgrassb+48,#3000,rc_1_44_0+56   ; near ('half', 44)
-    defw rc_1_45_0+2,lgrassb+48,#3000,rc_1_45_0+56   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_43_1+5,#0001,#3000,rc_1_43_1+53   ; near ('half', 43)
+    defw rc_1_44_0+2,#00F5,#3000,rc_1_44_0+56   ; near ('half', 44)
+    defw rc_1_45_0+2,#00F5,#3000,rc_1_45_0+56   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -1200,14 +1200,14 @@
     defs 2,0
     defw rc_1_42_0+4,lgrassb+48,#3040   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_1+5,lgrassb+48,#3000,rc_1_43_1+53   ; near ('half', 43)
-    defw rc_1_44_0+2,lgrassb+48,#3000,rc_1_44_0+56   ; near ('half', 44)
-    defw rc_1_45_1+6,lgrassb+48,#3000,rc_1_45_1+54   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_43_1+5,#0001,#3000,rc_1_43_1+53   ; near ('half', 43)
+    defw rc_1_44_0+2,#00F5,#3000,rc_1_44_0+56   ; near ('half', 44)
+    defw rc_1_45_1+6,#00F5,#3000,rc_1_45_1+54   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0
@@ -1290,14 +1290,14 @@
     defs 2,0
     defw rc_1_42_1+5,lgrassb+48,#3040   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_1+5,lgrassb+48,#3000,rc_1_43_1+53   ; near ('half', 43)
-    defw rc_1_44_0+2,lgrassb+48,#3000,rc_1_44_0+56   ; near ('half', 44)
-    defw rc_1_45_1+6,lgrassb+48,#3000,rc_1_45_1+54   ; near ('half', 45)
-    defw rc_1_46_0+6,lgrassb+48,#3000,rc_1_46_0+54   ; near ('half', 46)
-    defw rc_1_47_1+7,lgrassb+48,#3000,rc_1_47_1+61   ; near ('half', 47)
-    defw rc_1_48_0+7,lgrassb+48,#3000,rc_1_48_0+55   ; near ('half', 48)
-    defw rc_1_49_1+11,lgrassb+48,#3000,rc_1_49_1+59   ; near ('half', 49)
-    defw rc_1_50_0+5,lgrassb+48,#3000,rc_1_50_0+53   ; near ('half', 50)
+    defw rc_1_43_1+5,#0001,#3000,rc_1_43_1+53   ; near ('half', 43)
+    defw rc_1_44_0+2,#00F5,#3000,rc_1_44_0+56   ; near ('half', 44)
+    defw rc_1_45_1+6,#00F5,#3000,rc_1_45_1+54   ; near ('half', 45)
+    defw rc_1_46_0+6,#00F5,#3000,rc_1_46_0+54   ; near ('half', 46)
+    defw rc_1_47_1+7,#00F5,#3000,rc_1_47_1+61   ; near ('half', 47)
+    defw rc_1_48_0+7,#00F5,#3000,rc_1_48_0+55   ; near ('half', 48)
+    defw rc_1_49_1+11,#0001,#3000,rc_1_49_1+59   ; near ('half', 49)
+    defw rc_1_50_0+5,#00D5,#3000,rc_1_50_0+53   ; near ('half', 50)
     defs 8,0
     defs 6,0
     defs 6,0

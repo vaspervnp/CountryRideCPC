@@ -105,7 +105,6 @@ HUD_ROWS    EQU HUD_H/8
 SKY_ROWS    EQU (BLOCK_BOTTOM-HUD_H)/8
 ROAD_ROW    EQU ROAD_AREA_Y/8
 TOTAL_ROWS  EQU CRTC_R4+1
-IRQ_LOST    EQU #80         ; irq_phase while not in step with the frame
 
 ;; --- Common memory ----------------------------------------------------------
 ;; Each 2K block of pages 0 and 2 holds one raster line of 14 bottom-half
@@ -123,7 +122,7 @@ FRAG4       EQU #2540       ; line list, buffer 1
 FRAG5       EQU #2D40       ; (free: the road templates are in banks 4 and 5)
 FRAG6       EQU #3540       ; (free)
 FRAG7       EQU #3D40       ; road_init, road_project
-FRAG8       EQU #8540       ; (page 2) what the far road lines show
+FRAG8       EQU #8540       ; (page 2; free)
 
 IM2_TABLE   EQU #0600       ; 257 bytes of IM2_VEC
 IM2_VEC     EQU #07         ; ... so the vector is #0707

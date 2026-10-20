@@ -76,13 +76,16 @@ buf_entry
 ;; hud_update - bring the selected buffer's HUD up to date, as far as a
 ;; picture's share of time allows.
 ;;
-;; The share is HUD_SHARE units, about 1.1 ms: a small digit or a gauge
+;; The share is hud_quota units - HUD_SHARE, about 1.1 ms, or HUD_SHARE_LOW
+;; after a flip that turned the sky (draw_picture) - a small digit or a gauge
 ;; segment costs one, a big digit two. The total time's changed digits come
 ;; first, then at most one of the rest - the TIME digits, the gear, a segment
 ;; of either gauge. Anything left waits for the next picture of this buffer,
 ;; 80 ms away; each buffer has two pictures to show a copy before the next.
 ;; ---------------------------------------------------------------------------
 HUD_SHARE   EQU 3
+HUD_SHARE_LOW EQU 1
+hud_quota   defb HUD_SHARE
 hud_budget  defb 0
 
 hud_update
@@ -91,7 +94,7 @@ hud_update
     ld a,(hl)
     or a
     ret nz                      ; nothing new since it was brought up to date
-    ld a,HUD_SHARE
+    ld a,(hud_quota)
     ld (hud_budget),a
     call hud_total
     ret c                       ; out of time already
