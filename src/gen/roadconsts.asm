@@ -3,10 +3,9 @@
 ;; register values per stripe band
 ROAD0_PAIR  EQU #FCFC
 KERB0_PAIR  EQU #0F0F
-GRASS0_PAIR EQU #0303
 ROAD1_PAIR  EQU #3F3F
 KERB1_PAIR  EQU #3C3C
-GRASS1_PAIR EQU #C3C3
+GRASS_PAIR  EQU #0303
 
 ;; the template sets (see tools/mkroad.py): a set per curve level,
 ;; level k at TMPL_A + (k + CURVE_K) * TMPL_SET; band B's TMPL_B - TMPL_A

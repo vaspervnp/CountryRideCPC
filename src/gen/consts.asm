@@ -10,7 +10,7 @@ PEN_HAZE       EQU  5   ; firmware colour 23
 PEN_WHITE      EQU  6   ; firmware colour 26
 PEN_GREY       EQU  7   ; firmware colour 13
 PEN_GRASS_A    EQU  8   ; firmware colour 18
-PEN_GRASS_B    EQU  9   ; firmware colour 21
+PEN_BUSH       EQU  9   ; firmware colour 9
 PEN_RED        EQU 10   ; firmware colour 6
 PEN_ORANGE     EQU 11   ; firmware colour 15
 PEN_YELLOW     EQU 12   ; firmware colour 24
@@ -28,7 +28,7 @@ SOLID_HAZE       EQU #F0
 SOLID_WHITE      EQU #3C
 SOLID_GREY       EQU #FC
 SOLID_GRASS_A    EQU #03
-SOLID_GRASS_B    EQU #C3
+SOLID_BUSH       EQU #C3
 SOLID_RED        EQU #0F
 SOLID_ORANGE     EQU #CF
 SOLID_YELLOW     EQU #33

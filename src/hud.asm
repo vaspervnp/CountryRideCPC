@@ -77,16 +77,19 @@ buf_entry
 ;; picture's share of time allows.
 ;;
 ;; The share is hud_quota units - HUD_SHARE, about 1.1 ms, or HUD_SHARE_LOW
-;; after a flip that turned the sky (draw_picture) - a small digit or a gauge
+;; when the road bends further (draw_picture) - a small digit or a gauge
 ;; segment costs one, a big digit two. The total time's changed digits come
 ;; first, then at most one of the rest - the TIME digits, the gear, a segment
-;; of either gauge. Anything left waits for the next picture of this buffer,
-;; 80 ms away; each buffer has two pictures to show a copy before the next.
+;; of either gauge. With the small share, every other time a gauge segment
+;; goes first, so that the gauges keep up while the road bends further for a
+;; while. Anything left waits for the next picture of this buffer, 80 ms
+;; away; each buffer has two pictures to show a copy before the next.
 ;; ---------------------------------------------------------------------------
 HUD_SHARE   EQU 3
 HUD_SHARE_LOW EQU 1
 hud_quota   defb HUD_SHARE
 hud_budget  defb 0
+hud_turn    defb 0              ; (the small share's turns)
 
 hud_update
     ld hl,hud_done
@@ -96,6 +99,16 @@ hud_update
     ret nz                      ; nothing new since it was brought up to date
     ld a,(hud_quota)
     ld (hud_budget),a
+    cp HUD_SHARE
+    jr nc,hud_update_total
+    ld hl,hud_turn              ; the small share: a gauge's turn?
+    ld a,(hl)
+    xor 1
+    ld (hl),a
+    jr z,hud_update_total
+    call hud_gauge_one
+    jp hud_total
+hud_update_total
     call hud_total
     ret c                       ; out of time already
 
@@ -191,6 +204,28 @@ hud_up_to_date
     ld hl,hud_done
     call buf_entry
     ld (hl),1
+    ret
+
+;; a segment of the speed gauge, or else the fuel gauge, if one is behind
+hud_gauge_one
+    ld hl,shown_speed
+    call buf_entry
+    ld a,(hv_speed)
+    cp (hl)
+    ld de,speed_seg
+    ld bc,SPEED_GAUGE_X*256+SPEED_GAUGE_Y
+    jr nz,hud_gauge_one_draw
+    ld hl,shown_fuel
+    call buf_entry
+    ld a,(hv_fuel)
+    cp (hl)
+    ret z
+    ld de,fuel_seg
+    ld bc,FUEL_GAUGE_X*256+FUEL_GAUGE_Y
+hud_gauge_one_draw
+    call gauge_update
+    ld hl,hud_budget
+    dec (hl)
     ret
 
 ;; Carry set if the budget left is less than a big digit's two units

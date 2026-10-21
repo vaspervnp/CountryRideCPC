@@ -201,37 +201,36 @@ def gfx():
         emit("    defw #%04X   ; %d" % (a, y))
     emit("")
 
-    # a hill profile for the demo: indexed by (zcam / 32) mod 256
+    # The demo's track, indexed by (zcam / 32) mod 256: stretches of flat
+    # straight road, hills (a crest ahead is positive, a dip negative) and
+    # curves, one at a time - the road never bends on a hill. A curve moves
+    # one level an entry towards its level and back, so the road bends into
+    # it and out of it.
     import math
-    prof = []
-    for i in range(256):
-        seg, t = divmod(i, 64)
-        if seg == 0:
-            v = 0 if t < 16 else 95 * math.sin(math.pi * (t - 16) / 48)
-        elif seg == 1:
-            v = 0 if t < 16 else -90 * math.sin(math.pi * (t - 16) / 48)
-        elif seg == 2:
-            v = 0 if t < 8 else 60 * math.sin(math.pi * (t - 8) / 56)
-        else:
-            v = 0 if t < 16 else 95 * math.sin(math.pi * (t - 16) / 48)
-        prof.append(int(round(v)) & 0xFF)
+    track = [("flat", 6), ("hill", 32, 95), ("flat", 4), ("curve", 30, 5),
+             ("flat", 4), ("hill", 32, -90), ("flat", 4), ("curve", 30, -7),
+             ("flat", 4), ("hill", 26, 60), ("flat", 4), ("curve", 20, -3),
+             ("flat", 4), ("hill", 24, 95), ("flat", 4), ("curve", 28, 7)]
+    hills, curve = [], []
+    for kind, n, *arg in track:
+        for t in range(n):
+            h = k = 0
+            if kind == "hill":
+                h = int(round(arg[0] * math.sin(math.pi * t / n)))
+            elif kind == "curve":
+                k = arg[0]
+                k = max(-abs(k), min(abs(k), min(t, n - 1 - t))) * (1 if k > 0 else -1)
+            hills.append(h)
+            curve.append(k)
+    assert len(hills) == 256
+    assert all(h == 0 or k == 0 for h, k in zip(hills, curve))
+    assert max(map(abs, curve)) <= G.CURVE_K
+    assert all(abs(a - b) <= 1 for a, b in zip(curve, curve[1:] + curve[:1]))
     emit(";; demo hill profile, (zcam / 32) mod 256 -> hill")
     emit("hill_profile")
     for i in range(0, 256, 16):
-        emit("    defb " + ",".join("#%02X" % v for v in prof[i:i + 16]))
+        emit("    defb " + ",".join("#%02X" % (v & 0xFF) for v in hills[i:i + 16]))
     emit("")
-
-    # the demo's curves, on the same track as the hills: a curve level for
-    # each (zcam / 32) mod 256, moving one level an entry towards each
-    # stretch's level, so the road bends into a curve and out of it
-    targets = [(0, 0), (4, 5), (40, 0), (84, -7), (114, 0), (132, 3),
-               (152, -3), (176, 0), (202, 7), (232, 0)]
-    level, curve = 0, []
-    for i in range(256):
-        aim = [t for start, t in targets if start <= i][-1]
-        level += (aim > level) - (aim < level)
-        curve.append(level)
-    assert curve[-1] == 0 and max(map(abs, curve)) <= G.CURVE_K
     emit(";; demo curve levels, (zcam / 32) mod 256 -> level (signed); must")
     emit(";; follow hill_profile")
     emit("curve_profile")

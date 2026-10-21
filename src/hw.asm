@@ -56,7 +56,10 @@ CRTC_R9     EQU 7           ; 8 lines per character row
 ;;           configuration the game uses. The rest of each 2K block holds the
 ;;           common fragments.
 ;;
-;; The Z80 sees page 1 at #4000 with RAM_C1, page 3 there with RAM_C3.
+;; The Z80 sees page 1 at #4000 with RAM_C1, page 3 there with RAM_C3. The
+;; HUDs take the first #600 bytes of each 2K block of page 1; the rest of
+;; each block (#x600-#x7FF) is the bush sprites' code (bushcode.asm), which
+;; runs with RAM_C1.
 HUD_MA0     EQU #1000       ; CRTC start of buffer 0's HUD: page 1
 HUD1_OFF    EQU HUD_ROWS*96 ; buffer 1's HUD, bytes on
 HUD_MA1     EQU HUD_MA0+HUD1_OFF/2
@@ -111,18 +114,20 @@ TOTAL_ROWS  EQU CRTC_R4+1
 ;; character rows - 1344 bytes - and leaves 704 bytes at #x540-#x7FF. Pages
 ;; 0 and 2 are mapped in every configuration above, so these 16 fragments are
 ;; the only RAM that the game code, the road engine and the interrupt handler
-;; can all see. They hold everything that has to be shared. The others in
-;; page 2 (#8D40 ... #BD40) are free.
+;; can all see. They hold everything that has to be shared: fragments 0-7 in
+;; page 0, 8-15 in page 2.
 FRAG_LEN    EQU #2C0
 FRAG0       EQU #0540       ; variables, IM 2 table, interrupt handler
 FRAG1       EQU #0D40       ; trampolines, stack
 FRAG2       EQU #1540       ; road_draw and the grass blocks
 FRAG3       EQU #1D40       ; line list, buffer 0
 FRAG4       EQU #2540       ; line list, buffer 1
-FRAG5       EQU #2D40       ; (free: the road templates are in banks 4 and 5)
+FRAG5       EQU #2D40       ; road_init, rp_near_cmp
 FRAG6       EQU #3540       ; (free)
-FRAG7       EQU #3D40       ; road_init, road_project
-FRAG8       EQU #8540       ; (page 2; free)
+FRAG7       EQU #3D40       ; road_project
+FRAG8       EQU #8540       ; page 2: the bush tables and sprites (bushdata.asm)
+FRAG15      EQU #BD40       ; ... up to here
+FRAG_COUNT  EQU 16
 
 IM2_TABLE   EQU #0600       ; 257 bytes of IM2_VEC
 IM2_VEC     EQU #07         ; ... so the vector is #0707

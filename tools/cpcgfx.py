@@ -55,8 +55,8 @@ PENS = [
     ("HAZE",        23),   # 5  haze at the foot of the mountains
     ("WHITE",       26),   # 6  snow, HUD values, kerb (band B), lane lines
     ("GREY",        13),   # 7  rock, asphalt (band A)
-    ("GRASS_A",     18),   # 8  verge (band A), distant ground strip
-    ("GRASS_B",     21),   # 9  verge (band B): lime, close to the green
+    ("GRASS_A",     18),   # 8  the grass, distant ground strip
+    ("BUSH",        9),    # 9  bushes: dark green
     ("RED",         6),    # 10 kerb (band A), gauge
     ("ORANGE",      15),   # 11 gauge
     ("YELLOW",      24),   # 12 HUD labels, gauge
@@ -231,16 +231,18 @@ def curve_shift(k, r):
 # ---------------------------------------------------------------------------
 
 BANDS = [
-    dict(grass=PEN["GRASS_A"], kerb=PEN["RED"], road=PEN["GREY"],
-         line=PEN["WHITE"]),
-    dict(grass=PEN["GRASS_B"], kerb=PEN["WHITE"], road=PEN["ASPHALT_B"],
+    dict(kerb=PEN["RED"], road=PEN["GREY"], line=PEN["WHITE"]),
+    dict(kerb=PEN["WHITE"], road=PEN["ASPHALT_B"],
          line=None),                       # dashed: no lane lines on band B
-    # far away: the grass and the asphalt of band A, the kerb and the (absent)
-    # lane line of band B - the markings move on where the stripes stop
-    dict(grass=PEN["GRASS_A"], kerb=PEN["WHITE"], road=PEN["GREY"],
-         line=None),
+    # far away: the asphalt of band A, the kerb and the (absent) lane line of
+    # band B - the markings move on where the stripes stop
+    dict(kerb=PEN["WHITE"], road=PEN["GREY"], line=None),
 ]
 GROUND_PEN = PEN["GRASS_A"]                # the strip between hills and peaks
+
+# The grass is one colour, band A's, and never moves, so the road engine only
+# redraws it where the road has moved.
+PLAIN_GRASS = PEN["GRASS_A"]
 
 
 def road_row_pixels(half, band, lanes=LANES):
@@ -265,3 +267,84 @@ def road_row_pixels(half, band, lanes=LANES):
                 if kw <= i < 2 * total - kw:
                     pens[i] = b["line"]
     return pens, total
+
+
+# ---------------------------------------------------------------------------
+# Bushes beside the road. The demo track loops every TRACK_PERIOD depth units
+# (src/game.asm reads its hills and curves at (zcam / 32) mod 256); a bush
+# stands at a depth z on it, on one side, in one of BUSH_SIZES (its height
+# in metres - 1 m is 50/109 of a line per row, the lane being 3.7 m) and at
+# a lateral factor from BUSH_LATS: its centre is that many times as far from
+# the road's centre as the outer edge of the kerb.
+#
+# The engine has a sprite for each of BUSH_H heights (lines), 1.2 pixels wide
+# a line (so a bush is 2.4 times as wide as it is tall), and per row tables
+# of which sprite a size class uses and how far out a lateral class is. A
+# size class is first drawn when its sprite would be BUSH_H_MIN lines high.
+# ---------------------------------------------------------------------------
+
+TRACK_PERIOD = 8192
+BUSH_SIZES = [0.4, 0.6, 0.85]          # metres
+BUSH_LATS = [1.2, 1.4, 1.6, 1.85, 2.1]
+BUSH_LAT_OF = [(0, 2), (1, 3), (3, 4)]  # lateral classes each size can have
+BUSH_H = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16]
+BUSH_H_MIN = 4.5                        # lines: a smaller bush is not drawn
+BUSH_ASPECT = 1.2                       # pixels across per line of height
+BUSH_LINES_PER_M = 50 / 109             # lines per metre, per row
+BUSH_ROW_MIN = 7                        # further away a bush is not drawn
+BUSH_ZNEAR = 72                         # nearer than this it has gone by
+BUSH_ZFAR = 1024                        # the depth tables end here
+BUSH_GAP = (100, 300)                   # depth units from one bush to the next
+BUSH_MAX = 8                            # bushes drawn at most, nearest first
+BUSH_BIG_GAP = 400                      # ... and from one of the biggest size
+BUSH_IN_REACH = 3                       # bushes in reach at once, at most
+BUSH_SEED = 5
+
+
+def bush_row(zr):
+    """The row a bush zr depth units ahead stands on, 0 if none: the tables
+    have it every 2 units up to 512 and every 8 beyond."""
+    if zr < BUSH_ZNEAR or zr >= BUSH_ZFAR:
+        return 0
+    z = (zr & ~1) + 1 if zr < 512 else (zr & ~7) + 4
+    r = int(DEPTH_K / z + 0.5)
+    return r if BUSH_ROW_MIN <= r <= ROWS else 0
+
+
+def bush_sprite_of(size, r):
+    """The sprite index a bush of size class `size` uses on row r, None if it
+    is too small to draw."""
+    h = BUSH_SIZES[size] * BUSH_LINES_PER_M * r
+    if h < BUSH_H_MIN:
+        return None
+    return min(range(len(BUSH_H)), key=lambda i: abs(BUSH_H[i] - h))
+
+
+def bush_zvis(size):
+    """How far ahead a bush of size class `size` is first drawn: one past the
+    furthest it has a sprite at."""
+    return 1 + max(zr for zr in range(BUSH_ZNEAR, BUSH_ZFAR)
+                   if bush_row(zr) and bush_sprite_of(size, bush_row(zr)) is not None)
+
+
+def bush_centre(k, r):
+    """The road's centre on row r at curve level k, in bytes, for a bush."""
+    return SCR_BYTES // 2 + bush_shift(k, r)
+
+
+def bush_lat(lat, r):
+    """Bytes from the road's centre to a bush's centre on row r."""
+    return int(BUSH_LATS[lat] * (2 * HALF_MAX + KERB_BOTTOM) / ROWS / 2 * r + 0.5)
+
+
+def bush_curve8(r):
+    """8/7 of what curve level 1 moves row r by, as a parabola in rows (not
+    in template groups as the road does: a bush need not be that exact)."""
+    t = (ROWS - r) / (ROWS - 1)
+    return int(CURVE_TOP * 8 * t * t / CURVE_K + 0.5)
+
+
+def bush_shift(k, r):
+    """Bytes right that curve level k moves a bush on row r."""
+    v = (abs(k) * bush_curve8(r)) >> 3
+    return v if k >= 0 else -v

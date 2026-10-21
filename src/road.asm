@@ -1,7 +1,7 @@
 ;; ===========================================================================
-;; road.asm - road_init and road_project, in common fragment 7. They run
-;; with RAM_C6: bank 6 holds the row arrays and the hill tables
-;; (src/gen/roadrows.asm).
+;; road.asm - road_project, in common fragment 7, and road_init and
+;; rp_near_cmp, in fragment 5. They run with RAM_C6: bank 6 holds the row
+;; arrays and the hill tables (src/gen/roadrows.asm).
 ;;
 ;; road_project writes, for every road line, the template of the row of road
 ;; that line shows into the line list; road_draw (common.asm) then draws it.
@@ -25,49 +25,7 @@
 ;; line, so a hill costs road_project nothing that a flat road does not.
 ;; ===========================================================================
 
-    ORG FRAG7,FRAG_STORE+7*FRAG_LEN
-
-;; ---------------------------------------------------------------------------
-;; road_init - fill both line lists with where each line starts, every line
-;; ground, and the end marker; forget what either buffer shows.
-;; ---------------------------------------------------------------------------
-road_init
-    ld a,#FF
-    ld (rp_level),a
-    ld (rp_level+1),a
-    ld hl,list0
-    ld b,hi(BOT0_BASE)
-    call road_init_list
-    ld hl,list1
-    ld b,hi(BOT1_BASE)
-road_init_list
-    ld de,line_ends
-    ld c,ROAD_LINES
-road_init_loop
-    ld a,(de)
-    inc de
-    ld (hl),a
-    inc hl
-    ld a,(de)
-    inc de
-    add a,b
-    ld (hl),a
-    inc hl
-    ld (hl),lo(tmpl_ground)
-    inc hl
-    ld (hl),hi(tmpl_ground)
-    inc hl
-    dec c
-    jr nz,road_init_loop
-    xor a                               ; the end: SP is never used
-    ld (hl),a
-    inc hl
-    ld (hl),a
-    inc hl
-    ld (hl),lo(tmpl_end)
-    inc hl
-    ld (hl),hi(tmpl_end)
-    ret
+    ORG FRAG7,FRAG_ST7
 
 ;; ---------------------------------------------------------------------------
 ;; road_project - write the templates into (road_buf)'s line list, from
@@ -149,6 +107,9 @@ rp_near_ok
     ld (rp_zlo4+1),a
     ld (rp_zlo5+1),a
     ld (rp_zlo6+1),a
+    ld (rp_zlo7+1),a
+    ld (rp_zlo8+1),a
+    ld (rp_zlo9+1),a
     ld a,(road_curve)                   ; the curve level's template set:
     add a,CURVE_K                       ; this many pages on
     ASSERT TMPL_SET == 512
@@ -158,6 +119,10 @@ rp_near_ok
     ld (rp_lvl3+1),a
     ld (rp_lvl4+1),a
     ld (rp_lvl5+1),a
+    ld (rp_lvl6+1),a
+    ld (rp_lvl7+1),a
+    ld (rp_lvl8+1),a
+    ld (rp_lvl9+1),a
 
     ; this buffer's last picture: its curve set (did it move?) and zcam
     ld hl,(rp_vars)
@@ -174,6 +139,12 @@ rp_near_ok
 rp_known
     ld a,e
     ld (rp_moved),a                     ; 0: the same curve
+    call rp_mode
+    ld (rp_fl+1),a
+    ld (rp_fl2+1),a
+    ld hl,(rp_vars)                     ; (rp_vars again for what follows)
+    inc hl
+    inc hl
     inc hl
     inc hl                              ; rp_zcam
     ld a,(hl)
@@ -186,15 +157,32 @@ rp_known
     ld a,(rp_near)
     or a
     jr z,rp_far
+    ld l,a
+    ld a,(rp_cmp)
+    or a
+    ld a,l
+    jp nz,rp_near_cmp
 
 ;; BC = line -> row table, DE = template slot of the list entry. Two lines
 ;; per turn of the loop; an odd count starts half way in.
-MACRO RP_LINE zl,lv
+MACRO RP_LINE zl,lv,fl,cmp
     ld a,(bc)                           ; the row this line shows (0 = ground)
     inc bc
+    IF {cmp}
+    cp (iy+0)                           ; ... and showed then (IY)
+    inc iy
+    ENDIF
     ld l,a
     ld h,hi(rr_tlo)
     ld a,(hl)                           ; template, low byte
+    IF {cmp}
+{fl}
+    jr nz,$+3                           ; (or JR C: rp_mode)
+    inc a                               ; the same row: only the road
+    ELSE
+{fl}
+    or 0                                ; 1: only the road (self-modified)
+    ENDIF
     ld (de),a
     inc e                               ; (an entry never crosses a page)
     inc h
@@ -225,13 +213,14 @@ MEND
     exx
     jr rp_second
 rp_pair
-    RP_LINE rp_zlo,rp_lvl
+    RP_LINE rp_zlo,rp_lvl,rp_fl,0
 rp_second
-    RP_LINE rp_zlo2,rp_lvl2
+    RP_LINE rp_zlo2,rp_lvl2,rp_fl2,0
     exx
     dec b
     exx
     jr nz,rp_pair
+    jp rp_far
 
 ;; Past FAR_Z the grass and the asphalt stay band A's; the kerbs and lane
 ;; dashes go on moving: band 0's template or band 2's, by a longer dash.
@@ -242,13 +231,20 @@ rp_second
 ;; A line that has not changed gets the skip template - no pushes at all.
 
 ;; A = (depth + zcam) AND mask (0: band 0), L = the row: write the line's
-;; template, step DE to the next entry's
-MACRO RP_FAR_TMPL lv
+;; template - fl = 1: only the road - and step DE to the next entry's
+MACRO RP_FAR_TMPL lv,fl
     or a
     ld h,hi(rr_tlo)
     jr z,$+4
     ld h,hi(rr_tlo2)
     ld a,(hl)                           ; template, low byte
+    IF {fl} == 1
+    inc a                               ; (templates are at even addresses)
+    ENDIF
+    IF {fl} == 2
+rp_far_fl
+    or 0                                ; 1: only the road (self-modified)
+    ENDIF
     ld (de),a
     inc e
     inc h
@@ -298,7 +294,8 @@ rp_zold
     add a,0                             ; + zcam then (self-modified)
     and (hl)                            ; ... and then
     cp ixh
-    jr nz,rp_far_new
+rp_fdash
+    jr nz,rp_far_new                    ; (or JR: rp_dirty)
     ld a,lo(tmpl_skip)                  ; the same
     ld (de),a
     inc e
@@ -312,9 +309,9 @@ rp_zold
     exx
     jr nz,rp_far_line
     jp rp_done
-rp_far_new
+rp_far_new                              ; the same row: only the road
     ld a,ixh
-    RP_FAR_TMPL rp_lvl3
+    RP_FAR_TMPL rp_lvl3,1
     ld (rp_tail),de                     ; the list goes at least this far
     exx
     dec b
@@ -361,7 +358,8 @@ rp_zold2
     add a,0                             ; + zcam then (self-modified)
     and (hl)
     cp ixh
-    jr nz,rp_far_hill_dash
+rp_fdash2
+    jr nz,rp_far_hill_dash              ; (or JR: rp_dirty)
     ld a,lo(tmpl_skip)                  ; the same
     ld (de),a
     inc e
@@ -373,26 +371,37 @@ rp_zold2
     exx
     dec b
     exx
-    jr nz,rp_far_hill_line
+    jp nz,rp_far_hill_line
     jp rp_done
-rp_far_hill_new
-rp_zlo6
+rp_far_hill_new                         ; another row: the whole line - but
+rp_far_near                             ; only the road if it is nearer and the
+    jr nc,rp_far_hill_dash2             ; road straight (offset self-modified,
+rp_zlo6                                 ; 0 = off: rp_mode)
     add a,0                             ; + zcam (self-modified)
     inc h
     and (hl)
-    jr rp_far_hill_draw
-rp_far_hill_dash
+    RP_FAR_TMPL rp_lvl6,0
+    jr rp_far_hill_next
+rp_far_hill_dash2
+rp_zlo9
+    add a,0                             ; + zcam (self-modified)
+    inc h
+    and (hl)
+    RP_FAR_TMPL rp_lvl9,1
+    jr rp_far_hill_next
+rp_far_hill_dash                        ; the same row: only the road
     ld a,ixh
-rp_far_hill_draw
-    RP_FAR_TMPL rp_lvl5
+    RP_FAR_TMPL rp_lvl5,1
+rp_far_hill_next
     ld (rp_tail),de
     exx
     dec b
     exx
-    jr nz,rp_far_hill_line
+    jp nz,rp_far_hill_line
     jp rp_done
 
-;; the curve moved: every far line is drawn
+;; the curve moved (or nothing is known): every far line is drawn, with
+;; only its road and a margin if the hill is the same (rp_mode)
 rp_far_all
     ld a,(bc)
     inc bc
@@ -403,7 +412,7 @@ rp_zlo4
     add a,0                             ; + zcam (self-modified)
     inc h
     and (hl)
-    RP_FAR_TMPL rp_lvl4
+    RP_FAR_TMPL rp_lvl4,2
     exx
     dec b
     exx
@@ -425,6 +434,7 @@ rp_zcam     defb 0,0                    ; ... zcam, low byte
 rp_vars     defw 0                      ; this buffer's rp_level entry
 rp_moved    defb 0                      ; 0: the same curve as then
 rp_old_level defb 0                     ; hill level then (#FF: none)
+rp_cmp      defb 0                      ; 1: lines checked against the old rows
     ASSERT rp_set == rp_level+2
     ASSERT rp_zcam == rp_level+4
 rp_count    defb 0                     ; lines to draw
@@ -435,3 +445,205 @@ rp_tail     defw 0                      ; where the end marker goes
 
 frag7_end
     ASSERT frag7_end <= FRAG7+FRAG_LEN
+
+;; ===========================================================================
+;; Fragment 5: road_init, and road_project's lines for a hill that moved
+;; (fragment 7 is full); RAM_C6 as there.
+;; ===========================================================================
+    ORG FRAG5,FRAG_ST5
+frag5_start
+
+;; ---------------------------------------------------------------------------
+;; road_init - fill both line lists with where each line starts, every line
+;; ground, and the end marker; forget what either buffer shows.
+;; ---------------------------------------------------------------------------
+road_init
+    ld a,#FF
+    ld (rp_level),a
+    ld (rp_level+1),a
+    ld hl,list0
+    ld b,hi(BOT0_BASE)
+    call road_init_list
+    ld hl,list1
+    ld b,hi(BOT1_BASE)
+road_init_list
+    ld de,line_ends
+    ld c,ROAD_LINES
+road_init_loop
+    ld a,(de)
+    inc de
+    ld (hl),a
+    inc hl
+    ld a,(de)
+    inc de
+    add a,b
+    ld (hl),a
+    inc hl
+    ld (hl),lo(tmpl_ground)
+    inc hl
+    ld (hl),hi(tmpl_ground)
+    inc hl
+    dec c
+    jr nz,road_init_loop
+    xor a                               ; the end: SP is never used
+    ld (hl),a
+    inc hl
+    ld (hl),a
+    inc hl
+    ld (hl),lo(tmpl_end)
+    inc hl
+    ld (hl),hi(tmpl_end)
+    ret
+
+;; the hill moved: IY = the old level's line -> row table
+rp_near_cmp
+    push af
+    ld a,(rp_old_level)
+    ld l,a
+    ld h,0
+    add hl,hl
+    push de
+    ld de,level_addr
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    push de
+    pop iy
+    pop de
+    pop af
+    srl a
+    exx
+    ld b,a
+    exx
+    jr nc,rp_pair_cmp
+    inc a
+    exx
+    ld b,a
+    exx
+    jr rp_second_cmp
+rp_pair_cmp
+    RP_LINE rp_zlo7,rp_lvl7,rp_flx,1
+rp_second_cmp
+    RP_LINE rp_zlo8,rp_lvl8,rp_fly,1
+    exx
+    dec b
+    exx
+    jr nz,rp_pair_cmp
+    jp rp_far
+
+;; ---------------------------------------------------------------------------
+;; rp_mode - how this picture's lines are drawn, from E = the curve set now
+;; minus then (2 a level; odd: nothing is known) and the hill now and then.
+;;
+;; A line that shows the row it did when this buffer was last drawn, at the
+;; same curve level, needs only its road drawn: the grass is plain and
+;; already right. If the curve has moved one or two levels, the road has
+;; moved at most 5 pairs a level (tools/mkroad.py), so its road and that
+;; many pairs of grass either side will do (rd_margin). More, or nothing
+;; known: whole lines. If the hill moved, each line's row is compared with
+;; the one the old level's table gives (rp_cmp); on a straight road a line
+;; that now shows a nearer row needs only its road too - the old, narrower
+;; one lies under it.
+;;
+;; Returns A = the flag for every near line: 1 = only the road (and the
+;; margin), 0 = whole lines or as rp_cmp says. Sets rp_cmp, rp_far_fl (far
+;; lines when the curve moved) and the compare branches.
+;;
+;; A far line whose dash has not moved is skipped - unless a bush that may
+;; have stood in front of the far road was taken away (rp_dirty, bush.asm):
+;; then it gets its road drawn.
+;; ---------------------------------------------------------------------------
+rp_mode
+    push bc                             ; (the line -> row table)
+    ld a,(rp_dirty)
+    or a
+    ld a,#20                            ; JR NZ
+    jr z,rp_mode_dash
+    ld a,#18                            ; JR
+rp_mode_dash
+    ld (rp_fdash),a
+    ld (rp_fdash2),a
+    call rp_mode_set
+    pop bc
+    ret
+rp_mode_set
+    xor a
+    ld (rp_cmp),a
+    ld (rp_far_fl+1),a
+    ld a,e
+    bit 0,a
+    jr nz,rp_mode_whole                 ; nothing known
+    or a
+    jp p,rp_mode_abs
+    neg
+rp_mode_abs
+    cp 5
+    jr nc,rp_mode_whole                 ; more than two levels
+    ld c,a                              ; 0, 2 or 4: M = 0, 5 or 10 pairs
+    rrca
+    add a,c
+    add a,c                             ; 5 * A / 2
+    call rd_margin
+    ld a,(rp_old_level)
+    ld hl,(rp_vars)
+    cp (hl)
+    jr nz,rp_mode_hill
+    ld a,1
+    ld (rp_far_fl+1),a                  ; the same hill: every line
+    ret
+rp_mode_hill
+    ld a,1                              ; the hill moved: compare the rows
+    ld (rp_cmp),a
+    ld a,(rp_moved)
+    ld hl,(#20*256)+0                   ; JR NZ: the same row; far: off
+    or a
+    jr nz,rp_mode_op
+    ld a,(road_curve)
+    or a
+    jr nz,rp_mode_op
+    ld hl,(#38*256)+rp_far_hill_dash2-rp_far_near-2   ; JR C: no farther row
+rp_mode_op
+    ld a,h
+    ld (rp_flx),a
+    ld (rp_fly),a
+    ld a,l
+    ld (rp_far_near+1),a
+rp_mode_whole
+    xor a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; rd_margin - A = M, the pairs of grass road_draw draws either side of the
+;; road on an only-the-road line (0: none, the fast way).
+;; ---------------------------------------------------------------------------
+rd_margin
+    or a
+    ld hl,line_road_a
+    ld de,line_road_b
+    jr z,rd_margin_jr
+    neg
+    add a,PAIRS                         ; MT = PAIRS - M
+    ld (lm_m1+1),a
+    ld (lm_m2+1),a
+    ld (lm_m3+1),a
+    ld (lm_p1+1),a
+    ld (lm_p2+1),a
+    ld (lm_p3+1),a
+    ld c,a
+    add a,lo(lgrassa)
+    ld (lm_la+1),a
+    ld (lm_la2+2),a
+    ld a,c
+    add a,lo(lgrassb)
+    ld (lm_lb+1),a
+    ld (lm_lb2+2),a
+    ld hl,line_margin_a
+    ld de,line_margin_b
+rd_margin_jr
+    ld (lg_jr_a+1),hl
+    ld (lg_jr_b+1),de
+    ret
+
+frag5_end
+    ASSERT frag5_end <= FRAG5+FRAG_LEN

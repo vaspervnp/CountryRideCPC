@@ -31,6 +31,7 @@ $(DSK): $(SRC) disc/country.bas | $(BUILD)
 gen:
 	$(PYTHON) tools/mkgfx.py
 	$(PYTHON) tools/mkroad.py
+	$(PYTHON) tools/mkbush.py
 
 shots: $(DSK)
 	$(PYTHON) tools/run.py shots

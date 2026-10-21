@@ -41,9 +41,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from functools import lru_cache
 from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, FAR_Z, far_mask, m0_byte, m0_solid,
                     road_row_pixels, row_half_bytes, row_depth, SCR_BYTES,
-                    ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift)
+                    ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
+                    PLAIN_GRASS)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src", "gen", "roadcores.asm")
@@ -63,19 +65,20 @@ def word(lo, hi):
     return lo | (hi << 8)
 
 
+@lru_cache(maxsize=None)
 def core_bytes(band, half, parity):
-    """Screen bytes of the core, left to right, and H (bytes each side of
-    the centre before the parity widening)."""
-    b = BANDS[band]
+    """Screen bytes of the core - the kerbs and the asphalt -
+    left to right, and H (bytes each side of the centre before the parity
+    widening). What is left of the bytes it covers is plain grass."""
     pens, total = road_row_pixels(half, band)
     H = (total + 1) // 2
     # pixel 0 of the byte-aligned core is centre_px - 2H
-    px = [b["grass"]] * (4 * H)
+    px = [PLAIN_GRASS] * (4 * H)
     off = 2 * H - total
     for i, p in enumerate(pens):
         px[off + i] = p
     if parity:
-        px = [b["grass"]] * 2 + px + [b["grass"]] * 2
+        px = [PLAIN_GRASS] * 2 + px + [PLAIN_GRASS] * 2
     out = [m0_byte(px[i], px[i + 1]) for i in range(0, len(px), 2)]
     return out, H
 
@@ -88,8 +91,10 @@ FAR_HALF = row_half_bytes(max(r for r in range(1, ROWS + 1)
                               if row_depth(r) > FAR_Z))
 
 
-def compile_variant(band, half, parity):
-    """Returns (code bytes, entry offsets [NP+1], NP, H)."""
+def compile_variant(band, half, parity, entries=frozenset()):
+    """Returns (code bytes, entry offsets [NP+1], NP, H). `entries`: the
+    pairs some template enters the code at, besides the first; a pair that
+    is the same as the one before reuses its LD BC,nn unless it is one."""
     regs = BANDS[REG_BAND[band]]
     road = m0_solid(regs["road"])
     kerb = m0_solid(regs["kerb"])
@@ -98,17 +103,23 @@ def compile_variant(band, half, parity):
     assert n % 2 == 0
     code = []
     entry = []
+    bc = None                          # what BC' holds, if this pair follows on
     for j in range(n // 2):
         lo = data[n - 2 - 2 * j]       # left byte of the pair
         hi = data[n - 1 - 2 * j]       # right byte, written first by PUSH
         entry.append(len(code))
+        if j in entries:
+            bc = None
         if lo == hi == road:
             code.append(0xD5)                     # PUSH DE
         elif lo == hi == kerb:
             code.append(0xF5)                     # PUSH AF
+        elif word(lo, hi) == bc:
+            code.append(0xC5)                     # PUSH BC, BC' as it is
         else:
             w = word(lo, hi)
             code += [0x01, w & 0xFF, w >> 8, 0xC5]  # LD BC,nn / PUSH BC
+            bc = w
     entry.append(len(code))
     code += [0xD9, 0x08, 0xDD, 0xE9]              # EXX / EX AF,AF' / JP (IX)
     return code, entry, n // 2, H
@@ -120,26 +131,42 @@ def halves(band):
     return range(MIN_HALF, (FAR_HALF if band == 2 else HALF_MAX) + 1)
 
 
+def geometry(band, half, shift):
+    """For a row of `half` moved `shift` bytes right of the centre: the
+    variant drawing it, and its core's right and left edges in pairs (it may
+    reach past either edge of the screen)."""
+    data, H = core_bytes(band, half, 0)
+    c = CENTRE + shift
+    parity = (c + H) & 1
+    data, H = core_bytes(band, half, parity)
+    u = (c + H + parity) // 2
+    return (band, half, parity), u, u - len(data) // 2
+
+
+def entry_pair(u, l):
+    """The pair the core is entered at, None if it is all off the screen."""
+    if u <= 0 or l >= PAIRS:
+        return None
+    return max(0, u - PAIRS)
+
+
 def template(variants, band, half, shift):
     """What road_draw pops for a row of `half` moved `shift` bytes right of
-    the centre (see common.asm): core entry (IY), left grass entry (IX), AF
-    (A = right grass entry, Z = no exit patch), then the exit patch address
+    the centre (see common.asm): core entry (IY), AF (A = right grass entry,
+    Z = no exit patch), left grass entry (IX), then the exit patch address
     if the core hangs off the left of the screen. A core cut short there has
     no left grass, so IX holds the byte the patch hides instead. Returns the
     words."""
-    code, entry, np_, H = variants[(band, half, 0)]
-    c = CENTRE + shift
-    parity = (c + H) & 1
-    code, entry, np_, H = variants[(band, half, parity)]
-    name = "rc_%d_%d_%d" % (band, half, parity)
-    u = (c + H + parity) // 2
-    l = u - np_
+    key, u, l = geometry(band, half, shift)
+    code, entry, np_, H = variants[key]
+    name = "rc_%d_%d_%d" % key
     rg = max(0, min(u, PAIRS))
     patch = None
-    if u <= 0 or l >= PAIRS:
+    e = entry_pair(u, l)
+    if e is None:
         iy = "empty_core"
     else:
-        iy = "%s+%d" % (name, entry[max(0, u - PAIRS)])
+        iy = "%s+%d" % (name, entry[e])
         if l < 0:
             patch = "%s+%d" % (name, entry[u])
     reg = REG_BAND[band]
@@ -147,16 +174,15 @@ def template(variants, band, half, shift):
     if patch:
         ix = "#%04X" % code[entry[u]]
     af = "#%02X%02X" % (rg, 0x40 if patch is None else 0)
-    return [iy, ix, af] + ([patch] if patch else [])
+    return [iy, af, ix] + ([patch] if patch else [])
 
 
-GROUND = ["empty_core", "lgrassa+%d" % PAIRS, "#0040"]
+GROUND = ["empty_core", "#0040", "lgrassa+%d" % PAIRS]
 
 
-def template_slots(variants):
-    """The layout of a template set: [(kind, group, size, offset)], kind
-    'ground', 'near' (bands 0 and 1) or 'far' (band 2). A slot is 8 bytes if
-    any level's template in it has an exit patch, else 6."""
+def template_groups():
+    """The groups of rows a template set has a template for: (kind, group,
+    bands, half, the group's first row), kind 'near' or 'far'."""
     rows = range(1, ROWS + 1)
     near = list(dict.fromkeys(curve_group(r) for r in rows))
     far = list(dict.fromkeys(curve_group(r) for r in rows if row_depth(r) > FAR_Z))
@@ -164,12 +190,34 @@ def template_slots(variants):
     row = {}
     for r in rows:
         row.setdefault(curve_group(r), r)
+    return ([("near", g, (0, 1), half[g], row[g]) for g in near]
+            + [("far", g, (2,), half[g], row[g]) for g in far])
+
+
+def entries_used():
+    """Per variant, the pairs the templates enter its code at."""
+    used = {}
+    for kind, g, bands, half, row in template_groups():
+        for b in bands:
+            for k in range(-CURVE_K, CURVE_K + 1):
+                key, u, l = geometry(b, half, curve_shift(k, row))
+                e = entry_pair(u, l)
+                if e is not None:
+                    used.setdefault(key, set()).add(e)
+    return used
+
+
+def template_slots(variants):
+    """The layout of a template set: [(kind, group, size, offset)], kind
+    'ground', 'near' (bands 0 and 1) or 'far' (band 2). A slot is 8 bytes if
+    any level's template in it has an exit patch, else 6."""
     slots = [("ground", None, 6)]
-    for kind, groups, bands in (("near", near, (0, 1)), ("far", far, (2,))):
-        for g in groups:
-            words = max(len(template(variants, b, half[g], curve_shift(k, row[g])))
-                        for b in bands for k in range(-CURVE_K, CURVE_K + 1))
-            slots.append((kind, g, 2 * words))
+    half, row = {}, {}
+    for kind, g, bands, h, r in template_groups():
+        half[g], row[g] = h, r
+        words = max(len(template(variants, b, h, curve_shift(k, r)))
+                    for b in bands for k in range(-CURVE_K, CURVE_K + 1))
+        slots.append((kind, g, 2 * words))
     out, off = [], 0
     for kind, g, size in slots:
         out.append((kind, g, size, off))
@@ -180,11 +228,14 @@ def template_slots(variants):
 
 def main():
     import scene
+    used = entries_used()
     variants = {}
     for band in range(3):
         for half in halves(band):
             for parity in range(2):
-                variants[(band, half, parity)] = compile_variant(band, half, parity)
+                key = (band, half, parity)
+                variants[key] = compile_variant(band, half, parity,
+                                                frozenset(used.get(key, ())))
 
     # --- the code: bands 0 and 2 (drawn with band A's registers) in bank 4,
     # band 1 in bank 5 ---
@@ -216,8 +267,8 @@ def main():
                                                   m0_solid(b["road"]))))
         emit("KERB%d_PAIR  EQU #%04X" % (band, word(m0_solid(b["kerb"]),
                                                   m0_solid(b["kerb"]))))
-        emit("GRASS%d_PAIR EQU #%04X" % (band, word(m0_solid(b["grass"]),
-                                                  m0_solid(b["grass"]))))
+    emit("GRASS_PAIR  EQU #%04X" % word(m0_solid(PLAIN_GRASS),
+                                        m0_solid(PLAIN_GRASS)))
     slots, ghalf, grow = template_slots(variants)
     soff = {(kind, g): off for kind, g, size, off in slots}
     emit("")

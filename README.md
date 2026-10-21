@@ -6,10 +6,11 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 This is the first milestone: the screen layout and the road engine. There is
 no car or player input yet. A demo drive runs a four-lane road over a looping
-run of crests, dips and curves at 25 frames a second, and fills the HUD with
-plausible numbers.
+run of crests, dips and curves - never a curve on a hill - with bushes of
+different sizes beside it at random intervals, at 25 frames a second, and
+fills the HUD with plausible numbers.
 
-| Crest ahead, bending right | In a dip, bending left | The sharpest curve |
+| Crest ahead | In a dip | The sharpest curve |
 |---|---|---|
 | ![Behind a crest](docs/screen-crest.png) | ![In a dip](docs/screen-dip.png) | ![A sharp right](docs/screen-curve.png) |
 
@@ -78,11 +79,15 @@ leaves the screen. The sky and the mountains turn sideways as the road
 bends, by hardware scrolling.
 
 The road has four lanes, each a little wider than the future 45-pixel car. It
-has thick red and white kerbs. The grass and the asphalt alternate in
-stripes of close colours. Kerbs and lane dashes move all the way to the
-horizon: past the striped zone their dashes get longer with distance, so
-they don't flicker. The road never narrows to a point: far away it is still
+has thick red and white kerbs. The asphalt alternates in stripes of close
+colours; the grass is one plain colour. Kerbs and lane dashes move all the
+way to the horizon: past the striped zone their dashes get longer with
+distance, so they don't flicker. The road never narrows to a point: far away it is still
 10 pixels wide, kerb to kerb.
+
+Bushes stand on the grass on either side, at random intervals, in three
+sizes and at different distances from the road. They grow as they come
+nearer, from 5 to 16 lines, and leave by the sides of the screen.
 
 ## How it works
 
@@ -145,7 +150,7 @@ The CRTC always reads the base 64K:
 | Page | Holds |
 |---|---|
 | 0 | buffer 1's road part, common fragments |
-| 1 | both HUDs (`#4000` with RAM C1), 4K free |
+| 1 | both HUDs (`#4000` with RAM C1), the bush sprites' code beside them |
 | 2 | buffer 0's road part, common fragments |
 | 3 | the sky ring (`#4000` with RAM C3) |
 
@@ -161,8 +166,14 @@ The banks hold the rest:
 Some code and data must be reachable from every RAM configuration: the
 variables they share, the interrupt handler, the stack, the line lists and
 the part of the renderer that switches banks. These live in 704-byte
-fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts; nine
-are used, seven are free. `src/hw.asm` has the whole map.
+fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts: seven in
+page 0, and the eight in page 2 hold the bushes' tables and their sprites as
+data (one in page 0 is free). `src/hw.asm` has the whole map.
+
+Page 1 has the HUDs in the first `#600` bytes of each 2K block; the other
+512 bytes of each block hold the bush sprites as code. `BOOT.BIN` is loaded
+at `#4000`, so it carries that code where it runs, and the fragments, which
+it copies out, two to a block where the HUDs go later.
 
 ### The road
 
@@ -188,6 +199,13 @@ Each frame:
    and far lines whose dash has not moved - told from the bit of
    (depth + camera) the dash is, now and when the buffer was last drawn. The
    list ends after the last line that changed.
+4. The grass never changes colour, so a line that shows the same row at the
+   same curve level as when its buffer was last drawn gets only its road
+   drawn, kerb to kerb, and its grass is left alone. Bit 0 of the template
+   pointer says so (templates sit at even addresses). If the hill has moved,
+   `road_project` compares each line's row with the old hill level's; on a
+   straight road a line that now shows a nearer row needs only its road
+   too, as the old, narrower road lies under the new one.
 
 Hills move row *r* down (on a crest) or up (in a dip) by *h / r* lines, with
 occlusion behind a crest. The line-to-row mapping is precomputed for 128 hill
@@ -212,29 +230,75 @@ pointer, so a curve costs nothing per line.
 Far away, a row moves a lot from row to row, so the 7 furthest rows have a
 template each; nearer, the rows of one width share one.
 
-When the level changes, every far line moves and is drawn again (~2.5 ms).
-That picture leaves its HUD changes and the sky's turn to the next one, and
-a picture that starts with the sky turning keeps its buffer's level for one
-more picture, so the two never fall on the same picture.
+A buffer's level moves at most one level a picture. When it moves, the road
+has moved sideways by at most 5 pairs of bytes on any line, so each line is
+drawn with its road and 5 pairs of grass either side of it, not whole. That
+picture has a smaller HUD share and leaves the sky's turn to the next one,
+and a picture that starts with the sky turning keeps its buffer's level for
+one more picture, so the two never fall on the same picture.
+
+### Bushes
+
+`tools/mkbush.py` places the bushes along the track, with a fixed random
+seed, and makes a sprite for each of 11 heights; `tools/scene.py` has their
+art and works out where they go, and `src/bush.asm` has to match it.
+
+- **In reach.** A bush comes into reach when it is near enough for its size
+  class to be drawn, and leaves it when it has gone by. The bushes in reach
+  are kept in a short list, nearest first; a table of where each comes into
+  reach, in that order, tells when one joins. The layout never has more than
+  three in reach at once.
+- **Projection.** A bush's depth ahead gives its row (a table), so its size
+  class gives the sprite and its lateral class how far from the road's
+  centre it stands, signed for its side; the road's centre at that row
+  comes from a table per curve level (mirrored for left curves), and its
+  line from *h / r* as for the road. It is drawn while its centre is on the
+  screen and its row is not behind a crest.
+- **Drawing.** The grass is plain, so a sprite is drawn as it is, with no
+  mask: a run of whole pairs of bytes a line, the grass between its leaves
+  already in. Each sprite is code (`src/gen/bushcode.asm`): for every line,
+  the step to the next line's run, then `PUSH`es from the run's right end,
+  its three most used pairs in registers. A bush cut by a side of the screen
+  or the top of the road part is copied instead, from the same sprite as
+  data, with its lines cut to fit.
+- **Erasing.** Each buffer remembers the boxes its bushes were drawn in. At
+  its next picture, before the road is drawn, they are filled with grass by
+  `PUSH`es, a character row's lines at a time; the records are read with
+  `POP`. A bush on the inside of a curve may stand in front of the far road;
+  when one goes, the far lines are drawn even where their dash has not
+  moved, to put that road back.
+- **Interrupts.** While SP points into the screen, interrupts are off but get
+  one instruction's chance a line, with SP at the right end of the run about
+  to be pushed: the return address an interrupt leaves there is pushed
+  over. The sprite code `CALL`s the step to the next character row there
+  too.
+
+The tables and the sprites as data are in the page 2 fragments, which are
+mapped whatever the bank; the code in page 1 (RAM C1, as the game runs);
+the track and the drawing in bank 7.
 
 ### The HUD
 
 The HUD shows a copy of the game's values, taken every 4 pictures (6.25 times
 a second). The gauges have 8 segments. Each buffer remembers what it shows.
 Only what changed is redrawn, within a share of about 1.1 ms a picture (a
-third of that after a flip that turned the sky); the rest waits for the
-buffer's next picture. Text and gauges sit on the HUD's
-plain background, so drawing is plain copying, never masking.
+third of that when the curve level moves; then every other time a gauge
+segment goes before the total time); the rest waits for the buffer's next
+picture. Text and gauges sit on the HUD's plain background, so drawing is
+plain copying, never masking.
 
 ### Timing
 
 Measured in the emulator through the demo's crests, dips and curves, from
 the flip that starts a picture to the picture being done, a picture takes
-about 33.1 ms of its 40 ms (37.3 ms at worst):
+about 31.3 ms of its 40 ms (38.6 ms at worst, when the curve level changes;
+38.2 ms at worst otherwise):
 
-- road drawing: ~26.6 ms (~29.6 ms when the curve level changes);
-- road projection: ~4.6 ms;
-- HUD: ~1 ms, within its share (less after a sky turn);
+- road drawing: ~21.5 ms (~22.7 ms when the hill moves, ~27.6 ms when the
+  curve level changes);
+- road projection: ~5 ms (~5.8 ms when the hill moves);
+- bushes: ~1.7 ms (4.9 ms at worst), taking away and drawing;
+- HUD: ~1 ms, within its share;
 - game logic: ~0.6 ms;
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
@@ -250,13 +314,13 @@ BASIC and types `RUN"COUNTRY`, the way a person would.
 `make check` then:
 
 - measures the frame rate;
-- compares 240 freshly drawn road pictures, line by line, with what
-  `tools/scene.py` (the Python reference model) says they should be, over
-  hills and curve levels;
+- compares 240 freshly drawn road parts, line by line, bushes and all, with
+  what `tools/scene.py` (the Python reference model) says they should be,
+  over hills and curve levels;
 - does the same for 20 pictures of the HUD and horizon;
 - compares 300 frames of what the emulator actually displayed with the
   buffer on screen, split the way the model says for that frame's drop: 100
-  with each of the CRTC behaviours below.
+  with each of the CRTC behaviours below, spread over a lap of the track.
 
 The emulator harness expects the headless emulator in
 `~/repos/CPCTools/cpcemu`. `tools/emu/build.sh` builds a debug library from
@@ -284,6 +348,7 @@ src/            the game
   common.asm    the fragments: variables, interrupts and ruptures, road_draw
   road.asm      road_init, road_project
   game.asm      main loop, demo drive
+  bush.asm      the bushes: projected, drawn, taken away
   hud.asm       HUD updates
   horizon.asm   how far the horizon drops, the sky ring
   screen.asm    buffers, blitting, the static picture
@@ -293,6 +358,8 @@ tools/
   scene.py      the reference model of the whole screen
   mkgfx.py      HUD, sky and mountain graphics -> src/gen/
   mkroad.py     the generated road code, templates and tables -> src/gen/
+  mkbush.py     the bushes along the track, their sprites (as code and as
+                data) and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts

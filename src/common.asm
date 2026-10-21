@@ -15,7 +15,7 @@
 ;; ===========================================================================
 ;; Fragment 0: variables, the IM 2 table, the interrupt handler
 ;; ===========================================================================
-    ORG FRAG0,FRAG_STORE+0*FRAG_LEN
+    ORG FRAG0,FRAG_ST0
 frag0_start
 
 ;; --- frame timing -----------------------------------------------------------
@@ -56,6 +56,7 @@ road_buf    defb 0          ; buffer road_project/road_draw work on
 ;; --- road_draw state ---------------------------------------------------------
 line_ptr    defw 0          ; next line list entry
 rd_save_sp  defw 0
+rp_dirty    defb 0          ; a bush may have covered the far road (bush.asm)
 
 ;; --- profiling (read by tools/run.py) ---------------------------------------
 frames_drawn defw 0         ; pictures completed
@@ -207,7 +208,7 @@ frag0_end
 ;; ===========================================================================
 ;; Fragment 1: trampolines and the stack
 ;; ===========================================================================
-    ORG FRAG1,FRAG_STORE+1*FRAG_LEN
+    ORG FRAG1,FRAG_ST1
 frag1_start
 
 ;; ---------------------------------------------------------------------------
@@ -412,20 +413,26 @@ frag1_end
 ;; ===========================================================================
 ;; Fragment 2: road_draw
 ;; ===========================================================================
-    ORG FRAG2,FRAG_STORE+2*FRAG_LEN
+    ORG FRAG2,FRAG_ST2
 frag2_start
+
+PAIRS       EQU SCR_BYTES/2 ; two-byte pairs a line, one PUSH each
 
 ;; ---------------------------------------------------------------------------
 ;; road_draw - draw the lines in the line list of (road_buf).
 ;;
 ;; A line list entry is two words: where SP starts for that line (the end of
 ;; the line in the screen) and a template - three or four more words, popped
-;; in turn (tools/mkroad.py makes them, one set per curve level):
+;; in turn (tools/mkroad.py makes them, one set per curve level). Bit 0 of
+;; the template's address set means "only the road": the grass is plain and
+;; already right, so the line is only its core (line_road_a) - or, when
+;; road_project has set a margin (rd_margin), its core and that many pairs of
+;; grass either side, as far as the core can have moved since (line_margin_a).
 ;;
 ;;   IY      where to enter the road core (part-way in if it hangs off the
 ;;           right of the screen)
-;;   IX      where to enter the left grass block (how much grass is left)
 ;;   AF      A = low byte of the right grass block entry; F: Z = no patch
+;;   IX      where to enter the left grass block (how much grass is left)
 ;;   patch   only if NZ: the core hangs off the left of the screen, and this
 ;;           is the first byte of it that must not run: JP (HL) is written
 ;;           over it, and put back when the core leaves through it - IX then
@@ -464,7 +471,7 @@ road_draw
     ld sp,kerb0_word
     pop af
     ex af,af'
-    ld bc,GRASS0_PAIR
+    ld bc,GRASS_PAIR
     ld hl,list0
     ld a,(road_buf)
     or a
@@ -491,16 +498,41 @@ line_done_a
     jp nz,to_band_b                     ; a band B template, in bank 5
 line_go_a
     ex de,hl
+    bit 0,l
+lg_jr_a
+    jp nz,line_road_a                   ; only the road (or line_margin_a)
     ld sp,hl
     pop iy
-    pop ix
     pop af                              ; A = right grass entry, Z = no patch
+    pop ix
     jr nz,line_patch
     ex de,hl                            ; HL = screen
     ld sp,hl
     ld l,a
     ld h,hi(rgrass)
     jp (hl)
+
+;; Only the road: the line shows the same row in the same place as when
+;; this buffer was last drawn, so the grass on either side is right. SP
+;; starts at the core's right edge, (48 - A) pairs in from the end of the
+;; line, and the core leaves into no left grass.
+line_road_a
+    dec l                               ; (templates are at even addresses)
+    ld sp,hl
+    pop iy
+    pop af
+    jr nz,line_road_patch
+    sub PAIRS
+    add a,a
+    ld l,a
+    sbc a,a
+    ld h,a
+    add hl,de
+    ld sp,hl
+    ld ix,lgrassa+PAIRS
+    exx
+    ex af,af'
+    jp (iy)
 
 ;; the core hangs off the left: DE = screen, SP at the patch address
 line_patch
@@ -529,16 +561,57 @@ line_done_b
     jp z,to_band_a
 line_go_b
     ex de,hl
+    bit 0,l
+lg_jr_b
+    jp nz,line_road_b                   ; (or line_margin_b)
     ld sp,hl
     pop iy
-    pop ix
     pop af
+    pop ix
     jr nz,line_patch
     ex de,hl
     ld sp,hl
     ld l,a
     ld h,hi(rgrass)
     jp (hl)
+
+line_road_b
+    dec l
+    ld sp,hl
+    pop iy
+    pop af
+    jr nz,line_road_patch
+    sub PAIRS
+    add a,a
+    ld l,a
+    sbc a,a
+    ld h,a
+    add hl,de
+    ld sp,hl
+    ld ix,lgrassb+PAIRS
+    exx
+    ex af,af'
+    jp (iy)
+
+;; only the road, cut short at the left: A = right grass entry, DE = screen,
+;; SP at the template's IX
+line_road_patch
+    pop ix                              ; the byte the patch hides
+    pop hl
+    ld (hl),#E9                         ; JP (HL)
+    ex de,hl                            ; DE = patch address, HL = screen
+    sub PAIRS
+    add a,a
+    jr nc,line_road_patch_go            ; the core reaches the right edge
+    add a,l
+    ld l,a
+    jr c,line_road_patch_go
+    dec h
+line_road_patch_go
+    ld sp,hl
+    exx
+    ex af,af'
+    jp (iy)
 
 ;; --- switching band: registers, and the bank the cores are in -----------------
 ;; DE = template, HL = screen.
@@ -552,7 +625,7 @@ to_band_b
     ld sp,kerb1_word
     pop af
     ex af,af'
-    ld bc,GRASS1_PAIR
+    ld bc,GRASS_PAIR                    ; the grass is the same in both bands
     jp line_go_b
 
 to_band_a
@@ -565,8 +638,92 @@ to_band_a
     ld sp,kerb0_word
     pop af
     ex af,af'
-    ld bc,GRASS0_PAIR
+    ld bc,GRASS_PAIR
     jp line_go_a
+
+;; Only the road and a margin: at most M pairs of grass each side (the
+;; constants marked MT are PAIRS - M, set by rd_margin). The left grass is
+;; what the template says, but no more than M pairs.
+line_margin_a
+    dec l
+    ld sp,hl
+    pop iy
+    pop af                              ; A = right grass entry, Z = no patch
+    pop ix
+    jr nz,line_margin_patch
+    ld l,a
+    ld a,ixl
+lm_la
+    cp lo(lgrassa)+PAIRS                ; lo(lgrassa) + MT (self-modified)
+    jr nc,line_margin_right
+lm_la2
+    ld ixl,lo(lgrassa)+PAIRS            ; lo(lgrassa) + MT (self-modified)
+    jr line_margin_right
+
+line_margin_b
+    dec l
+    ld sp,hl
+    pop iy
+    pop af
+    pop ix
+    jr nz,line_margin_patch
+    ld l,a
+    ld a,ixl
+lm_lb
+    cp lo(lgrassb)+PAIRS                ; lo(lgrassb) + MT (self-modified)
+    jr nc,line_margin_right
+lm_lb2
+    ld ixl,lo(lgrassb)+PAIRS            ; lo(lgrassb) + MT (self-modified)
+    jr line_margin_right
+
+;; L = right grass entry, DE = screen; then the right grass and on
+line_margin_right
+    ld a,l
+lm_m1
+    cp PAIRS                            ; MT (self-modified)
+    jr nc,line_margin_all               ; no more right grass than M pairs
+lm_m2
+    sub PAIRS                           ; MT (self-modified)
+    add a,a
+    ld l,a
+    ld h,#FF
+    add hl,de
+    ld sp,hl                            ; the screen, M pairs right of the core
+lm_m3
+    ld l,PAIRS                          ; MT (self-modified): M pairs of grass
+    ld h,hi(rgrass)
+    jp (hl)
+
+line_margin_all
+    ex de,hl
+    ld sp,hl
+    ld l,a
+    ld h,hi(rgrass)
+    jp (hl)
+
+;; ... the core hanging off the left: no left grass; A = right grass entry,
+;; DE = screen, SP at the patch address
+line_margin_patch
+    pop hl
+    ld (hl),#E9                         ; JP (HL)
+    ex de,hl                            ; DE = patch address, HL = screen
+lm_p1
+    cp PAIRS                            ; MT (self-modified)
+    jr nc,line_margin_patch_go
+lm_p2
+    sub PAIRS                           ; MT (self-modified)
+    add a,a
+    add a,l
+    ld l,a
+    jr c,$+3
+    dec h
+lm_p3
+    ld a,PAIRS                          ; MT (self-modified)
+line_margin_patch_go
+    ld sp,hl
+    ld l,a
+    ld h,hi(rgrass)
+    jp (hl)
 
 kerb0_word  defw KERB0_PAIR
 kerb1_word  defw KERB1_PAIR
@@ -588,10 +745,12 @@ render_end
 ;; Templates for every frame, here because they are band A's (bit 13 of the
 ;; address clear) and must be read in either bank:
 ;; the end of the list
-tmpl_end    defw render_end,lgrassa+48,#3040
+    ALIGN 2                             ; bit 0 of a template's address is a
+tmpl_end    defw render_end,#3040,lgrassa+48   ; flag (road_draw)
 ;; a line that is already right: nothing pushed
-tmpl_skip   defw 0,0,lo(rgrass_skip)*256+#40
+tmpl_skip   defw 0,lo(rgrass_skip)*256+#40,0
     ASSERT (tmpl_end & #2000) == 0
+    ASSERT ((tmpl_end | tmpl_skip) & 1) == 0
 
     ASSERT $ <= #1700
     defs #1700-$,0
@@ -634,14 +793,14 @@ frag2_end
 LIST_GUARD  EQU 32
 LIST_LEN    EQU (ROAD_LINES+1)*4
 
-    ORG FRAG3,FRAG_STORE+3*FRAG_LEN
+    ORG FRAG3,FRAG_ST3
     defs LIST_GUARD,0
 list0                                   ; 4-aligned: road_project steps
     ASSERT (list0 & 3) == 0             ; within an entry with INC E
     defs LIST_LEN,0
     ASSERT $ <= FRAG3+FRAG_LEN
 
-    ORG FRAG4,FRAG_STORE+4*FRAG_LEN
+    ORG FRAG4,FRAG_ST4
     defs LIST_GUARD,0
 list1
     ASSERT (list1 & 3) == 0

@@ -154,15 +154,15 @@ def fps(g, seconds=10):
 def cmd_shots():
     """Screenshots of the road's shapes, taken at a VSYNC so the picture is
     whole: flat and straight, behind the top of a crest (road down to 1/3 of
-    the screen, ground showing) bending right, in a dip (road up to 2/5)
-    bending left, and the sharpest curve. A shape counts once the curve
-    level has held for 8 VSYNCs, so both buffers were drawn with it."""
+    the screen, ground showing), in a dip (road up to 2/5), and the sharpest
+    curve - the demo track never bends on a hill. A shape counts once the
+    curve level has held for 8 VSYNCs, so both buffers were drawn with it."""
     g = Game()
     docs = os.path.join(ROOT, "docs")
     os.makedirs(docs, exist_ok=True)
     want = {"flat": lambda h, k: h == 0 and k == 0,
-            "crest": lambda h, k: 90 <= h <= 127 and k == 5,
-            "dip": lambda h, k: -128 <= h <= -86 and k == -7,
+            "crest": lambda h, k: 90 <= h <= 127 and k == 0,
+            "dip": lambda h, k: -128 <= h <= -86 and k == 0,
             "curve": lambda h, k: k == 7}
     taken = {}
     last, held = None, 0
@@ -225,7 +225,8 @@ def road_pens(g, buf, y0=160, y1=272):
 
 
 def road_model(g):
-    """What scene.py says the road should be for the engine's inputs now."""
+    """What scene.py says the road part should be for the engine's inputs
+    now: lines ROAD_AREA_Y..271, the road and the bushes."""
     import scene
     zcam = g.word("ZCAM")
     hill = g.byte("HILL")
@@ -233,7 +234,7 @@ def road_model(g):
     hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
     curve = g.byte("ROAD_CURVE")
     curve = curve - 256 if curve > 127 else curve
-    return scene.road_lines(hill, zcam, curve), hill, zcam, curve
+    return scene.road_area(hill, zcam, curve), hill, zcam, curve
 
 
 # Where line 0 of the picture is in the emulator's framebuffer (1024 x 312,
@@ -260,22 +261,24 @@ def at_vsync(g):
 
 def cmd_check():
     import scene
-    from cpcgfx import ROAD_Y, SCR_H, pen_hw
+    from cpcgfx import SCR_H, pen_hw
     g = Game()
     frames, vbls, late = fps(g, 10)
     print("%d pictures in %d VSYNCs: %.2f pictures/s, %d late"
           % (frames, vbls, 50.0 * frames / max(vbls, 1), late))
-    # Every road line of a freshly drawn buffer against the Python model -
-    # including the lines road_project decided had not changed.
+    # Every line of a freshly drawn buffer's road part against the Python
+    # model, the bushes on it - including the lines road_project decided had
+    # not changed.
     bad = 0
     seen = set()
     curves = set()
+    y0 = scene.ROAD_AREA_Y
     for n in range(240):
-        run_to(g.c, g.sym["RENDER_END"])
+        run_to(g.c, g.sym["PICTURE_DONE"])
         buf = g.byte("ROAD_BUF")
         want, hill, zcam, curve = road_model(g)
-        got = road_pens(g, buf, ROAD_Y, SCR_H)
-        wrong = [ROAD_Y + i for i in range(len(want)) if want[i] != got[i]]
+        got = road_pens(g, buf, y0, SCR_H)
+        wrong = [y0 + i for i in range(len(want)) if want[i] != got[i]]
         seen.add(hill)
         curves.add(curve)
         if wrong:
@@ -285,7 +288,7 @@ def cmd_check():
                       "differ, first %d" % (n, buf, hill, zcam, curve, len(wrong),
                                             wrong[0]))
         for _ in range(37):              # skip ahead to vary hill and zcam
-            run_to(g.c, g.sym["RENDER_END"])
+            run_to(g.c, g.sym["PICTURE_DONE"])
     print("road check: %d of 240 pictures differ from scene.py; hills seen %s; "
           "curve levels seen %s" % (bad, sorted(seen), sorted(curves)))
 
@@ -328,7 +331,8 @@ def cmd_check():
     # What the CRTC made of the buffer on screen: the split frame, with the
     # horizon as far down as the buffer's road asked for - the same whatever
     # the CRTC does in the R5 lines (tools/emu/crtc_patch.py), 100 frames
-    # with each of the three behaviours.
+    # with each of the three behaviours, a few frames apart so they spread
+    # over a lap of the demo track.
     import cpc
     scr_bad = 0
     drops = set()
@@ -351,7 +355,7 @@ def cmd_check():
             if scr_bad <= 3:
                 print("frame %d (R5 model %d, buffer %d, drop %d): lines %s "
                       "differ" % (n, n // 100, buf, drop, wrong[:8]))
-        g.c.run_frames(1)
+        g.c.run_frames(1 + n * 7 % 9)
     print("screen check: %d of 300 frames (3 R5 models) differ from the parts "
           "split as scene.py says; drops seen %s; %d headings"
           % (scr_bad, sorted(drops), len(heads)))

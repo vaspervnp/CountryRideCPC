@@ -100,6 +100,7 @@ main_draw
 main_hud_kept
     ld a,(back_buf)
     call draw_picture
+picture_done                    ; (tools/run.py looks at the picture here)
 
     ; show it at the next VSYNC that keeps the 25 Hz cadence, its horizon
     ; as far down as its road's top, its sky looking its way - unless its
@@ -148,16 +149,17 @@ draw_screen_hud
     ret
 
 ;; ---------------------------------------------------------------------------
-;; draw_picture - A = buffer: HUD changes, then the road.
+;; draw_picture - A = buffer: HUD changes, last time's bushes taken away,
+;; the road, then this picture's bushes (bush.asm).
 ;;
-;; When the curve level is not the one the buffer was last drawn with, every
-;; far road line moves and is drawn again (~2.5 ms more): the HUD then waits
-;; for the buffer's next picture, and the sky's turn for the next picture
-;; (pic_bent), so the picture keeps to its 40 ms. When the flip that started
-;; this picture turned the sky (~1.4 ms taken from it), the HUD has a
-;; smaller share and the road keeps the buffer's curve level - the next
-;; picture takes the new one; as a picture that does defers the sky's turn,
-;; the two buffers take it one after the other.
+;; A buffer's curve level moves at most one level a picture towards the
+;; game's. When it moves, the road has moved sideways on most lines and
+;; road_project draws them with a margin of grass (~6 ms more): the HUD then
+;; has a smaller share, and the sky's turn waits for the next picture
+;; (pic_bent). When the flip that started this picture turned the sky
+;; (~1.4 ms taken from it), the road keeps the buffer's curve level - the
+;; next picture takes the new one; as a picture that does defers the sky's
+;; turn, the two buffers take it one after the other.
 ;; ---------------------------------------------------------------------------
 draw_picture
     push af
@@ -174,25 +176,34 @@ draw_picture
     ld b,HUD_SHARE
     jr z,draw_picture_level
     ld a,(hl)                   ; it did: this buffer's level again
-    ld b,HUD_SHARE_LOW
 draw_picture_level
-    ld (road_curve),a
-    cp (hl)
+    sub (hl)
+    ld c,0
+    jr z,draw_picture_step
+    ld b,HUD_SHARE_LOW          ; a level towards the game's
+    ld c,1
+    jp p,draw_picture_step
+    ld c,-1
+draw_picture_step
+    ld a,(hl)
+    add a,c
     ld (hl),a
+    ld (road_curve),a
     ld a,b
-    ld (hud_quota),a            ; (the flags are still the level's)
-    ld hl,pic_bent
-    ld (hl),0
-    jr nz,draw_picture_bent
-    call hud_update
-    jr draw_picture_road
+    ld (hud_quota),a
+    ld a,c
+    or a
+    jr z,draw_picture_bent
+    ld a,1
 draw_picture_bent
-    inc (hl)
-draw_picture_road
+    ld (pic_bent),a
+    call hud_update
     SET_RAM RAM_C1
+    call bush_erase             ; last time's bushes, before the road
     pop af
     ld (road_buf),a
-    jp road_frame
+    call road_frame
+    jp bush_draw                ; this picture's on top of it
 
 ;; ---------------------------------------------------------------------------
 ;; set_palette - HL = 16 Gate Array colour bytes. Border black.

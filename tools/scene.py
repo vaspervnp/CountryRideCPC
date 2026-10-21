@@ -14,10 +14,15 @@ Everything works in pen numbers on a 192x272 grid of mode 0 pixels.
 import math
 import os
 
-from cpcgfx import (PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
+from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
                     HORIZON_Y, curve_shift,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
+                    PLAIN_GRASS, TRACK_PERIOD, BUSH_SIZES, BUSH_LATS, BUSH_LAT_OF,
+                    BUSH_H, BUSH_ASPECT, BUSH_ZNEAR, BUSH_ZFAR, BUSH_GAP,
+                    BUSH_SEED, BUSH_BIG_GAP, BUSH_MAX, BUSH_IN_REACH, bush_row,
+                    bush_sprite_of, bush_lat, bush_centre, bush_zvis,
+                    m0_byte, m0_decode,
                     row_half_bytes, row_depth, road_row_pixels, pen_rgb)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -390,12 +395,16 @@ def project(hill, zcam=0):
     return line_row
 
 
+HILL_MAX = max(h for h in range(0, 128, 2)
+               if next(i for i, r in enumerate(project(h)) if r is not None)
+               + ROAD_Y <= ROAD_TOP_MAX)
+
+
 def road_line(r, band, cx=SCR_W // 2):
     """Pens of one road line showing row r (None = ground strip)."""
     if r is None:
         return [GROUND_PEN] * SCR_W
-    b = BANDS[band]
-    out = [b["grass"]] * SCR_W
+    out = [PLAIN_GRASS] * SCR_W
     pens, left = road_row_pixels(row_half_bytes(r), band)
     for i, p in enumerate(pens):
         x = cx - left + i
@@ -409,6 +418,199 @@ def road_lines(hill, zcam, curve=0):
     rows = project(hill, zcam)
     return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * curve_shift(curve, r))
             if r else road_line(None, 0) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Bushes
+# ---------------------------------------------------------------------------
+
+# A bush is a few round clumps of leaves, in a box 2.4 wide and 1 high
+# (square units), lit from the upper left like the mountains.
+BUSH_CLUMPS = [(0.42, 0.62, 0.40), (0.95, 0.50, 0.50), (1.50, 0.55, 0.47),
+               (1.98, 0.66, 0.36), (0.75, 0.30, 0.28), (1.30, 0.28, 0.27),
+               (1.75, 0.38, 0.27)]
+BUSH_LIGHT = (-0.5, -0.7, 0.5)
+BUSH_PENS = dict(lit=PEN["GRASS_A"], body=PEN["BUSH"], dark=PEN["BLACK"])
+
+
+def _leaf_noise(i, j, seed=3):
+    """-1..1, fixed per leaf cell."""
+    v = (i * 374761393 + j * 668265263 + seed * 2246822519) & 0xFFFFFFFF
+    v = ((v ^ (v >> 13)) * 1274126177) & 0xFFFFFFFF
+    return ((v >> 8) & 0xFFFF) / 32767.5 - 1
+
+
+def bush_art(h):
+    """A bush `h` lines high: rows of pens, None where the grass shows."""
+    w = max(2, int(BUSH_ASPECT * h + 0.5))
+    lx, ly, lz = BUSH_LIGHT
+    n = math.sqrt(lx * lx + ly * ly + lz * lz)
+    lx, ly, lz = lx / n, ly / n, lz / n
+    inside = [[None] * w for _ in range(h)]
+    for j in range(h):
+        v = (j + 0.5) / h
+        for i in range(w):
+            u = (i + 0.5) / w * 2.4
+            best = None
+            for cx, cy, r in BUSH_CLUMPS:
+                d2 = (u - cx) ** 2 + (v - cy) ** 2
+                if d2 <= r * r:
+                    z = math.sqrt(r * r - d2)
+                    if best is None or z > best[0]:
+                        best = (z, (u - cx) / r, (v - cy) / r, z / r)
+            inside[j][i] = best
+    out = [[None] * w for _ in range(h)]
+    for j in range(h):
+        for i in range(w):
+            b = inside[j][i]
+            if b is None:
+                continue
+            _, nx, ny, nz = b
+            lit = nx * lx + ny * ly + nz * lz
+            lit += 0.35 * _leaf_noise(int(i / 1.5), j // 2)
+            edge = any(not (0 <= j + dj < h and 0 <= i + di < w)
+                       or inside[j + dj][i + di] is None
+                       for di, dj in ((-1, 0), (1, 0), (0, -1), (0, 1)))
+            if h >= 5 and j == h - 1:
+                pen = BUSH_PENS["dark"]          # its shadow on the ground
+            elif lit < 0.1:
+                pen = BUSH_PENS["dark"]
+            elif lit > 0.8 and not edge:
+                pen = BUSH_PENS["lit"]
+            else:
+                pen = BUSH_PENS["body"]
+            out[j][i] = pen
+    return out
+
+
+def bush_sprite(k):
+    """Sprite k (BUSH_H[k] lines) as the engine draws it: (width in bytes,
+    [(first byte, [bytes])] a line). Each line is one run of bytes from its
+    first pixel of bush to its last, the grass between filled in, and a byte
+    of grass more where that makes it a whole number of pairs (the engine
+    PUSHes them): on the left, or on the right at the sprite's left edge. The
+    width is even, so that byte is always inside it."""
+    art = bush_art(BUSH_H[k])
+    w = len(art[0])
+    wb = (w + 1) // 2
+    wb += wb & 1
+    lines = []
+    for row in art:
+        px = [i for i, p in enumerate(row) if p is not None]
+        assert px, "a bush line with no bush in it"
+        a, b = px[0] // 2, px[-1] // 2 + 1
+        if (b - a) & 1:
+            if a:
+                a -= 1
+            else:
+                b += 1
+        pens = [PLAIN_GRASS if p is None else p for p in row]
+        pens += [PLAIN_GRASS] * (2 * wb - len(pens))
+        lines.append((a, [m0_byte(pens[2 * x], pens[2 * x + 1]) for x in range(a, b)]))
+    return wb, lines
+
+
+BUSH_SPRITES = [bush_sprite(k) for k in range(len(BUSH_H))]
+
+
+def bush_layout():
+    """The bushes along the track, nearest first: (z, side, size, lateral),
+    side -1 left or 1 right, at random gaps - pushed further on where that
+    would make more than BUSH_IN_REACH bushes in reach at once (a bush is in
+    reach from bush_zvis to BUSH_ZNEAR ahead)."""
+    import random
+    rnd = random.Random(BUSH_SEED)
+    zvis = [bush_zvis(size) for size in range(len(BUSH_SIZES))]
+
+    def reach(z, size):                 # the zcams it is in reach at
+        return z - zvis[size] + 1, z - BUSH_ZNEAR
+
+    def crowded(z, size, others):
+        a, b = reach(z, size)
+        spans = [(max(a, a2), min(b, b2)) for a2, b2 in
+                 (reach(z2, s2) for z2, _, s2, _ in others)]
+        spans = [(a2, b2) for a2, b2 in spans if a2 <= b2]
+        return any(sum(1 for a3, b3 in spans if a3 <= a2 <= b3) >= BUSH_IN_REACH
+                   for a2, b2 in spans)
+
+    out = []
+    z = rnd.randint(*BUSH_GAP)
+    big = -BUSH_BIG_GAP
+    while z < TRACK_PERIOD - BUSH_GAP[0]:
+        size = rnd.randrange(len(BUSH_SIZES))
+        if size == len(BUSH_SIZES) - 1:
+            if z - big < BUSH_BIG_GAP:      # two of the biggest stay apart
+                size -= 1
+            else:
+                big = z
+        while crowded(z, size, out[-2 * BUSH_IN_REACH:]):
+            z += 8
+        lo, hi = BUSH_LAT_OF[size]
+        out.append((z, rnd.choice((-1, 1)), size, rnd.randint(lo, hi)))
+        z += rnd.randint(*BUSH_GAP)
+    # where the track loops: the last ones against the first, a lap on
+    while out and crowded(out[-1][0], out[-1][2],
+                          out[-2 * BUSH_IN_REACH - 1:-1]
+                          + [(z2 + TRACK_PERIOD, sd, s2, l2)
+                             for z2, sd, s2, l2 in out[:2 * BUSH_IN_REACH]]):
+        out.pop()
+    return [b for b in out if b[0] < TRACK_PERIOD]
+
+
+BUSHES = bush_layout()
+
+
+def effective_hill(hill):
+    """The hill the road engine draws: an even level, no stronger a crest
+    than HILL_MAX lets the road's top go."""
+    return min(level_hill(hill_level(hill)), HILL_MAX)
+
+
+def bush_items(hill, zcam, curve):
+    """The bushes on screen, in the order they are drawn - nearest first,
+    BUSH_MAX at most (they hardly ever overlap): (sprite, left byte, base
+    line, inside of the curve). `hill` as the road engine draws it. A bush
+    going off a side of the screen is drawn until its centre goes."""
+    rows = project(hill)
+    top = next(r for r in rows if r)         # the furthest row in sight
+    out = []
+    for z, side, size, lat in BUSHES:
+        zr = (z - zcam) % TRACK_PERIOD
+        r = bush_row(zr)
+        if not r or r < top:
+            continue
+        q = abs(hill) // r
+        y = HORIZON_Y + r + (q if hill >= 0 else -q)
+        if y < ROAD_Y:
+            continue
+        k = bush_sprite_of(size, r)
+        if k is None:
+            continue
+        wb = BUSH_SPRITES[k][0]
+        # drawn while its centre is on the screen (as the engine works it
+        # out, in bytes: the offset at most 127)
+        cx = bush_centre(curve, r) + side * min(bush_lat(lat, r), 127)
+        if not 0 <= cx < SCR_W // 2:
+            continue
+        bx = cx - wb // 2
+        out.append((zr, k, bx, y, side * curve > 0))
+    out.sort(key=lambda t: t[0])
+    return [t[1:] for t in out[:BUSH_MAX]]
+
+
+def draw_bushes(lines, y0, hill, zcam, curve):
+    """Draw the bushes into `lines` (pen rows, the first being line y0)."""
+    for k, bx, y, _ in bush_items(hill, zcam, curve):
+        wb, spans = BUSH_SPRITES[k]
+        top = y - len(spans) + 1
+        for j, (a, data) in enumerate(spans):
+            yy = top + j
+            if yy < max(y0, ROAD_AREA_Y):
+                continue
+            for i, b in enumerate(data):
+                x = bx + a + i
+                if 0 <= x < SCR_W // 2:
+                    lines[yy - y0][2 * x:2 * x + 2] = list(m0_decode(b))
 
 
 # ---------------------------------------------------------------------------
@@ -461,10 +663,14 @@ def sky_lines(heading=0):
     return out
 
 
-def road_area(hill=0, zcam=0, curve=0):
-    """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road."""
-    return ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
-            + road_lines(hill, zcam, curve))
+def road_area(hill=0, zcam=0, curve=0, bushes=True):
+    """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, and
+    the bushes. `hill` as the road engine draws it (effective_hill)."""
+    lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
+             + road_lines(hill, zcam, curve))
+    if bushes:
+        draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve)
+    return lines
 
 
 def ground_drop(hill):
@@ -502,8 +708,8 @@ def screen(hill=0, zcam=0, drop=None, heading=0, curve=0, **hudvals):
     road bent by curve level `curve`."""
     if drop is None:
         drop = ground_drop(hill)
-    return shown(hud(**hudvals), sky_lines(heading), road_area(hill, zcam, curve),
-                 drop)
+    return shown(hud(**hudvals), sky_lines(heading),
+                 road_area(effective_hill(hill), zcam, curve), drop)
 
 
 def to_image(pens, scale=True):
