@@ -304,9 +304,13 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   6th on the costly side of a sharp curve, two pairs a tick earlier); one
   worked out ahead, whenever there is a step at all. Else the road waits a
   picture. After a step the next picture of each buffer draws every line's
-  road and a margin of grass. Nothing moves on a hill or just before one,
-  nor after a picture whose hill moved (those pictures are heavy enough):
-  on hilly track that, more than the steps' cost, holds steering back.
+  road and a margin of grass. Nothing moves after a picture whose hill
+  moved, nor while a hill is under the camera or near: three track entries
+  (96 depth units) ahead for a new curve level, two for a step sideways -
+  the two pictures a step makes heavy are done before the hill moves (at
+  full speed an entry is ~3 pictures). Pictures whose hill moves are heavy
+  enough: a step on top of one makes it late. On hilly track that, more
+  than the steps' cost, holds steering back.
 - **A new curve level off the middle** is worked out a few groups of rows at
   a time, in the time left before each flip; meanwhile pictures draw a
   margin for the groups still a level behind. It waits on a hill or just

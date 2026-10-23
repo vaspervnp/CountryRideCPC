@@ -508,5 +508,17 @@ cp_piece
 cp_both
     jp cache_both
 
+;; ---------------------------------------------------------------------------
+;; cache_hill - (cache_steps) a hill here or within HILL_AHEAD entries: no
+;; new curve level, but a step sideways if the hill is further than
+;; HILL_STEP_AHEAD entries - the pictures that step makes heavy are done
+;; before it moves.
+;; ---------------------------------------------------------------------------
+cache_hill
+    ld b,HILL_STEP_AHEAD+1
+    call hill_near_b
+    ret nz
+    jp cache_steps_x
+
 cache1_end
     ASSERT cache1_end <= #8000

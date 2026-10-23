@@ -269,8 +269,11 @@ pic_bushes
 ;; picture's hill moved (as the road leaves a hill): a picture whose hill
 ;; moves compares each line's row with then's, and a new level or a step
 ;; sideways on top of that - or the cache catching up with a level - is too
-;; much. (The track has no curve on a hill: a level only waits when it is
-;; late; the road waits to move sideways.)
+;; much. A new level waits for a hill HILL_AHEAD track entries ahead, a step
+;; sideways only for one HILL_STEP_AHEAD ahead (cache_hill): the pictures
+;; its two buffers draw next are done by then. (The track has no curve on
+;; a hill: a level only waits when it is late; the road waits to move
+;; sideways.)
 ;;
 ;; The curve level moves a level towards the game's - not within two
 ;; pictures of the last move, so that a buffer's road moves a level at most
@@ -290,11 +293,11 @@ pic_bushes
 ;; sky's turn and the cache's jobs back for a picture.
 ;; ---------------------------------------------------------------------------
 cache_steps
-    call hill_near              ; no hill here or just ahead
-    ret nz
-    ld a,(rp_cmp)               ; nor did the last picture's hill move
+    ld a,(rp_cmp)               ; the last picture's hill did not move
     or a
     ret nz
+    call hill_near              ; nor is a hill here or just ahead (a step
+    jp nz,cache_hill            ; sideways looks less far: cache.asm)
     ld a,(curve_wait)
     or a
     jr nz,cache_steps_x
@@ -421,6 +424,8 @@ cache_steps_step
 DEMO_HOLD   EQU 128
 HILL_AHEAD  EQU 3               ; track entries (32 depth units) the curve
                                 ; level looks ahead for a hill
+HILL_STEP_AHEAD EQU 2           ; ... and a step sideways (~6 pictures at
+                                ; full speed)
 STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step
