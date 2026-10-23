@@ -282,10 +282,11 @@ pic_bushes
 ;; all (the curve levels' own sets are drawn, and the cache follows them
 ;; when it can); off it, only once the cache has caught up with the last.
 ;;
-;; Then road_x moves towards steer_x, two pairs if it is that far and there
-;; is time, else one, the whole cache with it (cache_step) - out of the
-;; middle only once the cache has caught up with the curve level, into it
-;; only once it has caught up too. A step the cache has worked out ahead
+;; Then road_x moves two pairs towards steer_x - always two, so it is
+;; always even: with steer_x a pair from it, it waits - the whole cache with
+;; it (cache_step), out of the middle only once the cache has caught up with
+;; the curve level, into it only once it has caught up too. A step the
+;; cache has worked out ahead
 ;; (cache_ready) is only copied into place, ~5 ms, and goes whenever this
 ;; runs; else it is made there and then, and only if it is sure to be done
 ;; before the flip (STEP_LATE): else the road waits a picture, which then
@@ -361,7 +362,7 @@ cache_steps_go
     ld a,(road_x)               ; pairs or more to the side a curve of 3
     bit 7,e                     ; levels or more bends to (many groups cut
     jr z,$+4                    ; short on that side): a tick earlier then;
-    neg                         ; two pairs a tick earlier still
+    neg                         ; two pairs (all there are) a tick earlier
     cp 8
     jp m,cache_steps_gate
     ld a,e
@@ -375,22 +376,14 @@ cache_steps_gate
     jp p,$+5
     neg
     cp 2
-    jr c,cache_steps_one        ; (a pair is all it is to go)
-    ld a,(curve_wait)           ; (nor two while a new curve level has the
+    ret c                       ; (a pair is all it is to go: it waits)
+    ld a,(curve_wait)           ; (nor while a new curve level has the
     or a                        ; road drawn with a margin)
-    jr nz,cache_steps_one
+    ret nz
     ld a,(irq_n)
     inc a
     cp b
-    jr c,cache_steps_two
-cache_steps_one
-    ld a,(irq_n)
-    cp b
     ret nc
-cache_steps_now
-    ld b,1                      ; a pair
-    db #21                      ; (LD HL,nn: over the next)
-cache_steps_two
     ld b,2                      ; two pairs
     ld a,c
     call clamp_ab
@@ -497,8 +490,8 @@ steer_to
     ld a,b                      ; a pair a picture at most, either way, on
     ld b,1                      ; from where the road was to go - no more
     call clamp_ab               ; than STEER_AHEAD from where it is (the
-    ld b,a                      ; road goes up to 2 pairs a step: when it
-    ld a,(steer_x)              ; has the time), nor ROAD_X_MAX from the
+    ld b,a                      ; road goes 2 pairs a step, so it needs
+    ld a,(steer_x)              ; that much), nor ROAD_X_MAX from the
     add a,b                     ; middle
     ld hl,road_x
     sub (hl)

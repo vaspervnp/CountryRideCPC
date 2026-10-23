@@ -273,20 +273,19 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   turned round from one group to the next and following the edge's slope,
   moves where each one rounds, and the edges come out as even staircases.
   The lane lines sit at an even number of pixels from the centre.
-- **A step sideways** (`cache_step`) moves every group's sum a pair's (or
-  two pairs') worth, between two pictures, so none shows the road half
-  moved. The groups whose byte changes - about 40 of 51 - get their
+- **A step sideways** (`cache_step`) moves every group's sum two pairs'
+  worth (8 pixels: `road_x` is always even, and with the road to go a pair
+  it waits), between two pictures, so none shows the road half moved. The groups whose byte changes - about 40 of 51 - get their
   templates made afresh: band B's in bank 5 there and then, band A's and
   the far rows' band 2 in bank 4 after, from a list of the groups that
   moved. A core all on the screen takes its template straight from per
   group tables; one cut short by a side of the screen has the pair it is
   entered at or left by looked up in its entry table (every core variant
   sits in one 256-byte page, so that is all low bytes). Made there and
-  then, a step takes ~11-12 ms (up to ~13 ms; ~14.5 ms with the road 8
-  pairs or more to the side a sharp curve bends to; two pairs ~12.5 ms, up
-  to ~15 ms).
-- **Worked out ahead.** So the next step - towards where the road is to go,
-  up to two pairs - is worked out in the time left before each flip, a
+  then, a step takes ~12.5 ms (up to ~15 ms with the road 8 pairs or more
+  to the side a sharp curve bends to).
+- **Worked out ahead.** So the next step - two pairs towards where the
+  road is to go - is worked out in the time left before each flip, a
   piece at a time (`cache_pre`: up to 12 groups or 7 band A templates,
   ~2.4 ms, up to ~2.8 ms), when no new curve level is being caught up with.
   Its templates go into a staging set in each bank, laid out as the cache
@@ -300,9 +299,9 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   pieces).
 - **Only when it fits.** A step made there and then - when none is worked
   out ahead - is made after a picture only if it is sure to be done before
-  the flip, by the interrupts counted since the last one: up to the 7th (the
-  6th on the costly side of a sharp curve, two pairs a tick earlier); one
-  worked out ahead, whenever there is a step at all. Else the road waits a
+  the flip, by the interrupts counted since the last one: up to the 6th (the
+  5th on the costly side of a sharp curve); one worked out ahead, whenever
+  there is a step at all. Else the road waits a
   picture. After a step the next picture of each buffer draws every line's
   road and a margin of grass. Nothing moves after a picture whose hill
   moved, nor while a hill is under the camera or near: three track entries

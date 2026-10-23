@@ -34,7 +34,7 @@
 frag6_start
 
 road_x      defb 0          ; the road's pairs right of the middle, signed
-                            ; (cache_step)
+                            ; and even (cache_step: two pairs a step)
 cache_k     defb 0          ; curve level the cache is made for (cache_curve)
 rd_s        defb 0          ; road_x's step (cache_step)
 rd_kdir     defb 0          ; cache_k's last step: 1 or -1
@@ -457,12 +457,12 @@ cr_no
 
 ;; ---------------------------------------------------------------------------
 ;; cache_pre - (cache_job, with no groups to put at cache_k) the step
-;; road_x is to take next, towards steer_x, worked out ahead a piece at a
-;; time (each up to ~3 ms, as a batch of jobs): the staging sets made the
-;; cache's first if they are not (rs5, then rs4), then PRE_BATCH groups a
-;; piece (pre5, pre4). One that goes further, or the other way, is dropped
-;; (cache_drop). NZ if there was any work. RAM_C1 in and out. Destroys
-;; everything.
+;; road_x is to take next, two pairs towards steer_x if it is that far,
+;; worked out ahead a piece at a time (each up to ~3 ms, as a batch of
+;; jobs): the staging sets made the cache's first if they are not (rs5,
+;; then rs4), then PRE_BATCH groups a piece (pre5, pre4). One the other way
+;; is dropped (cache_drop). NZ if there was any work. RAM_C1 in and out.
+;; Destroys everything.
 ;; ---------------------------------------------------------------------------
 cache_pre
     ld a,(road_x)
@@ -472,6 +472,11 @@ cache_pre
     ret z                               ; none to take
     ld b,2
     call clamp_ab
+    ld e,a
+    inc a
+    and #FD
+    ret z                               ; (a pair: none - two a step)
+    ld a,e
     ld hl,pre_s
     ld e,(hl)
     inc e
