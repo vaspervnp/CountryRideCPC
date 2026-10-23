@@ -396,13 +396,76 @@ the player not steering, the curves carrying the car out. Roughly:
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
 
-In the demo 6 pictures in 3000 came within half a millisecond of their
-flip or past it, with the player not steering 2; by up to 1.2 ms past it:
-pictures off the middle of the road while the cache catches up with a new
-curve level, or whose hill moved. A sideways step (~5 ms copied into place,
-or up to ~14 ms made there and then), a batch of the cache's work (3
-groups, up to ~3 ms) or a piece of the next step worked out ahead (up to
-~2.8 ms) never runs past the flip.
+In the demo 2 pictures in 3000 ran past their flip, with the player not
+steering 1, steering from side to side 3; by up to 1 ms: pictures off the
+middle of the road while the cache catches up with a new curve level, or
+whose hill moved. A sideways step (~5 ms copied into place, or up to ~14 ms
+made there and then), a batch of the cache's work (3 groups, up to ~3 ms)
+or a piece of the next step worked out ahead (up to ~2.8 ms) never runs past
+the flip.
+
+### Steering in numbers
+
+Measured in the emulator, 3000 pictures each: the demo; the player not
+steering, the curves carrying the car out; and steering from side to side,
+the tools setting `steer_x` to 32 pairs either way in turn.
+
+| | Demo | Not steering | Side to side |
+|---|---|---|---|
+| a picture, on average | 28.0 ms | 27.3 ms | 29.0 ms |
+| the worst | 40.7 ms | 40.6 ms | 41.0 ms |
+| past the flip | 2 | 1 | 3 |
+| pairs the road moved a picture | 0.074 | 0.057 | 0.179 |
+
+The cache's work, each piece (the step worked out ahead and copied into
+place, or made there and then when there is none):
+
+| | Mean | Worst |
+|---|---|---|
+| a step copied into place (two pairs) | 5.0 ms | 5.2 ms |
+| a step made there and then (two pairs) | 12.6 ms | 14.0 ms |
+| a piece of the next step worked out ahead | 2.4 ms | 2.8 ms |
+| the staging sets made the cache's again, a bank | 2.6 ms | 2.7 ms |
+| a batch of a new curve level's catching up (3 groups) | 2.1 ms | 2.9 ms |
+
+Steering across the road (10 runs from one side to the other): 0.178 pairs
+a picture - 0.110 with every step made there and then (measured before the
+steps were always two pairs). The first run, from the flat start, went 0.62
+pairs a picture; the most there can be is one, two pairs every other
+picture. Holding a key (the road at most two pairs behind): 0.149 pairs a
+picture, changing direction every 20 pictures; 0.156 every 60. The demo
+track is mostly hills and curves.
+
+What holds it back is the pictures, not the steps: a step makes the next
+picture of each buffer draw every line's road, and on hilly track there is
+rarely the room. Road drawing alone, steering from side to side (with
+steps on hills allowed, for the last):
+
+| The picture | Drawing |
+|---|---|
+| nothing moved (most lines skipped) | 12.7 ms |
+| the hill moved | 16.5 ms |
+| the road moved sideways | 23 ms |
+| both | 24.1 ms (28 ms at worst) |
+
+Steps sideways on hills, tried (pictures past the flip, demo / not steering
+/ side to side, and pairs a picture side to side):
+
+| A step sideways waits for a hill | Past the flip | Pairs |
+|---|---|---|
+| under the camera or 3 track entries ahead (*) | 2 / 2 / 1-3 | 0.175 |
+| ... 2 entries ahead (now) | 2 / 1 / 3 | 0.179 |
+| ... 1 entry ahead | 4 / 3 / 4 | 0.185 |
+| ... under the camera only (*) | 4 / 1 / 7 | 0.199 |
+| never: steps on a moving hill too (*) | 8-16 / 10-16 / 45-56 | 0.36 |
+
+(*) Measured while a step could still be one pair or two.
+
+Steps on a moving hill would double steering on hilly track, but the
+picture after one is up to ~3.5 ms too long; drawing the lines that show
+another row with the road and both margins instead of whole saved only
+0.6 ms on average, and letting a step go only after a light picture still
+left many late. Nothing moves after a picture whose hill moved.
 
 ## Testing
 
