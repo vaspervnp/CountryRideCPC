@@ -28,11 +28,11 @@ rr_tlo   ; band 0 template, low byte
     defb #88,#88,#90,#90,#98,#98
     defs 128-110,0
 rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;
-            ; then ROWS + 1, as if one more
+            ; then ROWS + 1, as if one more, and 255 (none)
     defb 1,2,4,6,8,10,12,15,17,19,21,23,26,28,30,32
     defb 34,36,39,41,43,45,47,50,52,54,56,58,60,63,65,67
     defb 69,71,74,76,78,80,82,84,87,89,91,93,95,98,100,102
-    defb 104,106,108,110
+    defb 104,106,108,110,255
     ALIGN 256
 rr_depth   ; depth, low byte
     defb 0,80,40,27,148,16,13,85

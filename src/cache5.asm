@@ -86,7 +86,7 @@ st5_end
     ld (rd_lsp),sp                      ; j5_back)
 st5_sp
     ld sp,0                             ; (self-modified)
-    ret
+    jp st5_mark
 st5_fend                                ; the far groups done: the rest, with
     ld a,l                              ; no band 2
     cp #CD+NFAR
@@ -541,7 +541,9 @@ pre5
     ld a,(pre_g)
     or a
     jr nz,p5_go
-    ld hl,RA_AO                         ; the first piece: the a's kept
+    dec a
+    ld (pre_g0),a                       ; the first piece: none moved yet,
+    ld hl,RA_AO                         ; the a's kept
     ld de,SB
     ld bc,NGROUPS
     ldir
@@ -590,6 +592,11 @@ p5_sp
     ld a,l
     sub #CD
     ld (pre_g),a                        ; (0 - #CD: NGROUPS)
+    ld a,(pre_g0)
+    inc a
+    call z,st5_first                    ; the first group it moves, if none
+    dec a                               ; yet
+    ld (pre_g0),a
     ld a,hi(CACHE_B)
     ld (tm_b_page+1),a
     ld a,hi(rd_gp)
@@ -646,6 +653,9 @@ u5_end
 ;; cache set (from the first group with band B rows on); rs5 - the other
 ;; way, STAGE_B and SGP made the cache's again. Destroy BC, DE, HL.
 cm5
+    ld a,(pre_g0)
+    cp 255
+    call nz,st5_marka
     ld hl,SGP
     ld de,rd_gp
     ld bc,NGROUPS
@@ -673,6 +683,34 @@ rs5
     ld hl,CACHE_B+8*(1+NFARONLY)
     ld de,STAGE_B+8*(1+NFARONLY)
     jr c5_n
+
+;; st5_mark - after st5: the groups from the first whose a moved on are
+;; noted as moved for both buffers (cache_mark; st5_marka: A = that one) -
+;; the rows of those before it are as they were (rp_mode_chg). Destroys
+;; AF, DE, HL.
+st5_mark
+    call st5_first
+    or a
+    ret z                               ; none moved
+    dec a
+st5_marka
+    call cache_mark
+    ld a,NGROUPS-1
+    jp cache_mark
+
+;; st5_first - after a pass of st5's loop: A = 1 + the first group on its
+;; list (rd_list: pushed first, after the end), 0 if it is empty. Destroys
+;; F, DE, HL.
+st5_first
+    ld hl,(rd_lsp)
+    ld de,rd_ltop-2
+    xor a
+    sbc hl,de
+    ret z
+    ld a,(rd_ltop-4)                    ; 2 g
+    srl a
+    inc a
+    ret
 
 cache5_bank_end
     ASSERT cache5_bank_end <= STAGE_B && STAGE_B+8*(1+NGROUPS) <= SGP

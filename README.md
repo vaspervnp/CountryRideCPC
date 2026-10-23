@@ -302,8 +302,9 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   the flip, by the interrupts counted since the last one: up to the 6th (the
   5th on the costly side of a sharp curve); one worked out ahead, whenever
   there is a step at all. Else the road waits a
-  picture. After a step the next picture of each buffer draws every line's
-  road and a margin of grass. Nothing moves after a picture whose hill
+  picture. After a step the next picture of each buffer draws every near
+  line's road and a margin of grass, and the far lines too unless the step
+  left every far group where it was. Nothing moves after a picture whose hill
   moved, nor while a hill is under the camera or near: three track entries
   (96 depth units) ahead for a new curve level, two for a step sideways -
   the two pictures a step makes heavy are done before the hill moves (at
@@ -466,6 +467,14 @@ picture after one is up to ~3.5 ms too long; drawing the lines that show
 another row with the road and both margins instead of whole saved only
 0.6 ms on average, and letting a step go only after a light picture still
 left many late. Nothing moves after a picture whose hill moved.
+
+Not drawing the lines of the groups a step left where they were saves
+little: the first group a step moves is nearly always a far one (0-9), and
+the ~7 it leaves are scattered. Sending the near lines through the
+skip-checking loop for them cost 1.1 ms more than it saved; only the far
+lines are left out, when no far group moved (about one step in five): the
+picture after a step on flat road 0.25 ms shorter on average, 38.7 ms at
+worst instead of 39.3, steering as it was.
 
 ## Testing
 

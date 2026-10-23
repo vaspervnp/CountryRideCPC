@@ -47,6 +47,7 @@ pre_s       defb 0          ; the step worked out ahead (cache_pre): 1 or 2
 pre_g       defb 0          ; the groups it has gone through (pre5)
 pre_sync    defb 0          ; the staging sets the cache's: bit 0 STAGE_B
                             ; and SGP, bit 1 STAGE_A (both: 3)
+pre_g0      defb 0          ; the first group whose a it moves (255: none)
 
 ;; ---------------------------------------------------------------------------
 ;; cache_step - A = 1 or 2 either way: road_x that many pairs on, and the
@@ -159,7 +160,9 @@ rp_lo_c     defb 0                      ; (rp_mode_chg: rows from it on ...)
 ;; level it did. With road_x the same, no row has moved then; else only
 ;; the rows of the groups it worked out: from the first one's first row
 ;; (rp_lo_c, for rp_flag2_road) to the next one's after the last
-;; (rp_skip_r). Keeps HL, IX.
+;; (rp_skip_r). With road_x moved, every near row - but no far one if
+;; neither a step (cache_mark) nor the cache moved a far group (rp_lo_c).
+;; Keeps HL, IX.
 ;; ---------------------------------------------------------------------------
 rp_mode_chg
     push hl
@@ -200,8 +203,9 @@ rp_mode_chg_r
     jr nc,rp_mode_chg_x                 ; (any)
     ld a,ixl
     or ixh
-    jr nz,rp_mode_chg_x
     ld a,c
+    jr z,$+4
+    ld a,NGROUPS+1                      ; road_x moved: every near row (255)
     add a,lo(rr_gfirst)
     ld l,a
     ld h,hi(rr_gfirst)

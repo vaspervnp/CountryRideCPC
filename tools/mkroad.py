@@ -525,8 +525,8 @@ def main():
     page("rr_tlo", tl, "band 0 template, low byte")
     emit("    defs 128-%d,0" % len(tl))
     emit("rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;")
-    emit("            ; then ROWS + 1, as if one more")
-    gfirst = [str(r) for g, h, r in cache_groups()[0]] + [str(ROWS + 1)]
+    emit("            ; then ROWS + 1, as if one more, and 255 (none)")
+    gfirst = [str(r) for g, h, r in cache_groups()[0]] + [str(ROWS + 1), "255"]
     for i in range(0, len(gfirst), 16):
         emit("    defb " + ",".join(gfirst[i:i + 16]))
     page("rr_depth", dp, "depth, low byte")
