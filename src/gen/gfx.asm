@@ -190,11 +190,11 @@ fuel_seg
     defb #CF,#CA
     defb #33,#62
     defb #33,#62
-    defb #F3,#E2
-    defb #F3,#E2
+    defb #03,#42
+    defb #03,#42
 speed_seg
-    defb #F3,#E2
-    defb #F3,#E2
+    defb #03,#42
+    defb #03,#42
     defb #33,#62
     defb #33,#62
     defb #CF,#CA

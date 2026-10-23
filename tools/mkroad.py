@@ -20,10 +20,11 @@ Each pair of bytes (written right to left) becomes one of:
   LD BC,nn / PUSH BC   anything else
 and the variant ends with EXX / EX AF,AF' / JP (IX).
 
-The variant runs in the shadow register set. The entry table gives the code
-address of every pair, so a core hanging off the right of the screen is
-entered part-way in, and one hanging off the left is cut short by writing
-JP (HL) (HL' = line_done_shadow) over the first pair that must not be drawn.
+The variant runs in the shadow register set. Every pair can be entered (no
+pair leans on the LD BC,nn of the one before), so a core hanging off the
+right of the screen is entered part-way in, and one hanging off the left is
+cut short by writing JP (HL) (HL' = line_done_shadow) over the first pair
+that must not be drawn.
 
 Also written here:
   * the templates: what road_draw pops for a line (core entry, left grass
@@ -45,7 +46,9 @@ from functools import lru_cache
 from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, FAR_Z, far_mask, m0_byte, m0_solid,
                     road_row_pixels, row_half_bytes, row_depth, SCR_BYTES,
                     ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
-                    PLAIN_GRASS)
+                    curve_c1, curve_d, road_shift, shift_tau, CURVE_ROW_GROUPS, PERSP_P,
+                    PLAIN_GRASS, ROAD_X_MAX,
+                    GRASS_ROW, GRASS_SHIFT, GRASS_STRIPES, PEN)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src", "gen", "roadcores.asm")
@@ -69,16 +72,18 @@ def word(lo, hi):
 def core_bytes(band, half, parity):
     """Screen bytes of the core - the kerbs and the asphalt -
     left to right, and H (bytes each side of the centre before the parity
-    widening). What is left of the bytes it covers is plain grass."""
+    widening). What is left of the pairs it covers is kerb too (no grass:
+    the grass is striped, the core is not): scene.road_line."""
     pens, total = road_row_pixels(half, band)
     H = (total + 1) // 2
+    kerb = pens[0]
     # pixel 0 of the byte-aligned core is centre_px - 2H
-    px = [PLAIN_GRASS] * (4 * H)
+    px = [kerb] * (4 * H)
     off = 2 * H - total
     for i, p in enumerate(pens):
         px[off + i] = p
     if parity:
-        px = [PLAIN_GRASS] * 2 + px + [PLAIN_GRASS] * 2
+        px = [kerb] * 2 + px + [kerb] * 2
     out = [m0_byte(px[i], px[i + 1]) for i in range(0, len(px), 2)]
     return out, H
 
@@ -91,10 +96,9 @@ FAR_HALF = row_half_bytes(max(r for r in range(1, ROWS + 1)
                               if row_depth(r) > FAR_Z))
 
 
-def compile_variant(band, half, parity, entries=frozenset()):
-    """Returns (code bytes, entry offsets [NP+1], NP, H). `entries`: the
-    pairs some template enters the code at, besides the first; a pair that
-    is the same as the one before reuses its LD BC,nn unless it is one."""
+def compile_variant(band, half, parity):
+    """Returns (code bytes, entry offsets [NP+1], NP, H). Every pair can be
+    entered, so none reuses the LD BC,nn of the one before."""
     regs = BANDS[REG_BAND[band]]
     road = m0_solid(regs["road"])
     kerb = m0_solid(regs["kerb"])
@@ -108,8 +112,7 @@ def compile_variant(band, half, parity, entries=frozenset()):
         lo = data[n - 2 - 2 * j]       # left byte of the pair
         hi = data[n - 1 - 2 * j]       # right byte, written first by PUSH
         entry.append(len(code))
-        if j in entries:
-            bc = None
+        bc = None
         if lo == hi == road:
             code.append(0xD5)                     # PUSH DE
         elif lo == hi == kerb:
@@ -179,6 +182,29 @@ def template(variants, band, half, shift):
 
 GROUND = ["empty_core", "#0040", "lgrassa+%d" % PAIRS]
 
+CACHE_LEVEL = LEVELS            # the set after the last level's: the cache
+G_OFF = 112                     # added to a pair position in the cache maths
+
+
+def cache_groups():
+    """The near groups in slot order (g = 0..), with (half, first row), the
+    number of them with far rows (the first NFAR) and of those with nothing
+    but far rows (the first NFARONLY)."""
+    groups = template_groups()
+    near = [(g, h, r) for kind, g, bands, h, r in groups if kind == "near"]
+    far = [g for kind, g, bands, h, r in groups if kind == "far"]
+    assert [g for g, h, r in near[:len(far)]] == far
+    only = sum(1 for g in far
+               if all(row_depth(r) > FAR_Z for r in range(1, ROWS + 1)
+                      if curve_group(r) == g))
+    return near, len(far), only
+
+
+def cache_template(variants, band, half, row, k, x):
+    """The template the Z80 works out for a cache set: as template(), the
+    road also x pairs right of the middle (cpcgfx.road_shift)."""
+    return template(variants, band, half, road_shift(k, row, x))
+
 
 def template_groups():
     """The groups of rows a template set has a template for: (kind, group,
@@ -194,30 +220,16 @@ def template_groups():
             + [("far", g, (2,), half[g], row[g]) for g in far])
 
 
-def entries_used():
-    """Per variant, the pairs the templates enter its code at."""
-    used = {}
-    for kind, g, bands, half, row in template_groups():
-        for b in bands:
-            for k in range(-CURVE_K, CURVE_K + 1):
-                key, u, l = geometry(b, half, curve_shift(k, row))
-                e = entry_pair(u, l)
-                if e is not None:
-                    used.setdefault(key, set()).add(e)
-    return used
-
-
 def template_slots(variants):
     """The layout of a template set: [(kind, group, size, offset)], kind
-    'ground', 'near' (bands 0 and 1) or 'far' (band 2). A slot is 8 bytes if
-    any level's template in it has an exit patch, else 6."""
-    slots = [("ground", None, 6)]
+    'ground', 'near' (bands 0 and 1) or 'far' (band 2). Every slot has room
+    for an exit patch: with the player off the road's centre (cache sets)
+    any group's may need one."""
+    slots = [("ground", None, 8)]
     half, row = {}, {}
     for kind, g, bands, h, r in template_groups():
         half[g], row[g] = h, r
-        words = max(len(template(variants, b, h, curve_shift(k, r)))
-                    for b in bands for k in range(-CURVE_K, CURVE_K + 1))
-        slots.append((kind, g, 2 * words))
+        slots.append((kind, g, 8))
     out, off = [], 0
     for kind, g, size in slots:
         out.append((kind, g, size, off))
@@ -226,16 +238,60 @@ def template_slots(variants):
     return out, half, row
 
 
+def pack_pages(keys, size):
+    """The variants in pages of 256 bytes, none across two: first fit, the
+    biggest first."""
+    pages, room = [], []
+    for k in sorted(keys, key=lambda k: -size[k]):
+        assert size[k] <= 256
+        for i, r in enumerate(room):
+            if r >= size[k]:
+                pages[i].append(k)
+                room[i] -= size[k]
+                break
+        else:
+            pages.append([k])
+            room.append(256 - size[k])
+    return pages
+
+
+# Bank 5's per group arrays (cache5.asm), one in the room after each band B
+# template set's near slots: at offset BA_LANE + g, so that L is #CD + g -
+# the last group's at #FF - and the next array two pages on.
+BA_ARRAYS = ["PL", "PH", "P2L", "P2H", "AL", "AH", "AO", "WL", "WH", "FL",
+             "C1L", "C1H", "DA", "KK", "H"]
+BA_LANE = 0x1CD
+
+
+def bank5_arrays(near):
+    """The values bank 5's per group arrays start with (cache5.asm): the
+    road in the middle at curve level 0."""
+    out = {name: [] for name in BA_ARRAYS}
+    for g, h, r in near:
+        H = core_bytes(0, h, 0)[1]
+        p, c1, d = PERSP_P * h, curve_c1(r), curve_d(r)
+        assert 0 <= 2 * p < 1024 and 0 <= c1 * CURVE_K < 32768 and -256 < d <= 0
+        none = h < CURVE_ROW_GROUPS
+        vals = dict(PL=p & 255, PH=p >> 8, P2L=2 * p & 255, P2H=2 * p >> 8,
+                    AL=128 + 64, AH=H, AO=0x80, WL=0, WH=W_NONE >> 8 if none else 0,
+                    FL=0 if none else ("hi(rd_tent%d)" % (h & 1)),
+                    C1L=c1 & 255, C1H=c1 >> 8, DA=-d, KK=CURVE_K, H=H)
+        for name in BA_ARRAYS:
+            out[name].append(vals[name])
+    return out
+
+
+# A row with no bias (no lane lines) has W this far off: w never in -128..127
+W_NONE = 0x1C00
+
+
 def main():
     import scene
-    used = entries_used()
     variants = {}
     for band in range(3):
         for half in halves(band):
             for parity in range(2):
-                key = (band, half, parity)
-                variants[key] = compile_variant(band, half, parity,
-                                                frozenset(used.get(key, ())))
+                variants[(band, half, parity)] = compile_variant(band, half, parity)
 
     # --- the code: bands 0 and 2 (drawn with band A's registers) in bank 4,
     # band 1 in bank 5 ---
@@ -243,19 +299,29 @@ def main():
     for fname, bands in (("roada.asm", (0, 2)), ("roadb.asm", (1,))):
         lines = [";; Generated by tools/mkroad.py - do not edit.",
                  ";; Road core variants for stripe band(s) %s:" % (bands,),
-                 ";; rc_<band>_<half>_<parity>.", ""]
+                 ";; rc_<band>_<half>_<parity>, each after its entry table",
+                 ";; re_<band>_<half>_<parity>: the offset of every other pair's",
+                 ";; code (pairs 0, 2, 4 ...; an odd pair is 1 byte on, or 4 if the",
+                 ";; even one is LD BC,nn / PUSH BC). Each variant is in one page:",
+                 ";; its entries are low bytes (cachemac.asm).", ""]
         emit = lines.append
-        size = 0
-        for band in bands:
-            for half in halves(band):
-                for parity in range(2):
-                    code, entry, np_, H = variants[(band, half, parity)]
-                    name = "rc_%d_%d_%d" % (band, half, parity)
-                    emit(name)
-                    for i in range(0, len(code), 16):
-                        emit("    defb " + ",".join("#%02X" % c for c in code[i:i + 16]))
-                    size += len(code)
-        sizes[fname] = size
+        keys = [(band, half, parity) for band in bands for half in halves(band)
+                for parity in range(2)]
+        size = {k: len(variants[k][0]) + (len(variants[k][1]) + 1) // 2 for k in keys}
+        for i, page in enumerate(pack_pages(keys, size)):
+            if i:
+                emit("    ALIGN 256")
+            for band, half, parity in page:
+                code, entry, np_, H = variants[(band, half, parity)]
+                n = "%d_%d_%d" % (band, half, parity)
+                e2 = entry[0::2]
+                emit("re_" + n)
+                emit("    defb " + ",".join(str(v) for v in e2))
+                emit("rc_" + n)
+                for j in range(0, len(code), 16):
+                    emit("    defb " + ",".join("#%02X" % c for c in code[j:j + 16]))
+                emit("    ASSERT hi(re_%s) == hi($-1)" % n)
+        sizes[fname] = sum(size.values())
         open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
 
     # --- register values and variant sizes ---
@@ -269,6 +335,12 @@ def main():
                                                   m0_solid(b["kerb"]))))
     emit("GRASS_PAIR  EQU #%04X" % word(m0_solid(PLAIN_GRASS),
                                         m0_solid(PLAIN_GRASS)))
+    emit(";; the grass's other stripe: its byte is GRASS_X apart; the rows from")
+    emit(";; GRASS_ROW on are striped by bit GRASS_SHIFT of (depth + zcam)")
+    emit("GRASS_X     EQU #%02X" % ((m0_solid(PLAIN_GRASS) ^ m0_solid(PEN["GRASS_B"]))
+                                     if GRASS_STRIPES else 0))
+    emit("GRASS_ROW   EQU %d" % GRASS_ROW)
+    emit("GRASS_SHIFT EQU %d" % GRASS_SHIFT)
     slots, ghalf, grow = template_slots(variants)
     soff = {(kind, g): off for kind, g, size, off in slots}
     emit("")
@@ -283,6 +355,43 @@ def main():
     emit("CORES_B     EQU #%04X" % CORES_B)
     emit(";; a line with no road (the first level's copy; every level has one)")
     emit("tmpl_ground EQU TMPL_A+%d" % soff[("ground", None)])
+    near, nfar, nfaronly = cache_groups()
+    emit("")
+    emit(";; the cache sets (common.asm): the road off the middle of the screen")
+    emit("CACHE_LEVEL EQU %d   ; the set after the last level's" % CACHE_LEVEL)
+    emit("NGROUPS     EQU %d   ; template groups, slot 1 + g of a set" % len(near))
+    emit("NFAR        EQU %d   ; the first NFAR have far rows: a slot NGROUPS on" % nfar)
+    emit("NFARONLY    EQU %d   ; ... the first NFARONLY nothing else" % nfaronly)
+    emit(";; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g")
+    emit("W_NONE      EQU #%04X   ; a row with no bias: W this far off" % W_NONE)
+    for i, name in enumerate(BA_ARRAYS):
+        emit("RA_%-8s EQU #%04X" % (name, TMPL_B + i * TMPL_SET + BA_LANE))
+    emit("G_OFF       EQU %d   ; added to a pair position in the cache maths" % G_OFF)
+    emit("ROAD_X_MAX  EQU %d   ; road_x goes this far either way" % ROAD_X_MAX)
+    emit("PERSP_P     EQU %d   ; a pair of it moves half-width h h * PERSP_P / 256"
+         " bytes" % PERSP_P)
+    emit("")
+    emit(";; per road drop (the horizon's, hz_ground): how far the sky part goes")
+    emit(";; down (scene.sky_drop)")
+    drops = range(max(scene.ground_drop(h) for h in range(-128, 128, 2)) + 1)
+    emit("MACRO SKY_DROP_TABLE")
+    emit("    defb " + ",".join(str(scene.sky_drop(d)) for d in drops))
+    emit("MEND")
+    emit("SKY_DROP_N  EQU %d" % len(drops))
+    emit(";; a curve level's move between |k| = m and m + 1 leaves the groups from")
+    emit(";; CF_SAME<m> on where they were (cache.asm: cf_same)")
+    for m in range(CURVE_K):
+        moved = [gi for gi, (g, h, r) in enumerate(near)
+                 if curve_shift(m, r) != curve_shift(m + 1, r)
+                 or curve_shift(-m, r) != curve_shift(-m - 1, r)]
+        emit("CF_SAME%d    EQU %d" % (m, max(moved) + 1))
+    emit(";; ... the rows from CF_ROW<m> on (255: none; road15.asm: cf_rows)")
+    for m in range(CURVE_K):
+        moved = [gi for gi, (g, h, r) in enumerate(near)
+                 if curve_shift(m, r) != curve_shift(m + 1, r)
+                 or curve_shift(-m, r) != curve_shift(-m - 1, r)]
+        same = max(moved) + 1
+        emit("CF_ROW%d     EQU %d" % (m, near[same][2] if same < len(near) else 255))
     open(os.path.join(ROOT, "src", "gen", "roadconsts.asm"), "w").write(
         "\n".join(lines) + "\n")
 
@@ -296,24 +405,77 @@ def main():
                  ";; (%d used): dw core entry (IY), left grass entry (IX), AF" % used,
                  ";; (A = right grass entry, F: Z = no exit patch)[, exit patch].", ""]
         emit = lines.append
+        arrays = bank5_arrays(near)
         for k in range(-CURVE_K, CURVE_K + 1):
             emit(";; curve level %d" % k)
             for kind, g, size, off in slots:
+                if kind == "far" and side == "b":
+                    continue
                 if kind == "ground":
                     words = GROUND if side == "a" else None
                 elif kind == "near":
                     words = template(variants, 0 if side == "a" else 1, ghalf[g],
                                      curve_shift(k, grow[g]))
                 else:
-                    words = (template(variants, 2, ghalf[g], curve_shift(k, grow[g]))
-                             if side == "a" else None)
+                    words = template(variants, 2, ghalf[g], curve_shift(k, grow[g]))
                 if words is None:
                     emit("    defs %d,0" % size)
                     continue
                 emit("    defw " + ",".join(words) + "   ; %s %s" % (kind, g or ""))
                 if 2 * len(words) < size:
                     emit("    defs %d,0" % (size - 2 * len(words)))
-            emit("    defs %d,0" % (TMPL_SET - used))
+            if side == "a":
+                emit("    defs %d,0" % (TMPL_SET - used))
+                continue
+            name = BA_ARRAYS[k + CURVE_K]
+            here = soff[("far", near[0][0])]
+            emit("    defs %d,0" % (BA_LANE - here))
+            emit("    ASSERT $ == RA_%s" % name)
+            emit("    defb " + ",".join(str(v) for v in arrays[name]))
+            assert BA_LANE + len(near) == TMPL_SET
+        open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
+
+    # --- what the Z80 needs to make a cache set's templates (cachemac.asm):
+    # per bank, per group and parity, the core's code and entry table ---
+    near, nfar, nfaronly = cache_groups()
+    assert nfar == nfaronly and len(near) + nfar <= 64
+    for fname, tab, bands, lg in (("roadgeoa.asm", "rd_t4", (0, 2), "lgrassa"),
+                                  ("roadgeob.asm", "rd_t5", (1, 1), "lgrassb")):
+        lines = [";; Generated by tools/mkroad.py - do not edit.",
+                 ";; Per group g (index g; band 2's of the far groups NGROUPS + g)",
+                 ";; and parity p, at %s + g, + 128 for p = 0: lo(%s) + PAIRS" % (tab, lg),
+                 ";; + H + p (+0) and the core's code, low byte (+64); a page on, its",
+                 ";; entry table's low byte (+0) and the code's high byte (+64).",
+                 "    ALIGN 256",
+                 tab]
+        emit = lines.append
+        idx = [(bands[0], h) for g, h, r in near] + [(bands[1], h) for g, h, r in near[:nfar]]
+        for page in range(2):
+            for p in (1, 0):
+                for lane in range(2):
+                    vals = []
+                    for band, h in idx:
+                        H = core_bytes(band, h, p)[1]
+                        n = "%d_%d_%d" % (band, h, p)
+                        vals.append(((("(lo(%s)+%d)&255" % (lg, PAIRS + H + p)), "lo(rc_%s)" % n),
+                                     ("lo(re_%s)" % n, "hi(rc_%s)" % n))[page][lane])
+                    emit("    defb " + ",".join(vals))
+                    emit("    defs %d,0" % (64 - len(vals)))
+        if tab == "rd_t5":
+            emit(";; Per w (-128..127, as a byte): the bias t - 64 (cpcgfx.road_shift:")
+            emit(";; shift_tau(4 w), turned round for an odd half-width in rd_tent1, at")
+            emit(";; most 63), for cache5.asm")
+            for odd in range(2):
+                emit("    ALIGN 256")
+                emit("rd_tent%d" % odd)
+                vals = []
+                for wb in range(256):
+                    w = wb - 256 if wb > 127 else wb
+                    t = shift_tau(4 * w)
+                    t = min(-t if odd else t, 63)
+                    vals.append((t - 64) & 255)
+                for i in range(0, 256, 32):
+                    emit("    defb " + ",".join(str(v) for v in vals[i:i + 32]))
         open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
 
     # --- bank 6: rows, hill tables, line addresses ---
@@ -356,12 +518,19 @@ def main():
     emit(";; is in is (depth + camera) AND mask, which needs only low bytes.")
     emit(";; The templates are the row's group's in the first curve level's set:")
     emit(";; a level is TMPL_SET/256 pages further, and near rows' band 1 is")
-    emit(";; TMPL_B - TMPL_A = #2000 above band 0 - mask 16 rotated left once is")
+    emit(";; TMPL_B - TMPL_A = #2000 above band 0 - mask 64 rotated right once is")
     emit(";; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and")
     emit(";; band 0's or band 2's template.")
+    assert far_mask(ROWS) == 64 and (TMPL_B - TMPL_A) >> 8 == 64 >> 1
     page("rr_tlo", tl, "band 0 template, low byte")
+    emit("    defs 128-%d,0" % len(tl))
+    emit("rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;")
+    emit("            ; then ROWS + 1, as if one more")
+    gfirst = [str(r) for g, h, r in cache_groups()[0]] + [str(ROWS + 1)]
+    for i in range(0, len(gfirst), 16):
+        emit("    defb " + ",".join(gfirst[i:i + 16]))
     page("rr_depth", dp, "depth, low byte")
-    page("rr_mask", mk, "16; 32, 64, 128 past FAR_Z; 0 for the ground")
+    page("rr_mask", mk, "64; 128 past FAR_Z; 0 for the ground")
     page("rr_thi", th, "band 0 template, high byte")
     page("rr_tlo2", tl2, "far rows: band 2 template, low byte")
     emit("    ALIGN 256")

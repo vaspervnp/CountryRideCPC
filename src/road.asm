@@ -9,7 +9,7 @@
 ;; The road is made of ROWS rows. On a flat road row r is on line
 ;; HORIZON_Y+r, so row 109 is the bottom line and row 1 the furthest. A row
 ;; knows its depth and its width, and so its template: the stripe band is
-;; bit 4 of (depth + zcam).
+;; bit 6 of (depth + zcam).
 ;;
 ;; Curves: the templates come in a set per curve level, each with every row
 ;; already moved sideways as far as that level bends it (tools/mkroad.py), so
@@ -101,28 +101,9 @@ rp_near_ok
     ld c,a
 
     ld a,(zcam)
-    ld (rp_zlo+1),a
-    ld (rp_zlo2+1),a
-    ld (rp_zlo3+1),a
-    ld (rp_zlo4+1),a
-    ld (rp_zlo5+1),a
-    ld (rp_zlo6+1),a
-    ld (rp_zlo7+1),a
-    ld (rp_zlo8+1),a
-    ld (rp_zlo9+1),a
-    ld a,(road_curve)                   ; the curve level's template set:
-    add a,CURVE_K                       ; this many pages on
-    ASSERT TMPL_SET == 512
-    add a,a
-    ld (rp_lvl+1),a
-    ld (rp_lvl2+1),a
-    ld (rp_lvl3+1),a
-    ld (rp_lvl4+1),a
-    ld (rp_lvl5+1),a
-    ld (rp_lvl6+1),a
-    ld (rp_lvl7+1),a
-    ld (rp_lvl8+1),a
-    ld (rp_lvl9+1),a
+    call rp_zsets                       ; (common.asm, fragment 4)
+    call rp_sets                        ; the template set; A = the curve
+                                        ; level's
 
     ; this buffer's last picture: its curve set (did it move?) and zcam
     ld hl,(rp_vars)
@@ -140,18 +121,7 @@ rp_known
     ld a,e
     ld (rp_moved),a                     ; 0: the same curve
     call rp_mode
-    ld (rp_fl+1),a
-    ld (rp_fl2+1),a
-    ld hl,(rp_vars)                     ; (rp_vars again for what follows)
-    inc hl
-    inc hl
-    inc hl
-    inc hl                              ; rp_zcam
-    ld a,(hl)
-    ld (rp_zold+1),a
-    ld (rp_zold2+1),a
-    ld a,(zcam)
-    ld (hl),a
+    call rp_dzset                       ; (common.asm, fragment 4)
 
     ld de,(rp_slot)
     ld a,(rp_near)
@@ -162,36 +132,42 @@ rp_known
     or a
     ld a,l
     jp nz,rp_near_cmp
+    ld a,(rp_skip)
+    or a
+    ld a,l
+rp_skip_go
+    jp nz,rp_near_skip                  ; (or rp_near_same: rp_mode_set)
+rp_near_go                              ; (A lines: rp_near_skip's rest)
 
 ;; BC = line -> row table, DE = template slot of the list entry. Two lines
-;; per turn of the loop; an odd count starts half way in.
-MACRO RP_LINE zl,lv,fl,cmp
-    ld a,(bc)                           ; the row this line shows (0 = ground)
+;; per turn of the loop; an odd count starts half way in. Each is flagged
+;; 1, only the road (and the margin) - or 0, all of it, if the grass's
+;; stripe on it is not what it was: (depth + zcam) AND 127 less than zcam's
+;; move since then (rp_dzset: twice it, compared with twice that; 255 when
+;; every line is drawn whole).
+MACRO RP_LINE zl,dz,lv
+    ld a,(bc)                           ; the row this line shows
     inc bc
-    IF {cmp}
-    cp (iy+0)                           ; ... and showed then (IY)
-    inc iy
-    ENDIF
     ld l,a
-    ld h,hi(rr_tlo)
-    ld a,(hl)                           ; template, low byte
-    IF {cmp}
-{fl}
-    jr nz,$+3                           ; (or JR C: rp_mode)
-    inc a                               ; the same row: only the road
-    ELSE
-{fl}
-    or 0                                ; 1: only the road (self-modified)
-    ENDIF
-    ld (de),a
-    inc e                               ; (an entry never crosses a page)
-    inc h
+    ld h,hi(rr_depth)
     ld a,(hl)                           ; depth, low byte
 {zl}
     add a,0                             ; + zcam (self-modified)
+    ld ixl,a
+    add a,a                             ; (bit 7 out)
+{dz}
+    cp 0                                ; (self-modified) CF: the grass's
+    sbc a,a                             ; stripe has moved on it
+    inc a                               ; 0: all of it, 1: only the road
+    dec h
+    or (hl)                             ; template, low byte
+    ld (de),a
+    inc e                               ; (an entry never crosses a page)
+    ld a,ixl
     inc h
-    and (hl)                            ; 16 (0 for the ground)
-    rlca                                ; band B is #2000 higher
+    inc h
+    and (hl)                            ; 64 (0 for the ground)
+    rrca                                ; band B is #2000 higher
     inc h
     add a,(hl)                          ; template, high byte
 {lv}
@@ -201,6 +177,7 @@ MACRO RP_LINE zl,lv,fl,cmp
     inc e
     inc e
 MEND
+    ASSERT rr_depth == rr_tlo+#100
 
     srl a                               ; pairs of lines (A = rp_near)
     exx
@@ -213,9 +190,9 @@ MEND
     exx
     jr rp_second
 rp_pair
-    RP_LINE rp_zlo,rp_lvl,rp_fl,0
+    RP_LINE rp_zlo,rp_dz,rp_lvl
 rp_second
-    RP_LINE rp_zlo2,rp_lvl2,rp_fl2,0
+    RP_LINE rp_zlo2,rp_dz2,rp_lvl2
     exx
     dec b
     exx
@@ -244,6 +221,10 @@ MACRO RP_FAR_TMPL lv,fl
     IF {fl} == 2
 rp_far_fl
     or 0                                ; 1: only the road (self-modified)
+    ENDIF
+    IF {fl} == 3
+rp_far_hfl
+    or 0                                ; 2: a margin (rp_far_m), 0: whole
     ENDIF
     ld (de),a
     inc e
@@ -373,14 +354,22 @@ rp_fdash2
     exx
     jp nz,rp_far_hill_line
     jp rp_done
-rp_far_hill_new                         ; another row: the whole line - but
-rp_far_near                             ; only the road if it is nearer and the
-    jr nc,rp_far_hill_dash2             ; road straight (offset self-modified,
-rp_zlo6                                 ; 0 = off: rp_mode)
-    add a,0                             ; + zcam (self-modified)
-    inc h
+rp_far_hill_new                         ; another row: the whole line, or a
+rp_far_near                             ; margin if the hill alone moved
+    jr nc,rp_far_hill_dash2             ; (rp_far_m) - only the road if it is
+rp_zlo6                                 ; nearer and the road straight (offset
+    add a,0                             ; self-modified, 0 = off: rp_mode)
+    inc h                               ; + zcam (self-modified)
     and (hl)
-    RP_FAR_TMPL rp_lvl6,0
+    ld ixl,a
+    ld a,l
+    or a
+    ld a,ixl
+    jr z,rp_far_ground                  ; the ground: always whole
+    RP_FAR_TMPL rp_lvl6,3
+    jr rp_far_hill_next
+rp_far_ground
+    RP_FAR_TMPL rp_lvl10,0
     jr rp_far_hill_next
 rp_far_hill_dash2
 rp_zlo9
@@ -426,17 +415,76 @@ rp_done
     ld (hl),lo(tmpl_end)
     inc hl
     ld (hl),hi(tmpl_end)
+    jp rp_grass                         ; (common.asm, fragment 4)
+
+;; ---------------------------------------------------------------------------
+;; be_prep - (bush_erase, here for room) the lines the grass of the selected
+;; buffer's last picture changed its green at (road_draw: rd_gb0, rd_gb1),
+;; for be_grass: be_ys, 255, then from the bottom up the first line below
+;; each change (from ROAD_AREA_Y), then 0; be_c0 the bottom line's green.
+;; Destroys AF, BC, DE, HL, IX.
+;; ---------------------------------------------------------------------------
+be_prep
+    ld hl,rd_gb0
+    ld de,list0
+    ld a,(tgt_buf)
+    or a
+    jr z,be_prep_buf
+    ld hl,rd_gb1
+    ld de,list1
+be_prep_buf
+    ld a,(hl)
+    ld (be_c0),a
+    ld bc,RD_GB
+    add hl,bc                           ; the first change's high byte
+    ld ix,be_ys
+    ld (ix+0),255
+be_prep_one
+    inc ix
+    ld b,(hl)
+    dec hl
+    ld c,(hl)                           ; BC = the list past the line's entry
+    dec hl
+    ld a,b
+    or c
+    jr z,be_prep_end
+    push hl
+    ld h,b
+    ld l,c
+    or a
+    sbc hl,de
+    srl h
+    rr l
+    srl l                               ; entries: line ROAD_AREA_Y + 112 - it
+    ld a,113
+    sub l
+    ld (ix+0),a                         ; the line below it
+    pop hl
+    jr be_prep_one
+be_prep_end
+    ld (ix+0),a
     ret
 
 rp_level    defb #FF,#FF                ; hill level each buffer was drawn with
 rp_set      defb 0,0                    ; ... curve set (pages on)
 rp_zcam     defb 0,0                    ; ... zcam, low byte
+rp_xmin     defb 0,0                    ; ... the least road_x a group was at
+rp_xmax     defb 0,0                    ; ... the greatest
+rp_kmin     defb 0,0                    ; ... the least curve level
+rp_kmax     defb 0,0                    ; ... the greatest
+rp_kdir     defb 0,0                    ; ... the cache's last level step
 rp_vars     defw 0                      ; this buffer's rp_level entry
+rp_cache    defb 0                      ; 1: the templates are the cache's
 rp_moved    defb 0                      ; 0: the same curve as then
 rp_old_level defb 0                     ; hill level then (#FF: none)
 rp_cmp      defb 0                      ; 1: lines checked against the old rows
+rp_skip     defb 0                      ; 1: near lines with their stripe of
+                                        ; then skipped (rp_near_skip)
     ASSERT rp_set == rp_level+2
     ASSERT rp_zcam == rp_level+4
+    ASSERT rp_xmin == rp_level+6 && rp_xmax == rp_level+8
+    ASSERT rp_kmin == rp_level+10 && rp_kmax == rp_level+12
+    ASSERT rp_kdir == rp_level+14
 rp_count    defb 0                     ; lines to draw
 rp_near     defb 0                     ; of which striped rows
 rp_slot     defw 0
@@ -511,26 +559,119 @@ rp_near_cmp
     push de
     pop iy
     pop de
+    ld a,(rp_skip)                      ; the lines no move moved first
+    or a                                ; (rp_rows_r), as rp_near_skip
+    jr z,rp_cmp_all                     ; does: IY on with BC after them
+    push iy
+    pop hl
+    sbc hl,bc                           ; (CF clear)
+    ld (rp_cmp_d+1),hl
+    ld hl,rp_cmp_go
+    ld (rp_skip_jp+1),hl
     pop af
-    srl a
+    jp rp_near_skip
+rp_cmp_go                               ; A: the lines left
+rp_cmp_d
+    ld hl,0                             ; (self-modified: old table - new)
+    add hl,bc
+    push hl
+    pop iy
+    push af
+rp_cmp_all
+    pop af
+    push iy
     exx
-    ld b,a
+    pop hl                              ; HL': the rows then
+    ld b,a                              ; B': lines
     exx
-    jr nc,rp_pair_cmp
-    inc a
+
+;; One line a turn. Flagged as RP_LINE does if it shows the row it showed
+;; then (IY); another row: as rp_mode_rows says (rp_flx), or 0, all of it,
+;; if the grass's stripe on it is not the one on the row then.
+rp_line_cmp
+    ld a,(bc)                           ; the row this line shows
+    inc bc
+    ld l,a
+    ld h,hi(rr_depth)
+    ld a,(hl)                           ; depth, low byte
+rp_zlo7
+    add a,0                             ; + zcam (self-modified)
+    ld ixl,a
+    ld a,l
     exx
-    ld b,a
+    cp (hl)                             ; ... and showed then
+    inc hl
     exx
-    jr rp_second_cmp
-rp_pair_cmp
-    RP_LINE rp_zlo7,rp_lvl7,rp_flx,1
-rp_second_cmp
-    RP_LINE rp_zlo8,rp_lvl8,rp_fly,1
+    jr nz,rp_other_cmp
+    ld a,ixl
+    add a,a
+rp_dz7
+    cp 0                                ; (self-modified, as rp_dz)
+    sbc a,a
+    inc a                               ; 0: all of it, 1: only the road
+rp_put_cmp
+    dec h
+    or (hl)                             ; template, low byte
+    ld (de),a
+    inc e
+    ld a,ixl
+    inc h
+    inc h
+    and (hl)                            ; 64 (0 for the ground)
+    rrca
+    inc h
+    add a,(hl)                          ; template, high byte
+rp_lvl7
+    add a,0                             ; + the curve level (self-modified)
+    ld (de),a
+    inc de
+    inc e
+    inc e
     exx
     dec b
     exx
-    jr nz,rp_pair_cmp
+    jr nz,rp_line_cmp
     jp rp_far
+
+rp_other_cmp                            ; another row (CF: a further one)
+    ld a,0
+rp_flx
+    jr z,$+3                            ; (or JR NC, JR NZ: rp_mode_rows)
+    inc a                               ; 2: the road and a margin
+rp_flx2
+    inc a
+    or a
+    jr z,rp_put_cmp                     ; (0: all of it anyway)
+    ld ixh,a                            ; another row's flag ...
+    ld a,l
+    cp GRASS_ROW
+    ld a,ixl
+    jr nc,$+4
+    and #7F                             ; (past the stripes: GRASS_PAIR's)
+    ld ixl,a                            ; (bit 7 is not the band's)
+    push hl
+    exx
+    dec hl
+    ld a,(hl)
+    inc hl
+    exx
+    ld l,a                              ; ... unless the row then's grass
+    ld a,(hl)                           ; stripe is another
+rp_zo
+    add a,0                             ; + zcam then (self-modified)
+    ld h,a
+    ld a,l
+    cp GRASS_ROW
+    ld a,h
+    jr nc,$+4
+    and #7F
+    pop hl
+    xor ixl
+    add a,a
+    sbc a,a
+    cpl
+    and ixh
+    jr rp_put_cmp
 
 ;; ---------------------------------------------------------------------------
 ;; rp_mode - how this picture's lines are drawn, from E = the curve set now
@@ -567,83 +708,185 @@ rp_mode_dash
     call rp_mode_set
     pop bc
     ret
-rp_mode_set
-    xor a
-    ld (rp_cmp),a
-    ld (rp_far_fl+1),a
-    ld a,e
-    bit 0,a
-    jr nz,rp_mode_whole                 ; nothing known
+;; A = how far a group can have moved: 0 if less
+rp_mode_pos
     or a
-    jp p,rp_mode_abs
-    neg
-rp_mode_abs
-    cp 5
-    jr nc,rp_mode_whole                 ; more than two levels
-    ld c,a                              ; 0, 2 or 4: M = 0, 5 or 10 pairs
-    rrca
-    add a,c
-    add a,c                             ; 5 * A / 2
-    call rd_margin
-    ld a,(rp_old_level)
-    ld hl,(rp_vars)
-    cp (hl)
-    jr nz,rp_mode_hill
-    ld a,1
-    ld (rp_far_fl+1),a                  ; the same hill: every line
-    ret
-rp_mode_hill
-    ld a,1                              ; the hill moved: compare the rows
-    ld (rp_cmp),a
-    ld a,(rp_moved)
-    ld hl,(#20*256)+0                   ; JR NZ: the same row; far: off
-    or a
-    jr nz,rp_mode_op
-    ld a,(road_curve)
-    or a
-    jr nz,rp_mode_op
-    ld hl,(#38*256)+rp_far_hill_dash2-rp_far_near-2   ; JR C: no farther row
-rp_mode_op
-    ld a,h
-    ld (rp_flx),a
-    ld (rp_fly),a
-    ld a,l
-    ld (rp_far_near+1),a
-rp_mode_whole
+    ret p
     xor a
     ret
 
-;; ---------------------------------------------------------------------------
-;; rd_margin - A = M, the pairs of grass road_draw draws either side of the
-;; road on an only-the-road line (0: none, the fast way).
-;; ---------------------------------------------------------------------------
-rd_margin
+;; A = levels a group can have moved: 0 if less, 5 pairs a level; more than
+;; two: whole lines (rp_mode_far)
+rp_mode_lvl
     or a
+    jp p,rp_mode_lvl_p
+    xor a
+    ret
+rp_mode_lvl_p
+    cp 3
+    jr c,rp_mode_lvl_ok
+    ld a,1
+    ld (rp_mode_far+1),a
+    xor a
+    ret
+rp_mode_lvl_ok
+    ld d,a
+    add a,a
+    add a,a
+    add a,d
+    ret
+
+;; CF: neither B nor C is more than RP_MARGIN_MAX
+rp_mode_max
+    ld a,b
+    cp c
+    jr nc,$+3
+    ld a,c
+    cp RP_MARGIN_MAX+1
+    ret
+
+;; ---------------------------------------------------------------------------
+;; rd_margin - B, C = the pairs of grass road_draw draws left and right of
+;; the road on an only-the-road line (both 0: none, the fast way).
+;; ---------------------------------------------------------------------------
+RP_MARGIN_MAX EQU 12                    ; more and whole lines are drawn
+RP_HILL_M   EQU 2                       ; a near line's row moved a row
+RP_HILL_STEP EQU 10                     ; hill levels (h/2) it may have moved: h/r
+                                        ; changes by a line at most on row 21
+
+;; ---------------------------------------------------------------------------
+;; rp_sets - the template set road_project takes the templates from: the
+;; curve level's, or with the road off the middle, the cache (cache.asm;
+;; rp_cache). Returns A = the curve level's (pages on from the first).
+;; ---------------------------------------------------------------------------
+rp_sets
+    ld a,(road_x)
+    or a
+    ld a,1
+    ld (rp_cache),a
+    ld a,CACHE_LEVEL*TMPL_SET/256
+    jr nz,rp_sets_set
+    xor a
+    ld (rp_cache),a
+    ld a,(road_curve)
+    add a,CURVE_K
+    ASSERT TMPL_SET == 512
+    add a,a
+rp_sets_set
+    ld (rp_lvl+1),a
+    ld (rp_lvl2+1),a
+    ld (rp_lvl3+1),a
+    ld (rp_lvl4+1),a
+    ld (rp_lvl5+1),a
+    ld (rp_lvl6+1),a
+    ld (rp_lvl7+1),a
+    ld (rp_lvl9+1),a
+    ld (rp_lvl10+1),a
+    ld (rp_lvl11+1),a
+    ld (rp_lvl12+1),a
+    ld a,(road_curve)
+    add a,CURVE_K
+    add a,a
+    ret
+
+rd_margin
     ld hl,line_road_a
     ld de,line_road_b
+    ld a,b
+    or c
     jr z,rd_margin_jr
-    neg
-    add a,PAIRS                         ; MT = PAIRS - M
+    ld a,PAIRS                          ; MT = PAIRS - M: on the right
+    sub c
     ld (lm_m1+1),a
     ld (lm_m2+1),a
     ld (lm_m3+1),a
     ld (lm_p1+1),a
     ld (lm_p2+1),a
     ld (lm_p3+1),a
-    ld c,a
-    add a,lo(lgrassa)
+    ld a,lo(lgrassa)+PAIRS              ; ... on the left
+    sub b
     ld (lm_la+1),a
     ld (lm_la2+2),a
-    ld a,c
-    add a,lo(lgrassb)
+    ld (lm_ca+1),a
+    ld (lm_ca2+2),a
+    add a,(lo(lgrassb)-lo(lgrassa))&255
     ld (lm_lb+1),a
     ld (lm_lb2+2),a
+    ld (lm_cb+1),a
+    ld (lm_cb2+2),a
+    ld hl,line_lmarg_a                  ; one side only: the faster ways
+    ld de,line_lmarg_b
+    ld a,c
+    or a
+    jr z,rd_margin_jr
+    ld hl,line_rmarg_a
+    ld de,line_rmarg_b
+    ld a,b
+    or a
+    jr z,rd_margin_jr
     ld hl,line_margin_a
     ld de,line_margin_b
 rd_margin_jr
     ld (lg_jr_a+1),hl
     ld (lg_jr_b+1),de
     ret
+
+;; rd_road - only the road on an only-the-road line, whatever the margin
+rd_road
+    ld hl,line_road_a
+    ld de,line_road_b
+    jr rd_margin_jr
+
+;; ---------------------------------------------------------------------------
+;; be_grass - (bush_erase) DE = the grass then on line IXL (from
+;; ROAD_AREA_Y), IXH = the next line further down whose green is the other
+;; (255: none), be_p where that is in be_ys (be_prep). Keeps BC, HL.
+;; be_next - the line is IXH's: DE the other green, IXH the next.
+;; ---------------------------------------------------------------------------
+be_grass
+    push hl
+    ld hl,be_ys
+    ld a,ixl
+    ld e,0
+be_grass_one
+    inc hl
+    cp (hl)                             ; the changes below the line
+    jr nc,be_grass_at
+    inc e
+    jr be_grass_one
+be_grass_at
+    dec hl
+    ld (be_p),hl
+    ld a,(hl)
+    ld ixh,a
+    ld a,(be_c0)
+    bit 0,e
+    jr z,$+4
+    xor GRASS_X
+    ld e,a
+    ld d,a
+    pop hl
+    ret
+be_next
+    push hl
+    ld hl,(be_p)
+be_next_one
+    ld a,e
+    xor GRASS_X
+    ld e,a
+    ld d,a
+    dec hl
+    ld a,(hl)
+    cp ixl
+    jr z,be_next_one                    ; (two on one line: it changes back)
+    ld ixh,a
+    ld (be_p),hl
+    pop hl
+    ret
+
+be_c0       defb lo(GRASS_PAIR)
+be_p        defw 0
+be_ys       defs 8,0
 
 frag5_end
     ASSERT frag5_end <= FRAG5+FRAG_LEN

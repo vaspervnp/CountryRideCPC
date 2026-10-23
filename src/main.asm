@@ -20,6 +20,8 @@
     INCLUDE "hw.asm"
     INCLUDE "gen/consts.asm"
     INCLUDE "gen/roadconsts.asm"
+    INCLUDE "cachemac.asm"
+    INCLUDE "roadm2.asm"
 
 
 ;; Where the fragments sit in BOOT.BIN (page 1, where it is loaded): two to
@@ -54,6 +56,10 @@ roada_start
     ASSERT $ <= TMPL_A+#2000
     ORG CORES_A
     INCLUDE "gen/roada.asm"
+    INCLUDE "gen/roadgeoa.asm"
+    INCLUDE "cache4.asm"
+    LINE_M2 a,lm2_lta                   ; (roadm2.asm)
+    ASSERT $ <= STAGE_A
 roada_end
     ASSERT roada_end <= #8000
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
@@ -65,7 +71,10 @@ roada_end
     ORG CORES_B
 roadb_start
     INCLUDE "gen/roadb.asm"
-    ASSERT $ <= TMPL_B
+    INCLUDE "gen/roadgeob.asm"
+    INCLUDE "cache5.asm"
+    LINE_M2 b,lm2_ltb                   ; (roadm2.asm)
+    ASSERT $ <= STAGE_B
     ORG TMPL_B
     INCLUDE "gen/roadtmplb.asm"
 roadb_end
@@ -79,6 +88,7 @@ roadb_end
     ORG #4000
 roadc_start
     INCLUDE "gen/roadrows.asm"
+    INCLUDE "road6.asm"
 roadc_end
     ASSERT roadc_end <= #8000
     SAVE "ROADC.BIN",#4000,roadc_end-#4000,DSK,"build/countryride.dsk"
@@ -111,7 +121,9 @@ game_bank_end
     INCLUDE "boot.asm"
     INCLUDE "common.asm"
     INCLUDE "road.asm"
+    INCLUDE "cache.asm"
     INCLUDE "gen/bushdata.asm"
+    INCLUDE "road15.asm"
     INCLUDE "gen/bushcode.asm"
     ASSERT FRAG_ST1+FRAG_LEN <= #4600
     SAVE "BOOT.BIN",#4000,#4000,DSK,"build/countryride.dsk"

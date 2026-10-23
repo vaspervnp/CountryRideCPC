@@ -2,4 +2,4 @@
 
 ;; palette: Gate Array colour bytes (#40 + hardware colour), pens 0..15
 palette_hw
-    defb #54,#44,#55,#57,#5F,#5B,#4B,#40,#52,#56,#4C,#4E,#4A,#52,#5F,#5D
+    defb #54,#44,#55,#57,#5F,#5B,#4B,#40,#52,#56,#4C,#4E,#4A,#5A,#5C,#5D

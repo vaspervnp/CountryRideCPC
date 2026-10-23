@@ -89,7 +89,7 @@ HUD_SHARE   EQU 3
 HUD_SHARE_LOW EQU 1
 hud_quota   defb HUD_SHARE
 hud_budget  defb 0
-hud_turn    defb 0              ; (the small share's turns)
+hud_turn    defb 0,0            ; (the small share's turns, per buffer)
 
 hud_update
     ld hl,hud_done
@@ -101,7 +101,8 @@ hud_update
     ld (hud_budget),a
     cp HUD_SHARE
     jr nc,hud_update_total
-    ld hl,hud_turn              ; the small share: a gauge's turn?
+    ld hl,hud_turn              ; the small share: a gauge's turn? (each
+    call buf_entry              ; buffer its own, every other time)
     ld a,(hl)
     xor 1
     ld (hl),a

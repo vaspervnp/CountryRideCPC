@@ -5,8 +5,379 @@
 ;; BOOT.BIN has them where they run.
 
     ORG #4600
+car_code0
+    ld de,#0000
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld bc,#8ACF
+    di
+    push bc
+    ld hl,#CFCF
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld bc,#CF45
+    push bc
+    ld hl,#C86E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld bc,#0F0F
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F05
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC0A
+    di
+    push hl
+    ld hl,#80C0
+    push hl
+    ld hl,#CCCC
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#05FC
+    push hl
+    ld hl,#080A
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#540F
+    di
+    push hl
+    ld hl,#80C8
+    push hl
+    ld h,#C4
+    push hl
+    ld l,#40
+    push hl
+    ld hl,#0FA8
+    push hl
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC00
+    di
+    push hl
+    push bc
+    ld hl,#80CC
+    push hl
+    ld hl,#C0C0
+    push hl
+    ld hl,#CC40
+    push hl
+    push bc
+    ld hl,#00FC
+    push hl
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC00
+    di
+    push hl
+    push bc
+    ld hl,#0F05
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#0A0F
+    push hl
+    push bc
+    ld hl,#00FC
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0ACF
+    di
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#05
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F05
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A00
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A0A
+    di
+    push hl
+    ld hl,#8F9B
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#674F
+    push hl
+    ld hl,#0515
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A00
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A0A
+    di
+    push hl
+    ld hl,#8F9B
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#674F
+    push hl
+    ld hl,#0515
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A00
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A0F
+    di
+    push hl
+    push bc
+    push bc
+    ld hl,#053C
+    push hl
+    ld h,#3C
+    push hl
+    ld l,#0A
+    push hl
+    push bc
+    push bc
+    ld c,#15
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A3F
+    di
+    push hl
+    ld bc,#3F3F
+    push bc
+    push bc
+    ld hl,#153C
+    push hl
+    ld h,#3C
+    push hl
+    ld l,#2A
+    push hl
+    push bc
+    push bc
+    ld c,#15
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#80C0
+    di
+    push hl
+    ld bc,#C000
+    push bc
+    ld hl,#2814
+    push hl
+    push de
+    push de
+    push de
+    push hl
+    ld hl,#00C0
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#80C0
+    di
+    push hl
+    push bc
+    ld bc,#A854
+    push bc
+    push de
+    push de
+    push de
+    push bc
+    ld bc,#00C0
+    push bc
+    ld bc,#C040
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    jp #4E00
+    ASSERT $ <= #4800
+    ORG #4E00
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#5400
+    di
+    push hl
+    ld bc,#00A8
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push hl
+    push bc
+    jp bush_spr_done
 bush_c0
-    ld de,#0300
+    ld de,#C3C3
+    ld ix,#C300
     ld sp,hl
     ei
     ld bc,#0802
@@ -14,19 +385,7 @@ bush_c0
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#C343
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    ld b,#83
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -35,7 +394,7 @@ bush_c0
     bit 6,h
     call nz,bush_next_row
     push de
-    ld bc,#C3C3
+    ld bc,#8383
     push bc
     ld sp,hl
     ei
@@ -44,16 +403,25 @@ bush_c0
     add hl,bc
     bit 6,h
     call nz,bush_next_row
+    push ix
     push de
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    push ix
     ld bc,#C382
     push bc
     ld sp,hl
-    push de
+    push ix
     ld bc,#0000
     push bc
     jp bush_spr_done
 bush_c1
-    ld de,#83C3
+    ld de,#C3C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -69,9 +437,9 @@ bush_c1
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0343
+    ld bc,#C343
     push bc
-    ld b,#43
+    ld bc,#43C3
     push bc
     ld sp,hl
     ei
@@ -100,18 +468,18 @@ bush_c1
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#01C3
+    ld bc,#41C3
     push bc
     ld bc,#0082
     push bc
     ld sp,hl
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
     jp bush_spr_done
 bush_c2
-    ld de,#83C3
+    ld de,#C3C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -127,9 +495,9 @@ bush_c2
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0143
+    ld bc,#4143
     push bc
-    ld bc,#8303
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -161,8 +529,7 @@ bush_c2
     call nz,bush_next_row
     ld bc,#C382
     push bc
-    ld c,#C3
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -175,13 +542,14 @@ bush_c2
     ld b,#41
     push bc
     ld sp,hl
-    ld bc,#0100
+    ld bc,#4100
     push bc
-    ld bc,#0002
+    ld bc,#0082
     push bc
     jp bush_spr_done
 bush_c3
-    ld de,#C343
+    ld de,#C3C3
+    ld ix,#43C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -197,8 +565,41 @@ bush_c3
     add hl,bc
     bit 6,h
     call nz,bush_next_row
+    ld bc,#C343
+    push bc
+    ld bc,#83C3
+    push bc
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
     push de
-    ld bc,#8303
+    push ix
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    push de
+    push de
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C382
+    push bc
+    push de
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -207,46 +608,7 @@ bush_c3
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    ld bc,#43C3
-    push bc
-    ld c,#43
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    ld bc,#C3C3
-    push bc
-    ld b,#43
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0382
-    push bc
-    ld bc,#C3C3
-    push bc
-    ld b,#83
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0300
+    ld bc,#C300
     push bc
     ld bc,#82C3
     push bc
@@ -259,22 +621,23 @@ bush_c3
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0382
+    ld bc,#C382
     push bc
     ld bc,#0000
     push bc
     ld b,#41
     push bc
     ld sp,hl
-    ld bc,#0301
+    ld bc,#C341
     push bc
     ld bc,#0000
     push bc
-    ld c,#02
+    ld c,#82
     push bc
     jp bush_spr_done
 bush_c4
-    ld de,#83C3
+    ld de,#C3C3
+    ld ix,#43C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -283,8 +646,10 @@ bush_c4
     bit 6,h
     call nz,bush_next_row
     push de
-    ld bc,#4303
-    push bc
+    jp #5600
+    ASSERT $ <= #5000
+    ORG #5600
+    push de
     ld sp,hl
     ei
     ld bc,#0801
@@ -299,18 +664,12 @@ bush_c4
     ei
     ld bc,#0800
     di
-    jp #4E00
-    ASSERT $ <= #4800
-    ORG #4E00
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    ld bc,#43C3
-    push bc
-    ld c,#43
-    push bc
+    push de
+    push ix
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -318,11 +677,23 @@ bush_c4
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0341
+    ld bc,#C341
     push bc
     ld bc,#4382
     push bc
-    ld c,#C3
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#4141
+    push bc
+    ld bc,#C382
+    push bc
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -331,7 +702,7 @@ bush_c4
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0141
+    ld bc,#41C3
     push bc
     ld bc,#C382
     push bc
@@ -343,20 +714,7 @@ bush_c4
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#01C3
-    push bc
-    ld bc,#C382
-    push bc
-    ld c,#C3
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0102
+    ld bc,#4102
     push bc
     ld bc,#0082
     push bc
@@ -369,24 +727,24 @@ bush_c4
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0182
+    ld bc,#4182
     push bc
     ld bc,#0000
     push bc
     ld b,#41
     push bc
     ld sp,hl
-    ld bc,#0300
+    ld bc,#C300
     push bc
-    ld bc,#0001
+    ld bc,#0041
     push bc
-    ld c,#02
+    ld c,#82
     push bc
     jp bush_spr_done
 bush_c5
-    ld de,#83C3
-    ld ix,#4343
-    ld iy,#03C3
+    ld de,#C3C3
+    ld ix,#83C3
+    ld iy,#41C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -395,8 +753,7 @@ bush_c5
     bit 6,h
     call nz,bush_next_row
     push de
-    ld bc,#4303
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0801
@@ -405,17 +762,7 @@ bush_c5
     bit 6,h
     call nz,bush_next_row
     push de
-    push ix
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    push iy
-    push iy
-    ld bc,#8343
+    ld bc,#43C3
     push bc
     ld sp,hl
     ei
@@ -424,21 +771,35 @@ bush_c5
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#8382
-    push bc
-    push iy
-    push ix
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#8301
-    push bc
-    push ix
     push de
+    ld bc,#03C3
+    push bc
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C382
+    push bc
+    ld bc,#03C3
+    push bc
+    ld b,#43
+    push bc
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C301
+    push bc
+    ld bc,#4343
+    push bc
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -450,7 +811,7 @@ bush_c5
     push bc
     ld bc,#4382
     push bc
-    push de
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -458,12 +819,10 @@ bush_c5
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#41C3
-    push bc
+    push iy
     ld bc,#8282
     push bc
-    ld bc,#41C3
-    push bc
+    push iy
     ld sp,hl
     ei
     ld bc,#0800
@@ -475,8 +834,7 @@ bush_c5
     push bc
     ld c,#82
     push bc
-    ld bc,#41C3
-    push bc
+    push iy
     ld sp,hl
     ei
     ld bc,#0800
@@ -484,24 +842,24 @@ bush_c5
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#82
     push bc
     ld bc,#00C3
     push bc
     ld sp,hl
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
-    ld bc,#0102
+    ld bc,#4182
     push bc
     jp bush_spr_done
 bush_c6
     ld de,#83C3
     ld ix,#C3C3
-    ld iy,#0301
+    ld iy,#43C3
     ld sp,hl
     ei
     ld bc,#0801
@@ -510,8 +868,7 @@ bush_c6
     bit 6,h
     call nz,bush_next_row
     push ix
-    ld bc,#4303
-    push bc
+    push ix
     ld sp,hl
     ei
     ld bc,#0801
@@ -520,8 +877,7 @@ bush_c6
     bit 6,h
     call nz,bush_next_row
     push ix
-    ld bc,#4343
-    push bc
+    push iy
     ld sp,hl
     ei
     ld bc,#0800
@@ -529,11 +885,10 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#01C3
+    ld bc,#41C3
     push bc
     push de
-    ld bc,#8303
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -541,11 +896,10 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#01C3
+    ld bc,#41C3
     push bc
     push de
-    ld bc,#4343
-    push bc
+    push iy
     ld sp,hl
     ei
     ld bc,#0800
@@ -553,8 +907,7 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#43C3
-    push bc
+    push iy
     ld bc,#8343
     push bc
     push de
@@ -565,8 +918,7 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#43C3
-    push bc
+    push iy
     ld bc,#8343
     push bc
     push de
@@ -577,15 +929,16 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
-    ld bc,#C382
+    ld bc,#C341
     push bc
+    ld c,#82
+    push bc
+    jp #5E00
+    ASSERT $ <= #5800
+    ORG #5E00
     ld bc,#41C3
     push bc
     push ix
-    jp #5600
-    ASSERT $ <= #5000
-    ORG #5600
     ld sp,hl
     ei
     ld bc,#0800
@@ -593,8 +946,9 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
-    ld bc,#C382
+    ld bc,#C341
+    push bc
+    ld c,#82
     push bc
     ld b,#00
     push bc
@@ -607,7 +961,8 @@ bush_c6
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
+    ld bc,#C341
+    push bc
     ld bc,#8200
     push bc
     ld bc,#4141
@@ -624,20 +979,20 @@ bush_c6
     ld bc,#0000
     push bc
     push bc
-    ld c,#43
+    ld c,#C3
     push bc
     ld sp,hl
-    ld bc,#0001
+    ld bc,#0041
     push bc
-    ld bc,#0200
+    ld bc,#8200
     push bc
-    ld bc,#0102
+    ld bc,#4182
     push bc
     jp bush_spr_done
 bush_c7
-    ld de,#83C3
-    ld ix,#8343
-    ld iy,#C3C3
+    ld de,#C3C3
+    ld ix,#83C3
+    ld iy,#41C3
     ld sp,hl
     ei
     ld bc,#0802
@@ -645,7 +1000,7 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -656,8 +1011,7 @@ bush_c7
     push de
     ld bc,#C343
     push bc
-    ld bc,#4303
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -666,9 +1020,9 @@ bush_c7
     bit 6,h
     call nz,bush_next_row
     push de
-    push ix
-    ld bc,#4303
+    ld bc,#8343
     push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0802
@@ -676,19 +1030,6 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#41C3
-    push bc
-    push de
-    push ix
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0383
-    push bc
     push iy
     push ix
     push ix
@@ -699,11 +1040,11 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    push iy
-    push ix
     push de
+    push de
+    ld bc,#8343
+    push bc
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -711,12 +1052,36 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0382
+    push de
+    push de
+    ld bc,#8343
+    push bc
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C382
     push bc
     ld bc,#0143
     push bc
-    ld bc,#41C3
+    push iy
+    push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C382
     push bc
+    ld b,#01
+    push bc
+    push iy
     push de
     ld sp,hl
     ei
@@ -725,27 +1090,12 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0382
-    push bc
-    ld b,#01
-    push bc
-    ld bc,#41C3
-    push bc
-    push iy
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0382
+    ld bc,#C382
     push bc
     ld bc,#4100
     push bc
-    ld c,#C3
-    push bc
-    ld b,#82
+    push iy
+    ld bc,#82C3
     push bc
     ld sp,hl
     ei
@@ -754,9 +1104,8 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0300
+    ld bc,#C300
     push bc
-    ld b,#C3
     push bc
     ld bc,#4141
     push bc
@@ -769,37 +1118,27 @@ bush_c7
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0301
+    ld bc,#C341
     push bc
     ld bc,#8200
     push bc
     ld b,#00
     push bc
-    ld c,#02
+    ld c,#82
     push bc
     ld sp,hl
-    ld bc,#0301
+    ld bc,#C341
     push bc
     ld bc,#0000
     push bc
     push bc
-    ld c,#02
+    ld c,#82
     push bc
     jp bush_spr_done
 bush_c8
-    ld de,#C343
-    ld ix,#83C3
-    ld iy,#C3C3
-    ld sp,hl
-    ei
-    ld bc,#0801
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    push ix
-    ld bc,#C303
-    push bc
+    ld de,#C3C3
+    ld ix,#C343
+    ld iy,#0082
     ld sp,hl
     ei
     ld bc,#0801
@@ -808,6 +1147,15 @@ bush_c8
     bit 6,h
     call nz,bush_next_row
     push de
+    push de
+    ld sp,hl
+    ei
+    ld bc,#0801
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    push ix
     ld bc,#C383
     push bc
     ld sp,hl
@@ -817,9 +1165,9 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push ix
     push de
-    ld bc,#4343
+    push ix
+    ld bc,#43C3
     push bc
     ld sp,hl
     ei
@@ -828,7 +1176,7 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push ix
+    push de
     ld bc,#4343
     push bc
     ld c,#C3
@@ -840,13 +1188,12 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#03C3
-    push bc
+    push de
     ld bc,#C383
     push bc
     ld bc,#4343
     push bc
-    ld b,#83
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -855,11 +1202,12 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#8341
+    ld bc,#C341
     push bc
-    push iy
     push de
     push ix
+    ld bc,#83C3
+    push bc
     ld sp,hl
     ei
     ld bc,#0800
@@ -867,28 +1215,27 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#8343
+    push ix
+    push ix
+    ld bc,#8243
     push bc
-    jp #5E00
-    ASSERT $ <= #5800
-    ORG #5E00
     push de
-    ld b,#82
-    push bc
-    push iy
     ld sp,hl
     ei
     ld bc,#0800
+    jp #6600
+    ASSERT $ <= #6000
+    ORG #6600
     di
     add hl,bc
     bit 6,h
     call nz,bush_next_row
     ld bc,#8243
     push bc
-    push de
+    push ix
     ld bc,#00C3
     push bc
-    push iy
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -900,7 +1247,7 @@ bush_c8
     push bc
     ld c,#C3
     push bc
-    push iy
+    push de
     ld bc,#C383
     push bc
     ld sp,hl
@@ -912,9 +1259,8 @@ bush_c8
     call nz,bush_next_row
     ld bc,#00C3
     push bc
-    ld c,#82
-    push bc
-    ld bc,#82C3
+    push iy
+    ld b,#82
     push bc
     push bc
     ld sp,hl
@@ -924,7 +1270,7 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
@@ -939,26 +1285,33 @@ bush_c8
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
     push bc
-    ld c,#02
-    push bc
+    push iy
     ld sp,hl
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
-    ld c,#02
-    push bc
-    push bc
+    push iy
+    push iy
     jp bush_spr_done
 bush_c9
-    ld de,#C383
-    ld ix,#C3C3
-    ld iy,#8241
+    ld de,#C3C3
+    ld ix,#C383
+    ld iy,#C341
+    ld sp,hl
+    ei
+    ld bc,#0801
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    push de
+    push de
     ld sp,hl
     ei
     ld bc,#0801
@@ -967,17 +1320,7 @@ bush_c9
     bit 6,h
     call nz,bush_next_row
     push ix
-    ld bc,#4303
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0801
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    push de
-    push de
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -985,10 +1328,10 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push de
+    push ix
     ld bc,#C303
     push bc
-    push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0801
@@ -996,7 +1339,7 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push de
+    push ix
     ld bc,#C343
     push bc
     ld bc,#43C3
@@ -1008,13 +1351,12 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#83C3
-    push bc
+    push de
     ld bc,#4301
     push bc
     ld c,#43
     push bc
-    ld b,#83
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -1029,7 +1371,7 @@ bush_c9
     push bc
     ld bc,#4343
     push bc
-    ld b,#83
+    ld bc,#83C3
     push bc
     ld sp,hl
     ei
@@ -1055,10 +1397,10 @@ bush_c9
     call nz,bush_next_row
     ld bc,#4383
     push bc
-    push ix
+    push de
     ld bc,#8243
     push bc
-    push ix
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -1066,13 +1408,11 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0301
-    push bc
-    push de
-    ld bc,#C341
-    push bc
+    push iy
     push ix
+    push iy
     push de
+    push ix
     ld sp,hl
     ei
     ld bc,#07FE
@@ -1080,13 +1420,11 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0301
-    push bc
-    ld bc,#C341
-    push bc
-    push bc
-    push ix
+    push iy
+    push iy
+    push iy
     push de
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -1094,10 +1432,11 @@ bush_c9
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
-    push iy
-    push iy
-    ld bc,#82C3
+    ld bc,#8241
+    push bc
+    push bc
+    push bc
+    ld c,#C3
     push bc
     ld sp,hl
     ei
@@ -1111,7 +1450,7 @@ bush_c9
     ld bc,#0041
     push bc
     push bc
-    ld bc,#8243
+    ld bc,#82C3
     push bc
     ld sp,hl
     ei
@@ -1122,24 +1461,25 @@ bush_c9
     call nz,bush_next_row
     ld bc,#0000
     push bc
-    push iy
-    ld c,#41
+    ld bc,#8241
     push bc
-    ld c,#02
+    ld b,#00
+    push bc
+    ld c,#82
     push bc
     ld sp,hl
-    ld bc,#0102
+    ld bc,#4182
     push bc
     ld b,#00
     push bc
     push bc
-    ld c,#03
+    ld c,#C3
     push bc
     jp bush_spr_done
 bush_c10
-    ld de,#83C3
-    ld ix,#C3C3
-    ld iy,#0343
+    ld de,#C3C3
+    ld ix,#83C3
+    ld iy,#C300
     ld sp,hl
     ei
     ld bc,#0801
@@ -1148,23 +1488,18 @@ bush_c10
     bit 6,h
     call nz,bush_next_row
     push de
+    push de
+    ld sp,hl
+    ei
+    ld bc,#0801
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
     ld bc,#C343
     push bc
-    ld sp,hl
-    ei
-    ld bc,#0801
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#8343
-    push bc
-    push de
-    ld c,#03
-    jp #6600
-    ASSERT $ <= #6000
-    ORG #6600
-    push bc
+    push ix
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -1173,18 +1508,21 @@ bush_c10
     bit 6,h
     call nz,bush_next_row
     push de
-    push de
+    push ix
     ld bc,#03C3
     push bc
     ld sp,hl
     ei
     ld bc,#0800
     di
+    jp #6E00
+    ASSERT $ <= #6800
+    ORG #6E00
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push ix
     push de
+    push ix
     ld bc,#03C3
     push bc
     ld sp,hl
@@ -1198,9 +1536,9 @@ bush_c10
     push bc
     ld b,#43
     push bc
-    push iy
-    ld bc,#C303
+    ld bc,#0343
     push bc
+    push de
     ld sp,hl
     ei
     ld bc,#0800
@@ -1208,14 +1546,13 @@ bush_c10
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0383
-    push bc
-    push ix
+    push de
+    push de
     ld bc,#43C3
     push bc
-    push iy
-    ld bc,#8343
+    ld bc,#0343
     push bc
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -1223,14 +1560,14 @@ bush_c10
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
-    push de
+    ld bc,#C343
+    push bc
+    push ix
     ld bc,#8302
     push bc
     ld bc,#C343
     push bc
-    ld b,#83
-    push bc
+    push ix
     ld sp,hl
     ei
     ld bc,#0800
@@ -1238,11 +1575,71 @@ bush_c10
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    push iy
-    push de
+    ld bc,#C343
+    push bc
+    push ix
     ld bc,#8382
     push bc
+    push de
     push ix
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C343
+    push bc
+    ld bc,#01C3
+    push bc
+    push iy
+    ld bc,#C383
+    push bc
+    push bc
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    push de
+    ld bc,#01C3
+    push bc
+    push iy
+    ld bc,#C383
+    push bc
+    push bc
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#4182
+    push bc
+    ld bc,#4300
+    push bc
+    push iy
+    ld bc,#C341
+    push bc
+    push de
+    ld sp,hl
+    ei
+    ld bc,#0800
+    di
+    add hl,bc
+    bit 6,h
+    call nz,bush_next_row
+    ld bc,#C382
+    push bc
+    ld bc,#4300
+    push bc
+    push iy
+    ld bc,#C341
+    push bc
     push de
     ld sp,hl
     ei
@@ -1252,71 +1649,7 @@ bush_c10
     bit 6,h
     call nz,bush_next_row
     push iy
-    ld bc,#01C3
-    push bc
-    ld bc,#C300
-    push bc
-    ld c,#83
-    push bc
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#03C3
-    push bc
-    ld b,#01
-    push bc
-    ld bc,#C300
-    push bc
-    ld c,#83
-    push bc
-    push bc
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0182
-    push bc
-    ld bc,#4300
-    push bc
-    ld b,#C3
-    push bc
-    ld c,#41
-    push bc
-    push ix
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0382
-    push bc
-    ld bc,#4300
-    push bc
-    ld b,#C3
-    push bc
-    ld c,#41
-    push bc
-    push ix
-    ld sp,hl
-    ei
-    ld bc,#0800
-    di
-    add hl,bc
-    bit 6,h
-    call nz,bush_next_row
-    ld bc,#0300
-    push bc
-    ld b,#82
+    ld bc,#8200
     push bc
     push bc
     ld c,#41
@@ -1330,14 +1663,13 @@ bush_c10
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0300
-    push bc
-    ld b,#82
+    push iy
+    ld bc,#8200
     push bc
     push bc
     ld bc,#0041
     push bc
-    ld c,#43
+    ld c,#C3
     push bc
     ld sp,hl
     ei
@@ -1346,22 +1678,412 @@ bush_c10
     add hl,bc
     bit 6,h
     call nz,bush_next_row
-    ld bc,#0300
-    push bc
-    ld b,#C3
-    push bc
-    ld b,#00
+    push iy
+    push iy
+    ld bc,#0000
     push bc
     push bc
-    ld c,#43
+    ld c,#C3
     push bc
     ld sp,hl
-    ld bc,#0100
+    ld bc,#4100
     push bc
     ld b,#00
     push bc
-    ld b,#01
+    ld b,#41
     push bc
     push bc
     jp bush_spr_done
-    ASSERT $ <= #6800
+car_code1
+    ld de,#0000
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld bc,#8ACF
+    di
+    push bc
+    ld hl,#CFCF
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld bc,#CF45
+    push bc
+    ld hl,#C86E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld bc,#0F0F
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F05
+    push hl
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC54
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FCFC
+    di
+    push hl
+    ld hl,#7E0A
+    push hl
+    ld hl,#80C0
+    push hl
+    ld hl,#CCCC
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#05FC
+    push hl
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC7E
+    di
+    push hl
+    ld hl,#150F
+    push hl
+    ld hl,#80C8
+    push hl
+    ld h,#C4
+    push hl
+    ld l,#40
+    push hl
+    ld hl,#0FA8
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC2A
+    di
+    push hl
+    ld l,#00
+    push hl
+    push bc
+    ld hl,#80CC
+    push hl
+    ld hl,#C0C0
+    push hl
+    ld hl,#CC40
+    push hl
+    push bc
+    ld hl,#00FC
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FCFC
+    di
+    push hl
+    ld hl,#0A0F
+    push hl
+    ld h,#00
+    push hl
+    ld hl,#0F05
+    push hl
+    push de
+    push de
+    ld hl,#000A
+    push hl
+    push bc
+    jp #7600
+    ASSERT $ <= #7000
+    ORG #7600
+    ld l,#FC
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC0A
+    di
+    push hl
+    push bc
+    ld hl,#0ACF
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#05
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#540F
+    di
+    push hl
+    push bc
+    ld h,#0A
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F05
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    push bc
+    ld hl,#2A00
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld hl,#0F2F
+    push hl
+    ld hl,#2A0A
+    push hl
+    ld hl,#8F9B
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld h,#3F
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#674F
+    push hl
+    ld hl,#0515
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld hl,#0F2F
+    push hl
+    ld hl,#2A00
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#2A0A
+    push hl
+    ld hl,#8F9B
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld h,#3F
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#674F
+    push hl
+    ld hl,#0515
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0A0F
+    di
+    push hl
+    ld hl,#3F3F
+    push hl
+    ld hl,#2A00
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0015
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A3F
+    di
+    push hl
+    ld h,#3F
+    push hl
+    ld hl,#2A0F
+    push hl
+    push bc
+    ld hl,#053C
+    push hl
+    ld h,#3C
+    push hl
+    ld l,#0A
+    push hl
+    push bc
+    ld c,#15
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#2A3F
+    di
+    push hl
+    ld bc,#3F3F
+    push bc
+    push hl
+    push bc
+    ld hl,#153C
+    push hl
+    ld h,#3C
+    push hl
+    ld l,#2A
+    push hl
+    push bc
+    ld c,#15
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#80C0
+    di
+    push hl
+    ld bc,#C040
+    push bc
+    ld l,#40
+    push hl
+    ld hl,#003C
+    push hl
+    push de
+    push de
+    push hl
+    ld l,#C0
+    push hl
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#80C0
+    di
+    push hl
+    push bc
+    ld l,#40
+    push hl
+    ld hl,#00FC
+    push hl
+    push de
+    push de
+    push hl
+    ld l,#C0
+    push hl
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#5400
+    di
+    push hl
+    ld bc,#00A8
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push hl
+    push bc
+    jp bush_spr_done
+    ASSERT $ <= #7800

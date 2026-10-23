@@ -14,8 +14,8 @@ PEN_BUSH       EQU  9   ; firmware colour 9
 PEN_RED        EQU 10   ; firmware colour 6
 PEN_ORANGE     EQU 11   ; firmware colour 15
 PEN_YELLOW     EQU 12   ; firmware colour 24
-PEN_GREEN      EQU 13   ; firmware colour 18
-PEN_ASPHALT_B  EQU 14   ; firmware colour 14
+PEN_GRASS_B    EQU 13   ; firmware colour 21
+PEN_CAR_DARK   EQU 14   ; firmware colour 3
 PEN_MAUVE      EQU 15   ; firmware colour 5
 
 ;; a byte of two pixels of the same pen
@@ -32,8 +32,8 @@ SOLID_BUSH       EQU #C3
 SOLID_RED        EQU #0F
 SOLID_ORANGE     EQU #CF
 SOLID_YELLOW     EQU #33
-SOLID_GREEN      EQU #F3
-SOLID_ASPHALT_B  EQU #3F
+SOLID_GRASS_B    EQU #F3
+SOLID_CAR_DARK   EQU #3F
 SOLID_MAUVE      EQU #FF
 
 ;; screen and road geometry
@@ -51,9 +51,9 @@ ROWS          EQU 109
 HORIZON_Y     EQU 162
 HALF_MAX      EQU 50
 MIN_HALF      EQU 2
-BAND_SHIFT    EQU 4
-FAR_Z         EQU 360
-FAR_ROW       EQU 21   ; rows 1..FAR_ROW are past FAR_Z
+BAND_SHIFT    EQU 6
+FAR_Z         EQU 700
+FAR_ROW       EQU 11   ; rows 1..FAR_ROW are past FAR_Z
 MOUNT_TOP     EQU 106   ; first line of the mountain strip
 PANO_Y0       EQU 104   ; first line of the panorama (a character row)
 PANO_WORDS    EQU 96   ; panorama width in CRTC words (4 pixels)

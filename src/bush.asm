@@ -17,9 +17,11 @@
 ;;               (bush_reach, nearest first, mkbush.py); those on the screen
 ;;               are drawn, each noted for the next bush_erase of this buffer
 ;;
-;; A bush on the inside of a curve may stand in front of the far road. When
-;; such a bush goes, road_project must not skip a far line whose dash has
-;; not moved (rp_dirty).
+;; A bush moves sideways with the road (road_x: as far as its row does,
+;; cpcgfx.player_shift). One on the inside of a
+;; curve may stand in front of the far road. When such a bush goes,
+;; road_project must not skip a far line whose dash has not moved
+;; (rp_dirty), nor a near line the bush stood on (rp_dlo, rp_dhi).
 ;;
 ;; A bush is drawn one of two ways:
 ;;
@@ -39,9 +41,9 @@
 
 BUSH_REC    EQU 6                       ; a drawn bush's box, for bush_erase:
                                         ; its top right; its lines (bit 7: on
-                                        ; the inside of a curve) and those to
-                                        ; the end of its first character row;
-                                        ; how it is erased
+                                        ; the inside of a curve) and its top
+                                        ; line (from ROAD_AREA_Y); how it is
+                                        ; erased
 
 ;; a sprite's record: bush_sinfo + 16 * sprite (mkbush.py)
 SI_HW       EQU 0                       ; half its width
@@ -53,6 +55,11 @@ SI_CODE     EQU 6                       ; its code
 SI_DATA     EQU 8                       ; its lines as data
 
 bd_rec      defw 0                      ; where the next erase record goes
+bd_ranges   defb 111,0,111,0            ; per buffer: the first and last line
+                                        ; (from ROAD_AREA_Y) its bushes on the
+                                        ; inside stood on (none: 111, 0)
+bd_k        defb #7F                    ; the curve level of the last picture
+                                        ; (#7F: none yet)
 
 ;; per buffer: where its records end (low byte), then the records (in one
 ;; page)
@@ -65,6 +72,36 @@ bush_recs1  defb lo(bush_recs1+1)
     defs BUSH_MAX*BUSH_REC,0
     ASSERT hi(bush_recs0) == hi($-1)
 
+;; HL = the selected buffer's lines its bushes on the inside stood on
+bd_range_ptr
+    ld hl,bd_ranges
+    ld a,(tgt_buf)
+    or a
+    ret z
+    inc hl
+    inc hl
+    ret
+
+;; the bush about to be drawn is on the inside (IYH): its lines, C (its top,
+;; signed) on, go in the selected buffer's range
+bd_note
+    call bd_range_ptr
+    ld a,c
+    or a
+    jp p,$+4
+    xor a
+    cp (hl)
+    jr nc,$+3
+    ld (hl),a
+    inc hl
+    ld a,c
+    add a,(ix+SI_H)
+    dec a
+    cp (hl)
+    ret c
+    ld (hl),a
+    ret
+
 ;; HL = the selected buffer's erase records
 bush_rec_ptr
     ld hl,bush_recs0
@@ -76,11 +113,21 @@ bush_rec_ptr
 
 ;; ---------------------------------------------------------------------------
 ;; bush_erase - the grass back over the boxes the selected buffer's bushes
-;; were drawn in; rp_dirty set if one of them stood on the inside of a curve.
-;; A box is erased a character row's lines at a time (as many as are in it),
-;; each line PUSHes from its right end. Destroys everything.
+;; were drawn in; rp_dirty set if one of them stood on the inside of a curve,
+;; and rp_dlo, rp_dhi to the lines those stood on. A box is erased a
+;; character row's lines at a time (as many as are in it, up to where the
+;; grass of then changes its green: be_prep), each line PUSHes from its
+;; right end. Destroys everything.
 ;; ---------------------------------------------------------------------------
 bush_erase
+    call bd_range_ptr
+    ld a,(hl)
+    ld (rp_dlo),a
+    ld (hl),111
+    inc hl
+    ld a,(hl)
+    ld (rp_dhi),a
+    ld (hl),0
     call bush_rec_ptr
     xor a
     ld (rp_dirty),a
@@ -89,45 +136,28 @@ bush_erase
     cp l
     ret z                               ; none
     ld (be_end+1),a
+    push hl
+    call be_prep                        ; (road.asm) the grass of then
+    pop hl
     ld (be_sp+1),sp
-    ld de,GRASS_PAIR
     di                                  ; (SP in the records: what an interrupt
     ld sp,hl                            ; pushes lands on one already read)
 be_rec
     pop hl                              ; the box's top right
-    pop bc                              ; C = lines, B = those in its first row
+    pop bc                              ; C = lines, B = its top line
     pop iy                              ; how it is erased
     ld (be_ptr+1),sp
     ld a,c
     and #80
-    jr z,be_lines
+    jr z,be_box
     ld (rp_dirty),a                     ; it stood on the inside of a curve
     xor c
     ld c,a
-be_lines
-    ld a,c                              ; B lines this time: those to the end
-    sub b                               ; of the row, or all that are left
-    jr nc,be_some
-    ld b,c
-    xor a
-be_some
-    ld c,a                              ; C = lines after these
-    jp (iy)
-be_segd                                 ; (back here, HL a line past them)
-    ld a,c
-    or a
-    jr z,be_boxd
-    ld a,h                              ; on to the next character row
-    sub #40
-    ld h,a
-    ld a,l
-    add a,96
-    ld l,a
-    jr nc,be_row
-    inc h
-be_row
-    ld b,8
-    jr be_lines
+be_box
+    ld a,b
+    ld ixl,a                            ; IXL = the line, from ROAD_AREA_Y
+    call be_grass                       ; DE = its grass, IXH = where it changes
+    jp be_seg                           ; (fragments 2 and 15: room)
 be_boxd
 be_ptr
     ld sp,0                             ; (self-modified: the next record)
@@ -196,20 +226,28 @@ bd_hill
     ld a,(hl)
     ld (b1_top+1),a
 bd_hill_same
-    ; the curve: its level's centre table, mirrored for a left curve; which
-    ; side is the inside (if it is not the last picture's)
+    ; which side is the inside, where a bush may stand in front of the far
+    ; road: the side the curve bends to
+    ld de,0                             ; D: the left's mark, E: the right's
     ld a,(road_curve)
-    ld hl,b1_inside+1
+    call bd_side                        ; (flags: the level's)
+    jr z,bd_side_set
+    ld a,(hill)                         ; a curve still on a hill (its level
+    or a                                ; lags the track's): the layout does
+    jr z,bd_side_set                    ; not keep a bush on either side off
+    ld de,#8080                         ; the road there
+bd_side_set
+    ld a,e
+    ld (b1_inr+1),a
+    ld a,d
+    ld (b1_inl+1),a
+    ; the curve: its level's centre table, mirrored for a left curve (if it
+    ; is not the last picture's)
+    ld a,(road_curve)
+    ld hl,bd_k
     cp (hl)
     jr z,bd_curve_same
     ld (hl),a
-    or a
-    ld a,#80
-    jr nz,bd_bent
-    xor a
-bd_bent
-    ld (b1_inside+4),a
-    ld a,(road_curve)
     ld hl,0                             ; (nop, nop; add a,0)
     ld c,l
     or a
@@ -364,6 +402,17 @@ bd_head
     ld (0),a                            ; (self-modified: the buffer's)
     ret
 
+;; A > 0: the right is the inside (E = #80); A < 0: the left (D = #80)
+bd_side
+    or a
+    ret z
+    jp m,bd_side_l
+    ld e,#80
+    ret
+bd_side_l
+    ld d,#80
+    ret
+
 ;; bush_join - DE = a bush that has come into reach: into bush_reach, after
 ;; those nearer
 bush_join
@@ -481,7 +530,7 @@ b1_top
     ld ixh,hi(bush_sinfo)               ; IX = its sprite's record
 
     ; how far from the road's centre (signed: its side's table), and
-    ; whether that is the inside of the curve
+    ; whether that is the inside
     ld a,(hl)
     or c
     ld e,a
@@ -489,11 +538,27 @@ b1_top
     ld d,(hl)
     ld a,(de)
     ld e,a                              ; E = the offset
-b1_inside
-    xor #7F                             ; (self-modified: the curve level;
-    cpl                                 ; #7F: none yet)
-    and #80                             ; (self-modified: 0 when straight)
+    rla
+b1_inr
+    ld a,0                              ; (self-modified: #80 if the right is
+    jr nc,b1_ins                        ; the inside)
+b1_inl
+    ld a,0                              ; (self-modified: the left)
+b1_ins
     ld iyh,a                            ; IYH: #80 on the inside
+
+    ; and as far again as road_x moves its row (rd_gp, by its
+    ; template group: bush_rh); far off if that is beyond a byte
+    ld a,c
+    or lo(bush_rh)
+    ld l,a
+    ld h,hi(bush_rh)
+    ld l,(hl)
+    ld h,hi(rd_gp)
+    ld a,(hl)
+    add a,e
+    ret pe
+    ld e,a
 
     ; its centre: the road's + the offset; it is drawn while that is on the
     ; screen. Its left: half its width less
@@ -547,8 +612,13 @@ b1_flat
     sub (ix+SI_H)
     inc a
     ld c,a                              ; C = its top line (signed)
+    ld a,iyh
+    or a
+    call nz,bd_note
 
     ; which way: its code if it is all on the screen
+    ld a,c
+    or a
     jp m,bush_copy                      ; cut off at the top
     ld a,d
     or a
@@ -593,11 +663,7 @@ b1_buf
     or iyh
     ld (hl),a                           ; its lines; inside the curve
     inc hl
-    ld a,c
-    and 7
-    xor 7
-    inc a
-    ld (hl),a                           ; lines to its row's end
+    ld (hl),c                           ; its top line
     inc hl
     ld a,(ix+SI_WAY)
     ld (hl),a                           ; how it is erased
@@ -634,6 +700,68 @@ bush_next_row
     ret nc
     inc h
     ret
+
+;; ---------------------------------------------------------------------------
+;; car_lines - after road_project, before road_draw (road_frame): if this
+;; buffer last showed the car seen another way (car_view), the lines at its
+;; top where the views' runs differ (CAR_TOP) are drawn whole - else what
+;; the old view had there and the new one has not would stay on any of them
+;; road_project left as it was. Line ROAD_AREA_Y + y is entry 111 - y.
+;; Destroys AF, B, DE, HL.
+;; ---------------------------------------------------------------------------
+    ASSERT SCR_H-1-ROAD_AREA_Y == 111 && CAR_TOP > 0
+car_lines
+    ld hl,drawn_view
+    call buf_entry
+    ld a,(car_view)
+    cp (hl)
+    ret z
+    ld (hl),a
+    ld hl,(rp_slot)
+    ld de,4*(111-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
+    add hl,de
+    ld e,4
+    ld b,CAR_TOP
+car_lines_one
+    ld a,(hl)
+    and #FC                             ; flags off: the whole line
+    ld (hl),a
+    add hl,de
+    djnz car_lines_one
+    ret
+
+;; ---------------------------------------------------------------------------
+;; car_draw - the player's car into the selected buffer, over the road and
+;; the bushes: its code (bushcode.asm, scene.py's art) pushes it the way a
+;; bush's does. It is in the same place in every picture and drawn over
+;; whatever is there, so it is never taken away. Destroys everything.
+;; ---------------------------------------------------------------------------
+car_draw
+    ld a,(car_view)                     ; straight, turning left or right:
+    add a,a                             ; car_views (gen/bush.asm)
+    add a,a
+    ld l,a
+    ld h,0
+    ld de,car_views
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)                           ; DE = where its first line's run ends
+    inc hl
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a                              ; HL = its code
+    ex de,hl
+    ld a,(tgt_buf)
+    or a
+    jr z,cd_buf
+    res 7,h                             ; (buffer 1: #8000 lower)
+cd_buf
+    push de
+    ld (b1_sp+1),sp
+    di
+    ret                                 ; into its code
 
 ;; ---------------------------------------------------------------------------
 ;; bush_copy - the other way: its lines copied from its data with LDIs, each
@@ -712,10 +840,7 @@ bc_all
     jp p,bc_first2
     xor a
 bc_first2
-    and 7
-    xor 7
-    inc a
-    ld (hl),a                           ; lines to its first row's end
+    ld (hl),a                           ; its top line (cut: 0)
     inc hl
     ld a,e                              ; how it is erased: be_ways[pairs]
     add a,a

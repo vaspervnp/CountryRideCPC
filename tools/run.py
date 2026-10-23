@@ -132,6 +132,14 @@ class Game:
         """A variable of the game code, which lives in bank 7 at #C000."""
         return self.bank(7, self.sym[name] + off, 1)[0]
 
+    def game_poke(self, name, value, off=0):
+        """Set a byte variable of the game code (bank 7)."""
+        import ctypes
+        import cpc
+        p = cpc._lib.cpcemu_ram_ptr(self.c._h, 7)
+        a = ctypes.addressof(p.contents) + ((self.sym[name] + off) & 0x3FFF)
+        ctypes.memmove(a, bytes([value & 0xFF]), 1)
+
     def shot(self, path):
         self.c.screenshot(path, aspect=True)
 
@@ -224,17 +232,29 @@ def road_pens(g, buf, y0=160, y1=272):
             for y in range(y0, y1)]
 
 
+def _signed(v):
+    return v - 256 if v > 127 else v
+
+
 def road_model(g):
     """What scene.py says the road part should be for the engine's inputs
-    now: lines ROAD_AREA_Y..271, the road and the bushes."""
+    now: lines ROAD_AREA_Y..271, the road, the bushes and the car."""
     import scene
     zcam = g.word("ZCAM")
-    hill = g.byte("HILL")
-    hill = hill - 256 if hill > 127 else hill
+    hill = _signed(g.byte("HILL"))
     hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
-    curve = g.byte("ROAD_CURVE")
-    curve = curve - 256 if curve > 127 else curve
-    return scene.road_area(hill, zcam, curve), hill, zcam, curve
+    curve = _signed(g.byte("ROAD_CURVE"))
+    x = _signed(g.byte("ROAD_X"))
+    view = g.game_byte("CAR_VIEW")
+    return scene.road_area(hill, zcam, curve, x=x, view=view), hill, zcam, curve, x
+
+
+def road_partial(g):
+    """At PICTURE_DONE: whether the picture was drawn with the cache (the
+    road off the middle) while it was still catching up with the curve
+    level - some groups of rows a level behind, as road_project allows for,
+    but not as the model draws it. (road_x moves the whole cache at once.)"""
+    return g.byte("RP_CACHE") and g.byte("RD_N2")
 
 
 # Where line 0 of the picture is in the emulator's framebuffer (1024 x 312,
@@ -269,28 +289,38 @@ def cmd_check():
     # Every line of a freshly drawn buffer's road part against the Python
     # model, the bushes on it - including the lines road_project decided had
     # not changed.
+    # A picture drawn while the cache was catching up is passed over for
+    # the next one.
     bad = 0
     seen = set()
     curves = set()
+    xs = set()
+    partial = 0
     y0 = scene.ROAD_AREA_Y
     for n in range(240):
         run_to(g.c, g.sym["PICTURE_DONE"])
+        while road_partial(g):
+            partial += 1
+            run_to(g.c, g.sym["PICTURE_DONE"])
         buf = g.byte("ROAD_BUF")
-        want, hill, zcam, curve = road_model(g)
+        want, hill, zcam, curve, x = road_model(g)
         got = road_pens(g, buf, y0, SCR_H)
         wrong = [y0 + i for i in range(len(want)) if want[i] != got[i]]
         seen.add(hill)
         curves.add(curve)
+        xs.add(x)
         if wrong:
             bad += 1
             if bad <= 5:
-                print("picture %d (buffer %d, hill %d, zcam %d, curve %d): %d lines "
-                      "differ, first %d" % (n, buf, hill, zcam, curve, len(wrong),
-                                            wrong[0]))
+                print("picture %d (buffer %d, hill %d, zcam %d, curve %d, x %d): %d "
+                      "lines differ, first %d" % (n, buf, hill, zcam, curve, x,
+                                                  len(wrong), wrong[0]))
         for _ in range(37):              # skip ahead to vary hill and zcam
             run_to(g.c, g.sym["PICTURE_DONE"])
-    print("road check: %d of 240 pictures differ from scene.py; hills seen %s; "
-          "curve levels seen %s" % (bad, sorted(seen), sorted(curves)))
+    print("road check: %d of 240 pictures differ from scene.py (%d passed over, "
+          "the cache catching up); hills seen %s; curve levels seen %s; road_x "
+          "from %d to %d" % (bad, partial, sorted(seen), sorted(curves), min(xs),
+                             max(xs)))
 
     # The HUD, sky and mountains of a freshly drawn buffer.
     from cpcgfx import HUD_H

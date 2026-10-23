@@ -15,10 +15,10 @@ import math
 import os
 
 from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
-                    HORIZON_Y, curve_shift,
+                    HORIZON_Y, road_shift, player_shift, curve_group,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
-                    PLAIN_GRASS, TRACK_PERIOD, BUSH_SIZES, BUSH_LATS, BUSH_LAT_OF,
+                    PLAIN_GRASS, grass_pen, TRACK_PERIOD, BUSH_SIZES, BUSH_LATS, BUSH_LAT_OF,
                     BUSH_H, BUSH_ASPECT, BUSH_ZNEAR, BUSH_ZFAR, BUSH_GAP,
                     BUSH_SEED, BUSH_BIG_GAP, BUSH_MAX, BUSH_IN_REACH, bush_row,
                     bush_sprite_of, bush_lat, bush_centre, bush_zvis,
@@ -126,7 +126,7 @@ def big_glyph(name, pen=VALUE_PEN):
 
 GAUGE_SEGS = 8                   # segments per gauge, 4 pixels each
 GAUGE_H = 6
-GAUGE_ZONES = [PEN["RED"], PEN["ORANGE"], PEN["YELLOW"], PEN["GREEN"]]
+GAUGE_ZONES = [PEN["RED"], PEN["ORANGE"], PEN["YELLOW"], PEN["GRASS_A"]]
 
 HUD = dict(
     time_label=(8, 6), time_value=(8, 17),          # two big digits
@@ -400,23 +400,26 @@ HILL_MAX = max(h for h in range(0, 128, 2)
                + ROAD_Y <= ROAD_TOP_MAX)
 
 
-def road_line(r, band, cx=SCR_W // 2):
-    """Pens of one road line showing row r (None = ground strip)."""
+def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS):
+    """Pens of one road line showing row r (None = ground strip). The engine
+    draws the road in whole pairs (4 pixels): the kerb fills them out."""
     if r is None:
         return [GROUND_PEN] * SCR_W
-    out = [PLAIN_GRASS] * SCR_W
+    out = [grass] * SCR_W
     pens, left = road_row_pixels(row_half_bytes(r), band)
-    for i, p in enumerate(pens):
-        x = cx - left + i
-        if 0 <= x < SCR_W:
-            out[x] = p
+    x0 = cx - left
+    x1 = x0 + len(pens)
+    for x in range(max(0, x0 & ~3), min(SCR_W, (x1 + 3) & ~3)):
+        out[x] = pens[x - x0] if x0 <= x < x1 else pens[0]
     return out
 
 
-def road_lines(hill, zcam, curve=0):
-    """Lines ROAD_Y..SCR_H-1, the road bent by curve level `curve`."""
+def road_lines(hill, zcam, curve=0, x=0):
+    """Lines ROAD_Y..SCR_H-1, the road bent by curve level `curve` and x
+    pairs right of the middle (cpcgfx.road_shift)."""
     rows = project(hill, zcam)
-    return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * curve_shift(curve, r))
+    return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * road_shift(curve, r, x),
+                      grass_pen(r, zcam))
             if r else road_line(None, 0) for r in rows]
 
 
@@ -431,6 +434,9 @@ BUSH_CLUMPS = [(0.42, 0.62, 0.40), (0.95, 0.50, 0.50), (1.50, 0.55, 0.47),
                (1.75, 0.38, 0.27)]
 BUSH_LIGHT = (-0.5, -0.7, 0.5)
 BUSH_PENS = dict(lit=PEN["GRASS_A"], body=PEN["BUSH"], dark=PEN["BLACK"])
+# What fills a sprite's runs between its leaves and out to whole pairs: no
+# grass, so that it looks the same on either of the grass's stripes.
+BUSH_FILL = PEN["BUSH"]
 
 
 def _leaf_noise(i, j, seed=3):
@@ -486,10 +492,10 @@ def bush_art(h):
 def bush_sprite(k):
     """Sprite k (BUSH_H[k] lines) as the engine draws it: (width in bytes,
     [(first byte, [bytes])] a line). Each line is one run of bytes from its
-    first pixel of bush to its last, the grass between filled in, and a byte
-    of grass more where that makes it a whole number of pairs (the engine
-    PUSHes them): on the left, or on the right at the sprite's left edge. The
-    width is even, so that byte is always inside it."""
+    first pixel of bush to its last, the gaps between filled in with
+    BUSH_FILL, and a byte of it more where that makes it a whole number of
+    pairs (the engine PUSHes them): on the left, or on the right at the
+    sprite's left edge. The width is even, so that byte is always inside it."""
     art = bush_art(BUSH_H[k])
     w = len(art[0])
     wb = (w + 1) // 2
@@ -504,8 +510,8 @@ def bush_sprite(k):
                 a -= 1
             else:
                 b += 1
-        pens = [PLAIN_GRASS if p is None else p for p in row]
-        pens += [PLAIN_GRASS] * (2 * wb - len(pens))
+        pens = [BUSH_FILL if p is None else p for p in row]
+        pens += [BUSH_FILL] * (2 * wb - len(pens))
         lines.append((a, [m0_byte(pens[2 * x], pens[2 * x + 1]) for x in range(a, b)]))
     return wb, lines
 
@@ -566,7 +572,7 @@ def effective_hill(hill):
     return min(level_hill(hill_level(hill)), HILL_MAX)
 
 
-def bush_items(hill, zcam, curve):
+def bush_items(hill, zcam, curve, x=0):
     """The bushes on screen, in the order they are drawn - nearest first,
     BUSH_MAX at most (they hardly ever overlap): (sprite, left byte, base
     line, inside of the curve). `hill` as the road engine draws it. A bush
@@ -589,7 +595,8 @@ def bush_items(hill, zcam, curve):
         wb = BUSH_SPRITES[k][0]
         # drawn while its centre is on the screen (as the engine works it
         # out, in bytes: the offset at most 127)
-        cx = bush_centre(curve, r) + side * min(bush_lat(lat, r), 127)
+        cx = (bush_centre(curve, r) + player_shift(curve, x, r)
+              + side * min(bush_lat(lat, r), 127))
         if not 0 <= cx < SCR_W // 2:
             continue
         bx = cx - wb // 2
@@ -598,9 +605,9 @@ def bush_items(hill, zcam, curve):
     return [t[1:] for t in out[:BUSH_MAX]]
 
 
-def draw_bushes(lines, y0, hill, zcam, curve):
+def draw_bushes(lines, y0, hill, zcam, curve, x=0):
     """Draw the bushes into `lines` (pen rows, the first being line y0)."""
-    for k, bx, y, _ in bush_items(hill, zcam, curve):
+    for k, bx, y, _ in bush_items(hill, zcam, curve, x):
         wb, spans = BUSH_SPRITES[k]
         top = y - len(spans) + 1
         for j, (a, data) in enumerate(spans):
@@ -611,6 +618,126 @@ def draw_bushes(lines, y0, hill, zcam, curve):
                 x = bx + a + i
                 if 0 <= x < SCR_W // 2:
                     lines[yy - y0][2 * x:2 * x + 2] = list(m0_decode(b))
+
+
+# ---------------------------------------------------------------------------
+# The player's car: a low, wide red sports car seen from behind - a rear
+# wing over a small rear window between buttresses, rounded shoulders, a
+# black grille across the back with the lights behind its slats, the body
+# shaded darker low on the sides, fat tyres - fixed in the middle of the
+# screen a little above the bottom (the monitor's edge can hide the last
+# lines) - the road moves under it. Each line is one run of whole pairs (4
+# pixels), like a bush's, so the engine draws it with PUSHes; it is drawn
+# last, over the road and the bushes. The road under it is drawn afresh
+# with every picture (or left as it was, car and all, when road_project
+# skips the line), so it needs no erasing. The grey at the ends of a few
+# runs is the asphalt's, rounding the corners.
+# ---------------------------------------------------------------------------
+
+CAR_W = 36                      # pixels (a line is whole pairs: 4 pixels)
+CAR_X = (SCR_W - CAR_W) // 2    # 78: byte 39
+CAR_BOTTOM = SCR_H - 12         # the line below it
+CAR_PEN = dict(R="RED", O="ORANGE", Y="YELLOW", K="BLACK", G="GREY",
+               W="WHITE", N="NAVY", S="SKY", D="CAR_DARK")
+
+
+def _car_sym(half):
+    """A line the same both sides: its left half, mirrored."""
+    assert len(half) == CAR_W // 2
+    return half + half[::-1]
+
+
+CAR_ART = [_car_sym(h) for h in (
+    "....KKKKKKKKKKKKKK",                                   # wing
+    "....KOOOOOOOOOOOOO",
+    "....KRRRRRRRRRRRRR",
+    "....KKKKKKKKKKKKKK",
+    "........GGKRKNNNSS",                                   # rear window
+    "........GKRRKNNSSN",                                   # and buttresses
+    "....GGKKRRRRKNSSNN",
+    "GGKKRRRRRRRKKKKKKK",                                   # deck
+    "KROOOOOOOOOOOOOOOO",
+    "KRRRRRRRRRRRRRRRRR",
+    "KDKKKKKKKKKKKKKKKK",                                   # grille, lights
+    "KDKRROYOKDDDDDDDDD",
+    "KDKKKKKKKKKKKKKKKK",
+    "KDKRROYOKDDDDDDDDD",
+    "KDKKKKKKKKKKKKKKKK",
+    "KDRRRRRRRRRRRKWWWW",                                   # plate
+    "KDDDDDDDDDDDDKWWWW",
+    "KKKKKKKKKKKKKKKKKK",                                   # diffuser
+    "KNNNNNKKKWWKKKKKKK",                                   # tyres, exhausts
+    "KNNNNNKKKGGKKKKKKK",
+    "KKKKKKKKKKKKKKKKKK",
+    "GKKKKKKGKKKKKKKKKK",
+)]
+CAR_H = len(CAR_ART)
+CAR_Y = CAR_BOTTOM - CAR_H      # its top line
+
+# Steering, it is seen turning (OutRun's way): turning left, its rear face
+# narrower and further left, its right flank in view and the cabin, further
+# forward, further left still. Turning right is the same mirrored.
+_TURN_REAR = [
+    "K" * 28,                                               # wing
+    "K" + "O" * 26 + "K",
+    "K" + "R" * 26 + "K",
+    "K" * 28,
+    None, None, None,                                       # (the cabin)
+    "GGKKRRRRR" + "K" * 12 + "RRRRRKK",                     # deck
+    "KR" + "O" * 24 + "RK",
+    "KR" + "R" * 24 + "RK",
+    "KD" + "K" * 24 + "DK",                                 # grille, lights
+    "KDKRROYOKDDDDDDDDDDKOYORRKDK",
+    "KD" + "K" * 24 + "DK",
+    "KDKRROYOKDDDDDDDDDDKOYORRKDK",
+    "KD" + "K" * 24 + "DK",
+    "KDRRRRRRRKWWWWWWWWKRRRRRRRDK",                         # plate
+    "KDDDDDDDDKWWWWWWWWKDDDDDDDDK",
+    "K" * 28,                                               # diffuser
+    "KNNNNNKKWWKKKKKKKKKKWWKKKNNK",                         # tyres, exhausts
+    "KNNNNNKKGGKKKKKKKKKKGGKKKNNK",
+    "K" * 28,
+    "GKKKKKKG" + "K" * 20,
+]
+_TURN_FLANK = [
+    "........", "........", "........", "KGGG....",
+    None, None, None,
+    "RRRKGGGG", "RRRRRKGG", "RRRRRRKG", "RRRRRRRK", "DRRRRRRK", "DRRRRRRK",
+    "DDRRRRRK", "DDDDRRRK", "DDDDDDDK", "DDDDDDDK", "KKKKKKKK",
+    "KNNNNNNK", "KNNNNNNK", "KKKKKKKK", "GKKKKKKG",
+]
+_TURN_CABIN = [
+    "....GGKRKNNNSSSSNNNKRKDGGGGG........",
+    "....GKRRKNNSSNNSSNNKRRKDDGGG........",
+    "GGKKRRRRKNSSNNNNSSNKRRRRKKGGDKGG....",
+]
+CAR_ART_LEFT = [_TURN_CABIN[i - 4] if r is None else r + _TURN_FLANK[i]
+                for i, r in enumerate(_TURN_REAR)]
+CAR_ART_RIGHT = [r[::-1] for r in CAR_ART_LEFT]
+CAR_ARTS = [CAR_ART, CAR_ART_LEFT, CAR_ART_RIGHT]   # car_view 0, 1, 2
+assert all(len(a) == CAR_H and all(len(r) == CAR_W for r in a) for a in CAR_ARTS)
+
+
+def car_runs(view=0):
+    """The car's lines as a bush sprite's: (first byte from the car's left,
+    the bytes of its run)."""
+    out = []
+    for row in CAR_ARTS[view]:
+        a = min(i for i, c in enumerate(row) if c != ".")
+        b = max(i for i, c in enumerate(row) if c != ".") + 1
+        assert a % 4 == 0 and b % 4 == 0 and "." not in row[a:b]
+        pens = [PEN[CAR_PEN[c]] for c in row[a:b]]
+        out.append((a // 2, [m0_byte(pens[i], pens[i + 1]) for i in range(0, len(pens), 2)]))
+    return out
+
+
+def draw_car(lines, y0, view=0):
+    """Draw the car into `lines` (pen rows, the first being line y0), seen
+    straight, turning left or turning right (view 0, 1, 2)."""
+    for j, row in enumerate(CAR_ARTS[view]):
+        for i, c in enumerate(row):
+            if c != ".":
+                lines[CAR_Y + j - y0][CAR_X + i] = PEN[CAR_PEN[c]]
 
 
 # ---------------------------------------------------------------------------
@@ -663,13 +790,16 @@ def sky_lines(heading=0):
     return out
 
 
-def road_area(hill=0, zcam=0, curve=0, bushes=True):
-    """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, and
-    the bushes. `hill` as the road engine draws it (effective_hill)."""
+def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0):
+    """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
+    bushes and the car (seen as car_view `view`). `hill` as the road engine
+    draws it (effective_hill)."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
-             + road_lines(hill, zcam, curve))
+             + road_lines(hill, zcam, curve, x))
     if bushes:
-        draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve)
+        draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x)
+    if car:
+        draw_car(lines, ROAD_AREA_Y, view)
     return lines
 
 
@@ -684,17 +814,31 @@ def road_from(drop):
     return (ROAD_Y + drop) // 8 * 8
 
 
+def sky_drop(drop):
+    """How far the sky and the mountains go down for a road drop: twice as
+    far, so that the ground between them and the road's top - a crest's far
+    side, that the crest hides - narrows, but no further than the line
+    before the road part starts (its first line is a character row's), and
+    never more than 2 lines on from the drop before - from 11 lines of
+    ground on the flat to 3-7 on a crest."""
+    s = 0
+    for k in range(1, drop + 1):
+        s = min(s + 2, road_from(k) - BLOCK_BOTTOM)
+    return s
+
+
 def shown(hud_pens, sky, road, drop):
     """What the CRTC shows: the three parts, split for a drop."""
     out = []
     first_road = road_from(drop)
+    sd = sky_drop(drop)
     for y in range(SCR_H):
         if y < HUD_H:
             out.append(hud_pens[y])
-        elif y < HUD_H + drop:
+        elif y < HUD_H + sd:
             out.append([BORDER_TOP] * SCR_W)
-        elif y < BLOCK_BOTTOM + drop:
-            out.append(sky[y - drop - HUD_H])
+        elif y < BLOCK_BOTTOM + sd:
+            out.append(sky[y - sd - HUD_H])
         elif y < first_road:
             out.append([BORDER_LOW] * SCR_W)
         else:
@@ -702,14 +846,14 @@ def shown(hud_pens, sky, road, drop):
     return out
 
 
-def screen(hill=0, zcam=0, drop=None, heading=0, curve=0, **hudvals):
+def screen(hill=0, zcam=0, drop=None, heading=0, curve=0, x=0, **hudvals):
     """The picture on the screen: the horizon `drop` lines down (by default
     as far as the road's ground goes), looking `heading` words right, the
     road bent by curve level `curve`."""
     if drop is None:
         drop = ground_drop(hill)
     return shown(hud(**hudvals), sky_lines(heading),
-                 road_area(effective_hill(hill), zcam, curve), drop)
+                 road_area(effective_hill(hill), zcam, curve, x=x), drop)
 
 
 def to_image(pens, scale=True):

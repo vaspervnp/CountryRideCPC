@@ -5,6 +5,8 @@ geometry and the road shape are defined exactly once. tools/mkconsts.py writes
 the same numbers out as src/gen/consts.asm for the Z80 side.
 """
 
+from functools import lru_cache
+
 # ---------------------------------------------------------------------------
 # Hardware
 # ---------------------------------------------------------------------------
@@ -54,14 +56,14 @@ PENS = [
     ("PASTEL",      14),   # 4  sky near the horizon, snow in shadow
     ("HAZE",        23),   # 5  haze at the foot of the mountains
     ("WHITE",       26),   # 6  snow, HUD values, kerb (band B), lane lines
-    ("GREY",        13),   # 7  rock, asphalt (band A)
+    ("GREY",        13),   # 7  rock, asphalt
     ("GRASS_A",     18),   # 8  the grass, distant ground strip
     ("BUSH",        9),    # 9  bushes: dark green
     ("RED",         6),    # 10 kerb (band A), gauge
     ("ORANGE",      15),   # 11 gauge
     ("YELLOW",      24),   # 12 HUD labels, gauge
-    ("GREEN",       18),   # 13 gauge
-    ("ASPHALT_B",   14),   # 14 asphalt (band B): pastel blue, close to grey
+    ("GRASS_B",     21),   # 13 the grass's other stripe: lime
+    ("CAR_DARK",    3),    # 14 the car's shading: dark red
     ("MAUVE",       5),    # 15 distant rock
 ]
 PEN = {name: i for i, (name, _) in enumerate(PENS)}
@@ -165,22 +167,19 @@ def line_px(half):
 
 # Depth of a row: z = DEPTH_K / r. 16 bits; the near row is z ~= 71.
 DEPTH_K = 7760
-BAND_SHIFT = 4              # a stripe band is 16 depth units long
-FAR_Z = 360                 # beyond this the stripes stop (they would alias)
+BAND_SHIFT = 6              # a stripe band is 64 depth units long
+FAR_Z = 700                 # beyond this the stripes stop (they would alias:
+                            # the rows are a stripe apart)
 
 
 def far_mask(r):
     """Past FAR_Z the grass and the asphalt stop striping, but the kerbs and
-    the lane dashes keep moving - with longer dashes the further away they
-    are, so a dash still covers a row or two instead of flickering. The
-    mask is the bit of (depth + camera) that says which half of the dash the
-    row is in: 16 near (the stripes' own), 32, 64 or 128 far away."""
+    the lane dashes keep moving - with a longer dash, so that it still
+    covers a row or two instead of flickering. The mask is the bit of
+    (depth + camera) that says which half of the dash the row is in: 64
+    near (the stripes' own), 128 far away."""
     if row_depth(r) <= FAR_Z:
-        return 16
-    if r >= 18:
-        return 32
-    if r >= 13:
-        return 64
+        return 1 << BAND_SHIFT
     return 128
 
 
@@ -195,35 +194,145 @@ def row_depth(r):
 # (2 pixels each) at the strongest level. The road engine has its templates
 # made for every level, so a curve costs it nothing per line.
 #
-# The engine keeps one template per *group* of rows: a row of its own where
+# The engine keeps one template per *group* of rows: two rows (or one) where
 # the road is narrow (far away, where the bend moves most from row to row),
 # else all the rows of one width. A group moves as its middle row would.
+#
+# Where a group goes is worked out as a whole number of bytes from an exact
+# sum (road_shift): the curve - curve_c1, kept in 1/50 bytes - and the
+# player's share. It is rounded once, so the edges never step back and
+# forth from group to group, and with a slight bias that keeps the lane
+# lines straight too (road_shift).
 # ---------------------------------------------------------------------------
 
 CURVE_K = 7
 CURVE_TOP = 64
-CURVE_ROW_GROUPS = 4        # rows narrower than this half-width: one group each
+CURVE_ROW_GROUPS = 4        # rows narrower than this half-width: two a group
 
 
 def curve_group(r):
-    """The template group of row r: ('row', r) or ('half', half-width)."""
+    """The template group of row r: ('rows', half-width, r // 2) or ('half',
+    half-width)."""
     h = row_half_bytes(r)
-    return ("row", r) if h < CURVE_ROW_GROUPS else ("half", h)
+    return ("rows", h, r // 2) if h < CURVE_ROW_GROUPS else ("half", h)
 
 
+@lru_cache(maxsize=None)
 def _group_mid(g):
-    if g[0] == "row":
-        return g[1]
-    rows = [r for r in range(1, ROWS + 1) if row_half_bytes(r) == g[1]]
+    rows = [r for r in range(1, ROWS + 1) if curve_group(r) == g]
     return (rows[0] + rows[-1]) / 2
 
 
-def curve_shift(k, r):
-    """Bytes to the right that row r moves at curve level k."""
+@lru_cache(maxsize=None)
+def _row_c1(r):
     t = (ROWS - _group_mid(curve_group(r))) / (ROWS - 1)
-    v = abs(k) * CURVE_TOP * t * t / CURVE_K
-    v = int(v + 0.5)
-    return v if k >= 0 else -v
+    return int(256 * CURVE_TOP * t * t / CURVE_K + 0.5)
+
+
+def curve_c1(r):
+    """How far curve level 1 moves row r's group right, in 1/256 bytes (level
+    k: k times as far)."""
+    return _row_c1(r)
+
+
+@lru_cache(maxsize=None)
+def curve_d(r):
+    """How fast that changes from one half-width to the next about row r's
+    group, in 1/512 bytes: c1 of the half-width one more less c1 of the one
+    less (twice a one-sided step at either end) - never more than 0. 0 where
+    the groups are rows two at a time."""
+    h = row_half_bytes(r)
+    if h < CURVE_ROW_GROUPS:
+        return 0
+    rs = range(1, ROWS + 1)
+    lo = [q for q in rs if row_half_bytes(q) == h - 1]
+    hi = [q for q in rs if row_half_bytes(q) == h + 1]
+    if not lo:
+        return 2 * (_row_c1(hi[0]) - _row_c1(r))
+    if not hi:
+        return 2 * (_row_c1(r) - _row_c1(lo[-1]))
+    return _row_c1(hi[0]) - _row_c1(lo[-1])
+
+
+# ---------------------------------------------------------------------------
+# The player. The car stays in the middle of the screen and the road moves
+# under it, in perspective: road_x pairs (4 pixels) of it moves a row of
+# half-width h right by x * PERSP_P * h / 256 bytes - the bottom row a
+# little less than x pairs (500/256 bytes a pair), the horizon not at all.
+#
+# A group's place in bytes is F + 1/2 rounded down, F being the exact sum of
+# its curve shift and its share of road_x - one rounding, so every edge
+# moves one way from group to group, as its exact place does. But the lane
+# lines are a whole number of bytes from the centre only every other
+# half-width (road_row_pixels), so the rounding is biased: by up to a
+# quarter of a byte, up on an even half-width and down on an odd one where
+# the road goes right as it nears (the other way round going left), most
+# where it goes half a byte a half-width - none where it goes a byte or
+# more, nor where it stands still. That keeps them going one way too.
+#
+# All of it is whole numbers of 1/256 bytes (the Z80 does it so, a 16-bit
+# sum a group):
+#   A = k c1 + x PERSP_P h + 128      (256 F + 128)
+#   v = k d + 2 PERSP_P x             (512 times F's slope, a byte a
+#                                      half-width)
+#   tau = |v| / 4 up to 256, (512 - |v|) / 4 up to 512, else 0 (rounded
+#         down)
+#   t = tau, its sign v's, the other way for an odd h (none for the rows
+#       grouped two at a time: they have no lane lines)
+#   shift = floor((A + t) / 256)
+# ---------------------------------------------------------------------------
+
+ROAD_X_MAX = 32             # pairs either way: the car on the grass beside it
+PERSP_P = 10                # a pair of road_x moves half-width h h * 10 / 256
+                            # bytes
+
+
+def shift_tau(v):
+    """The bias a slope v puts on a row's shift, in 1/256 bytes: w = v / 4
+    rounded down, itself up to 64 either way, then back to 0 by 128 (the Z80
+    works it out from w alone: cache5.asm)."""
+    w = v >> 2
+    if -64 <= w <= 64:
+        return w
+    if 64 < w < 128:
+        return 128 - w
+    if -128 <= w < -64:
+        return -128 - w
+    return 0
+
+
+def road_shift(k, r, x=0):
+    """Bytes to the right that row r moves at curve level k, the road x
+    pairs right of the middle."""
+    h = row_half_bytes(r)
+    a = k * curve_c1(r) + x * PERSP_P * h + 128
+    if h < CURVE_ROW_GROUPS:
+        return a >> 8                   # (no lane lines: no bias)
+    t = shift_tau(k * curve_d(r) + 2 * PERSP_P * x)
+    if h & 1:
+        t = -t
+    return (a + min(t, 63)) >> 8        # (63: the Z80's table holds t - 64)
+
+
+def curve_shift(k, r):
+    """Bytes to the right that row r moves at curve level k, the road in the
+    middle."""
+    return road_shift(k, r, 0)
+
+
+@lru_cache(maxsize=None)
+def group_row(r):
+    """The first row of row r's template group (the one its shift is worked
+    out for)."""
+    g = curve_group(r)
+    return next(q for q in range(1, ROWS + 1) if curve_group(q) == g)
+
+
+def player_shift(k, x, r):
+    """Bytes right that road_x = x moves row r by at curve level k, as its
+    template group does (for the bushes: they move with their row)."""
+    q = group_row(r)
+    return road_shift(k, q, x) - road_shift(k, q, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +341,7 @@ def curve_shift(k, r):
 
 BANDS = [
     dict(kerb=PEN["RED"], road=PEN["GREY"], line=PEN["WHITE"]),
-    dict(kerb=PEN["WHITE"], road=PEN["ASPHALT_B"],
+    dict(kerb=PEN["WHITE"], road=PEN["GREY"],
          line=None),                       # dashed: no lane lines on band B
     # far away: the asphalt of band A, the kerb and the (absent) lane line of
     # band B - the markings move on where the stripes stop
@@ -240,9 +349,23 @@ BANDS = [
 ]
 GROUND_PEN = PEN["GRASS_A"]                # the strip between hills and peaks
 
-# The grass is one colour, band A's, and never moves, so the road engine only
-# redraws it where the road has moved.
+# The grass is striped too, with stripes twice as long as the kerbs' - bit 7
+# of (depth + camera) - from the near rows to GRASS_ROW: as far as two lines
+# next to each other are never more than a kerb stripe apart (so the grass
+# changes colour exactly where a kerb's band B gives way to band A, which is
+# where the road engine changes it). Further away it is GRASS_A, as is the
+# ground, and the grass between a bush's leaves.
 PLAIN_GRASS = PEN["GRASS_A"]
+GRASS_SHIFT = 7
+GRASS_ROW = 15
+GRASS_STRIPES = True
+
+
+def grass_pen(r, zcam):
+    """The grass beside row r for the camera at zcam."""
+    if GRASS_STRIPES and r >= GRASS_ROW and (row_depth(r) + zcam) >> GRASS_SHIFT & 1:
+        return PEN["GRASS_B"]
+    return PLAIN_GRASS
 
 
 def road_row_pixels(half, band, lanes=LANES):
@@ -259,10 +382,12 @@ def road_row_pixels(half, band, lanes=LANES):
         pens[i] = b["kerb"]
         pens[2 * total - 1 - i] = b["kerb"]
     if lw:
-        # lane lines at -hw + k*2hw/lanes for k = 1..lanes-1, centred
-        for k in range(1, lanes):
-            c = total - hw + (2 * hw * k) // lanes   # pixel index of line centre
-            start = c - lw // 2
+        # lane lines: the middle one centred, the others 2 * (half // 2)
+        # pixels either side - a whole number of bytes, so that the rounding
+        # of road_shift can keep them straight - and as wide again outwards
+        assert lanes == 4
+        c = 2 * (half // 2)
+        for start in (total - c - lw, total - lw // 2, total + c):
             for i in range(start, start + lw):
                 if kw <= i < 2 * total - kw:
                     pens[i] = b["line"]
@@ -333,8 +458,11 @@ def bush_centre(k, r):
 
 
 def bush_lat(lat, r):
-    """Bytes from the road's centre to a bush's centre on row r."""
-    return int(BUSH_LATS[lat] * (2 * HALF_MAX + KERB_BOTTOM) / ROWS / 2 * r + 0.5)
+    """Bytes from the road's centre to a bush's centre on row r - a byte
+    more than the lateral factor says: off the middle a row's kerb is a byte
+    wider at an odd byte (the core's parity), and the nearest bushes would
+    stand on it."""
+    return int(BUSH_LATS[lat] * (2 * HALF_MAX + KERB_BOTTOM) / ROWS / 2 * r + 0.5) + 1
 
 
 def bush_curve8(r):

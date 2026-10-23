@@ -190,3 +190,30 @@ green_pairs
     REPEAT 8
     defw SOLID_GROUND*#101
     REND
+
+;; ---------------------------------------------------------------------------
+;; hill_near - NZ if the track has a hill under the camera or in the next
+;; HILL_AHEAD entries (32 depth units each); hill_near_b - in the next B - 1.
+;; Destroys AF, B, DE, HL.
+;; ---------------------------------------------------------------------------
+hill_near
+    ld b,HILL_AHEAD+1
+hill_near_b
+    ld hl,(zcam)
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; H = zcam / 32
+hill_near_one
+    ld e,h
+    ld d,0
+    push hl
+    ld hl,hill_profile
+    add hl,de
+    ld a,(hl)
+    pop hl
+    or a
+    ret nz
+    inc h
+    djnz hill_near_one
+    xor a                       ; (Z: none)
+    ret

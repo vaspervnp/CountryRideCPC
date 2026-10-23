@@ -52,7 +52,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAG_LEN = 0x2C0
 FRAG_FIRST = 8                  # fragments 8-15: page 2, #x540-#x7FF
 FRAG_COUNT = 8
-CODE_CHUNKS = [0x4600 + 0x800 * b for b in range(8)]   # page 1 gaps
+CODE_CHUNKS = [0x4600 + 0x800 * b for b in range(7)]   # page 1 gaps (the
+                                # eighth, #7E00, is the cache's: cache.asm)
 CHUNK_LEN = 0x200
 SINFO_FIELDS = ["half width", "width", "first line's end", "height",
                 "how its box is erased", "code", "data"]
@@ -77,10 +78,14 @@ def sprite_data(k):
 # --- code -------------------------------------------------------------------
 SIZE = {"ld de": 3, "ld ix": 4, "ld iy": 4, "ld sp,hl": 1, "ei": 1, "di": 1,
         "ld bc": 3, "add hl,bc": 1, "bit 6,h": 2, "call nz": 3, "push bc": 1,
-        "push de": 1, "push ix": 2, "push iy": 2, "ld b": 2, "ld c": 2, "jp": 3}
+        "push de": 1, "push ix": 2, "push iy": 2, "ld b": 2, "ld c": 2, "jp": 3,
+        "ld hl": 3, "ld h": 2, "ld l": 2, "ld d": 2, "ld e": 2, "push hl": 1,
+        "add hl,sp": 1, "nop": 1}
 TIME = {"ld de": 3, "ld ix": 4, "ld iy": 4, "ld sp,hl": 2, "ei": 1, "di": 1,
-        "ld bc": 3, "add hl,bc": 3, "bit 6,h": 2, "call nz": 3, "push bc": 3,
-        "push de": 3, "push ix": 4, "push iy": 4, "ld b": 2, "ld c": 2, "jp": 3}
+        "ld bc": 3, "add hl,bc": 3, "bit 6,h": 2, "call nz": 3, "push bc": 4,
+        "push de": 4, "push ix": 5, "push iy": 5, "ld b": 2, "ld c": 2, "jp": 3,
+        "ld hl": 3, "ld h": 2, "ld l": 2, "ld d": 2, "ld e": 2, "push hl": 4,
+        "add hl,sp": 3, "nop": 1}
 
 
 def kind(text):
@@ -92,8 +97,13 @@ def kind(text):
 
 def sprite_code(k):
     """Sprite k as code: [(instruction, step line or None)], and its time."""
+    return lines_code(sprite_lines(k))
+
+
+def lines_code(spans):
+    """A sprite's lines (first byte, bytes) as code, and its time."""
     lines = []                          # (run's right end, pairs right to left)
-    for a, data in sprite_lines(k):
+    for a, data in spans:
         n = len(data)
         assert n and not n & 1
         lines.append((a + n, [data[n - 1 - 2 * j] << 8 | data[n - 2 - 2 * j]
@@ -129,6 +139,101 @@ def sprite_code(k):
     return code, sum(TIME[kind(t)] for t, s in code)
 
 
+def line_addr(y):
+    """Line y's address in buffer 0 (the road part's memory: line 160 on)."""
+    return 0x8000 + (y & 7) * 0x800 + ((y >> 3) - 20) * 96
+
+
+def car_code(spans, y0, x0):
+    """The car as code: lines (first byte, bytes) from line y0, byte x0 -
+    always there, so each line's step is known, a character row's end and
+    all. Entered with HL at the right end of the first line's run; after a
+    line SP is at the left end of its run, and the next line's right end is
+    SP + its step (LD HL / ADD HL,SP / LD SP,HL). Some registers hold the
+    most used pairs throughout (loaded once), the others are loaded as
+    needed - the one whose pair is needed again last (HL's is gone at the
+    next line); the quickest way of those tried. Interrupts get one
+    instruction's chance a line, with SP at the right end of the run:
+    [(instruction, None)], and its time."""
+    lines = []                          # (run's right end, its bytes, pairs
+    for i, (a, data) in enumerate(spans):   # right to left)
+        n = len(data)
+        assert n and not n & 1
+        lines.append((line_addr(y0 + i) + x0 + a + n, n,
+                      [data[n - 1 - 2 * j] << 8 | data[n - 2 - 2 * j]
+                       for j in range(n // 2)]))
+    common = [v for v, c in collections.Counter(
+        v for e, n, pairs in lines for v in pairs).most_common(5)]
+    best = None
+    for fixed_regs in (("de",), ("de", "ix"), ("de", "ix", "iy"), ("de", "bc"),
+                       ("de", "bc", "ix"), ("de", "bc", "ix", "iy")):
+        fixed = dict(zip(common, fixed_regs))
+        dyn = [r for r in ("bc", "de", "hl") if r not in fixed_regs]
+        code = _car_code(lines, fixed, dyn)
+        us = sum(TIME[kind(t)] for t, st in code)
+        if best is None or us < best[1]:
+            best = (code, us)
+    return best
+
+
+def _car_code(lines, fixed, dyn):
+    code = [("ld %s,#%04X" % (reg, v), None) for v, reg in fixed.items()]
+    flat = [v for e, n, pairs in lines for v in pairs]
+    ends = []
+    for e, n, pairs in lines:
+        ends += [len(ends) + len(pairs)] * len(pairs) if not ends else \
+            [ends[-1] + len(pairs)] * len(pairs)
+    regs = {r: None for r in dyn}
+    never = len(flat) + 1
+
+    def next_use(w, at, until):
+        for j in range(at, until):
+            if flat[j] == w:
+                return j
+        return never
+
+    at = 0
+    for i, (e, n, pairs) in enumerate(lines):
+        if i == 0:
+            code.append(("ld sp,hl", None))
+        else:
+            pe, pn, pp = lines[i - 1]
+            code += [("ld hl,#%04X" % ((e - (pe - pn)) & 0xFFFF), None),
+                     ("add hl,sp", None), ("ld sp,hl", None)]
+        if "hl" in regs:
+            regs["hl"] = None
+        code.append(("ei", None))
+        window = len(code)              # the next instruction, then DI
+        for v in pairs:
+            end = ends[at]
+            at += 1
+            if v in fixed:
+                code.append(("push " + fixed[v], None))
+                continue
+            r = next((r for r, w in regs.items() if w == v), None)
+            if r is None:
+                def gone(r):            # when its pair is needed next
+                    w = regs[r]
+                    if w is None:
+                        return never + 1
+                    return next_use(w, at, end if r == "hl" else len(flat))
+                r = max(regs, key=gone)
+                w = regs[r]
+                if w is not None and w >> 8 == v >> 8:
+                    code.append(("ld %s,#%02X" % (r[1], v & 0xFF), None))
+                elif w is not None and w & 0xFF == v & 0xFF:
+                    code.append(("ld %s,#%02X" % (r[0], v >> 8), None))
+                else:
+                    code.append(("ld %s,#%04X" % (r, v), None))
+                regs[r] = v
+            code.append(("push " + r, None))
+        if kind(code[window][0]).startswith("push"):
+            code.insert(window, ("nop", None))
+        code.insert(window + 1, ("di", None))
+    code.append(("jp bush_spr_done", None))
+    return code
+
+
 class Chunks:
     """The page 1 gaps, filled one after the other; code runs on from one
     to the next with a JP."""
@@ -143,10 +248,13 @@ class Chunks:
         return CHUNK_LEN - self.used[self.cur]
 
     def code(self, label, code):
+        if self.room() < 8:             # (no room to start, or to jump on)
+            self.next_chunk(jump=False)
         self.out[self.cur].append(label)
         for text, step in code:
             n = SIZE[kind(text)]
-            if self.room() < n + 3 and text != "jp bush_spr_done":
+            if self.room() < n + 3 and not (text == "jp bush_spr_done"
+                                            and self.room() >= n):
                 self.next_chunk(jump=True)
             if step is not None:
                 self.out[self.cur].append("%s_s%d" % (label, step))
@@ -247,6 +355,68 @@ class Space:
     def free(self):
         return sum(ln for a, ln in self.runs) + 0x80 * len(self.halves)
 
+    def take_runs(self, below):
+        """All that is left below address `below`, as (start, length) runs in
+        address order - for code (FragCode); it is then used."""
+        free = sorted(self.runs + [(h, 0x80) for h in self.halves])
+        merged = []
+        for a, ln in free:
+            if merged and merged[-1][0] + merged[-1][1] == a:
+                merged[-1] = (merged[-1][0], merged[-1][1] + ln)
+            elif ln:
+                merged.append((a, ln))
+        out = [(a, min(ln, below - a)) for a, ln in merged if a < below]
+        self.halves = []
+        self.runs = [(a, ln) for a, ln in merged if a >= below]
+        return out
+
+
+class CodePiece:
+    """Code placed in a fragment (FragCode): its lines and its size."""
+
+    def __init__(self):
+        self.lines = []
+        self.size = 0
+
+    def __len__(self):
+        return self.size
+
+
+class FragCode:
+    """Code in the fragments' free runs, filled one after the other like
+    Chunks: code runs on from one to the next with a JP."""
+
+    def __init__(self, sp, runs):
+        self.runs = [(a, ln) for a, ln in runs if ln >= 16]
+        self.sp = sp
+        self.cur = -1
+        self.next_run()
+
+    def next_run(self):
+        self.cur += 1
+        if self.cur >= len(self.runs):
+            raise SystemExit("bushes: no room left in the fragments for the car")
+        self.piece = CodePiece()
+        a, ln = self.runs[self.cur]
+        self.left = ln
+        self.sp.placed.append((a, None, None, self.piece))
+
+    def code(self, label, code):
+        if self.left < 8:
+            self.next_run()
+        self.piece.lines.append(label)
+        for text, step in code:
+            n = SIZE[kind(text)]
+            if self.left < n + 3:
+                self.piece.lines.append("    jp #%04X" % self.runs[self.cur + 1][0]
+                                        if self.cur + 1 < len(self.runs) else "    ?")
+                self.piece.size += 3
+                self.next_run()
+            assert step is None
+            self.piece.lines.append("    " + text)
+            self.piece.size += n
+            self.left -= n
+
 
 def main():
     nspr = len(G.BUSH_H)
@@ -258,14 +428,19 @@ def main():
 
     # bushcode.asm: the sprites' code, smallest first, as many as there is
     # room for; the rest are only copied
+    cars = [car_code(S.car_runs(v), S.CAR_Y, S.CAR_X // 2) for v in range(3)]
+
     def build(ks):
         ch = Chunks()
+        ch.code("car_code0", cars[0][0])        # (the car first: it is drawn
+                                                # most; turning right: FragCode)
         out = {}
         for k in ks:
             code, us = sprite_code(k)
             out[k] = [code, us, sum(SIZE[kind(t)] for t, s in code)]
         for k in ks:
             ch.code("bush_c%d" % k, out[k][0])
+        ch.code("car_code1", cars[1][0])        # (and turning left after them)
         return ch, out
     n = nspr
     while True:
@@ -302,6 +477,10 @@ def main():
                     "from the road's centre (signed, at most 127)"
                     % (c, "right" if side > 0 else "left"),
                     [side * min(G.bush_lat(c, r), 127) & 0xFF for r in rows])
+    groups = list(dict.fromkeys(G.curve_group(r) for r in range(1, G.ROWS + 1)))
+    sp.half("bush_rh", "per row: its template group's lane, #CD + g, for road_x's "
+            "share of it (cache.asm: rd_gp)",
+            [0xCD] + [0xCD + groups.index(G.curve_group(r)) for r in range(1, G.ROWS + 1)])
     for k in range(G.CURVE_K + 1):
         cx = [G.bush_centre(k, r) for r in rows]
         assert all(0 <= v < 128 for v in cx)
@@ -312,6 +491,11 @@ def main():
             sp.anywhere(label, comment, sprite_data(k))
         except SystemExit:              # what is left of page 1
             ch.bytes(label, comment, sprite_data(k))
+
+    # the car turning right: code in what is left of fragments 8-14
+    # (road15.asm has the rest of fragment 15)
+    fc = FragCode(sp, sp.take_runs(frag_addr(FRAG_FIRST + FRAG_COUNT - 1)))
+    fc.code("car_code2", cars[2][0])
 
     lines = [";; Generated by tools/mkbush.py - do not edit.",
              ";; The bush sprites as code (see mkbush.py), and what else does not fit",
@@ -340,6 +524,10 @@ def main():
         for a, label, comment, data in here:
             if a > at:
                 emit("    defs %d,0" % (a - at))
+            if isinstance(data, CodePiece):
+                lines += data.lines
+                at = a + len(data)
+                continue
             emit("%s   ; %s" % (label, comment))
             if label == "bush_sinfo":
                 for s in range(16):
@@ -358,9 +546,12 @@ def main():
                 for j in range(0, len(data), 16):
                     emit("    defb " + ",".join("#%02X" % v for v in data[j:j + 16]))
             at = a + len(data)
+        if k == FRAG_FIRST + FRAG_COUNT - 1:
+            emit("bushdata_end              ; (the rest of the fragment: road.asm)")
         emit("    ASSERT $ <= #%04X" % (base + FRAG_LEN))
     for a, label, comment, data in sp.placed:
-        if label.startswith(("bush_rz", "bush_rtop", "bush_spr", "bush_lat", "bush_cx")):
+        if label and label.startswith(("bush_rz", "bush_rtop", "bush_spr", "bush_lat", "bush_cx",
+                                       "bush_rh")):
             emit("    ASSERT (%s & #7F) == 0" % label)
     for label in ("bush_rz1", "bush_ltab", "bush_sinfo"):
         emit("    ASSERT (%s & #FF) == 0" % label)
@@ -430,6 +621,21 @@ def main():
     emit("bush_head")
     emit("    defw bush_starts+%d*4" % head0)
     emit("BUSH_COUNT    EQU %d" % len(S.BUSHES))
+    # the lines at the car's top whose runs differ from view to view: a
+    # buffer that last showed another view has them drawn whole (car_lines)
+    ext = [[(a, a + len(d)) for a, d in S.car_runs(v)] for v in range(3)]
+    differ = [i for i in range(S.CAR_H) if len({e[i] for e in ext}) > 1]
+    car_top = max(differ) + 1 if differ else 0
+    emit("CAR_Y         EQU %d   ; the car's top line" % S.CAR_Y)
+    emit("CAR_TOP       EQU %d   ; its lines from there that differ from view to view"
+         % car_top)
+    emit(";; per car_view (straight, turning left, turning right): where the")
+    emit(";; car's first line's run ends in buffer 0, and its code")
+    emit("car_views")
+    for v in range(3):
+        a0, d0 = S.car_runs(v)[0]
+        end0 = line_addr(S.CAR_Y) + S.CAR_X // 2 + a0 + len(d0)
+        emit("    defw #%04X,car_code%d" % (end0, v))
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")
     emit("bush_cxs")
@@ -441,6 +647,9 @@ def main():
           " %d bytes of fragments %d-%d left"
           % (len(S.BUSHES), nspr, len(codes), ch.free(),
              sp.free(), FRAG_FIRST, FRAG_FIRST + FRAG_COUNT - 1))
+    for v, (car, car_us) in enumerate(cars):
+        print("  the car, view %d: %d lines, %d bytes of code, %d us"
+              % (v, S.CAR_H, sum(SIZE[kind(t)] for t, st in car), car_us))
     for k, (code, us, size) in codes.items():
         print("  sprite %2d: %2d lines, %3d bytes of code, %4d us" % (k, G.BUSH_H[k], size, us))
 

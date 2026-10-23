@@ -3,9 +3,14 @@
 ;; register values per stripe band
 ROAD0_PAIR  EQU #FCFC
 KERB0_PAIR  EQU #0F0F
-ROAD1_PAIR  EQU #3F3F
+ROAD1_PAIR  EQU #FCFC
 KERB1_PAIR  EQU #3C3C
 GRASS_PAIR  EQU #0303
+;; the grass's other stripe: its byte is GRASS_X apart; the rows from
+;; GRASS_ROW on are striped by bit GRASS_SHIFT of (depth + zcam)
+GRASS_X     EQU #F0
+GRASS_ROW   EQU 15
+GRASS_SHIFT EQU 7
 
 ;; the template sets (see tools/mkroad.py): a set per curve level,
 ;; level k at TMPL_A + (k + CURVE_K) * TMPL_SET; band B's TMPL_B - TMPL_A
@@ -18,3 +23,53 @@ CORES_A     EQU #6000
 CORES_B     EQU #4000
 ;; a line with no road (the first level's copy; every level has one)
 tmpl_ground EQU TMPL_A+0
+
+;; the cache sets (common.asm): the road off the middle of the screen
+CACHE_LEVEL EQU 15   ; the set after the last level's
+NGROUPS     EQU 51   ; template groups, slot 1 + g of a set
+NFAR        EQU 6   ; the first NFAR have far rows: a slot NGROUPS on
+NFARONLY    EQU 6   ; ... the first NFARONLY nothing else
+;; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g
+W_NONE      EQU #1C00   ; a row with no bias: W this far off
+RA_PL       EQU #61CD
+RA_PH       EQU #63CD
+RA_P2L      EQU #65CD
+RA_P2H      EQU #67CD
+RA_AL       EQU #69CD
+RA_AH       EQU #6BCD
+RA_AO       EQU #6DCD
+RA_WL       EQU #6FCD
+RA_WH       EQU #71CD
+RA_FL       EQU #73CD
+RA_C1L      EQU #75CD
+RA_C1H      EQU #77CD
+RA_DA       EQU #79CD
+RA_KK       EQU #7BCD
+RA_H        EQU #7DCD
+G_OFF       EQU 112   ; added to a pair position in the cache maths
+ROAD_X_MAX  EQU 32   ; road_x goes this far either way
+PERSP_P     EQU 10   ; a pair of it moves half-width h h * PERSP_P / 256 bytes
+
+;; per road drop (the horizon's, hz_ground): how far the sky part goes
+;; down (scene.sky_drop)
+MACRO SKY_DROP_TABLE
+    defb 0,2,4,6,8,10,12,14,16,16,16,16,16,18,20,22,24,24,24,24,24,26
+MEND
+SKY_DROP_N  EQU 22
+;; a curve level's move between |k| = m and m + 1 leaves the groups from
+;; CF_SAME<m> on where they were (cache.asm: cf_same)
+CF_SAME0    EQU 40
+CF_SAME1    EQU 42
+CF_SAME2    EQU 44
+CF_SAME3    EQU 40
+CF_SAME4    EQU 46
+CF_SAME5    EQU 40
+CF_SAME6    EQU 44
+;; ... the rows from CF_ROW<m> on (255: none; road15.asm: cf_rows)
+CF_ROW0     EQU 87
+CF_ROW1     EQU 91
+CF_ROW2     EQU 95
+CF_ROW3     EQU 87
+CF_ROW4     EQU 100
+CF_ROW5     EQU 87
+CF_ROW6     EQU 95

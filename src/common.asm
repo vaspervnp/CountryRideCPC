@@ -25,6 +25,9 @@ flip_req    defb 0          ; buffer + 1 to show from the next VSYNC, 0 = none
 flip_drop   defb 0          ; ... how far its horizon is down
 flip_head   defb 0          ; ... and where its sky looks (words right)
 flip_last   defb 0          ; vbl_count when the last flip happened
+irq_n       defb 0          ; interrupts since then (the 12th shows the next)
+main_cfg    defb RAM_C1     ; the RAM configuration the main code is in
+                            ; while it waits for a flip (cache_job)
 front_buf   defb 0          ; buffer being shown (0/1)
 
 ;; --- the split of the frame being shown (see rup_frame) ---------------------
@@ -57,6 +60,8 @@ road_buf    defb 0          ; buffer road_project/road_draw work on
 line_ptr    defw 0          ; next line list entry
 rd_save_sp  defw 0
 rp_dirty    defb 0          ; a bush may have covered the far road (bush.asm)
+rp_dlo      defb 0          ; ... and the lines it stood on, from
+rp_dhi      defb 0          ; ROAD_AREA_Y (rp_force)
 
 ;; --- profiling (read by tools/run.py) ---------------------------------------
 frames_drawn defw 0         ; pictures completed
@@ -101,6 +106,8 @@ isr
     push af
     push bc
     push hl
+    ld hl,irq_n
+    inc (hl)
 isr_next
     jp irq_lost                 ; (self-modified: this interrupt's handler)
 isr_out
@@ -122,10 +129,17 @@ isr_stack
 ;; ---------------------------------------------------------------------------
 rup_frame
     ld a,(rup_drop)
-    ld c,a
+    ld c,a                      ; C = the road's drop
+    ld hl,sky_drops
+    add a,l
+    ld l,a
+    jr nc,$+3
+    inc h
+    ld a,(hl)                   ; H = the sky's (scene.sky_drop) - not
+    ld h,a                      ; DE: the interrupt keeps AF, BC, HL only
     and 7
     ld (rup_r5a),a              ; HUD part: drop mod 8 R5 lines ...
-    ld a,c
+    ld a,h
     rrca
     rrca
     rrca
@@ -144,7 +158,7 @@ rup_frame
     add a,a
     add a,a
     sub BLOCK_BOTTOM
-    sub c                       ; green border lines after the sky, 4..11
+    sub h                       ; green border lines after the sky, 0..11
     ld l,SKY_ROWS-1
     cp 8
     jr c,rup_frame_r5b
@@ -202,6 +216,10 @@ rup_frame_hud_ma
     out (c),c
     ret
 
+sky_drops                       ; per road drop: the sky's
+    SKY_DROP_TABLE
+    ASSERT $-sky_drops == SKY_DROP_N
+
 frag0_end
     ASSERT frag0_end <= FRAG0+FRAG_LEN
 
@@ -219,6 +237,9 @@ frag1_start
 road_frame
     SET_RAM RAM_C6
     call road_project
+rf_projected                    ; (tools: timing)
+    SET_RAM RAM_C1
+    call car_lines              ; (bush.asm)
     call road_draw
     SET_RAM RAM_C1
     ret
@@ -295,8 +316,15 @@ rup_flip
     ld (rup_drop),a
     xor a
     ld (flip_req),a
+    ld (irq_n),a
     call rup_frame              ; the HUD part's start first: it is near
-    jp ring_turn                ; then turn the sky the new picture looks at
+    ld bc,#7F00+RAM_C1          ; then turn the sky the new picture looks at
+    out (c),c                   ; (game code, bank 7 - while the main code
+    call ring_turn              ; may be making the cache, banks 4 and 5:
+    ld a,(main_cfg)             ; main_cfg)
+    ld b,#7F
+    out (c),a
+    ret
 
 ;; rup_safe - one plain full frame, whatever the beam is doing
 rup_safe
@@ -407,8 +435,163 @@ irq_size
     CRTC_HL 7
     jp isr_out
 
+;; cache_mark - (cf_run5, job5) A = a group worked out afresh: both
+;; buffers have its rows to draw as moved. Destroys AF, HL.
+cache_mark
+    ld hl,rd_ghi
+    inc a
+    cp (hl)
+    jr c,$+3
+    ld (hl),a
+    inc l
+    cp (hl)
+    jr c,$+3
+    ld (hl),a
+    inc l
+    dec a
+    cp (hl)
+    jr nc,$+3
+    ld (hl),a
+    inc l
+    cp (hl)
+    ret nc
+    ld (hl),a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; rp_flag2_marg, rp_flag2_road - (rp_mode_set) what flag 2 means to
+;; road_draw (lg2_a, lg2_b): the road and a margin - a line showing another
+;; row than then, the hill having moved - or, while flag 1 is the road and
+;; a margin, only the road: what rp_near_skip gives a line whose row did not
+;; move (rp_skip_rf), and rp_force a skipped one (rp_force_res). Then
+;; rp_near_skip may also have a window of rows that did move after its
+;; first ones (rp_lo_c: rp_seg_in). Destroys AF, BC, HL.
+;; ---------------------------------------------------------------------------
+rp_flag2_road
+    ld hl,line_road2_a
+    ld (lg2_a+1),hl
+    ld hl,rp_skip_rest0
+    ld a,(rp_lo_c)
+    or a
+    jr z,rp_flag2_w
+    ld hl,rp_seg_in
+    ld b,a
+    ld a,(rr_gfirst+NFAR)               ; and with the far groups as then,
+    cp b                                ; the far lines have not moved
+    jr c,$+4
+    jr nz,rp_flag2_w
+    xor a
+    ld (rp_moved),a
+rp_flag2_w
+    ld (rp_skip_rest+1),hl
+    ld hl,line_road2_b
+    ld bc,#8602                         ; RES 0,(HL): flag 3 into 2
+    jr rp_flag2_set
+rp_flag2_marg
+    ld hl,rp_skip_rest0
+    ld (rp_skip_rest+1),hl
+    ld hl,line_marg2_a
+    ld (lg2_a+1),hl
+    ld hl,line_marg2_b
+    ld bc,#8E01                         ; RES 1,(HL): flag 3 into 1
+rp_flag2_set
+    ld (lg2_b+1),hl
+    ld a,c
+    ld (rp_skip_rf+1),a
+    ld a,b
+    ld (rp_force_res+1),a
+    ld a,3
+    ld (rp_skip_s3+1),a
+    ret
+
+;; rp_seg_in - (rp_near_skip, at the first row the curve may have moved)
+;; the window of rows that did, down to the first group the cache worked
+;; out (rp_lo_c): their lines are drawn with the margin - flag 1 if
+;; unchanged too - and the skip loop goes on to the window's end, then
+;; (rp_seg_out) on as before, to the last line. The line is looked at again.
+rp_seg_in
+    ld hl,rp_seg_out
+    ld a,(rp_lo_c)
+    ld ixh,1
+    jr rp_seg_set
+rp_seg_out
+    ld hl,rp_skip_rest0                 ; (not again: rp_skip_r 0)
+    xor a
+    ld ixh,3
+rp_seg_set
+    ld (rp_skip_rest+1),hl
+    ld (rp_skip_r+1),a
+    ld a,ixh
+    ld (rp_skip_s3+1),a                 ; 1 or 3 ...
+    inc a
+    srl a
+    ld (rp_skip_rf+1),a                 ; ... and 1 or 2
+    jp rp_skip_line
+
+;; ---------------------------------------------------------------------------
+;; rp_far_m - the hill alone moved: B = C = the margin a far line that now
+;; shows another row needs - 1 + (|curve level| + 1) / 2 pairs, one more
+;; with road_x 17 or more either way (tools: the edges of the rows a far
+;; line can show then and now) - and RP_HILL_M at least. The far lines get
+;; it (rp_far_hfl) - unless the cache is still catching up with the curve
+;; level, which can move them further.
+rp_far_m
+    ld a,(rp_cache)
+    or a
+    jr z,rp_far_m_k
+    ld a,(rd_n2)
+    or a
+    jr nz,rp_far_m_h
+rp_far_m_k
+    ld a,2
+    ld (rp_far_hfl+1),a
+    ld a,(road_curve)
+    or a
+    jp p,$+5
+    neg
+    inc a
+    srl a
+    inc a
+    ld c,a
+    ld a,(road_x)
+    add a,16
+    cp 33                               ; (CF: 16 or less either way)
+    ld a,c
+    sbc a,-1
+    cp RP_HILL_M
+    jr nc,rp_far_m_bc
+rp_far_m_h
+    ld a,RP_HILL_M
+rp_far_m_bc
+    ld b,a
+    ld c,a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; sky_next - (main) NZ if the next picture draws its buffer's road moved:
+;; road_x has since it was last drawn, or groups the cache worked out
+;; (rd_ghi) - the sky's turn waits then. Keeps BC.
+sky_next
+    ld a,(back_buf)
+    xor 1
+    ld e,a
+    ld d,0
+    ld hl,drawn_x
+    add hl,de
+    ld a,(road_x)
+    cp (hl)
+    ret nz
+    ld hl,rd_ghi
+    add hl,de
+    ld a,(hl)
+    dec a
+    cp NGROUPS                          ; (1..NGROUPS: worked out)
+    sbc a,a
+    ret
+
 frag1_end
-    ASSERT frag1_end <= STACK_TOP-256      ; leave the stack 256 bytes
+    ASSERT frag1_end <= STACK_TOP-48       ; leave the stack 48 bytes (it
+                                           ; takes ~24: tools)
 
 ;; ===========================================================================
 ;; Fragment 2: road_draw
@@ -462,6 +645,7 @@ PAIRS       EQU SCR_BYTES/2 ; two-byte pairs a line, one PUSH each
 ;; ---------------------------------------------------------------------------
 road_draw
     ld (rd_save_sp),sp
+    call rd_start                       ; the list, the grass (fragment 3)
     di
     SET_RAM RAM_C4                      ; start in band A
     exx
@@ -471,14 +655,7 @@ road_draw
     ld sp,kerb0_word
     pop af
     ex af,af'
-    ld bc,GRASS_PAIR
-    ld hl,list0
-    ld a,(road_buf)
-    or a
-    jr z,road_draw_go
-    ld hl,list1
-road_draw_go
-    ld (line_ptr),hl
+    ld bc,(rd_grass)
     jr line_done_a
 
 ;; --- band A -------------------------------------------------------------------
@@ -501,6 +678,10 @@ line_go_a
     bit 0,l
 lg_jr_a
     jp nz,line_road_a                   ; only the road (or line_margin_a)
+    bit 1,l
+lg2_a
+    jp nz,line_marg2_a                  ; the road and a margin (or
+                                        ; line_road2_a: rp_mode_set)
     ld sp,hl
     pop iy
     pop af                              ; A = right grass entry, Z = no patch
@@ -515,8 +696,13 @@ lg_jr_a
 ;; Only the road: the line shows the same row in the same place as when
 ;; this buffer was last drawn, so the grass on either side is right. SP
 ;; starts at the core's right edge, (48 - A) pairs in from the end of the
-;; line, and the core leaves into no left grass.
+;; line, and the core leaves into no left grass. Flag 2 can mean only the
+;; road too (rp_mode_set: lg2_a).
+line_road2_a
+    dec l
 line_road_a
+    bit 1,l                             ; 3: already right (rp_near_skip)
+    jr nz,line_done_a
     dec l                               ; (templates are at even addresses)
     ld sp,hl
     pop iy
@@ -564,6 +750,9 @@ line_go_b
     bit 0,l
 lg_jr_b
     jp nz,line_road_b                   ; (or line_margin_b)
+    bit 1,l
+lg2_b
+    jp nz,line_marg2_b                  ; (or line_road2_b)
     ld sp,hl
     pop iy
     pop af
@@ -575,7 +764,11 @@ lg_jr_b
     ld h,hi(rgrass)
     jp (hl)
 
+line_road2_b
+    dec l
 line_road_b
+    bit 1,l                             ; 3: already right (rp_near_skip)
+    jr nz,line_done_b
     dec l
     ld sp,hl
     pop iy
@@ -625,7 +818,7 @@ to_band_b
     ld sp,kerb1_word
     pop af
     ex af,af'
-    ld bc,GRASS_PAIR                    ; the grass is the same in both bands
+    ld bc,(rd_grass)                    ; the grass goes on as it was
     jp line_go_b
 
 to_band_a
@@ -638,12 +831,18 @@ to_band_a
     ld sp,kerb0_word
     pop af
     ex af,af'
-    ld bc,GRASS_PAIR
-    jp line_go_a
+    ld bc,(rd_grass)
+tb_jp
+    jp tb_stripe                        ; (self-modified: line_go_a past the
+                                        ; grass's stripes)
 
 ;; Only the road and a margin: at most M pairs of grass each side (the
 ;; constants marked MT are PAIRS - M, set by rd_margin). The left grass is
-;; what the template says, but no more than M pairs.
+;; what the template says, but no more than M pairs. A line flagged 2 (not
+;; 1) always gets one: it shows another row than when its buffer was last
+;; drawn, the hill having moved (road_project).
+line_marg2_a
+    dec l
 line_margin_a
     dec l
     ld sp,hl
@@ -660,6 +859,8 @@ lm_la2
     ld ixl,lo(lgrassa)+PAIRS            ; lo(lgrassa) + MT (self-modified)
     jr line_margin_right
 
+line_marg2_b
+    dec l
 line_margin_b
     dec l
     ld sp,hl
@@ -738,19 +939,59 @@ empty_core
 render_end
     exx
     ex af,af'
-    ld sp,(rd_save_sp)
-    ei
-    ret
+    jp rd_end
 
 ;; Templates for every frame, here because they are band A's (bit 13 of the
 ;; address clear) and must be read in either bank:
 ;; the end of the list
-    ALIGN 2                             ; bit 0 of a template's address is a
-tmpl_end    defw render_end,#3040,lgrassa+48   ; flag (road_draw)
+    ALIGN 4                             ; bits 0 and 1 of a template's
+tmpl_end    defw render_end,#3040,lgrassa+48   ; address are flags (road_draw)
+    defs 2,0
 ;; a line that is already right: nothing pushed
 tmpl_skip   defw 0,lo(rgrass_skip)*256+#40,0
     ASSERT (tmpl_end & #2000) == 0
-    ASSERT ((tmpl_end | tmpl_skip) & 1) == 0
+    ASSERT ((tmpl_end | tmpl_skip) & 3) == 0
+
+;; Only the road and a margin on the right (none on the left): the right
+;; grass is what the template says, but no more than M pairs (as
+;; line_margin_a); the core leaves into no left grass. The _s ways look for
+;; flag 3 first (rp_skip_jr).
+line_rmarg_sa
+    bit 1,l
+    jp nz,line_done_a
+line_rmarg_a
+    dec l
+    ld sp,hl
+    pop iy
+    pop af                              ; A = right grass entry, Z = no patch
+    jr nz,line_rmarg_p
+    ld ix,lgrassa+PAIRS
+    ld l,a
+    jp line_margin_right
+line_rmarg_sb
+    bit 1,l
+    jp nz,line_done_b
+line_rmarg_b
+    dec l
+    ld sp,hl
+    pop iy
+    pop af
+    jr nz,line_rmarg_p
+    ld ix,lgrassb+PAIRS
+    ld l,a
+    jp line_margin_right
+line_rmarg_p                            ; the core hangs off the left
+    pop ix
+    jp line_margin_patch
+
+;; sky_stay - (cache_steps, here for room) the flip is not to turn the sky
+;; after all: the next picture has the road moved sideways to draw.
+sky_stay
+    ld a,(ring_head)
+    ld (flip_head),a
+    xor a
+    ld (sky_turns),a
+    ret
 
     ASSERT $ <= #1700
     defs #1700-$,0
@@ -781,6 +1022,86 @@ lgrassb
     push bc
     REND
     jp line_done_b
+    ASSERT hi(lgrassa) == hi(lgrassa+PAIRS) && hi(lgrassb) == hi(lgrassb+PAIRS)
+                                        ; (cachemac.asm: an entry is its low byte)
+
+;; Only the road and a margin on the left (none on the right): the left grass
+;; is what the template says, but no more than M pairs (MT = PAIRS - M, set
+;; by rd_margin); a core cut short at the left has none anyway.
+line_lmarg_a
+    dec l
+    ld sp,hl
+    pop iy
+    pop af
+    jp nz,line_road_patch
+    pop ix
+    ld l,a
+    ld a,ixl
+lm_ca
+    cp lo(lgrassa)+PAIRS                ; lo(lgrassa) + MT (self-modified)
+    jr nc,$+5
+lm_ca2
+    ld ixl,lo(lgrassa)+PAIRS            ; (self-modified)
+    ld a,l
+    sub PAIRS
+    add a,a
+    ld l,a
+    sbc a,a
+    ld h,a
+    add hl,de
+    ld sp,hl
+    exx
+    ex af,af'
+    jp (iy)
+
+line_lmarg_b
+    dec l
+    ld sp,hl
+    pop iy
+    pop af
+    jp nz,line_road_patch
+    pop ix
+    ld l,a
+    ld a,ixl
+lm_cb
+    cp lo(lgrassb)+PAIRS                ; lo(lgrassb) + MT (self-modified)
+    jr nc,$+5
+lm_cb2
+    ld ixl,lo(lgrassb)+PAIRS            ; (self-modified)
+    ld a,l
+    sub PAIRS
+    add a,a
+    ld l,a
+    sbc a,a
+    ld h,a
+    add hl,de
+    ld sp,hl
+    exx
+    ex af,af'
+    jp (iy)
+
+;; bush_erase's next lines of a box (bush.asm; fragment 15: be_segd)
+be_seg
+    ld a,ixl                            ; B lines this time: to the end of the
+    and 7                               ; row, of the box, or of the grass
+    sub 8
+    neg
+    cp c
+    jr c,$+3
+    ld a,c
+    ld b,a
+    ld a,ixh
+    sub ixl
+    cp b
+    jr nc,$+3
+    ld b,a
+    ld a,c
+    sub b
+    ld c,a                              ; C = lines after these
+    ld a,ixl
+    add a,b
+    ld ixl,a
+    jp (iy)
 
 frag2_end
     ASSERT frag2_end <= FRAG2+FRAG_LEN
@@ -798,6 +1119,121 @@ LIST_LEN    EQU (ROAD_LINES+1)*4
 list0                                   ; 4-aligned: road_project steps
     ASSERT (list0 & 3) == 0             ; within an entry with INC E
     defs LIST_LEN,0
+
+;; ---------------------------------------------------------------------------
+;; The grass's stripes, for road_draw (fragment 2 is full). From the bottom
+;; line up the grass is rd_grass0's green (rp_grass) and changes to the
+;; other at each line where a kerb's band B gives way to band A - which is
+;; where bit GRASS_SHIFT of (depth + zcam) changes, the rows being less than
+;; a kerb stripe apart there - up to the first line past GRASS_ROW, whose
+;; entry road_project has given tmpl_mid: from there on it is GRASS_PAIR's.
+;; The lines it changed at are noted in the buffer's rd_gb list, for
+;; bush_erase to put back the grass of then.
+;; ---------------------------------------------------------------------------
+RD_GB       EQU 14                      ; room for six changes and the end
+rd_grass    defw GRASS_PAIR             ; the grass now (road_draw: BC)
+rd_grass0   defb lo(GRASS_PAIR)         ; the bottom line's (rp_grass)
+rd_gbp      defw 0                      ; where the next change is noted
+rd_mid_t    defw 0                      ; tmpl_mid's line's own template
+;; per buffer: the bottom line's grass, then the changes - each the list
+;; pointer past the line's entry, pushed bottom line first - and a 0
+rd_gb0      defb lo(GRASS_PAIR)
+            defs RD_GB,0
+rd_gb1      defb lo(GRASS_PAIR)
+            defs RD_GB,0
+
+;; rd_start - (road_draw) the line list of (road_buf), and the grass
+;; striped from its bottom line up.
+rd_start
+    ld hl,tb_stripe
+    ld (tb_jp+1),hl
+    ld hl,rd_gb0
+    ld de,list0
+    ld a,(road_buf)
+    or a
+    jr z,rd_start_go
+    ld hl,rd_gb1
+    ld de,list1
+rd_start_go
+    ld (line_ptr),de
+    ld a,(rd_grass0)
+    ld (hl),a                           ; the bottom line's green, noted
+    ld e,a
+    ld d,a
+    ld (rd_grass),de
+    ld de,1+RD_GB
+    add hl,de
+    ld (rd_gbp),hl
+    ret
+
+;; (to_band_a) a kerb's band B gave way to band A, and so does the grass's
+;; stripe: the other green on, the line noted. BC = the grass, DE = the
+;; template, HL = the screen.
+tb_stripe
+    ld a,c
+    xor GRASS_X
+    ld c,a
+    ld b,a
+    ld (rd_grass),bc
+    ld ix,(line_ptr)
+    ld sp,(rd_gbp)
+    push ix
+    ld (rd_gbp),sp
+    jp line_go_a
+
+;; the first line past the grass's stripes: GRASS_PAIR's green on, and its
+;; own template back in the list, then read
+    ALIGN 4
+tmpl_mid    defw tm_mid,#3040,lgrassa+48
+    defs 2,0
+    ASSERT (tmpl_mid & #2000) == 0
+tm_mid
+    exx
+    ex af,af'                           ; (as the grass block left them)
+    ld hl,line_go_a
+    ld (tb_jp+1),hl                     ; no more stripes
+    ld de,(rd_mid_t)
+    ld ix,(line_ptr)
+    ld (ix-2),e
+    ld (ix-1),d
+    ld hl,0
+    add hl,sp                           ; HL = the screen
+    ld a,c
+    cp lo(GRASS_PAIR)
+    jr z,tm_mid_go                      ; that green already
+    ld bc,GRASS_PAIR
+    ld (rd_grass),bc
+    ld sp,(rd_gbp)                      ; noted (IX: the list past the line)
+    push ix
+    ld (rd_gbp),sp
+tm_mid_go
+    bit 5,d                             ; (a near row's: band B's may be)
+    jp z,line_go_a
+    jp to_band_b
+
+;; (render_end) the end of the buffer's grass changes, and back
+rd_end
+    ld sp,(rd_gbp)
+    ld hl,0
+    push hl
+    ld sp,(rd_save_sp)
+    ei
+    ret
+
+;; rp_zsets - (road_project) A = zcam's low byte into its loops.
+rp_zsets
+    ld (rp_zlo+1),a
+    ld (rp_zlo2+1),a
+    ld (rp_zlo3+1),a
+    ld (rp_zlo4+1),a
+    ld (rp_zlo5+1),a
+    ld (rp_zlo6+1),a
+    ld (rp_zlo7+1),a
+    ld (rp_zlo9+1),a
+    ld (rp_zlo10+1),a
+    ld (rp_zlo11+1),a
+    ret
+
     ASSERT $ <= FRAG3+FRAG_LEN
 
     ORG FRAG4,FRAG_ST4
@@ -805,4 +1241,161 @@ list0                                   ; 4-aligned: road_project steps
 list1
     ASSERT (list1 & 3) == 0
     defs LIST_LEN,0
+
+;; ---------------------------------------------------------------------------
+;; rp_grass - (road_project, at the end) the grass's stripes for road_draw:
+;; the bottom line's green in rd_grass0, and tmpl_mid in place of the first
+;; line past GRASS_ROW if it is drawn, its own template in rd_mid_t. RAM_C6.
+;; Destroys AF, DE, HL.
+;; ---------------------------------------------------------------------------
+    ASSERT GRASS_SHIFT == 7
+rp_grass
+    ld hl,(rp_vars)
+    ld a,(hl)                           ; the hill level now
+    ld l,a
+    ld h,0
+    add hl,hl
+    ld de,level_addr
+    add hl,de
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a                              ; HL = its line -> row table
+    push hl
+    ld l,(hl)                           ; the bottom line's row (a near one)
+    ld h,hi(rr_depth)
+    ld a,(zcam)
+    add a,(hl)
+    rla                                 ; CF: its stripe
+    ld a,lo(GRASS_PAIR)
+    jr nc,$+4
+    xor GRASS_X
+    ld (rd_grass0),a
+    pop hl
+    ld a,(rp_near)                      ; back from the last near line to the
+    ld e,a                              ; first past GRASS_ROW (a few: the
+    ld d,0                              ; rows from FAR_Z on are near ones)
+    add hl,de
+rp_grass_back
+    ld a,e
+    or a
+    jr z,rp_grass_at
+    dec hl
+    ld a,(hl)
+    cp GRASS_ROW
+    jr nc,rp_grass_at
+    dec e
+    jr rp_grass_back
+rp_grass_at                             ; E: that line
+    ld l,e
+    ld h,0
+    add hl,hl
+    add hl,hl
+    ld de,(rp_slot)
+    add hl,de                           ; its template slot
+    ex de,hl
+    ld hl,(rp_tail)
+    or a
+    sbc hl,de
+    ret c
+    ret z                               ; not drawn: the end marker's or past
+    ex de,hl
+    ld e,(hl)
+    ld (hl),lo(tmpl_mid)
+    inc hl
+    ld d,(hl)
+    ld (hl),hi(tmpl_mid)
+    ld (rd_mid_t),de
+    ret
+
+;; The ways to a line's road and margin when some lines are skipped too
+;; (rp_skip_jr): flag 3 is a line that is already right.
+line_margin_sa
+    bit 1,l
+    jp nz,line_done_a
+    jp line_margin_a
+line_margin_sb
+    bit 1,l
+    jp nz,line_done_b
+    jp line_margin_b
+line_lmarg_sa
+    bit 1,l
+    jp nz,line_done_a
+    jp line_lmarg_a
+line_lmarg_sb
+    bit 1,l
+    jp nz,line_done_b
+    jp line_lmarg_b
+
+;; rp_skip_jr - (road_project) lines skipped (rp_skip) as well as drawn
+;; with a margin: road_draw's way to a margin looks for flag 3 first.
+rp_skip_jr
+    ld a,(rp_skip)
+    or a
+    ret z
+    ld hl,(lg_jr_a+1)
+    ld a,l
+    ld hl,line_margin_sa
+    ld de,line_margin_sb
+    cp lo(line_margin_a)
+    jr z,rp_skip_jr_set
+    ld hl,line_lmarg_sa
+    ld de,line_lmarg_sb
+    cp lo(line_lmarg_a)
+    jr z,rp_skip_jr_set
+    ld hl,line_rmarg_sa
+    ld de,line_rmarg_sb
+    cp lo(line_rmarg_a)
+    ret nz                              ; (line_road_a looks for it already)
+rp_skip_jr_set
+    ld (lg_jr_a+1),hl
+    ld (lg_jr_b+1),de
+    ret
+    ASSERT lo(line_margin_a) != lo(line_lmarg_a) && lo(line_margin_a) != lo(line_road_a) && lo(line_lmarg_a) != lo(line_road_a)
+    ASSERT lo(line_rmarg_a) != lo(line_margin_a) && lo(line_rmarg_a) != lo(line_lmarg_a) && lo(line_rmarg_a) != lo(line_road_a)
+    ASSERT lo(line_margin_a) != lo(line_margin_sa) && lo(line_lmarg_a) != lo(line_margin_sa) && lo(line_margin_a) != lo(line_lmarg_sa) && lo(line_lmarg_a) != lo(line_lmarg_sa)
+    ASSERT lo(line_rmarg_sa) != lo(line_margin_a) && lo(line_rmarg_sa) != lo(line_lmarg_a) && lo(line_rmarg_sa) != lo(line_rmarg_a)
+    ASSERT lo(line_rmarg_a) != lo(line_margin_sa) && lo(line_rmarg_a) != lo(line_lmarg_sa)
+
+;; rp_dzset - (road_project, after rp_mode: A = 0 if every near line is to
+;; be drawn whole, or the rows compared) rp_skip_jr; this buffer's zcam then
+;; into the loops, and twice its move since (rp_dz: RP_LINE), or 255 for
+;; whole lines - or a move of a kerb stripe or more. Keeps BC.
+rp_dzset
+    push af
+    call rp_skip_jr
+    ld hl,(rp_vars)
+    inc hl
+    inc hl
+    inc hl
+    inc hl                              ; rp_zcam
+    ld a,(hl)
+    ld (rp_zold+1),a
+    ld (rp_zold2+1),a
+    ld (rp_zo+1),a
+    ld e,a
+    ld a,(zcam)
+    ld (hl),a
+    sub e                               ; the move since then
+    cp 64
+    ld e,255
+    jr nc,rp_dzset_w
+    add a,a
+    ld e,a
+rp_dzset_w
+    pop af
+    or a
+    jr nz,rp_dzset_go
+    ld a,(rp_cmp)
+    or a
+    jr nz,rp_dzset_go
+    ld e,255                            ; every line whole
+rp_dzset_go
+    ld a,e
+    ld (rp_dz+1),a
+    ld (rp_dz2+1),a
+    ld (rp_dz7+1),a
+    ld (rp_dz8+1),a
+    ret
+
     ASSERT $ <= FRAG4+FRAG_LEN

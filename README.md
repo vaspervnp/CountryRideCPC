@@ -4,11 +4,13 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 ![The road on the flat](docs/screen-flat.png)
 
-This is the first milestone: the screen layout and the road engine. There is
-no car or player input yet. A demo drive runs a four-lane road over a looping
-run of crests, dips and curves - never a curve on a hill - with bushes of
-different sizes beside it at random intervals, at 25 frames a second, and
-fills the HUD with plausible numbers.
+This is the first milestone: the screen layout, the road engine and the
+player's car. A demo drive runs a four-lane road over a looping run of
+crests, dips and curves - never a curve on a hill - with bushes of different
+sizes beside it at random intervals, at 25 frames a second, and fills the HUD
+with plausible numbers. Press left or right and you steer: the car stays in
+the middle of the screen and the road moves under it, and a curve carries
+the car out of it unless you steer against it.
 
 | Crest ahead | In a dip | The sharpest curve |
 |---|---|---|
@@ -38,6 +40,9 @@ Insert `build/countryride.dsk` in a CPC 6128, or any emulator of one, and type:
 ```
 RUN"COUNTRY
 ```
+
+Steer with the cursor keys, O and P, or a joystick: left and right. Until
+you first steer, the demo drives.
 
 The game needs the 6128's second 64K: it uses banks 4 to 7. So far it has
 been tested in emulators: the harness below, and Retro Virtual Machine. The
@@ -69,25 +74,34 @@ On the flat it is:
 
 The road's top rises and falls between 2/5 and 1/3 of the screen, and the
 horizon goes with it. When a crest hides the far road, the sky and the
-mountains move down as far as the road's top does, and the lines above them
-fill with the HUD's navy. The band of ground between the mountains and the
-road keeps its 11 lines.
+mountains move down, twice as fast as the road's top at first, and the lines
+above them fill with the HUD's navy. The band of ground between the
+mountains and the road - what the crest does not hide of the far side - goes
+from 11 lines on the flat to 3-7 behind a crest. It cannot go to none: the
+road part has to start at a character row, so the mountains can come no
+nearer to the road's top than the row it is in (*Horizon drop* below), and
+they move at most 2 lines a step, never in jumps.
 
 The road bends left and right, from nothing at the bottom, where the car
-will be, to the most at the horizon; in the sharpest curves the far road
+is, to the most at the horizon; in the sharpest curves the far road
 leaves the screen. The sky and the mountains turn sideways as the road
 bends, by hardware scrolling.
 
-The road has four lanes, each a little wider than the future 45-pixel car. It
-has thick red and white kerbs. The asphalt alternates in stripes of close
-colours; the grass is one plain colour. Kerbs and lane dashes move all the
-way to the horizon: past the striped zone their dashes get longer with
-distance, so they don't flicker. The road never narrows to a point: far away it is still
-10 pixels wide, kerb to kerb.
+The road has four lanes, each a little wider than the car. It
+has thick red and white kerbs. The asphalt is plain grey and the grass plain
+green: the stripes are in the kerbs and the lane dashes, which move all the
+way to the horizon; past the striped zone their dashes get longer with
+distance, so they don't flicker. The road never narrows to a point: far away
+it is still 10 pixels wide, kerb to kerb.
 
 Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
+
+The car is a red sports car seen from behind, 36 pixels wide and 22 lines
+high, a little above the bottom of the screen: a rear wing, fat tyres, the
+lights behind a black grille. Steering, it is seen turning, OutRun's way:
+its rear face narrower and further over, a flank in view.
 
 ## How it works
 
@@ -112,9 +126,12 @@ The interrupt handler reprograms the CRTC three times a frame (raster
 ruptures), so every frame is three CRTC frames with their own start address,
 row count and R5 lines.
 
-- **Horizon drop.** For a drop of *d* lines, the HUD part ends in navy
-  border: its last row (navy anyway), *d*/8 more rows, all hidden by R6, then
-  *d* mod 8 R5 lines. So the sky starts *d* lines lower.
+- **Horizon drop.** When the road's top is *d* lines down, the sky goes
+  *s* lines down: twice *d*, but no further than the road part's first line
+  less one, and at most 2 more than for *d* − 1 (`scene.sky_drop`, a table
+  in the interrupt handler). The HUD part ends in navy border: its last row
+  (navy anyway), *s*/8 more rows, all hidden by R6, then *s* mod 8 R5 lines.
+  So the sky starts *s* lines lower.
 - **Road start.** The road part starts at the character row the road's top
   is in. Between the two parts is green border (a row if needed, then R5
   lines), so the road lines are always where they are in memory, and the
@@ -158,8 +175,8 @@ The banks hold the rest:
 
 | Bank | Contents | Seen at |
 |---|---|---|
-| 4 | road templates (`#4000–#5FFF`) and code (`#6000`) for stripe band A | `#4000` (C4) |
-| 5 | road code (`#4000`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
+| 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A | `#4000` (C4) |
+| 5 | road code (`#4000`), the next step's staging set (`#5E00`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
 | 6 | the road's row tables and the precomputed hill tables | `#4000` (C6) |
 | 7 | the game (main loop, HUD, graphics, the panorama) | `#C000` (C1/C3) |
 
@@ -171,9 +188,10 @@ page 0, and the eight in page 2 hold the bushes' tables and their sprites as
 data (one in page 0 is free). `src/hw.asm` has the whole map.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block; the other
-512 bytes of each block hold the bush sprites as code. `BOOT.BIN` is loaded
-at `#4000`, so it carries that code where it runs, and the fragments, which
-it copies out, two to a block where the HUDs go later.
+512 bytes of each block hold the bush sprites as code - the last block's,
+at `#7E00`, the part of the road cache's work that runs with RAM C1.
+`BOOT.BIN` is loaded at `#4000`, so it carries that code where it runs, and
+the fragments, which it copies out, two to a block where the HUDs go later.
 
 ### The road
 
@@ -237,6 +255,74 @@ picture has a smaller HUD share and leaves the sky's turn to the next one,
 and a picture that starts with the sky turning keeps its buffer's level for
 one more picture, so the two never fall on the same picture.
 
+### Steering
+
+The car stays in the middle of the screen and the road moves under it, in
+perspective: `road_x` is how many pairs (4 pixels) right of the middle the
+road is on the bottom row, and a row of half-width *h* bytes moves `road_x`
+× 10*h*/256 bytes - the far road hardly moves, and the road turns about the
+horizon. In the middle the curve levels' own template sets are drawn; off
+it, `road_project` takes its templates from one more set in each bank, the
+cache, made for the curve level and `road_x` (`src/cache.asm`).
+
+- **Smooth edges.** Each group of rows keeps one sum - its curve level's
+  shift and its share of `road_x`, in 1/256 bytes - and is drawn at the
+  byte that sum rounds to (`cpcgfx.road_shift`). Rounded as it is,
+  neighbouring groups would step at different moments and the kerbs and
+  lane lines would zig-zag; so a small bias, at most a quarter of a byte,
+  turned round from one group to the next and following the edge's slope,
+  moves where each one rounds, and the edges come out as even staircases.
+  The lane lines sit at an even number of pixels from the centre.
+- **A step sideways** (`cache_step`) moves every group's sum a pair's (or
+  two pairs') worth, between two pictures, so none shows the road half
+  moved. The groups whose byte changes - about 40 of 51 - get their
+  templates made afresh: band B's in bank 5 there and then, band A's and
+  the far rows' band 2 in bank 4 after, from a list of the groups that
+  moved. A core all on the screen takes its template straight from per
+  group tables; one cut short by a side of the screen has the pair it is
+  entered at or left by looked up in its entry table (every core variant
+  sits in one 256-byte page, so that is all low bytes). Made there and
+  then, a step takes ~11-12 ms (up to ~13 ms; ~14.5 ms with the road 8
+  pairs or more to the side a sharp curve bends to; two pairs ~12.5 ms, up
+  to ~15 ms).
+- **Worked out ahead.** So the next step - towards where the road is to go,
+  up to two pairs - is worked out in the time left before each flip, a
+  piece at a time (`cache_pre`: up to 12 groups or 7 band A templates,
+  ~2.4 ms, up to ~2.8 ms), when no new curve level is being caught up with.
+  Its templates go into a staging set in each bank, laid out as the cache
+  set, and the bushes' shares into a staging table; the groups' sums move
+  there and then, and are put back if the step is dropped (the road to go
+  the other way, or less far; a new curve level). The step itself only
+  copies the staging sets into the cache sets: ~5 ms, so it can go after
+  any picture done by the 10th interrupt. The staging sets are then the
+  cache's, so the next one starts at once; after a step made there and
+  then, or a new curve level, they are made the cache's again first (two
+  pieces).
+- **Only when it fits.** A step made there and then - when none is worked
+  out ahead - is made after a picture only if it is sure to be done before
+  the flip, by the interrupts counted since the last one: up to the 7th (the
+  6th on the costly side of a sharp curve, two pairs a tick earlier); one
+  worked out ahead, whenever there is a step at all. Else the road waits a
+  picture. After a step the next picture of each buffer draws every line's
+  road and a margin of grass. Nothing moves on a hill or just before one,
+  nor after a picture whose hill moved (those pictures are heavy enough):
+  on hilly track that, more than the steps' cost, holds steering back.
+- **A new curve level off the middle** is worked out a few groups of rows at
+  a time, in the time left before each flip; meanwhile pictures draw a
+  margin for the groups still a level behind. It waits on a hill or just
+  before one (the track has no curve on a hill: only a late level waits) -
+  a picture whose hill moves compares every line's row with the old one's,
+  and both together are too much.
+- **Drift.** A curve carries the car out of it: the curve level times the
+  speed adds up, and every 48 of it is a pair outwards. Steering against it,
+  the two cancel; with neither, the car ends up on the grass, up to 32 pairs
+  (128 pixels) either way.
+- **The car** is three compiled sprites like the bushes' (below): straight,
+  turning left and its mirror. They differ only in their top 7 lines, and a
+  buffer that last showed another view has those lines drawn whole. The
+  straight and the left one are in page 1, the right one in the page 2
+  fragments.
+
 ### Bushes
 
 `tools/mkbush.py` places the bushes along the track, with a fixed random
@@ -252,8 +338,12 @@ art and works out where they go, and `src/bush.asm` has to match it.
   class gives the sprite and its lateral class how far from the road's
   centre it stands, signed for its side; the road's centre at that row
   comes from a table per curve level (mirrored for left curves), and its
-  line from *h / r* as for the road. It is drawn while its centre is on the
-  screen and its row is not behind a crest.
+  line from *h / r* as for the road. Off the middle it moves exactly as far
+  as its row's group does (`rd_gp`, kept by the cache), so it keeps its
+  place beside the kerb; it stands a byte further out than its lateral
+  class says, as at an odd byte a row's kerb is a byte wider (the core's
+  parity). It is drawn while its centre is on the screen and its row is not
+  behind a crest.
 - **Drawing.** The grass is plain, so a sprite is drawn as it is, with no
   mask: a run of whole pairs of bytes a line, the grass between its leaves
   already in. Each sprite is code (`src/gen/bushcode.asm`): for every line,
@@ -282,17 +372,17 @@ the track and the drawing in bank 7.
 The HUD shows a copy of the game's values, taken every 4 pictures (6.25 times
 a second). The gauges have 8 segments. Each buffer remembers what it shows.
 Only what changed is redrawn, within a share of about 1.1 ms a picture (a
-third of that when the curve level moves; then every other time a gauge
-segment goes before the total time); the rest waits for the buffer's next
-picture. Text and gauges sit on the HUD's plain background, so drawing is
-plain copying, never masking.
+third of that when the curve level moves or the road moves sideways; then,
+every other picture of each buffer, a gauge segment goes before the total
+time); the rest waits for the buffer's next picture. Text and gauges sit on
+the HUD's plain background, so drawing is plain copying, never masking.
 
 ### Timing
 
-Measured in the emulator through the demo's crests, dips and curves, from
-the flip that starts a picture to the picture being done, a picture takes
-about 31.3 ms of its 40 ms (38.6 ms at worst, when the curve level changes;
-38.2 ms at worst otherwise):
+Measured in the emulator over 3000 pictures (2 minutes) of the demo's
+crests, dips and curves, from the flip that starts a picture to the next
+flip being asked for, a picture takes about 28 ms of its 40 ms; 27.5 ms with
+the player not steering, the curves carrying the car out. Roughly:
 
 - road drawing: ~21.5 ms (~22.7 ms when the hill moves, ~27.6 ms when the
   curve level changes);
@@ -303,7 +393,13 @@ about 31.3 ms of its 40 ms (38.6 ms at worst, when the curve level changes;
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
 
-Not one picture was late in two minutes of driving.
+In the demo 6 pictures in 3000 came within half a millisecond of their
+flip or past it, with the player not steering 2; by up to 1.2 ms past it:
+pictures off the middle of the road while the cache catches up with a new
+curve level, or whose hill moved. A sideways step (~5 ms copied into place,
+or up to ~14 ms made there and then), a batch of the cache's work (3
+groups, up to ~3 ms) or a piece of the next step worked out ahead (up to
+~2.8 ms) never runs past the flip.
 
 ## Testing
 
@@ -347,7 +443,16 @@ src/            the game
   boot.asm      takes the machine over, copies the common fragments
   common.asm    the fragments: variables, interrupts and ruptures, road_draw
   road.asm      road_init, road_project
-  game.asm      main loop, demo drive
+  road6.asm     road_project's part in bank 6: how lines are drawn
+  road15.asm    road_project's part in fragment 15, the curve level's jobs
+  cache.asm     the road off the middle: the cache set, steps (also
+                worked out ahead), jobs
+  cache4.asm    ... its part in bank 4 (band A)
+  cache5.asm    ... and in bank 5 (band B)
+  cachemac.asm  making a cache template (both banks)
+  roadm2.asm    a line's road and margin when the hill and the road both
+                moved (banks 4 and 5)
+  game.asm      main loop, demo drive, steering
   bush.asm      the bushes: projected, drawn, taken away
   hud.asm       HUD updates
   horizon.asm   how far the horizon drops, the sky ring
@@ -369,6 +474,5 @@ docs/           screenshots
 
 ## Next
 
-- the car, always at the bottom centre;
 - curves that come from the horizon (the whole road bends at one level now);
 - 3- and 2-lane roads (the generator already has the `LANES` parameter).
