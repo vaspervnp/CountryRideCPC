@@ -447,26 +447,6 @@ rp_part_k1
     ld (rp_skip_r+1),a
     ret
 
-
- IF HILL_STEPS
-;; cache_hill - (cache_steps, experiment) a hill near or just moved: only a
-;; step sideways - with no hill under the camera or in the next
-;; HILL_STEP_AHEAD entries (if that is less than 3), and only one worked
-;; out ahead (unless HILL_FULL).
-cache_hill
-  IF HILL_STEP_AHEAD < 3
-    ld b,HILL_STEP_AHEAD+1
-    call hill_near_b
-    ret nz
-  ENDIF
-  IF HILL_FULL == 0
-    ld a,(pre_g)
-    cp NGROUPS
-    ret nz
-  ENDIF
-    jp cache_steps_x
- ENDIF
-
 cache5_end
     ASSERT cache5_end <= FRAG5+FRAG_LEN
 

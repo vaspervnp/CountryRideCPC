@@ -261,12 +261,6 @@ pic_road
 pic_bushes
     jp car_draw                 ; and the car on top of all
 
-HILL_STEPS  EQU 0               ; (experiment) bit 0: steps sideways with a
-                                ; hill near, bit 1: after a hill moved
-HILL_FULL   EQU 0               ; ... made there and then too, not only
-                                ; worked out ahead
-HILL_STEP_AHEAD EQU 3           ; ... with no hill this near (3: any)
-
 ;; ---------------------------------------------------------------------------
 ;; cache_steps - after a picture: the road's next steps (cache.asm), whose
 ;; templates cache_job then works out while the picture waits for its flip.
@@ -297,18 +291,10 @@ HILL_STEP_AHEAD EQU 3           ; ... with no hill this near (3: any)
 ;; ---------------------------------------------------------------------------
 cache_steps
     call hill_near              ; no hill here or just ahead
- IF HILL_STEPS&1
-    jp nz,cache_hill
- ELSE
     ret nz
- ENDIF
     ld a,(rp_cmp)               ; nor did the last picture's hill move
     or a
- IF HILL_STEPS&2
-    jp nz,cache_hill
- ELSE
     ret nz
- ENDIF
     ld a,(curve_wait)
     or a
     jr nz,cache_steps_x

@@ -193,16 +193,14 @@ green_pairs
 
 ;; ---------------------------------------------------------------------------
 ;; hill_near - NZ if the track has a hill under the camera or in the next
-;; HILL_AHEAD entries (32 depth units each); hill_near_b - in the next B - 1.
-;; Destroys AF, B, DE, HL.
+;; HILL_AHEAD entries (32 depth units each). Destroys AF, B, DE, HL.
 ;; ---------------------------------------------------------------------------
 hill_near
-    ld b,HILL_AHEAD+1
-hill_near_b
     ld hl,(zcam)
     add hl,hl
     add hl,hl
     add hl,hl                   ; H = zcam / 32
+    ld b,HILL_AHEAD+1
 hill_near_one
     ld e,h
     ld d,0
