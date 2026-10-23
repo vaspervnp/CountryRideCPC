@@ -252,48 +252,7 @@ rd_gk       defs NGROUPS,0          ; bit 1: to be put at cache_k
     defs #40-NGROUPS,0
 rd_list     defs #80,0              ; the groups that moved, for bank 4
 rd_ltop                             ; (st5, job5, pre5: tl_a)
-
-;; ---------------------------------------------------------------------------
-;; rp_side_hill - (rp_mode_rows) the hill has moved since this buffer was
-;; last drawn, and the road sideways: B, C = the margin the road's move
-;; needs (rd_margin's, for flag 1: a line showing the row it did). A line
-;; showing another row needs a row's margin as well (rp_far_m): flag 2
-;; gets both (line_m2_a, line_m2_b: roadm2.asm). NC if that is more than
-;; RP_MARGIN_MAX - whole lines then. Destroys AF, BC, HL.
-;; ---------------------------------------------------------------------------
-rp_side_hill
-    push bc
-    call rp_far_m                       ; B = C = a row's margin
-    pop hl
-    ld a,h
-    add a,b
-    ld b,a
-    ld a,l
-    add a,c
-    ld c,a
-    call rp_mode_max
-    ret nc
-    ld a,PAIRS
-    sub c
-    ld (lm2_mt),a
-    ld a,lo(lgrassa)+PAIRS
-    sub b
-    ld (lm2_lta),a
-    add a,(lo(lgrassb)-lo(lgrassa))&255
-    ld (lm2_ltb),a
-    ld hl,line_m2_a
-    ld (lg2_a+1),hl
-    ld hl,line_m2_b
-    ld (lg2_b+1),hl
-    scf
-    ret
-lm2_mt      defb 0                      ; PAIRS - the right margin
-lm2_lta     defb 0                      ; lo(lgrassa) + PAIRS - the left one
-lm2_ltb     defb 0                      ; ... lgrassb's
-
-rd_gfree
-    ASSERT $ <= rd_ltop+#80
-    defs rd_ltop+#80-$,0            ; (free)
+rd_gfree    defs #80,0              ; (free)
     INCLUDE "cachegap.asm"          ; (64 bytes of code)
     defs #CD-#C0,0
 rd_gp       defs NGROUPS,0          ; per group, at its lane (#CD + g): how

@@ -21,7 +21,6 @@
     INCLUDE "gen/consts.asm"
     INCLUDE "gen/roadconsts.asm"
     INCLUDE "cachemac.asm"
-    INCLUDE "roadm2.asm"
 
 
 ;; Where the fragments sit in BOOT.BIN (page 1, where it is loaded): two to
@@ -58,8 +57,6 @@ roada_start
     INCLUDE "gen/roada.asm"
     INCLUDE "gen/roadgeoa.asm"
     INCLUDE "cache4.asm"
-    LINE_M2 a,lm2_lta                   ; (roadm2.asm)
-    ASSERT $ <= STAGE_A
 roada_end
     ASSERT roada_end <= #8000
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
@@ -73,8 +70,7 @@ roadb_start
     INCLUDE "gen/roadb.asm"
     INCLUDE "gen/roadgeob.asm"
     INCLUDE "cache5.asm"
-    LINE_M2 b,lm2_ltb                   ; (roadm2.asm)
-    ASSERT $ <= STAGE_B
+    ASSERT $ <= TMPL_B
     ORG TMPL_B
     INCLUDE "gen/roadtmplb.asm"
 roadb_end

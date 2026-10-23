@@ -192,22 +192,16 @@ rp_habs                                 ; A = |h| for level A: |2A - 128|
 ;; rp_mode_rows - the hill moved: the near lines' rows are compared with
 ;; the ones they showed then (rp_cmp). A = 0 if nothing else moved: a line
 ;; that shows another row gets a margin - only its road if it is a nearer
-;; row and the road straight and in the middle. Else the others get the
-;; margin the road's move sideways needs, and such a line that and a row's
-;; (rp_side_hill) - or is drawn whole, if that is too much. Returns A = 0
-;; (rp_mode).
+;; row and the road straight and in the middle. Else such a line is drawn
+;; whole, and the others only with the margin the road's move sideways
+;; needs. Returns A = 0 (rp_mode).
 rp_mode_rows
-    or a
-    jr z,rp_rows_h
-    call rp_side_hill                   ; (cache.asm)
     ld hl,(#20*256)+0                   ; JR NZ and no second INC A:
     ld c,0                              ; another row, flag 0; far: off
-    jr nc,rp_rows_op
-    or 1                                ; (NZ: no nearer rows' way)
-rp_rows_h
+    or a
+    jr nz,rp_rows_op
     ld c,#3C                            ; (INC A)
     ld hl,(#28*256)+0                   ; JR Z: another row, flag 2
-    jr nz,rp_rows_op
     ld a,(road_curve)
     ld b,a
     ld a,(road_x)

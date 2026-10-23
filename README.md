@@ -450,8 +450,6 @@ src/            the game
   cache4.asm    ... its part in bank 4 (band A)
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
-  roadm2.asm    a line's road and margin when the hill and the road both
-                moved (banks 4 and 5)
   game.asm      main loop, demo drive, steering
   bush.asm      the bushes: projected, drawn, taken away
   hud.asm       HUD updates
