@@ -161,3 +161,61 @@ rp_mode_whole
     xor a
     ret
 
+;; per curve level k = -7..6: the first row a move between k and k + 1
+;; leaves where it was
+cf_rows     defb CF_ROW6,CF_ROW5,CF_ROW4,CF_ROW3,CF_ROW2,CF_ROW1,CF_ROW0
+            defb CF_ROW0,CF_ROW1,CF_ROW2,CF_ROW3,CF_ROW4,CF_ROW5,CF_ROW6
+    ASSERT CURVE_K == 7 && hi(cf_rows) == hi(cf_rows+13)
+
+;; rp_part_k - (rp_mode_set, above) HL = the least curve level a group was
+;; at when this buffer was last drawn (the greatest two bytes on), B, C
+;; now's: in rp_skip_r the first row no move between those levels moved - 0
+;; if the curve did not move, 255 (none) if the road moved sideways (IXL,
+;; IXH). Keeps BC, HL, IX.
+
+rp_part_k
+    ld a,ixl
+    or ixh
+    ld a,255
+    jr nz,rp_part_k1                    ; the road moved sideways
+    ld a,b
+    add a,CURVE_K
+    ld e,a
+    ld a,(hl)
+    add a,CURVE_K
+    cp e
+    jr nc,$+3
+    ld e,a                              ; E = the least level then or now
+    ld a,c
+    add a,CURVE_K
+    ld d,a
+    inc hl
+    inc hl
+    ld a,(hl)
+    dec hl
+    dec hl
+    add a,CURVE_K
+    cp d
+    jr c,$+3
+    ld d,a                              ; D = the greatest (both + CURVE_K)
+    ld a,d
+    sub e
+    jr z,rp_part_k1                     ; the curve did not move: 0
+    push hl
+    ld d,a
+    ld a,e
+    add a,lo(cf_rows)
+    ld l,a
+    ld h,hi(cf_rows)
+    dec d
+    ld a,(hl)                           ; the first row left by k <-> k + 1
+    jr z,rp_part_k2
+    inc l
+    cp (hl)                             ; ... and by k + 1 <-> k + 2
+    jr nc,rp_part_k2
+    ld a,(hl)
+rp_part_k2
+    pop hl
+rp_part_k1
+    ld (rp_skip_r+1),a
+    ret

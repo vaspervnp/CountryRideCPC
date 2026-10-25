@@ -210,9 +210,7 @@ draw_screen_hud
 ;; road has moved sideways on most lines and road_project draws them with a
 ;; margin of grass (~6 ms more): the HUD then has a smaller share, and the
 ;; sky's turn waits for the next picture (pic_bent). The HUD has the
-;; smaller share too when road_x has moved since then, or the cache has
-;; yet to catch up with the curve level off the middle - the sky waits for
-;; that too.
+;; smaller share too when road_x has moved since then.
 ;; ---------------------------------------------------------------------------
 draw_picture
     push af
@@ -235,15 +233,8 @@ draw_picture_x
     ld a,(road_x)
     cp (hl)
     ld (hl),a
-    jr nz,draw_picture_low      ; the road moved sideways
-    or a
     jr z,draw_picture_hud
-    ld a,(rd_n2)
-    or a
-    jr z,draw_picture_hud
-    ld a,1                      ; (the next picture is likely to find the
-    ld (pic_bent),a             ; cache still catching up: the sky waits)
-draw_picture_low
+draw_picture_low                ; the road moved sideways
     ld b,HUD_SHARE_LOW
 draw_picture_hud
     ld a,b
@@ -269,18 +260,20 @@ pic_bushes
 ;; picture's hill moved (as the road leaves a hill): a picture whose hill
 ;; moves compares each line's row with then's, and a new level or a step
 ;; sideways on top of that - or the cache catching up with a level - is too
-;; much. A new level waits for a hill HILL_AHEAD track entries ahead, a step
-;; sideways only for one HILL_STEP_AHEAD ahead (cache_hill): the pictures
-;; its two buffers draw next are done by then. (The track has no curve on
-;; a hill: a level only waits when it is late; the road waits to move
+;; much. A new level and a step sideways wait for a hill HILL_STEP_AHEAD
+;; track entries ahead: the two pictures either makes heavy (both buffers
+;; draw all of the road moved) are done by then. (The track has no curve
+;; on a hill: a level only waits when it is late; the road waits to move
 ;; sideways.)
 ;;
 ;; The curve level moves a level towards the game's - not within two
 ;; pictures of the last move, so that a buffer's road moves a level at most
-;; between two of its pictures, and not when this flip turns the sky (the
-;; next picture would pay for both). With the road in the middle that is
+;; between two of its pictures - holding back the sky's turn at this flip
+;; (sky_stay: the next picture would pay for both). With the road in the
+;; middle that is
 ;; all (the curve levels' own sets are drawn, and the cache follows them
-;; when it can); off it, only once the cache has caught up with the last.
+;; when it can); off it, only once the cache has the level worked out
+;; ahead, and then all of the road moves to it at once (cache_kstep).
 ;;
 ;; Then road_x moves two pairs towards steer_x - always two, so it is
 ;; always even: with steer_x a pair from it, it waits - the whole cache with
@@ -297,12 +290,10 @@ cache_steps
     ld a,(rp_cmp)               ; the last picture's hill did not move
     or a
     ret nz
-    call hill_near              ; nor is a hill here or just ahead (a step
-    jp nz,cache_hill            ; sideways looks less far: cache.asm)
+    ld b,HILL_STEP_AHEAD+1      ; nor is a hill here or just ahead
+    call hill_near_b
+    ret nz
     ld a,(curve_wait)
-    or a
-    jr nz,cache_steps_x
-    ld a,(sky_turns)
     or a
     jr nz,cache_steps_x
     ld a,(curve)
@@ -312,11 +303,7 @@ cache_steps
     ld c,a
     ld a,(road_x)
     or a
-    jr z,cache_steps_k          ; in the middle
-    ld a,(rd_n2)
-    or a
-    jr nz,cache_steps_x
-cache_steps_k
+    jp nz,cache_kstep           ; off the middle: worked out ahead (cache.asm)
     ld a,c
     or a
     ld a,1
@@ -330,6 +317,7 @@ cache_steps_kd
     ld (curve_wait),a
     pop af
     call cache_curve
+    call sky_stay               ; (the next picture has the road bent)
 cache_steps_x
     ld a,(back_buf)             ; no more than 2 pairs from where the next
     xor 1                       ; picture's buffer last had it (the margin
@@ -415,10 +403,10 @@ cache_steps_step
 ;; DEMO_HOLD pictures, the car seen turning while the road moves to it.
 ;; ---------------------------------------------------------------------------
 DEMO_HOLD   EQU 128
-HILL_AHEAD  EQU 3               ; track entries (32 depth units) the curve
-                                ; level looks ahead for a hill
-HILL_STEP_AHEAD EQU 2           ; ... and a step sideways (~6 pictures at
-                                ; full speed)
+HILL_AHEAD  EQU 3               ; track entries (32 depth units) the sky's
+                                ; turn looks ahead for a hill (main)
+HILL_STEP_AHEAD EQU 2           ; ... and a new curve level or a step
+                                ; sideways (~6 pictures at full speed)
 STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step

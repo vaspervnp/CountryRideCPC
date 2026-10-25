@@ -22,12 +22,18 @@
 ;;   before the flips (cache_pre: pre5, pre4, into staging sets laid out
 ;;   as the cache's) and only copied into place then (cm5, cm4), or, with
 ;;   none worked out ahead, there and then (st5, st4).
-;; - cache_k a level (cache_curve): every group is to be put at that level
-;;   (rd_gk bit 1) - a batch at a time (cache_job: job5, job4) in whatever
-;;   time is left before each flip, so a picture may show some groups a
-;;   level behind cache_k (road_project draws margins for that). Off the
-;;   middle any of them can move a byte, if not most; only those that do
-;;   have their templates made (and are noted as moved: cache_mark).
+;; - cache_k a level off the middle (cache_kstep): every group moves to it
+;;   between two pictures, as for a step - worked out ahead into the
+;;   staging sets (cache_pre: prk5, pre4; the level the track has next,
+;;   cache_want) and copied into place (cmk5, cm4); road_curve waits for
+;;   that. A picture never shows the road at two levels.
+;; - cache_k a level in the middle (cache_curve): the levels' own sets are
+;;   drawn there, and every group is to be put at the new level (rd_gk bit
+;;   1) a batch at a time (cache_job: job5, job4) in whatever time is left
+;;   before each flip; the road leaves the middle only once that is done.
+;;   Off the middle any of them can move a byte, if not most; only those
+;;   that do have their templates made (and are noted as moved:
+;;   cache_mark).
 ;; ===========================================================================
 
     ORG FRAG6,FRAG_ST6
@@ -247,6 +253,10 @@ cl_loop
     ld (rd_n2),a
     ret
 
+pre_k       defb 0          ; the work ahead is a curve level: cache_k + 1
+                            ; or - 1 (pre_s 0); 0 a step
+pre_g1      defb 0          ; (a level's: the last group whose a it moves)
+
     ASSERT $ <= #3640
     defs #3640-$,0
 
@@ -255,7 +265,86 @@ rd_gk       defs NGROUPS,0          ; bit 1: to be put at cache_k
     defs #40-NGROUPS,0
 rd_list     defs #80,0              ; the groups that moved, for bank 4
 rd_ltop                             ; (st5, job5, pre5: tl_a)
-rd_gfree    defs #80,0              ; (free)
+;; In the room after the list (common): parts of the cache's work in
+;; RAM_C1 (cache_want) and in RAM_C5 (prk5, undok5: cache5.asm's) that
+;; their own places have no room for.
+rd_gfree
+;; cache_want - (cache_pre) A = the curve level the cache is to work out
+;; ahead off the middle, cache_k + 1 or - 1: towards the game's (curve), or
+;; with that reached, the track's as far on as the camera goes in 8 VSYNCs
+;; (about the time it takes); 0 none - or the road in the middle (the
+;; levels' own sets are drawn there: cache_curve). Destroys F, DE, HL.
+cache_want
+    ld a,(road_x)
+    or a
+    ret z
+    ld a,(curve)
+    ld hl,road_curve
+    sub (hl)
+    jr nz,cw_way
+    ld hl,(speed)
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld e,h                              ; E = depth units in 8 VSYNCs
+    ld d,a
+    ld hl,(zcam)
+    add hl,de
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld e,h                              ; E = the track entry there
+    ld hl,curve_profile
+    add hl,de
+    ld a,(hl)
+    ld hl,road_curve
+    sub (hl)
+    ret z
+cw_way
+    ld a,1
+    ret p
+    ld a,-1
+    ret
+
+;; prk5 - (cache5.asm, with pre5)
+prk5
+    ld a,(cache_k)
+    ld hl,pre_k
+    add a,(hl)
+    add a,CURVE_K
+    ld (pk5_grp+1),a
+    call st5_none
+    ld a,hi(SGP)
+    ld (j5_gp+1),a
+    ld a,PRK_BATCH
+    ld bc,pk5_grp
+    ld de,pk5_back
+    ld hl,0                             ; (road_x stays)
+    jp p5_set
+
+;; undok5 - (cache_drop) the groups prk5 has moved put back at cache_k
+;; (j5_level), the last first, pre_g counted down - till the flip is near
+;; (JOB_LATE: the rest next time); with none left, their a's as SB has
+;; them. Destroys everything.
+undok5
+    ld a,(pre_g)
+    add a,#CD-1
+    ld l,a                              ; the last one's lane
+uk5_loop
+    call j5_level
+    ld a,l
+    sub #CD
+    ld (pre_g),a
+    jp z,u5_ao                          ; all put back
+    dec l
+    ld a,(irq_n)
+    cp JOB_LATE
+    jr c,uk5_loop
+    ret
+
+rd_gfree_end
+    ASSERT rd_gfree_end <= rd_ltop+#80
+    defs rd_ltop+#80-$,0
     INCLUDE "cachegap.asm"          ; (64 bytes of code)
     defs #CD-#C0,0
 rd_gp       defs NGROUPS,0          ; per group, at its lane (#CD + g): how
@@ -274,13 +363,14 @@ frag6_end
 
 ;; ---------------------------------------------------------------------------
 ;; cache_job - the cache's next piece of work: a batch of groups put at
-;; cache_k (job5, job4) - none after a step (the next pictures draw the
-;; road moved, with a margin: a new level's on top is too much) - or with
-;; none to put, a piece of the next step worked out ahead (cache_pre: it
-;; changes nothing drawn). A job running past the flip would start the next
-;; picture that much later: in the last 3.3 ms before it (JOB_LATE) there
-;; are none (they take up to ~3 ms). NZ if there was any. RAM_C1 in and
-;; out. Destroys everything.
+;; cache_k (job5, job4; the road in the middle) - none after a step (the
+;; next pictures draw the road moved, with a margin: a new level's on top
+;; is too much) - or with none to put, a piece of the next step or curve
+;; level worked out ahead (cache_pre: it changes nothing drawn). A job
+;; running past the flip would start the next picture that much later: in
+;; the last 3.3 ms before it (JOB_LATE) there are none (they take up to ~3
+;; ms; a piece worked out ahead stops there). NZ if there was any. RAM_C1
+;; in and out. Destroys everything.
 ;; ---------------------------------------------------------------------------
 JOB_LATE    EQU 11                      ; from this interrupt since the flip on,
                                         ; no job
@@ -308,22 +398,36 @@ cj_go
     jp cache_both
 
 ;; ---------------------------------------------------------------------------
-;; cache_drop - the step worked out ahead dropped: the sums it has moved
-;; put back (undo5), the staging sets no longer the cache's. NZ. RAM_C1 in
-;; and out. Destroys everything.
+;; cache_drop - the step or curve level worked out ahead dropped: the sums
+;; it has moved put back (undo5; a level's a piece at a time, undok5, till
+;; the flip is near), the staging sets no longer the cache's. NZ. RAM_C1
+;; in and out. Destroys everything.
 ;; ---------------------------------------------------------------------------
 cache_drop
     ld a,(pre_g)
     or a
     jr z,cd_s
     ld hl,undo5
+    ld a,(pre_k)
+    or a
+    jr z,$+5
+    ld hl,undok5
     ld de,cr_ret
     call cache_both
     xor a
-    ld (pre_g),a
     ld (pre_sync),a
+    ld a,(pre_k)
+    or a
+    jr z,cd_g
+    ld a,(pre_g)                        ; a level's: put back a piece at a
+    or a                                ; time (undok5 counts pre_g down)
+    ret nz
+cd_g
+    xor a
+    ld (pre_g),a
 cd_s
     ld (pre_s),a
+    ld (pre_k),a
     or 1
     ret
 
@@ -335,6 +439,7 @@ cache_init
     xor a
     ld (pre_g),a
     ld (pre_s),a
+    ld (pre_k),a
     ld (pre_sync),a
     ld (rd_s),a
     ld hl,cache_reset
@@ -348,65 +453,6 @@ cache_init_job
     ld (irq_n),a
     call cache_job
     jr nz,cache_init_job
-    ret
-
-;; per curve level k = -7..6: the first row a move between k and k + 1
-;; leaves where it was
-cf_rows     defb CF_ROW6,CF_ROW5,CF_ROW4,CF_ROW3,CF_ROW2,CF_ROW1,CF_ROW0
-            defb CF_ROW0,CF_ROW1,CF_ROW2,CF_ROW3,CF_ROW4,CF_ROW5,CF_ROW6
-    ASSERT CURVE_K == 7 && hi(cf_rows) == hi(cf_rows+13)
-
-;; rp_part_k - (rp_mode_set) HL = the least curve level a group was at when
-;; this buffer was last drawn (the greatest two bytes on), B, C now's: in
-;; rp_skip_r the first row no move between those levels moved - 0 if the
-;; curve did not move, 255 (none) if the road moved sideways (IXL, IXH).
-;; Keeps BC, HL, IX.
-
-rp_part_k
-    ld a,ixl
-    or ixh
-    ld a,255
-    jr nz,rp_part_k1                    ; the road moved sideways
-    ld a,b
-    add a,CURVE_K
-    ld e,a
-    ld a,(hl)
-    add a,CURVE_K
-    cp e
-    jr nc,$+3
-    ld e,a                              ; E = the least level then or now
-    ld a,c
-    add a,CURVE_K
-    ld d,a
-    inc hl
-    inc hl
-    ld a,(hl)
-    dec hl
-    dec hl
-    add a,CURVE_K
-    cp d
-    jr c,$+3
-    ld d,a                              ; D = the greatest (both + CURVE_K)
-    ld a,d
-    sub e
-    jr z,rp_part_k1                     ; the curve did not move: 0
-    push hl
-    ld d,a
-    ld a,e
-    add a,lo(cf_rows)
-    ld l,a
-    ld h,hi(cf_rows)
-    dec d
-    ld a,(hl)                           ; the first row left by k <-> k + 1
-    jr z,rp_part_k2
-    inc l
-    cp (hl)                             ; ... and by k + 1 <-> k + 2
-    jr nc,rp_part_k2
-    ld a,(hl)
-rp_part_k2
-    pop hl
-rp_part_k1
-    ld (rp_skip_r+1),a
     ret
 
 cache5_end
@@ -427,7 +473,8 @@ cache1_start
 ;; which on the step may not go: it goes whenever cache_steps runs, being
 ;; a copy (~5 ms) - as C then - if it is done, goes as far as C at most
 ;; and its way, and is a pair while a new curve level has the road drawn
-;; with a margin; else not at all (B = 0) till it is done or dropped.
+;; with a margin; else not at all (B = 0) till it is done or dropped - nor
+;; while a curve level is worked out ahead instead (pre_k: it goes first).
 ;; Destroys AF, E.
 ;; ---------------------------------------------------------------------------
 cache_ready
@@ -435,6 +482,11 @@ cache_ready
     or a
     ret z
     ld b,0
+    ld e,a
+    ld a,(pre_k)
+    or a
+    ret nz                              ; a curve level
+    ld a,e
     cp NGROUPS
     ret nz                              ; not done
     ld a,(pre_s)
@@ -460,15 +512,34 @@ cr_no
     ret
 
 ;; ---------------------------------------------------------------------------
-;; cache_pre - (cache_job, with no groups to put at cache_k) the step
+;; cache_pre - (cache_job, with no groups to put at cache_k) the curve level
+;; the road is to take next off the middle (cache_want), or else the step
 ;; road_x is to take next, two pairs towards steer_x if it is that far,
 ;; worked out ahead a piece at a time (each up to ~3 ms, as a batch of
 ;; jobs): the staging sets made the cache's first if they are not (rs5,
-;; then rs4), then PRE_BATCH groups a piece (pre5, pre4). One the other way
-;; is dropped (cache_drop). NZ if there was any work. RAM_C1 in and out.
-;; Destroys everything.
+;; then rs4), then PRE_BATCH groups a piece (pre5, pre4) - PRK_BATCH for a
+;; level (prk5, pre4). Any other worked out ahead is dropped first
+;; (cache_drop). NZ if there was any work. RAM_C1 in and out. Destroys
+;; everything.
 ;; ---------------------------------------------------------------------------
 cache_pre
+    call cache_want
+    or a
+    jr z,cp_step
+    ld hl,pre_k
+    cp (hl)
+    jr z,cp_work                        ; that level, under way
+    ld e,a
+    ld a,(pre_g)
+    or a
+    jp nz,cache_drop                    ; another under way: dropped first
+    ld (hl),e                           ; a new one
+    ld (pre_s),a
+    jr cp_work
+cp_step
+    ld a,(pre_k)
+    or a
+    jp nz,cache_drop                    ; a level no longer wanted
     ld a,(road_x)
     ld b,a
     ld a,(steer_x)
@@ -513,21 +584,60 @@ cp_piece
     cp NGROUPS
     ret z                               ; done
     ld hl,pre5
+    ld a,(pre_k)
+    or a
+    jr z,$+5
+    ld hl,prk5
     ld de,pre4
 cp_both
     jp cache_both
 
 ;; ---------------------------------------------------------------------------
-;; cache_hill - (cache_steps) a hill here or within HILL_AHEAD entries: no
-;; new curve level, but a step sideways if the hill is further than
-;; HILL_STEP_AHEAD entries - the pictures that step makes heavy are done
-;; before it moves.
+;; cache_kstep - (cache_steps, the road off the middle) C = the game's curve
+;; level less road_curve, HL = road_curve: it moves a level that way if
+;; the cache has that level worked out ahead (cache_pre: prk5, pre4) -
+;; copied into place, ~5 ms (cmk5, cm4) - and else waits; no step either
+;; then (cache_ready), but with no level worked out ahead. Both buffers'
+;; next pictures draw all of the road moved, ~10 ms more than the last
+;; one: that has to have been done by interrupt KSTEP_LATE - 1 since the
+;; flip, one later for each further level the road is behind.
 ;; ---------------------------------------------------------------------------
-cache_hill
-    ld b,HILL_STEP_AHEAD+1
-    call hill_near_b
-    ret nz
-    jp cache_steps_x
+KSTEP_LATE  EQU 8
+
+cache_kstep
+    ld a,(pre_k)
+    or a
+    jp z,cache_steps_x                  ; none (yet): a step may go
+    xor c
+    ret m                               ; the other way (cache_pre drops it)
+    ld a,(pre_g)
+    cp NGROUPS
+    ret nz                              ; not done
+    ld a,c
+    or a
+    jp p,$+5
+    neg
+    add a,KSTEP_LATE-1
+    ld b,a
+    ld a,(irq_n)
+    cp b
+    ret nc                              ; the last picture too heavy: later
+    ld a,(pre_k)
+    ld (rd_kdir),a
+    add a,(hl)
+    ld (hl),a
+    ld (cache_k),a
+    ld a,2
+    ld (curve_wait),a
+    ld a,3
+    ld (pre_sync),a                     ; (the staging sets the cache's after)
+    xor a
+    ld (pre_g),a
+    ld (pre_k),a
+    ld hl,cmk5
+    ld de,cm4
+    call cache_both
+    jp sky_stay                         ; (the next picture has the road bent)
 
 cache1_end
     ASSERT cache1_end <= #7F00

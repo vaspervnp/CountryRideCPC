@@ -123,7 +123,6 @@ st5_gp
     ld c,a
     push bc                             ; (band 2's too)
     sub 2*NGROUPS
-    inc ixh                             ; (pre5: templates to make)
     jr st5_tb
 st5_movedn                              ; (a group with no far rows)
     ld b,a
@@ -139,7 +138,6 @@ st5_movedn                              ; (a group with no far rows)
     ld c,a
     push bc
 st5_tb
-    inc ixh
     ld l,a
     ld h,b
     add a,2
@@ -214,6 +212,14 @@ st5_one
     ld (st5_op3),a
     ret
 
+;; st5_none - st5 with no step (job5, prk5): OR A for its ops. Destroys A.
+st5_none
+    ld a,#B7
+    ld (st5_op1),a
+    ld (st5_op2),a
+    ld (st5_op3),a
+    ret
+
 ;; gb_xl, gb_xh: 5 road_x (gs_set_wa: 5 A). Destroys AF, DE, HL.
 gs_set_w
     ld a,(road_x)
@@ -248,10 +254,7 @@ job5
     ld (rd_ltop-2),hl                   ; an empty list
     ld hl,rd_ltop-2
     ld (rd_lsp),hl
-    ld a,#B7                            ; OR A: no step
-    ld (st5_op1),a
-    ld (st5_op2),a
-    ld (st5_op3),a
+    call st5_none
     ld a,st5_moved-st5_mvj-2
     ld (st5_mvj+1),a
     ld a,#C3                            ; JP j5_back: one group
@@ -478,7 +481,8 @@ j5_s0t
     ld h,hi(RA_AO)
     ld a,(hl)
     sub ixh
-    ld h,hi(rd_gp)
+j5_gp
+    ld h,hi(rd_gp)                      ; (self-modified: SGP - prk5)
     ld (hl),a
     ret
 
@@ -519,25 +523,46 @@ cr_w
     ret
 
 ;; ---------------------------------------------------------------------------
-;; The next step worked out ahead (cache_pre, cache.asm): into the staging
-;; sets - STAGE_B here, STAGE_A in bank 4 - the cache sets' templates as
-;; they are to be after it, and into SGP rd_gp's, so that the step itself
-;; only copies them into place (cache_commit: cm5, cm4). Its sums go
-;; there and then (A', a: st5's own, for the groups so far - pre_g; SB
-;; keeps the a's they had, for undo5 to put back if it is dropped).
+;; The next step or curve level worked out ahead (cache_pre, cache.asm):
+;; into the staging sets - STAGE_B here, STAGE_A in bank 4 - the cache
+;; sets' templates as they are to be after it, and into SGP rd_gp's, so
+;; that the step or level itself only copies them into place (cm5 or cmk5,
+;; cm4). Its sums go there and then (A', a - and a level's KK, W - for the
+;; groups so far: pre_g; SB keeps the a's they had, for undo5 or undok5 to
+;; put back if it is dropped).
 ;; ---------------------------------------------------------------------------
 STAGE_B     EQU #5E00                   ; set out as a template set
 SGP         EQU #5FCD                   ; per group, at its lane
 SB          EQU #7FCD                   ; (the cache set's room)
     ASSERT lo(SGP) == #CD && lo(SB) == #CD && CACHE_B+8*(1+NGROUPS) <= SB
 PRE_BATCH   EQU 12                      ; groups a piece at most (pre5, pre4)
+PRK_BATCH   EQU 8                       ; ... a level's (prk5: more work each)
 PRE_PUTS    EQU 7                       ; ... and bank 4 templates
 
 ;; pre5 - a piece: from group pre_g on, groups moved pre_s pairs as st5
 ;; moves them - those whose a moves on the list for pre4, their band B
-;; templates in STAGE_B - till PRE_PUTS templates are to be made in bank 4
-;; or PRE_BATCH groups are done. Destroys everything.
+;; templates in STAGE_B - till PRE_PUTS templates are to be made in bank 4,
+;; PRE_BATCH groups are done or the flip is near (JOB_LATE: a group and
+;; pre4's templates take up to ~1.3 ms, and the flip is 3.3 ms away then).
+;; prk5 - as pre5, the groups moved to the curve level cache_k + pre_k
+;; instead (j5_lv; no step), their shares for the bushes worked out afresh
+;; (j5_s0, into SGP), PRK_BATCH a piece (in cache.asm's rd_gfree: no room
+;; here). Destroys everything.
 pre5
+    ld a,(pre_s)
+    call st5_set
+    ld a,(pre_s)
+    ld l,a
+    ld a,PRE_BATCH
+    ld bc,st5_grp
+    ld de,p5_back
+p5_set                                  ; A = the groups, BC: each one's
+    ld (p5_bat+1),a                     ; work, DE: back from it, L = road_x's
+    ld (p5_more+1),bc                   ; move
+    ld (st5_end+1),de
+    ld a,(road_x)
+    add a,l
+    call gs_set_wa                      ; (the bias for road_x after it)
     ld a,(pre_g)
     or a
     jr nz,p5_go
@@ -548,18 +573,10 @@ pre5
     ld bc,NGROUPS
     ldir
 p5_go
-    ld a,(road_x)
-    ld hl,pre_s
-    add a,(hl)
-    call gs_set_wa                      ; (the bias for road_x after it)
-    ld a,(pre_s)
-    call st5_set
     ld a,st5_moved-st5_mvj-2
     ld (st5_mvj+1),a
-    ld a,#C3                            ; JP p5_back: one group
-    ld hl,p5_back
+    ld a,#C3                            ; JP p5_back, pk5_back: one group
     ld (st5_end),a
-    ld (st5_end+1),hl
     ld a,hi(STAGE_B)
     ld (tm_b_page+1),a
     ld a,hi(SGP)
@@ -571,20 +588,30 @@ p5_go
     ld a,(pre_g)
     add a,#CD
     ld l,a                              ; L: the first group's lane
-    add a,PRE_BATCH
+p5_bat
+    add a,0                             ; (self-modified: the groups)
     jr nc,$+3
     xor a                               ; (past the last: 0)
     ld (p5_end+1),a
-    ld ixh,0                            ; (the templates st5_tb is to make)
-    jp st5_grp
+    or a
+    jr p5_more
+pk5_back                                ; (a level's)
+    dec l
+    call j5_s0                          ; the group's share for the bushes
+    inc l
 p5_back
     ld a,l
 p5_end
     cp 0                                ; (self-modified: the lane after)
     jr z,p5_done
-    ld a,ixh
-    cp PRE_PUTS
-    jp c,st5_grp
+    ld a,(irq_n)
+    cp JOB_LATE
+    jr nc,p5_done                       ; the flip near
+    ld (rd_lsp),sp
+    ld a,(rd_lsp)
+    cp lo(rd_ltop-2-2*PRE_PUTS)+1       ; (the templates for bank 4 so far)
+p5_more
+    jp nc,st5_grp                       ; (self-modified: pk5_grp)
 p5_done
     ld (rd_lsp),sp
 p5_sp
@@ -597,11 +624,17 @@ p5_sp
     call z,st5_first                    ; the first group it moves, if none
     dec a                               ; yet
     ld (pre_g0),a
+    call pk5_last
     ld a,hi(CACHE_B)
     ld (tm_b_page+1),a
     ld a,hi(rd_gp)
     ld (st5_gp+1),a
+    ld (j5_gp+1),a
     ret
+pk5_grp
+    ld c,0                              ; (self-modified: the level +
+    call j5_lv                          ; CURVE_K)
+    jp st5_grp
 
 ;; undo5 - (cache_drop) the groups pre5 has moved put back: their A' moved
 ;; pre_s pairs the other way, their a's as SB has them. Destroys
@@ -643,6 +676,7 @@ u5_op2
 u5_end
     cp 0                                ; (self-modified)
     jr nz,u5_loop
+u5_ao
     ld hl,SB
     ld de,RA_AO
     ld bc,NGROUPS
@@ -656,6 +690,7 @@ cm5
     ld a,(pre_g0)
     cp 255
     call nz,st5_marka
+cm5_c
     ld hl,SGP
     ld de,rd_gp
     ld bc,NGROUPS
@@ -713,4 +748,39 @@ st5_first
     ret
 
 cache5_bank_end
-    ASSERT cache5_bank_end <= STAGE_B && STAGE_B+8*(1+NGROUPS) <= SGP
+    ASSERT cache5_bank_end <= STAGE_B
+
+;; ---------------------------------------------------------------------------
+;; In the room between STAGE_B's slots and SGP (undok5: in cache.asm's
+;; rd_gfree).
+;; ---------------------------------------------------------------------------
+    ORG STAGE_B+8*(1+NGROUPS)
+stage_room
+
+;; pk5_last - after a piece: pre_g1 = the last group on its list, if any (a
+;; level's last group moved: cmk5). Destroys AF, HL.
+pk5_last
+    ld hl,(rd_lsp)
+    ld a,(hl)                           ; 2 g (band 2's: + 2 NGROUPS)
+    cp #FE
+    ret z                               ; (the list's end: none)
+    cp 2*NGROUPS
+    jr c,$+4
+    sub 2*NGROUPS
+    srl a
+    ld (pre_g1),a
+    ret
+
+;; cmk5 - as cm5, for a curve level: the groups from the first whose a it
+;; moved to the last noted as moved for both buffers (cache_mark).
+cmk5
+    ld a,(pre_g0)
+    cp 255
+    jp z,cm5_c
+    call cache_mark
+    ld a,(pre_g1)
+    call cache_mark
+    jp cm5_c
+
+stage_room_end
+    ASSERT stage_room_end <= SGP

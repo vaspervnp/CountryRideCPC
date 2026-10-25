@@ -295,7 +295,8 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
 - **Worked out ahead.** So the next step - two pairs towards where the
   road is to go - is worked out in the time left before each flip, a
   piece at a time (`cache_pre`: up to 12 groups or 7 band A templates,
-  ~2.4 ms, up to ~2.8 ms), when no new curve level is being caught up with.
+  ~2.4 ms, up to ~2.8 ms), when no new curve level is to be worked out
+  first (below).
   Its templates go into a staging set in each bank, laid out as the cache
   set, and the bushes' shares into a staging table; the groups' sums move
   there and then, and are put back if the step is dropped (the road to go
@@ -303,8 +304,8 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   copies the staging sets into the cache sets: ~5 ms, so it can go after
   any picture done by the 10th interrupt. The staging sets are then the
   cache's, so the next one starts at once; after a step made there and
-  then, or a new curve level, they are made the cache's again first (two
-  pieces).
+  then, or a new curve level in the middle, they are made the cache's
+  again first (two pieces).
 - **Only when it fits.** A step made there and then - when none is worked
   out ahead - is made after a picture only if it is sure to be done before
   the flip, by the interrupts counted since the last one: up to the 6th (the
@@ -313,18 +314,31 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   picture. After a step the next picture of each buffer draws every near
   line's road and a margin of grass, and the far lines too unless the step
   left every far group where it was. Nothing moves after a picture whose hill
-  moved, nor while a hill is under the camera or near: three track entries
-  (96 depth units) ahead for a new curve level, two for a step sideways -
-  the two pictures a step makes heavy are done before the hill moves (at
+  moved, nor while a hill is under the camera or near: two track entries
+  (64 depth units) ahead, for a step sideways as for a new curve level -
+  the two pictures either makes heavy are done before the hill moves (at
   full speed an entry is ~3 pictures). Pictures whose hill moves are heavy
   enough: a step on top of one makes it late. On hilly track that, more
   than the steps' cost, holds steering back.
-- **A new curve level off the middle** is worked out a few groups of rows at
-  a time, in the time left before each flip; meanwhile pictures draw a
-  margin for the groups still a level behind. It waits on a hill or just
-  before one (the track has no curve on a hill: only a late level waits) -
-  a picture whose hill moves compares every line's row with the old one's,
-  and both together are too much.
+- **A new curve level off the middle** is worked out ahead the same way,
+  into the staging sets (`cache_want`, `prk5`): the level the track has
+  next - a level towards the game's, or with that reached, the track's as
+  far on as the car goes in 8 VSYNCs, about the time it takes - 3 groups a
+  piece (each group moved a level, placed, and its share for the bushes
+  worked out afresh: ~2 ms, up to ~3 ms). The road takes the level only
+  once it is ready, and then all of it at once, copied into place like a
+  step (~5 ms): no picture shows the road at two levels. Until then no
+  step goes - the level goes first. The next picture of each buffer draws
+  all of the road moved, ~10 ms more than the last one, so the level only
+  goes after a picture done by the 7th interrupt since its flip (~27 ms) -
+  one later for each further level the road is behind the track. In the
+  middle the curve levels' own
+  sets are drawn, so the level moves there and then, and the cache
+  follows a few groups at a time; the road leaves the middle only once it
+  has. A level waits on a hill or just before one (the track has no curve
+  on a hill: only a late level waits) - a picture whose hill moves
+  compares every line's row with the old one's, and both together are too
+  much.
 - **Drift.** A curve carries the car out of it: the curve level times the
   speed adds up, and every 48 of it is a pair outwards. Steering against it,
   the two cancel; with neither, the car ends up on the grass, up to 32 pairs
@@ -394,7 +408,7 @@ the HUD's plain background, so drawing is plain copying, never masking.
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
 crests, dips and curves, from the flip that starts a picture to the next
-flip being asked for, a picture takes about 27.3 ms of its 40 ms; 26.4 ms
+flip being asked for, a picture takes about 26.3 ms of its 40 ms; 25.7 ms
 with the player not steering, the curves carrying the car out. Roughly
 (measured before the road's last four lines were cut, which took off
 ~0.7 ms on average and up to ~1.5 ms):
@@ -408,15 +422,16 @@ with the player not steering, the curves carrying the car out. Roughly
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
 
-In 3000 pictures one runs past its flip in the demo, by 0.3 ms - a picture
-off the middle of the road while the cache catches up with a new curve
-level - and none with the player not steering or steering from side to
-side, the worst there taking 39.6 ms. (Before the road's last four lines
-were cut, 2, 1 and 3 did, by up to 1.3 ms: such pictures, or ones whose
-hill moved.) A sideways step (~5 ms copied into place, or up to ~14 ms
-made there and then), a batch of the cache's work (3 groups, up to ~3 ms)
-or a piece of the next step worked out ahead (up to ~2.8 ms) never runs past
-the flip.
+In 3000 pictures none runs past its flip in the demo or with the player
+not steering, the worst taking 39.6 ms; steering from side to side, one
+does, by 0.7 ms - the second picture of a new curve level off the middle,
+after a light one, with many grass-stripe lines to draw whole as well.
+(Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
+while the cache caught up with a new level.) A sideways step (~5 ms copied
+into place, or up to ~14 ms made there and then), a batch of the cache's
+work in the middle (3 groups, up to ~3 ms) or a piece of the next step or
+curve level worked out ahead (up to ~3.4 ms and ~5.4 ms: they stop when
+the flip is 3.3 ms away) never runs past the flip.
 
 ### Steering in numbers
 
@@ -426,10 +441,11 @@ the tools setting `steer_x` to 32 pairs either way in turn.
 
 | | Demo | Not steering | Side to side |
 |---|---|---|---|
-| a picture, on average | 27.3 ms | 26.4 ms | 28.8 ms |
-| the worst | 40.3 ms | 39.0 ms | 39.6 ms |
-| past the flip | 1 | 0 | 0 |
-| pairs the road moved a picture | 0.075 | 0.065 | 0.203 |
+| a picture, on average | 26.3 ms | 25.7 ms | 27.5 ms |
+| the worst | 39.6 ms | 39.6 ms | 40.7 ms |
+| past the flip | 0 | 0 | 1 |
+| pairs the road moved a picture | 0.073 | 0.056 | 0.175 |
+| curve levels the road is behind the track, off the middle | 0.49 | | 0.50 |
 
 The cache's work, each piece (the step worked out ahead and copied into
 place, or made there and then when there is none):
@@ -438,12 +454,21 @@ place, or made there and then when there is none):
 |---|---|---|
 | a step copied into place (two pairs) | 5.0 ms | 5.2 ms |
 | a step made there and then (two pairs) | 12.6 ms | 14.0 ms |
-| a piece of the next step worked out ahead | 2.4 ms | 2.8 ms |
-| the staging sets made the cache's again, a bank | 2.6 ms | 2.7 ms |
-| a batch of a new curve level's catching up (3 groups) | 2.1 ms | 2.9 ms |
+| a piece of the next step worked out ahead | 2.4 ms | 3.4 ms |
+| a piece of the next curve level worked out ahead | 3.3 ms | 5.4 ms |
+| the staging sets made the cache's again, a bank | 2.6 ms | 2.9 ms |
+| a batch of a new curve level in the middle (3 groups) | 2.1 ms | 3.0 ms |
 
-Steering across the road (30 runs from one side to the other): 0.185 pairs
-a picture (0.165 before the road's last four lines were cut); 0.110 with
+Working the levels out ahead has its price in steering: until a level the
+track has next is ready and copied into place no step goes, and on a
+curve's way in and out (a level every ~3 pictures at full speed) that is
+most of the time. Before, the road lagged the track's curve by about a
+level on average (1.06 / 1.19 off the middle, demo / side to side), and
+pictures showed it at two levels; now half that, and never.
+
+Steering across the road (30 runs from one side to the other): 0.164 pairs
+a picture (0.185 before the curve levels were worked out ahead, 0.165
+before the road's last four lines were cut); 0.110 with
 every step made there and then (10 runs, measured before the steps were
 always two pairs). The first run, from the flat start, went 0.62
 pairs a picture; the most there can be is one, two pairs every other
