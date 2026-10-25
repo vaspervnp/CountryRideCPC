@@ -603,9 +603,12 @@ rk_row                          ; A = #40 + row: its keys, 1 = held
     ret
 
 ;; ---------------------------------------------------------------------------
-;; set_palette - HL = 16 Gate Array colour bytes. Border black.
+;; set_palette - HL = 16 Gate Array colour bytes. Border black. Interrupts
+;; off meanwhile: irq_road selects the border to colour it, and between a
+;; pen's selection and its colour that left the pen as it was (black).
 ;; ---------------------------------------------------------------------------
 set_palette
+    di
     ld bc,#7F00
 set_palette_loop
     out (c),c                   ; select pen C
@@ -620,6 +623,7 @@ set_palette_loop
     out (c),a                   ; the border
     ld a,BORDER_HW
     out (c),a
+    ei
     ret
 
 ;; ---------------------------------------------------------------------------
