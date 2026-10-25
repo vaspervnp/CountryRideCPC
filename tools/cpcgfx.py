@@ -118,20 +118,25 @@ TOP_ROWS = 20               # character rows held in the first 16K page
 # which moves the sky and the mountains down with the road):
 HUD_H = 64                  # lines 0..63: the HUD on its single-colour ground
 BLOCK_BOTTOM = 152          # lines 64..151: the sky and the mountains, 11 rows
-ROAD_Y = 163                # lines 152..162: ground; 163..271: the road area
+ROAD_Y = 163                # lines 152..162: ground; 163..267: the road area
 ROAD_TOP_MIN = 163          # road 2/5 of the screen at most ...
 ROAD_TOP_MAX = 181          # ... and 1/3 at least
-ROAD_LINES = SCR_H - ROAD_Y         # 109 scanlines redrawn every frame
+ROAD_END = 268              # the road stops here: lines 268..271 stay black
+                            # (a monitor's edge hides them anyway)
+ROAD_LINES = ROAD_END - ROAD_Y      # 105 scanlines redrawn every frame
 
 # ---------------------------------------------------------------------------
 # The road.
 #
-# Flat road: screen line y (163..271) shows row r = y - 162, so r runs from
-# 1 (furthest) to 109 (nearest). A row's half-width grows linearly with r.
-# Hills move rows up and down the screen; see src/road.asm.
+# Flat road: screen line y (163..267) shows row r = y - 162, so r runs from
+# 1 (furthest) to 105 (nearest). A row's half-width grows linearly with r.
+# Hills move rows up and down the screen; see src/road.asm. The road's
+# shape is laid out over rows 1..ROWS, as if it went on to the screen's
+# last line; the last rows drawn are NEAR_ROW's.
 # ---------------------------------------------------------------------------
 
-ROWS = ROAD_LINES           # 109 rows
+ROWS = SCR_H - ROAD_Y       # 109 rows: the road's shape
+NEAR_ROW = ROAD_LINES       # 105: the nearest row drawn
 HORIZON_Y = ROAD_Y - 1      # row r sits on line HORIZON_Y + r when flat
 
 LANES = 4
@@ -433,7 +438,7 @@ def bush_row(zr):
         return 0
     z = (zr & ~1) + 1 if zr < 512 else (zr & ~7) + 4
     r = int(DEPTH_K / z + 0.5)
-    return r if BUSH_ROW_MIN <= r <= ROWS else 0
+    return r if BUSH_ROW_MIN <= r <= NEAR_ROW else 0
 
 
 def bush_sprite_of(size, r):

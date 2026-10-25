@@ -106,14 +106,14 @@ bush_reach
 bush_head
     defw bush_starts+0*4
 BUSH_COUNT    EQU 39
-CAR_Y         EQU 238   ; the car's top line
-CAR_TOP       EQU 7   ; its lines from there that differ from view to view
+CAR_Y         EQU 240   ; the car's top line
+CAR_TOP       EQU 20   ; its lines from there that differ from view to view
 ;; per car_view (straight, turning left, turning right): where the
 ;; car's first line's run ends in buffer 0, and its code
 car_views
-    defw #B397,car_code0
-    defw #B395,car_code1
-    defw #B399,car_code2
+    defw #83F7,car_code0
+    defw #83F9,car_code1
+    defw #83F7,car_code2
 
 ;; per curve level 0..CURVE_K: its centre table
 bush_cxs

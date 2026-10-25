@@ -15,6 +15,7 @@ import math
 import os
 
 from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
+                    ROAD_END, NEAR_ROW,
                     HORIZON_Y, road_shift, player_shift, curve_group,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
@@ -377,18 +378,19 @@ def level_hill(level):
 
 def project(hill, zcam=0):
     """Which row each road line shows: list of (row or None) for lines
-    ROAD_Y..SCR_H-1, top to bottom. None means the distant ground.
+    ROAD_Y..ROAD_END-1, top to bottom. None means the distant ground.
     Rows are laid down nearest first; a row that lands on or below the top
-    of what is already drawn is hidden behind it."""
-    line_row = [None] * (SCR_H - ROAD_Y)
-    max_y = SCR_H
+    of what is already drawn is hidden behind it. (Deep in a dip a row past
+    NEAR_ROW reaches the last line: NEAR_ROW stands in for it.)"""
+    line_row = [None] * (ROAD_END - ROAD_Y)
+    max_y = ROAD_END
     for r in range(ROWS, 0, -1):
         y = HORIZON_Y + r + hill_offset(r, hill)
         if y < ROAD_TOP_MIN:
             y = ROAD_TOP_MIN
         if y < max_y:
             for yy in range(y, max_y):
-                line_row[yy - ROAD_Y] = r
+                line_row[yy - ROAD_Y] = min(r, NEAR_ROW)
             max_y = y
             if y == ROAD_TOP_MIN:
                 break
@@ -416,11 +418,13 @@ def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS):
 
 def road_lines(hill, zcam, curve=0, x=0):
     """Lines ROAD_Y..SCR_H-1, the road bent by curve level `curve` and x
-    pairs right of the middle (cpcgfx.road_shift)."""
+    pairs right of the middle (cpcgfx.road_shift), down to ROAD_END; black
+    under it."""
     rows = project(hill, zcam)
     return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * road_shift(curve, r, x),
                       grass_pen(r, zcam))
-            if r else road_line(None, 0) for r in rows]
+            if r else road_line(None, 0) for r in rows] + \
+        [[PEN["BLACK"]] * SCR_W for _ in range(ROAD_END, SCR_H)]
 
 
 # ---------------------------------------------------------------------------
@@ -622,107 +626,44 @@ def draw_bushes(lines, y0, hill, zcam, curve, x=0):
 
 # ---------------------------------------------------------------------------
 # The player's car: a low, wide red sports car seen from behind - a rear
-# wing over a small rear window between buttresses, rounded shoulders, a
-# black grille across the back with the lights behind its slats, the body
-# shaded darker low on the sides, fat tyres - fixed in the middle of the
-# screen a little above the bottom (the monitor's edge can hide the last
-# lines) - the road moves under it. Each line is one run of whole pairs (4
-# pixels), like a bush's, so the engine draws it with PUSHes; it is drawn
-# last, over the road and the bushes. The road under it is drawn afresh
-# with every picture (or left as it was, car and all, when road_project
-# skips the line), so it needs no erasing. The grey at the ends of a few
-# runs is the asphalt's, rounding the corners.
+# wing over a small rear window between buttresses, a black grille across
+# the back with the lights behind its slats, the plate on a dark band, fat
+# tyres - fixed in the middle of the screen a little above the bottom (the
+# monitor's edge can hide the last lines) - the road moves under it.
+# Steering, it is seen turning, its nose that way: turning left, the
+# rear face a little narrower and its left flank in view. The views are
+# renders of a 3D model (tools/car3d.py, in Blender) made into rows of
+# pens by tools/mkcar.py: tools/carart.py. Each line is one run of whole
+# pairs (4 pixels), like a bush's, so the engine draws it with PUSHes; it
+# is drawn last, over the road and the bushes. The road under it is drawn
+# afresh with every picture (or left as it was, car and all, when
+# road_project skips the line), so it needs no erasing. The grey at the
+# ends of a run is the asphalt's, rounding it out to whole pairs.
 # ---------------------------------------------------------------------------
 
-CAR_W = 36                      # pixels (a line is whole pairs: 4 pixels)
-CAR_X = (SCR_W - CAR_W) // 2    # 78: byte 39
+from carart import CAR_ART, CAR_ART_LEFT  # noqa: E402
+
+CAR_W = len(CAR_ART[0])         # pixels: the same either side of the middle
+CAR_X = (SCR_W - CAR_W) // 2
 CAR_BOTTOM = SCR_H - 12         # the line below it
 CAR_PEN = dict(R="RED", O="ORANGE", Y="YELLOW", K="BLACK", G="GREY",
                W="WHITE", N="NAVY", S="SKY", D="CAR_DARK")
-
-
-def _car_sym(half):
-    """A line the same both sides: its left half, mirrored."""
-    assert len(half) == CAR_W // 2
-    return half + half[::-1]
-
-
-CAR_ART = [_car_sym(h) for h in (
-    "....KKKKKKKKKKKKKK",                                   # wing
-    "....KOOOOOOOOOOOOO",
-    "....KRRRRRRRRRRRRR",
-    "....KKKKKKKKKKKKKK",
-    "........GGKRKNNNSS",                                   # rear window
-    "........GKRRKNNSSN",                                   # and buttresses
-    "....GGKKRRRRKNSSNN",
-    "GGKKRRRRRRRKKKKKKK",                                   # deck
-    "KROOOOOOOOOOOOOOOO",
-    "KRRRRRRRRRRRRRRRRR",
-    "KDKKKKKKKKKKKKKKKK",                                   # grille, lights
-    "KDKRROYOKDDDDDDDDD",
-    "KDKKKKKKKKKKKKKKKK",
-    "KDKRROYOKDDDDDDDDD",
-    "KDKKKKKKKKKKKKKKKK",
-    "KDRRRRRRRRRRRKWWWW",                                   # plate
-    "KDDDDDDDDDDDDKWWWW",
-    "KKKKKKKKKKKKKKKKKK",                                   # diffuser
-    "KNNNNNKKKWWKKKKKKK",                                   # tyres, exhausts
-    "KNNNNNKKKGGKKKKKKK",
-    "KKKKKKKKKKKKKKKKKK",
-    "GKKKKKKGKKKKKKKKKK",
-)]
 CAR_H = len(CAR_ART)
 CAR_Y = CAR_BOTTOM - CAR_H      # its top line
-
-# Steering, it is seen turning (OutRun's way): turning left, its rear face
-# narrower and further left, its right flank in view and the cabin, further
-# forward, further left still. Turning right is the same mirrored.
-_TURN_REAR = [
-    "K" * 28,                                               # wing
-    "K" + "O" * 26 + "K",
-    "K" + "R" * 26 + "K",
-    "K" * 28,
-    None, None, None,                                       # (the cabin)
-    "GGKKRRRRR" + "K" * 12 + "RRRRRKK",                     # deck
-    "KR" + "O" * 24 + "RK",
-    "KR" + "R" * 24 + "RK",
-    "KD" + "K" * 24 + "DK",                                 # grille, lights
-    "KDKRROYOKDDDDDDDDDDKOYORRKDK",
-    "KD" + "K" * 24 + "DK",
-    "KDKRROYOKDDDDDDDDDDKOYORRKDK",
-    "KD" + "K" * 24 + "DK",
-    "KDRRRRRRRKWWWWWWWWKRRRRRRRDK",                         # plate
-    "KDDDDDDDDKWWWWWWWWKDDDDDDDDK",
-    "K" * 28,                                               # diffuser
-    "KNNNNNKKWWKKKKKKKKKKWWKKKNNK",                         # tyres, exhausts
-    "KNNNNNKKGGKKKKKKKKKKGGKKKNNK",
-    "K" * 28,
-    "GKKKKKKG" + "K" * 20,
-]
-_TURN_FLANK = [
-    "........", "........", "........", "KGGG....",
-    None, None, None,
-    "RRRKGGGG", "RRRRRKGG", "RRRRRRKG", "RRRRRRRK", "DRRRRRRK", "DRRRRRRK",
-    "DDRRRRRK", "DDDDRRRK", "DDDDDDDK", "DDDDDDDK", "KKKKKKKK",
-    "KNNNNNNK", "KNNNNNNK", "KKKKKKKK", "GKKKKKKG",
-]
-_TURN_CABIN = [
-    "....GGKRKNNNSSSSNNNKRKDGGGGG........",
-    "....GKRRKNNSSNNSSNNKRRKDDGGG........",
-    "GGKKRRRRKNSSNNNNSSNKRRRRKKGGDKGG....",
-]
-CAR_ART_LEFT = [_TURN_CABIN[i - 4] if r is None else r + _TURN_FLANK[i]
-                for i, r in enumerate(_TURN_REAR)]
 CAR_ART_RIGHT = [r[::-1] for r in CAR_ART_LEFT]
 CAR_ARTS = [CAR_ART, CAR_ART_LEFT, CAR_ART_RIGHT]   # car_view 0, 1, 2
+assert CAR_W % 4 == 0 and CAR_X % 2 == 0
 assert all(len(a) == CAR_H and all(len(r) == CAR_W for r in a) for a in CAR_ARTS)
 
 
 def car_runs(view=0):
     """The car's lines as a bush sprite's: (first byte from the car's left,
-    the bytes of its run)."""
+    the bytes of its run) - (0, []) for a line the view leaves empty."""
     out = []
     for row in CAR_ARTS[view]:
+        if not row.strip("."):
+            out.append((0, []))
+            continue
         a = min(i for i, c in enumerate(row) if c != ".")
         b = max(i for i, c in enumerate(row) if c != ".") + 1
         assert a % 4 == 0 and b % 4 == 0 and "." not in row[a:b]

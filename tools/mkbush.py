@@ -52,9 +52,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAG_LEN = 0x2C0
 FRAG_FIRST = 8                  # fragments 8-15: page 2, #x540-#x7FF
 FRAG_COUNT = 8
-CODE_CHUNKS = [0x4600 + 0x800 * b for b in range(7)]   # page 1 gaps (the
-                                # eighth, #7E00, is the cache's: cache.asm)
-CHUNK_LEN = 0x200
+CODE_CHUNKS = [0x4600 + 0x800 * b for b in range(8)]   # page 1 gaps (the
+CHUNK_LENS = [0x200] * 7 + [0x100]      # eighth's first half, #7E00, is the
+                                        # cache's: cache.asm)
 SINFO_FIELDS = ["half width", "width", "first line's end", "height",
                 "how its box is erased", "code", "data"]
 
@@ -147,9 +147,10 @@ def line_addr(y):
 def car_code(spans, y0, x0):
     """The car as code: lines (first byte, bytes) from line y0, byte x0 -
     always there, so each line's step is known, a character row's end and
-    all. Entered with HL at the right end of the first line's run; after a
-    line SP is at the left end of its run, and the next line's right end is
-    SP + its step (LD HL / ADD HL,SP / LD SP,HL). Some registers hold the
+    all. Entered with HL at the right end of the first line's run (lines
+    with none are passed over); after a line SP is at the left end of its
+    run, and the next line's right end is SP + its step (LD HL / ADD HL,SP
+    / LD SP,HL). Some registers hold the
     most used pairs throughout (loaded once), the others are loaded as
     needed - the one whose pair is needed again last (HL's is gone at the
     next line); the quickest way of those tried. Interrupts get one
@@ -158,7 +159,9 @@ def car_code(spans, y0, x0):
     lines = []                          # (run's right end, its bytes, pairs
     for i, (a, data) in enumerate(spans):   # right to left)
         n = len(data)
-        assert n and not n & 1
+        assert not n & 1
+        if not n:
+            continue
         lines.append((line_addr(y0 + i) + x0 + a + n, n,
                       [data[n - 1 - 2 * j] << 8 | data[n - 2 - 2 * j]
                        for j in range(n // 2)]))
@@ -245,7 +248,7 @@ class Chunks:
         self.out = [[] for _ in CODE_CHUNKS]
 
     def room(self):
-        return CHUNK_LEN - self.used[self.cur]
+        return CHUNK_LENS[self.cur] - self.used[self.cur]
 
     def code(self, label, code):
         if self.room() < 8:             # (no room to start, or to jump on)
@@ -265,7 +268,7 @@ class Chunks:
         if self.cur + 1 >= len(CODE_CHUNKS):
             raise SystemExit("bushes: no room left in page 1 for the code")
         if jump:
-            self.out[self.cur].append("    jp #%04X" % CODE_CHUNKS[self.cur + 1])
+            self.out[self.cur].append("    jp #%04X" % self.start(self.cur + 1))
             self.used[self.cur] += 3
         self.cur += 1
 
@@ -274,7 +277,7 @@ class Chunks:
         (before any code)."""
         n = 2 * len(words)
         for c in range(len(CODE_CHUNKS)):
-            if CHUNK_LEN - self.used[c] >= n:
+            if CHUNK_LENS[c] - self.used[c] >= n:
                 self.out[c].append(label)
                 for j in range(0, len(words), 8):
                     self.out[c].append("    defw " + ",".join(words[j:j + 8]))
@@ -285,7 +288,7 @@ class Chunks:
     def bytes(self, label, comment, data):
         """Bytes, in one piece, in the first chunk with room left."""
         for c in range(len(CODE_CHUNKS)):
-            if CHUNK_LEN - self.used[c] >= len(data):
+            if CHUNK_LENS[c] - self.used[c] >= len(data):
                 self.out[c].append("%s   ; %s" % (label, comment))
                 for j in range(0, len(data), 16):
                     self.out[c].append("    defb " + ",".join("#%02X" % v
@@ -295,7 +298,12 @@ class Chunks:
         raise SystemExit("bushes: no room left for " + label)
 
     def free(self):
-        return sum(CHUNK_LEN - u for u in self.used)
+        return sum(n - u for n, u in zip(CHUNK_LENS, self.used))
+
+    @staticmethod
+    def start(c):
+        """Where chunk c's room starts: the eighth's second half."""
+        return CODE_CHUNKS[c] + 0x200 - CHUNK_LENS[c]
 
 
 # --- the fragments ----------------------------------------------------------
@@ -505,9 +513,9 @@ def main():
     for c, chunk in enumerate(CODE_CHUNKS):
         if not ch.out[c]:
             continue
-        lines.append("    ORG #%04X" % chunk)
+        lines.append("    ORG #%04X" % ch.start(c))
         lines += ch.out[c]
-        lines.append("    ASSERT $ <= #%04X" % (chunk + CHUNK_LEN))
+        lines.append("    ASSERT $ <= #%04X" % (chunk + 0x200))
     open(os.path.join(ROOT, "src", "gen", "bushcode.asm"), "w").write(
         "\n".join(lines) + "\n")
 
@@ -633,8 +641,8 @@ def main():
     emit(";; car's first line's run ends in buffer 0, and its code")
     emit("car_views")
     for v in range(3):
-        a0, d0 = S.car_runs(v)[0]
-        end0 = line_addr(S.CAR_Y) + S.CAR_X // 2 + a0 + len(d0)
+        y, (a0, d0) = next((y, r) for y, r in enumerate(S.car_runs(v)) if r[1])
+        end0 = line_addr(S.CAR_Y + y) + S.CAR_X // 2 + a0 + len(d0)
         emit("    defw #%04X,car_code%d" % (end0, v))
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")

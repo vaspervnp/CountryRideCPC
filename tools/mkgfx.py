@@ -53,7 +53,8 @@ def consts():
     emit(";; screen and road geometry")
     for name in ("SCR_W", "SCR_BYTES", "SCR_H", "TOP_ROWS", "HUD_H",
                  "BLOCK_BOTTOM", "ROAD_Y", "ROAD_TOP_MIN", "ROAD_TOP_MAX",
-                 "ROAD_LINES", "ROWS", "HORIZON_Y", "HALF_MAX", "MIN_HALF",
+                 "ROAD_END", "ROAD_LINES", "ROWS", "NEAR_ROW", "HORIZON_Y",
+                 "HALF_MAX", "MIN_HALF",
                  "BAND_SHIFT", "FAR_Z"):
         emit("%-13s EQU %d" % (name, getattr(G, name)))
     far = max(r for r in range(1, G.ROWS + 1) if G.row_depth(r) > G.FAR_Z)
@@ -66,6 +67,8 @@ def consts():
          % S.PANO_WORDS)
     emit("ROAD_AREA_Y   EQU %d   ; first line of the road part's memory"
          % S.ROAD_AREA_Y)
+    emit("LAST_Y        EQU %d   ; the road's last line, from ROAD_AREA_Y"
+         % (G.ROAD_END - 1 - S.ROAD_AREA_Y))
     emit("")
     emit("BORDER_HW     EQU #%02X" % (0x40 + G.FIRMWARE[G.BORDER_FW][0]))
     emit(";; the border where the ruptures show it: above the sky, below the")

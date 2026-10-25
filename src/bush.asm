@@ -55,9 +55,9 @@ SI_CODE     EQU 6                       ; its code
 SI_DATA     EQU 8                       ; its lines as data
 
 bd_rec      defw 0                      ; where the next erase record goes
-bd_ranges   defb 111,0,111,0            ; per buffer: the first and last line
+bd_ranges   defb LAST_Y,0,LAST_Y,0      ; per buffer: the first and last line
                                         ; (from ROAD_AREA_Y) its bushes on the
-                                        ; inside stood on (none: 111, 0)
+                                        ; inside stood on (none: LAST_Y, 0)
 bd_k        defb #7F                    ; the curve level of the last picture
                                         ; (#7F: none yet)
 
@@ -123,7 +123,7 @@ bush_erase
     call bd_range_ptr
     ld a,(hl)
     ld (rp_dlo),a
-    ld (hl),111
+    ld (hl),LAST_Y
     inc hl
     ld a,(hl)
     ld (rp_dhi),a
@@ -706,10 +706,10 @@ bush_next_row
 ;; buffer last showed the car seen another way (car_view), the lines at its
 ;; top where the views' runs differ (CAR_TOP) are drawn whole - else what
 ;; the old view had there and the new one has not would stay on any of them
-;; road_project left as it was. Line ROAD_AREA_Y + y is entry 111 - y.
+;; road_project left as it was. Line ROAD_AREA_Y + y is entry LAST_Y - y.
 ;; Destroys AF, B, DE, HL.
 ;; ---------------------------------------------------------------------------
-    ASSERT SCR_H-1-ROAD_AREA_Y == 111 && CAR_TOP > 0
+    ASSERT CAR_TOP > 0 && CAR_Y+CAR_TOP <= ROAD_END
 car_lines
     ld hl,drawn_view
     call buf_entry
@@ -718,7 +718,7 @@ car_lines
     ret z
     ld (hl),a
     ld hl,(rp_slot)
-    ld de,4*(111-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
+    ld de,4*(LAST_Y-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
     add hl,de
     ld e,4
     ld b,CAR_TOP

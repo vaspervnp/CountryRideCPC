@@ -46,8 +46,10 @@ BLOCK_BOTTOM  EQU 152
 ROAD_Y        EQU 163
 ROAD_TOP_MIN  EQU 163
 ROAD_TOP_MAX  EQU 181
-ROAD_LINES    EQU 109
+ROAD_END      EQU 268
+ROAD_LINES    EQU 105
 ROWS          EQU 109
+NEAR_ROW      EQU 105
 HORIZON_Y     EQU 162
 HALF_MAX      EQU 50
 MIN_HALF      EQU 2
@@ -58,6 +60,7 @@ MOUNT_TOP     EQU 106   ; first line of the mountain strip
 PANO_Y0       EQU 104   ; first line of the panorama (a character row)
 PANO_WORDS    EQU 96   ; panorama width in CRTC words (4 pixels)
 ROAD_AREA_Y   EQU 160   ; first line of the road part's memory
+LAST_Y        EQU 107   ; the road's last line, from ROAD_AREA_Y
 
 BORDER_HW     EQU #54
 ;; the border where the ruptures show it: above the sky, below the

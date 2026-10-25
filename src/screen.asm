@@ -170,6 +170,13 @@ draw_static
     ld de,SOLID_GROUND*#101
     call fill_lines
 
+    ; under the road, the screen's last lines: black (the road stops at
+    ; ROAD_END)
+    ld hl,ROAD_END
+    ld b,SCR_H-ROAD_END
+    ld de,SOLID_BLACK*#101
+    call fill_lines
+
     ; the labels
     ld ix,lbl_time
     ld bc,TIME_LBL_X*256+TIME_LBL_Y

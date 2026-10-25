@@ -43,7 +43,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from functools import lru_cache
-from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, FAR_Z, far_mask, m0_byte, m0_solid,
+from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, NEAR_ROW, ROAD_END, ROAD_LINES,
+                    FAR_Z, far_mask, m0_byte, m0_solid,
                     road_row_pixels, row_half_bytes, row_depth, SCR_BYTES,
                     ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
                     curve_c1, curve_d, road_shift, shift_tau, CURVE_ROW_GROUPS, PERSP_P,
@@ -208,7 +209,9 @@ def cache_template(variants, band, half, row, k, x):
 
 def template_groups():
     """The groups of rows a template set has a template for: (kind, group,
-    bands, half, the group's first row), kind 'near' or 'far'."""
+    bands, half, the group's first row), kind 'near' or 'far'. (The last
+    groups, past NEAR_ROW, are never drawn: the cache's loops need its lanes
+    to run up to 256 - cache5.asm.)"""
     rows = range(1, ROWS + 1)
     near = list(dict.fromkeys(curve_group(r) for r in rows))
     far = list(dict.fromkeys(curve_group(r) for r in rows if row_depth(r) > FAR_Z))
@@ -491,7 +494,7 @@ def main():
             emit("    defb " + ",".join(vals[i:i + 8]))
 
     tl, dp, mk, th, tl2, th2 = [], [], [], [], [], []
-    for r in range(ROWS + 1):
+    for r in range(NEAR_ROW + 1):
         if r == 0:
             a = TMPL_A + soff[("ground", None)]
             tl.append("#%02X" % (a & 0xFF))
@@ -513,7 +516,7 @@ def main():
             th2.append("0")
         dp.append(str(row_depth(r) & 0xFF))
         mk.append(str(far_mask(r)))
-    emit(";; Per row r (1..%d; 0 = the ground), page-aligned so a row is an" % ROWS)
+    emit(";; Per row r (1..%d; 0 = the ground), page-aligned so a row is an" % NEAR_ROW)
     emit(";; index and the next array is INC H away. The stripe or dash a row")
     emit(";; is in is (depth + camera) AND mask, which needs only low bytes.")
     emit(";; The templates are the row's group's in the first curve level's set:")
@@ -521,7 +524,7 @@ def main():
     emit(";; TMPL_B - TMPL_A = #2000 above band 0 - mask 64 rotated right once is")
     emit(";; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and")
     emit(";; band 0's or band 2's template.")
-    assert far_mask(ROWS) == 64 and (TMPL_B - TMPL_A) >> 8 == 64 >> 1
+    assert far_mask(NEAR_ROW) == 64 and (TMPL_B - TMPL_A) >> 8 == 64 >> 1
     page("rr_tlo", tl, "band 0 template, low byte")
     emit("    defs 128-%d,0" % len(tl))
     emit("rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;")
@@ -538,8 +541,8 @@ def main():
     emit(";; the end of that line, relative to the bottom half's base (#8000 for")
     emit(";; buffer 0, #0000 for buffer 1).")
     emit("line_ends")
-    for k in range(ROWS):
-        y = 271 - k
+    for k in range(ROAD_LINES):
+        y = ROAD_END - 1 - k
         off = (y & 7) * 0x800 + ((y >> 3) - 20) * 96 + 96
         emit("    defw #%04X   ; line %d" % (off, y))
 

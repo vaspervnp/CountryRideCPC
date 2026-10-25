@@ -70,7 +70,8 @@ On the flat it is:
 | 0–63 | ~1/4 | HUD on navy: TIME, SPEED gauge with the gear (N–6), TOTAL TIME, FUEL gauge |
 | 64–151 | ~1/3 | dithered sky fading into the HUD colour, snowy mountains |
 | 152–162 | | a band of ground |
-| 163–271 | 2/5 … 1/3 | the road: 109 lines on the flat, 91 behind a crest |
+| 163–267 | 2/5 … 1/3 | the road: 105 lines on the flat, 87 behind a crest |
+| 268–271 | | black: a monitor's edge hides these, and drawing them took ~0.7 ms a picture |
 
 The road's top rises and falls between 2/5 and 1/3 of the screen, and the
 horizon goes with it. When a crest hides the far road, the sky and the
@@ -98,10 +99,14 @@ Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
 
-The car is a red sports car seen from behind, 36 pixels wide and 22 lines
-high, a little above the bottom of the screen: a rear wing, fat tyres, the
-lights behind a black grille. Steering, it is seen turning, OutRun's way:
-its rear face narrower and further over, a flank in view.
+The car is a red sports car seen from behind, low down, 36 pixels wide
+(44 turning) and 20 lines high, a little above the bottom of the screen: a
+rear wing over the rear window, the lights behind a black grille, fat
+tyres standing out past the body. Steering, it is seen turning, OutRun's
+way: turning left, it turns about its rear axle, its nose going left, the
+left flank and the hubs of its tyres in view. The views are renders of a
+3D model (`tools/car3d.py`, in Blender), turned into the game's pens by
+`tools/mkcar.py`.
 
 ## How it works
 
@@ -188,14 +193,16 @@ page 0, and the eight in page 2 hold the bushes' tables and their sprites as
 data (one in page 0 is free). `src/hw.asm` has the whole map.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block; the other
-512 bytes of each block hold the bush sprites as code - the last block's,
-at `#7E00`, the part of the road cache's work that runs with RAM C1.
+512 bytes of each block hold the bush sprites and the car as code - the
+last block's first half, at `#7E00`, the part of the road cache's work
+that runs with RAM C1.
 `BOOT.BIN` is loaded at `#4000`, so it carries that code where it runs, and
 the fragments, which it copies out, two to a block where the HUDs go later.
 
 ### The road
 
-The road is made of 109 rows. Each row has a depth, and its stripe band is a
+The road is made of 105 rows (its shape is laid out over 109, as if it went
+on to the screen's last line). Each row has a depth, and its stripe band is a
 bit of (depth + camera position). For every row width, band and pixel parity,
 `tools/mkroad.py` generates straight-line code that draws the row with
 `PUSH` instructions:
@@ -233,7 +240,8 @@ levels, so a hill costs nothing extra per frame.
 
 A curve has a level from −7 (sharp left) to +7 (sharp right). At level *k*,
 row *r* moves sideways by *k*/7 × 64 × ((109 − *r*)/108)² bytes: a parabola,
-nothing at the bottom and 128 pixels at the horizon at the sharpest. Moving
+nothing at the screen's bottom and 128 pixels at the horizon at the
+sharpest. Moving
 a row only changes its template: the grass on each side, where the code is
 entered or cut short, and, for an odd number of bytes, the code for the
 other pixel parity.
@@ -322,10 +330,11 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   the two cancel; with neither, the car ends up on the grass, up to 32 pairs
   (128 pixels) either way.
 - **The car** is three compiled sprites like the bushes' (below): straight,
-  turning left and its mirror. They differ only in their top 7 lines, and a
-  buffer that last showed another view has those lines drawn whole. The
-  straight and the left one are in page 1, the right one in the page 2
-  fragments.
+  turning left and its mirror. Their lines' runs differ, so a buffer that
+  last showed another view has the car's lines drawn whole (up to 2 ms
+  more, on the pictures where the view changes). Seen turning, the car is
+  bigger: 1.3 ms to draw instead of 1.1. The straight and the left one are
+  in page 1, the right one in the page 2 fragments.
 
 ### Bushes
 
@@ -385,8 +394,10 @@ the HUD's plain background, so drawing is plain copying, never masking.
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
 crests, dips and curves, from the flip that starts a picture to the next
-flip being asked for, a picture takes about 28 ms of its 40 ms; 27.5 ms with
-the player not steering, the curves carrying the car out. Roughly:
+flip being asked for, a picture takes about 27.3 ms of its 40 ms; 26.4 ms
+with the player not steering, the curves carrying the car out. Roughly
+(measured before the road's last four lines were cut, which took off
+~0.7 ms on average and up to ~1.5 ms):
 
 - road drawing: ~21.5 ms (~22.7 ms when the hill moves, ~27.6 ms when the
   curve level changes);
@@ -397,10 +408,12 @@ the player not steering, the curves carrying the car out. Roughly:
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
 
-In the demo 2 pictures in 3000 ran past their flip, with the player not
-steering 1, steering from side to side 3; by up to 1 ms: pictures off the
-middle of the road while the cache catches up with a new curve level, or
-whose hill moved. A sideways step (~5 ms copied into place, or up to ~14 ms
+In 3000 pictures one runs past its flip in the demo, by 0.3 ms - a picture
+off the middle of the road while the cache catches up with a new curve
+level - and none with the player not steering or steering from side to
+side, the worst there taking 39.6 ms. (Before the road's last four lines
+were cut, 2, 1 and 3 did, by up to 1.3 ms: such pictures, or ones whose
+hill moved.) A sideways step (~5 ms copied into place, or up to ~14 ms
 made there and then), a batch of the cache's work (3 groups, up to ~3 ms)
 or a piece of the next step worked out ahead (up to ~2.8 ms) never runs past
 the flip.
@@ -413,10 +426,10 @@ the tools setting `steer_x` to 32 pairs either way in turn.
 
 | | Demo | Not steering | Side to side |
 |---|---|---|---|
-| a picture, on average | 28.0 ms | 27.3 ms | 29.0 ms |
-| the worst | 40.7 ms | 40.6 ms | 41.0 ms |
-| past the flip | 2 | 1 | 3 |
-| pairs the road moved a picture | 0.074 | 0.057 | 0.179 |
+| a picture, on average | 27.3 ms | 26.4 ms | 28.8 ms |
+| the worst | 40.3 ms | 39.0 ms | 39.6 ms |
+| past the flip | 1 | 0 | 0 |
+| pairs the road moved a picture | 0.075 | 0.065 | 0.203 |
 
 The cache's work, each piece (the step worked out ahead and copied into
 place, or made there and then when there is none):
@@ -429,9 +442,10 @@ place, or made there and then when there is none):
 | the staging sets made the cache's again, a bank | 2.6 ms | 2.7 ms |
 | a batch of a new curve level's catching up (3 groups) | 2.1 ms | 2.9 ms |
 
-Steering across the road (10 runs from one side to the other): 0.178 pairs
-a picture - 0.110 with every step made there and then (measured before the
-steps were always two pairs). The first run, from the flat start, went 0.62
+Steering across the road (30 runs from one side to the other): 0.185 pairs
+a picture (0.165 before the road's last four lines were cut); 0.110 with
+every step made there and then (10 runs, measured before the steps were
+always two pairs). The first run, from the flat start, went 0.62
 pairs a picture; the most there can be is one, two pairs every other
 picture. Holding a key (the road at most two pairs behind): 0.149 pairs a
 picture, changing direction every 20 pictures; 0.156 every 60. The demo
@@ -536,11 +550,14 @@ tools/
   scene.py      the reference model of the whole screen
   mkgfx.py      HUD, sky and mountain graphics -> src/gen/
   mkroad.py     the generated road code, templates and tables -> src/gen/
+  car3d.py      the car as a 3D model: run in Blender, it renders the views
+                -> assets/car/
+  mkcar.py      the car's views as the game's pens -> tools/carart.py
   mkbush.py     the bushes along the track, their sprites (as code and as
-                data) and tables -> src/gen/
+                data), the car as code, and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
-assets/         fonts
+assets/         fonts, the car's renders
 disc/           BASIC loader
 docs/           screenshots
 ```

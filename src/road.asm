@@ -6,8 +6,10 @@
 ;; road_project writes, for every road line, the template of the row of road
 ;; that line shows into the line list; road_draw (common.asm) then draws it.
 ;;
-;; The road is made of ROWS rows. On a flat road row r is on line
-;; HORIZON_Y+r, so row 109 is the bottom line and row 1 the furthest. A row
+;; The road is made of rows 1..NEAR_ROW (its shape laid out over ROWS, as
+;; if it went on to the screen's last line). On a flat road row r is on line
+;; HORIZON_Y+r, so row NEAR_ROW is on the road's last line, ROAD_END - 1,
+;; and row 1 the furthest. A row
 ;; knows its depth and its width, and so its template: the stripe band is
 ;; bit 6 of (depth + zcam).
 ;;
@@ -455,8 +457,8 @@ be_prep_one
     sbc hl,de
     srl h
     rr l
-    srl l                               ; entries: line ROAD_AREA_Y + 112 - it
-    ld a,113
+    srl l                               ; entries: line ROAD_AREA_Y + LAST_Y
+    ld a,LAST_Y+2                       ; + 1 - it
     sub l
     ld (ix+0),a                         ; the line below it
     pop hl

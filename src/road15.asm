@@ -177,7 +177,7 @@ rp_rows_r
     jr nc,$+3
     ld a,b
     ld (rp_skip_r+1),a
-    cp ROWS+1
+    cp NEAR_ROW+1
     ld a,0
     adc a,a                             ; 1 if a row is left
     ld (rp_skip),a

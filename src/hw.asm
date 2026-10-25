@@ -50,7 +50,8 @@ CRTC_R9     EQU 7           ; 8 lines per character row
 ;;           characters (2K) when MA10/MA11 are 0, so moving the start address
 ;;           a character scrolls the sky a word (4 pixels) for good, and only
 ;;           the column that comes in has to be written (ring_turn).
-;;   road    14 rows, lines 160-271: three lines of ground, then the road.
+;;   road    14 rows, lines 160-271: three lines of ground, the road to
+;;           line ROAD_END - 1 (267), then four black lines.
 ;;           Page 2 (buffer 0, #8000) or page 0 (buffer 1, #0000), as the
 ;;           road engine in banks 4 and 5 needs: those two are mapped in every
 ;;           configuration the game uses. The rest of each 2K block holds the

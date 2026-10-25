@@ -105,18 +105,17 @@ cb_hl
 ;; rp_force - after rp_near_skip (road15.asm): the near lines a bush on the
 ;; inside stood on (rp_dlo..rp_dhi) that it skipped get their road drawn
 ;; after all - taking the bush away put grass there: flag 3 becomes 1.
-;; Line ROAD_AREA_Y + y is entry 111 - y. Keeps BC, DE.
+;; Line ROAD_AREA_Y + y is entry LAST_Y - y. Keeps BC, DE.
 ;; ---------------------------------------------------------------------------
-    ASSERT SCR_H-1-ROAD_AREA_Y == 111
 rp_force
     ld a,(rp_dhi)
     cpl
-    add a,112
-    ld l,a                              ; L = the first entry, 111 - rp_dhi
+    add a,LAST_Y+1
+    ld l,a                              ; L = the first entry, LAST_Y - rp_dhi
     ld a,(rp_dlo)
     cpl
-    add a,112
-    ld h,a                              ; H = the last, 111 - rp_dlo ...
+    add a,LAST_Y+1
+    ld h,a                              ; H = the last, LAST_Y - rp_dlo ...
     ld a,(rp_near)
     dec a
     cp h
@@ -414,8 +413,9 @@ cache5_end
     ASSERT cache5_end <= FRAG5+FRAG_LEN
 
 ;; ===========================================================================
-;; Page 1, beside the HUDs: the eighth chunk tools/mkbush.py leaves for this
-;; (seen with RAM_C1 only) - the cache's work that runs in RAM_C1.
+;; Page 1, beside the HUDs: the first half of the eighth chunk, which
+;; tools/mkbush.py leaves for this (seen with RAM_C1 only) - the cache's
+;; work that runs in RAM_C1.
 ;; ===========================================================================
     ORG #7E00
 cache1_start
@@ -530,4 +530,4 @@ cache_hill
     jp cache_steps_x
 
 cache1_end
-    ASSERT cache1_end <= #8000
+    ASSERT cache1_end <= #7F00
