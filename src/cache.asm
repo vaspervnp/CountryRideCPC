@@ -40,7 +40,7 @@
 frag6_start
 
 road_x      defb 0          ; the road's pairs right of the middle, signed
-                            ; and even (cache_step: two pairs a step)
+                            ; and even (cache_step: 2 or 4 pairs a step)
 cache_k     defb 0          ; curve level the cache is made for (cache_curve)
 rd_s        defb 0          ; road_x's step (cache_step)
 rd_kdir     defb 0          ; cache_k's last step: 1 or -1
@@ -48,7 +48,7 @@ rd_n2       defb 0          ; groups still to be put at cache_k
 rd_next     defb 0          ; the group the next batch looks at first
 job_left    defb 0          ; (job5: groups still to put at cache_k)
 rd_lsp      defw 0          ; the list's first word (rd_list, st5, job5)
-pre_s       defb 0          ; the step worked out ahead (cache_pre): 1 or 2
+pre_s       defb 0          ; the step worked out ahead (cache_pre): 2 or 4
                             ; either way, 0 none
 pre_g       defb 0          ; the groups it has gone through (pre5)
 pre_sync    defb 0          ; the staging sets the cache's: bit 0 STAGE_B
@@ -56,7 +56,7 @@ pre_sync    defb 0          ; the staging sets the cache's: bit 0 STAGE_B
 pre_g0      defb 0          ; the first group whose a it moves (255: none)
 
 ;; ---------------------------------------------------------------------------
-;; cache_step - A = 1 or 2 either way: road_x that many pairs on, and the
+;; cache_step - A = 2 or 4 either way: road_x that many pairs on, and the
 ;; cache with it - the step worked out ahead copied into place if there is
 ;; one (cm5, cm4: cache_ready lets no other through then), else worked out
 ;; there and then (st5, st4). RAM_C1 in and out. Destroys everything.
@@ -108,9 +108,10 @@ cb_hl
     jp (hl)
 
 ;; ---------------------------------------------------------------------------
-;; rp_force - after rp_near_skip (road15.asm): the near lines a bush on the
-;; inside stood on (rp_dlo..rp_dhi) that it skipped get their road drawn
-;; after all - taking the bush away put grass there: flag 3 becomes 1.
+;; rp_force - after rp_near_skip (road15.asm) or rp_line_cmp: the near
+;; lines a bush on the inside stood on (rp_dlo..rp_dhi) that were skipped
+;; get their road drawn after all - taking the bush away put grass there:
+;; flag 3 becomes 1 (or 2: rp_flag2_road); the others stay as they are.
 ;; Line ROAD_AREA_Y + y is entry LAST_Y - y. Keeps BC, DE.
 ;; ---------------------------------------------------------------------------
 rp_force
@@ -141,6 +142,8 @@ rp_force
     add hl,de
     ld de,4
 rp_force_line
+    bit 0,(hl)
+    jr z,$+4                            ; (flags 0 and 2)
 rp_force_res
     res 1,(hl)                          ; (self-modified: RES 0 - rp_flag2)
     add hl,de
@@ -241,17 +244,7 @@ cache_curve
     ld (rd_kdir),a
     ld a,(road_curve)
     ld (cache_k),a
-;; cache_all - every group to be put at cache_k (cache_init too)
-cache_all
-    ld hl,rd_gk
-    ld b,NGROUPS
-cl_loop
-    set 1,(hl)
-    inc l
-    djnz cl_loop
-    ld a,NGROUPS
-    ld (rd_n2),a
-    ret
+    jp cache_all                ; (rd_gfree)
 
 pre_k       defb 0          ; the work ahead is a curve level: cache_k + 1
                             ; or - 1 (pre_s 0); 0 a step
@@ -340,6 +333,18 @@ uk5_loop
     ld a,(irq_n)
     cp JOB_LATE
     jr c,uk5_loop
+    ret
+
+;; cache_all - every group to be put at cache_k (cache_curve, cache_init)
+cache_all
+    ld hl,rd_gk
+    ld b,NGROUPS
+cl_loop
+    set 1,(hl)
+    inc l
+    djnz cl_loop
+    ld a,NGROUPS
+    ld (rd_n2),a
     ret
 
 rd_gfree_end
@@ -514,7 +519,7 @@ cr_no
 ;; ---------------------------------------------------------------------------
 ;; cache_pre - (cache_job, with no groups to put at cache_k) the curve level
 ;; the road is to take next off the middle (cache_want), or else the step
-;; road_x is to take next, two pairs towards steer_x if it is that far,
+;; road_x is to take next towards steer_x (cp_pend: up to four pairs),
 ;; worked out ahead a piece at a time (each up to ~3 ms, as a batch of
 ;; jobs): the staging sets made the cache's first if they are not (rs5,
 ;; then rs4), then PRE_BATCH groups a piece (pre5, pre4) - PRK_BATCH for a
@@ -526,6 +531,9 @@ cache_pre
     call cache_want
     or a
     jr z,cp_step
+    call cp_turn                        ; (player.asm) a step's turn: first
+    jr c,cp_step                        ; (the hill holds the level back)
+    jr nz,cp_take
     ld hl,pre_k
     cp (hl)
     jr z,cp_work                        ; that level, under way
@@ -540,18 +548,9 @@ cp_step
     ld a,(pre_k)
     or a
     jp nz,cache_drop                    ; a level no longer wanted
-    ld a,(road_x)
-    ld b,a
-    ld a,(steer_x)
-    sub b
+    call cp_pend
     ret z                               ; none to take
-    ld b,2
-    call clamp_ab
-    ld e,a
-    inc a
-    and #FD
-    ret z                               ; (a pair: none - two a step)
-    ld a,e
+cp_take
     ld hl,pre_s
     ld e,(hl)
     inc e
@@ -629,6 +628,7 @@ cache_kstep
     ld (cache_k),a
     ld a,2
     ld (curve_wait),a
+    ld (step_turn),a                    ; (a step goes first next: cp_turn)
     ld a,3
     ld (pre_sync),a                     ; (the staging sets the cache's after)
     xor a

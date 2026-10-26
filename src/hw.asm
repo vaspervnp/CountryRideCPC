@@ -44,18 +44,22 @@ CRTC_R9     EQU 7           ; 8 lines per character row
 ;; own start address, row count and R5 lines.
 ;;
 ;;   HUD     8 rows, page 1. One copy per buffer: buffer 0's at the start of
-;;           each 2K block, buffer 1's HUD1_OFF bytes on.
-;;   sky     11 rows: the dithered sky and the mountains. Page 3, one copy for
-;;           both buffers, in a ring: the CRTC's address wraps every 1024
-;;           characters (2K) when MA10/MA11 are 0, so moving the start address
-;;           a character scrolls the sky a word (4 pixels) for good, and only
-;;           the column that comes in has to be written (ring_turn).
-;;   road    14 rows, lines 160-271: three lines of ground, the road to
-;;           line ROAD_END - 1 (267), then four black lines.
-;;           Page 2 (buffer 0, #8000) or page 0 (buffer 1, #0000), as the
-;;           road engine in banks 4 and 5 needs: those two are mapped in every
-;;           configuration the game uses. The rest of each 2K block holds the
-;;           common fragments.
+;;           each 2K block, buffer 1's HUD1_OFF bytes on. Then navy border
+;;           down to the sky: the sky, the mountains and the road take the
+;;           screen's bottom half.
+;;   sky     6 rows from line SKY_Y (132): the dithered sky and the
+;;           mountains. Page 3, one copy for both buffers, in a ring: the
+;;           CRTC's address wraps every 1024 characters (2K) when MA10/MA11
+;;           are 0, so moving the start address a character scrolls the sky
+;;           a word (4 pixels) for good, and only the column that comes in has
+;;           to be written (ring_turn).
+;;   road    from line 184 (the row the road's top is in) to 271: four lines
+;;           of ground, the road to line ROAD_END - 1 (267), then four black
+;;           lines. Its memory is 14 rows from line 160 (ROAD_AREA_Y): the
+;;           first three never shown. Page 2 (buffer 0, #8000) or page 0
+;;           (buffer 1, #0000), as the road engine in banks 4 and 5 needs:
+;;           those two are mapped in every configuration the game uses. The
+;;           rest of each 2K block holds the common fragments.
 ;;
 ;; The Z80 sees page 1 at #4000 with RAM_C1, page 3 there with RAM_C3. The
 ;; HUDs take the first #600 bytes of each 2K block of page 1; the rest of
@@ -74,21 +78,23 @@ BOT0_BASE   EQU #8000       ; CPU address of line 160, buffer 0
 BOT1_BASE   EQU #0000       ; CPU address of line 160, buffer 1
 
 ;; --- The split frame -----------------------------------------------------------
-;; The horizon drops with the road: when a crest hides the far road, the sky
-;; part starts lower, by as many lines as the road's top has come down, under
-;; border in the HUD's navy; it is followed by border in the ground's green
-;; down to the character row the top of the road is in, where the road part
-;; starts. So the band of ground between the mountains and the road always
-;; has 11 lines, and every line of the road part is where it always is in its
-;; buffer: nothing that draws the road needs to know. For a drop of d lines
-;; (0..18):
+;; The sky part starts at line SKY_Y, under border in the HUD's navy, and the
+;; horizon drops with the road: when a crest hides the far road, the sky
+;; part starts lower still, by up to twice as many lines as the road's top
+;; has come down (scene.sky_drop); it is followed by border in the ground's
+;; green down to the character row the top of the road is in, where the
+;; road part starts. So the band of ground between the mountains and the
+;; road narrows from 8 lines to 3-7, and every line of the road part is
+;; where it always is in its buffer: nothing that draws the road needs to
+;; know. For a drop of d lines (0..14), s = SKY_Y - HUD_H + the sky's drop
+;; (68..88, sky_drops):
 ;;
-;;   HUD part    rows 0-6, then 8 + d lines of border: row 7 (navy anyway)
-;;               and d/8 more rows that R6 keeps from being displayed, then
-;;               d mod 8 R5 lines.
-;;   sky part    rows 0-10 of the ring, then the green border: a row if it
+;;   HUD part    rows 0-6, then 8 + s lines of border: row 7 (navy anyway)
+;;               and s/8 more rows that R6 keeps from being displayed, then
+;;               s mod 8 R5 lines.
+;;   sky part    rows 0-5 of the ring, then the green border: a row if it
 ;;               is 8 lines or more, then R5 lines for the rest.
-;;   road part   from line (163 + d) rounded down to a row: 20 + q, q = 0..2;
+;;   road part   from line (188 + d) rounded down to a row: 23 + q, q = 0..2;
 ;;               VSYNC at line 272 as always, then the rest of the 312 lines.
 ;;
 ;; CRTCs differ in the R5 lines: some count them as a row past R4 and stop
@@ -104,9 +110,10 @@ BOT1_BASE   EQU #0000       ; CPU address of line 160, buffer 1
 ;; than five lines to spare after the CRTC last looked at it for the part
 ;; before and before it looks at it for its own part; R12/R13 during the part
 ;; before, after that part's first row (a type 1 CRTC reloads them on each of
-;; its lines).
+;; its lines). The sky part's size waits for line ~170, in the sky part: the
+;; HUD part's rows run past it till then.
 HUD_ROWS    EQU HUD_H/8
-SKY_ROWS    EQU (BLOCK_BOTTOM-HUD_H)/8
+SKY_ROWS    EQU (BLOCK_BOTTOM-SKY_Y)/8
 ROAD_ROW    EQU ROAD_AREA_Y/8
 TOTAL_ROWS  EQU CRTC_R4+1
 

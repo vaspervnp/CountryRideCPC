@@ -121,6 +121,7 @@ game_bank_end
     INCLUDE "gen/bushdata.asm"
     INCLUDE "road15.asm"
     INCLUDE "gen/bushcode.asm"
+    INCLUDE "player.asm"
     ASSERT FRAG_ST1+FRAG_LEN <= #4600
     SAVE "BOOT.BIN",#4000,#4000,DSK,"build/countryride.dsk"
 

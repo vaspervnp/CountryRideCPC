@@ -10,7 +10,8 @@ CACHE_B     EQU TMPL_B+CACHE_LEVEL*TMPL_SET
 ;; band B template set's near slots, L = #CD + g its lane) - cpcgfx.
 ;; road_shift's sums, in 1/256 bytes:
 ;;
-;;   PL, PH     P = PERSP_P half: a pair of road_x's move (P2L, P2H: two)
+;;   P2L, P2H   2 P, P = PERSP_P half: road_x's move of two pairs (P4L,
+;;              P4H: of four)
 ;;   AL, AH     A' = k c1 + x P + 128 + 64, + 256 H (H: RA_H)
 ;;   AO         a: H + the shift it is at, the high byte of A' - 64 + t
 ;;   WL, WH     W = k d / 4: the bias's w is W + 5 road_x (+ W_NONE: none)
@@ -22,15 +23,15 @@ CACHE_B     EQU TMPL_B+CACHE_LEVEL*TMPL_SET
 ;;
 ;; (A' is A + 64 so that its low byte's sign tells if t, up to 64 either
 ;; way, can move a: only when it is 0..127.)
-    ASSERT lo(RA_PL) == #CD && #CD+NGROUPS == 256 && PERSP_P == 10
-    ASSERT RA_PH == RA_PL+#200 && RA_P2H == RA_P2L+#200
+    ASSERT lo(RA_P2L) == #CD && #CD+NGROUPS == 256 && PERSP_P == 10
+    ASSERT RA_P2H == RA_P2L+#200 && RA_P4H == RA_P4L+#200
     ASSERT RA_AH == RA_AL+#200 && RA_AO == RA_AH+#200
     ASSERT RA_WH == RA_WL+#200 && RA_FL == RA_WH+#200
     ASSERT RA_C1H == RA_C1L+#200 && (W_NONE & #FF) == 0
     ASSERT (rd_tent0 & #FF) == 0 && (rd_tent1 & #FF) == 0
 
 ;; ---------------------------------------------------------------------------
-;; st5 - road_x has moved rd_s pairs (1 or 2, either way; road_x is after's):
+;; st5 - road_x has moved rd_s pairs (2 or 4, either way; road_x is after's):
 ;; each group's A' moves P a pair. Where that moves its a, it goes on the
 ;; list for bank 4 (rd_lsp: tl_a), and its band B template is made there
 ;; and then (TM_PUT); its rows' share of road_x for the bushes (rd_gp)
@@ -56,11 +57,11 @@ st5
 ;; the loop: L = a group's lane, SP = the list
 st5_grp
 st5_ph
-    ld h,hi(RA_PL)                      ; (self-modified: RA_P2L)
+    ld h,hi(RA_P2L)                     ; (self-modified: RA_P4L)
     ld c,(hl)
     inc h
     inc h
-    ld b,(hl)                           ; BC = P
+    ld b,(hl)                           ; BC = 2 P (4 P)
     ld h,hi(RA_AL)
     ld a,(hl)
 st5_op1
@@ -189,8 +190,8 @@ st5_nob
     ld h,hi(RA_AO)
     jp st5_cmp
 
-;; st5_set - A = a step, 1 or 2 either way: st5's P (st5_ph) and its way
-;; (st5_op1..3) for it. Destroys AF, BC, E.
+;; st5_set - A = a step, 2 or 4 either way: st5's 2 P or 4 P (st5_ph) and
+;; its way (st5_op1..3) for it. Destroys AF, BC, E.
 st5_set
     ld bc,#8881                         ; ADC A,B / ADD A,C: to the right
     or a
@@ -198,11 +199,11 @@ st5_set
     neg
     ld bc,#9891                         ; SBC A,B / SUB C: to the left
 st5_dir
-    ld e,hi(RA_PL)
-    dec a
-    jr z,st5_one
-    ld e,hi(RA_P2L)                     ; two pairs
-st5_one
+    ld e,hi(RA_P2L)
+    cp 4
+    jr c,st5_two
+    ld e,hi(RA_P4L)                     ; four pairs
+st5_two
     ld a,e
     ld (st5_ph+1),a
     ld a,c
@@ -655,7 +656,7 @@ undo5
     ld l,#CD
 u5_loop
 u5_ph
-    ld h,0                              ; (self-modified: RA_PL, RA_P2L)
+    ld h,0                              ; (self-modified: RA_P2L, RA_P4L)
     ld c,(hl)
     inc h
     inc h

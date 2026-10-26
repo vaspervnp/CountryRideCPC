@@ -14,7 +14,7 @@ Everything works in pen numbers on a 192x272 grid of mode 0 pixels.
 import math
 import os
 
-from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, BLOCK_BOTTOM, ROAD_Y, ROWS,
+from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, SKY_Y, BLOCK_BOTTOM, ROAD_Y, ROWS,
                     ROAD_END, NEAR_ROW,
                     HORIZON_Y, road_shift, player_shift, curve_group,
                     far_mask,
@@ -196,12 +196,13 @@ def hud(time_left=60, speed_level=10, gear="4", total_centis=8345, fuel=13):
 # Sky: an ordered dither from the HUD colour down to the haze.
 # ---------------------------------------------------------------------------
 
-SKY_STOPS = [  # (line, pen) - the gradient passes through these. The first
-    (HUD_H + 8, PEN["NAVY"]),       # character row is plain navy, like the
-    (HUD_H + 22, PEN["BLUE"]),      # lines the ruptures put above it
-    (HUD_H + 40, PEN["SKY"]),
-    (HUD_H + 64, PEN["PASTEL"]),
-    (BLOCK_BOTTOM - 4, PEN["HAZE"]),
+SKY_TOP = SKY_Y + 4         # the dither starts here: above it the sky part
+SKY_STOPS = [  # (line, pen) - the gradient passes through these
+    (SKY_TOP, PEN["NAVY"]),         # is plain navy, like the lines the
+    (SKY_TOP + 5, PEN["BLUE"]),     # ruptures put above it
+    (SKY_TOP + 13, PEN["SKY"]),
+    (SKY_TOP + 24, PEN["PASTEL"]),
+    (BLOCK_BOTTOM - 3, PEN["HAZE"]),
 ]
 BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
@@ -264,10 +265,16 @@ def _ridge(peaks, width, rough):
     return h, owner
 
 
+# Drawn 44 lines high at most, then scaled down to MOUNT_H: heights, slopes
+# and roughness alike, so the ranges keep their width.
+MOUNT_H = 28
 FAR_PEAKS = [(20, 24, 0.5, 0.55), (82, 30, 0.45, 0.42), (140, 22, 0.55, 0.5),
              (205, 28, 0.42, 0.5), (268, 25, 0.5, 0.48), (330, 31, 0.55, 0.45)]
 NEAR_PEAKS = [(46, 38, 0.85, 1.0), (112, 28, 1.0, 0.75), (176, 44, 0.8, 1.0),
               (248, 33, 0.95, 0.85), (316, 41, 0.85, 0.9)]
+_MS = MOUNT_H / max(ph for _, ph, _, _ in NEAR_PEAKS)
+FAR_PEAKS = [(px, ph * _MS, sl * _MS, sr * _MS) for px, ph, sl, sr in FAR_PEAKS]
+NEAR_PEAKS = [(px, ph * _MS, sl * _MS, sr * _MS) for px, ph, sl, sr in NEAR_PEAKS]
 
 # Which pens the two ranges are painted in.
 MOUNT_PENS = dict(far_lit=PEN["PASTEL"], far_dark=PEN["MAUVE"],
@@ -276,11 +283,11 @@ MOUNT_PENS = dict(far_lit=PEN["PASTEL"], far_dark=PEN["MAUVE"],
 
 
 def _ranges():
-    far_rough = _fractal(PANORAMA_W, 7, 3.0)
-    near_rough = _fractal(PANORAMA_W, 11, 4.0)
-    snow_rough = [a + b for a, b in zip(_noise(PANORAMA_W, 23, 4.0, 32),
-                                        _noise(PANORAMA_W, 29, 3.5, 4))]
-    ridge_rough = _fractal(PANORAMA_W, 31, 3.0)
+    far_rough = _fractal(PANORAMA_W, 7, 3.0 * _MS)
+    near_rough = _fractal(PANORAMA_W, 11, 4.0 * _MS)
+    snow_rough = [a + b for a, b in zip(_noise(PANORAMA_W, 23, 4.0 * _MS, 32),
+                                        _noise(PANORAMA_W, 29, 3.5 * _MS, 4))]
+    ridge_rough = _fractal(PANORAMA_W, 31, 3.0 * _MS)
     hf, of = _ridge(FAR_PEAKS, PANORAMA_W, far_rough)
     hn, on = _ridge(NEAR_PEAKS, PANORAMA_W, near_rough)
     return hf, of, hn, on, snow_rough, ridge_rough
@@ -672,13 +679,14 @@ def car_runs(view=0):
     return out
 
 
-def draw_car(lines, y0, view=0):
+def draw_car(lines, y0, view=0, off=0):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
-    straight, turning left or turning right (view 0, 1, 2)."""
+    straight, turning left or turning right (view 0, 1, 2), `off` pairs right
+    of the middle (the game's car_off)."""
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":
-                lines[CAR_Y + j - y0][CAR_X + i] = PEN[CAR_PEN[c]]
+                lines[CAR_Y + j - y0][CAR_X + 4 * off + i] = PEN[CAR_PEN[c]]
 
 
 # ---------------------------------------------------------------------------
@@ -711,18 +719,19 @@ PANO_WORDS = PANORAMA_W // 4    # the panorama in CRTC words (4 pixels)
 
 
 def pano_y0():
-    """First line of the sky part that has mountains in its character row:
-    above it every line is one dither pair repeated."""
-    return mountains_top() // 8 * 8
+    """First line of the sky part that has mountains in its character row
+    (the part's rows start at SKY_Y): above it every line is one dither
+    pair repeated."""
+    return SKY_Y + (mountains_top() - SKY_Y) // 8 * 8
 
 
 def sky_lines(heading=0):
-    """The sky part, lines HUD_H..BLOCK_BOTTOM-1, looking `heading` words
+    """The sky part, lines SKY_Y..BLOCK_BOTTOM-1, looking `heading` words
     to the right. The dithered sky repeats every word, so only the mountains
     move."""
     top, pano = horizon_panorama()
     out = []
-    for y in range(HUD_H, BLOCK_BOTTOM):
+    for y in range(SKY_Y, BLOCK_BOTTOM):
         if y < top:
             out.append([sky_pen(x, y) for x in range(SCR_W)])
         else:
@@ -731,16 +740,17 @@ def sky_lines(heading=0):
     return out
 
 
-def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0):
+def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
+              car_off=0):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
-    bushes and the car (seen as car_view `view`). `hill` as the road engine
-    draws it (effective_hill)."""
+    bushes and the car (seen as car_view `view`, car_off pairs right of the
+    middle). `hill` as the road engine draws it (effective_hill)."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
              + road_lines(hill, zcam, curve, x))
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x)
     if car:
-        draw_car(lines, ROAD_AREA_Y, view)
+        draw_car(lines, ROAD_AREA_Y, view, car_off)
     return lines
 
 
@@ -776,10 +786,10 @@ def shown(hud_pens, sky, road, drop):
     for y in range(SCR_H):
         if y < HUD_H:
             out.append(hud_pens[y])
-        elif y < HUD_H + sd:
+        elif y < SKY_Y + sd:
             out.append([BORDER_TOP] * SCR_W)
         elif y < BLOCK_BOTTOM + sd:
-            out.append(sky[y - sd - HUD_H])
+            out.append(sky[y - sd - SKY_Y])
         elif y < first_road:
             out.append([BORDER_LOW] * SCR_W)
         else:

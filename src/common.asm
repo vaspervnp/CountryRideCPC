@@ -33,14 +33,12 @@ front_buf   defb 0          ; buffer being shown (0/1)
 ;; --- the split of the frame being shown (see rup_frame) ---------------------
 rup_buf     defb 0          ; buffer shown
 rup_drop    defb 0          ; lines the horizon is down
-rup_r4a     defb HUD_ROWS-1 ; HUD part: rows - 1, its border rows too
-rup_r5a     defb 0          ; HUD part: R5 lines
-rup_late    defb 0          ; HUD part has border rows: the sky part's size
-                            ; waits for line ~118
-rup_r4b     defb SKY_ROWS   ; sky part: rows - 1, a border row too (the
+rup_r4a     defb HUD_ROWS-1+(SKY_Y-HUD_H)/8 ; HUD part: rows - 1, its border
+rup_r5a     defb (SKY_Y-HUD_H)&7            ; rows too; its R5 lines (the
                             ; values here are drop 0's: rup_frame works
                             ; them out only when a picture is shown)
-rup_r5b     defb 0          ; sky part: R5 lines
+rup_r4b     defb SKY_ROWS-1 ; sky part: rows - 1, a border row too
+rup_r5b     defb (ROAD_Y/8*8-BLOCK_BOTTOM)&7 ; sky part: R5 lines
 rup_r4c     defb TOTAL_ROWS-ROAD_ROW-1 ; road part: rows - 1
 rup_r6c     defb CRTC_R7-ROAD_ROW      ; road part: R6 and R7
 rup_c       defw ROAD_MA0   ; road part: start (R13, R12)
@@ -135,16 +133,15 @@ rup_frame
     ld l,a
     jr nc,$+3
     inc h
-    ld a,(hl)                   ; H = the sky's (scene.sky_drop) - not
-    ld h,a                      ; DE: the interrupt keeps AF, BC, HL only
-    and 7
-    ld (rup_r5a),a              ; HUD part: drop mod 8 R5 lines ...
+    ld a,(hl)                   ; H = SKY_Y - HUD_H + the sky's drop
+    ld h,a                      ; (scene.sky_drop) - not DE: the interrupt
+    and 7                       ; keeps AF, BC, HL only
+    ld (rup_r5a),a              ; HUD part: H mod 8 R5 lines ...
     ld a,h
     rrca
     rrca
     rrca
-    and #1F
-    ld (rup_late),a             ; ... after drop / 8 border rows
+    and #1F                     ; ... after H / 8 border rows
     add a,HUD_ROWS-1
     ld (rup_r4a),a
     ld a,c                      ; the road part: from the row the top of the
@@ -153,12 +150,12 @@ rup_frame
     rrca
     rrca
     and #1F
-    ld b,a                      ; B = its row, ROAD_ROW..ROAD_ROW+2
+    ld b,a                      ; B = its row, ROAD_ROW+3..ROAD_ROW+5
     add a,a
     add a,a
     add a,a
-    sub BLOCK_BOTTOM
-    sub h                       ; green border lines after the sky, 0..11
+    sub BLOCK_BOTTOM-(SKY_Y-HUD_H)
+    sub h                       ; green border lines after the sky, 0..7
     ld l,SKY_ROWS-1
     cp 8
     jr c,rup_frame_r5b
@@ -361,6 +358,7 @@ MACRO CRTC_N reg,val
 MEND
 
     ASSERT HUD_ROWS*8 == HUD_H
+    ASSERT SKY_ROWS*8 == BLOCK_BOTTOM-SKY_Y
     ASSERT ROAD_ROW*8 == ROAD_AREA_Y
 
 ;; line ~14, in the HUD part: its size, no VSYNC; where the sky part starts
@@ -386,27 +384,24 @@ irq_hud
     out (c),l
     jp isr_out
 
-;; line ~66, the HUD part's display over: the sky part's rows, and its size
-;; - unless more border rows follow
+;; line ~66, the HUD part's display over (its border rows go on): the sky
+;; part's rows
 irq_sky
-    NEXT_IRQ irq_road
+    NEXT_IRQ irq_idle
     CRTC_N 6,SKY_ROWS
-    ld a,(rup_late)
-    or a
-    call z,rup_sky_size
     jp isr_out
-rup_sky_size
+
+;; line ~118, in the HUD part's border: nothing to do
+irq_idle
+    NEXT_IRQ irq_road
+    jp isr_out
+
+;; line ~170, in the sky part: its size and R5 lines, where the road part
+;; starts, the border below the mountains
+irq_road
+    NEXT_IRQ irq_size
     ld hl,rup_r4b
     CRTC_HL 4
-    ret
-
-;; line ~118, in the sky part: its size if not done yet, its R5 lines, where
-;; the road part starts, the border below the mountains
-irq_road
-    NEXT_IRQ irq_idle
-    ld a,(rup_late)
-    or a
-    call nz,rup_sky_size
     ld hl,rup_r5b
     CRTC_HL 5
     ld hl,rup_c+1
@@ -418,11 +413,7 @@ irq_road
     ld c,BORDER_LOW_HW
     out (c),c
     jp isr_out
-
-;; line ~170: nothing to do
-irq_idle
-    NEXT_IRQ irq_size
-    jp isr_out
+    ASSERT SKY_Y+5 < 170 && BLOCK_BOTTOM > 175
 
 ;; line ~222, in the road part: its size, and the VSYNC at line 272
 irq_size
@@ -529,12 +520,13 @@ rp_seg_set
     jp rp_skip_line
 
 ;; ---------------------------------------------------------------------------
-;; rp_far_m - the hill alone moved: B = C = the margin a far line that now
-;; shows another row needs - 1 + (|curve level| + 1) / 2 pairs, one more
-;; with road_x 17 or more either way (tools: the edges of the rows a far
-;; line can show then and now) - and RP_HILL_M at least. The far lines get
-;; it (rp_far_hfl) - unless the cache is still catching up with the curve
-;; level, which can move them further.
+;; rp_far_m - the hill alone moved: B = C = the margin a line that now
+;; shows another row needs - 3 + |curve level| / 2 pairs, one more with
+;; road_x 17 or more either way (tools: the edges of the rows a line can
+;; show then and now, the hill RP_HILL_STEP levels or less apart) - and
+;; RP_HILL_M at least. The far lines get it too (rp_far_hfl) - unless the
+;; cache is still catching up with the curve level, which can move them
+;; further.
 rp_far_m
     ld a,(rp_cache)
     or a
@@ -549,9 +541,8 @@ rp_far_m_k
     or a
     jp p,$+5
     neg
-    inc a
     srl a
-    inc a
+    add a,3
     ld c,a
     ld a,(road_x)
     add a,16
@@ -1379,7 +1370,13 @@ rp_dzset
     sub e                               ; the move since then
     cp 64
     ld e,255
-    jr nc,rp_dzset_w
+    jr c,rp_dzset_n
+    xor a                               ; a kerb stripe or more: no line is
+    ld (rp_skip),a                      ; skipped (its stripe can have gone
+    ld a,#B7                            ; round)
+    ld (rp_cmp_sk),a                    ; (OR A)
+    jr rp_dzset_w
+rp_dzset_n
     add a,a
     ld e,a
 rp_dzset_w

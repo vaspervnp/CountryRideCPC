@@ -148,7 +148,8 @@ ring_col
     ld h,a
     ld de,#800
     ld sp,sky_pairs             ; the plain sky rows: a dither pair a line
-    ld ixl,(PANO_Y0-HUD_H)/8
+    ld ixl,(PANO_Y0-SKY_Y)/8
+    ASSERT PANO_Y0 > SKY_Y && (PANO_Y0-SKY_Y)%8 == 0
 ring_col_sky
     RING_ROW
     dec ixl
@@ -162,11 +163,8 @@ ring_col_sky
     add hl,hl
     add hl,hl
     add hl,hl
-    ld b,h
-    ld c,l
-    add hl,hl
-    add hl,bc                   ; * 96
-    ASSERT PANO_COL_BYTES == 96
+    add hl,hl                   ; * 64
+    ASSERT PANO_COL_BYTES == 64
     ld bc,panorama_cols
     add hl,bc
     ld sp,hl

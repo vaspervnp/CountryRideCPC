@@ -53,8 +53,10 @@ FRAG_LEN = 0x2C0
 FRAG_FIRST = 8                  # fragments 8-15: page 2, #x540-#x7FF
 FRAG_COUNT = 8
 CODE_CHUNKS = [0x4600 + 0x800 * b for b in range(8)]   # page 1 gaps (the
-CHUNK_LENS = [0x200] * 7 + [0x100]      # eighth's first half, #7E00, is the
-                                        # cache's: cache.asm)
+CHUNK_LENS = [0x200] * 6 + [0xC0, 0x100]  # seventh's first #140 bytes,
+                                        # #7600, are the player's:
+                                        # player.asm; the eighth's first
+                                        # half, #7E00, the cache's)
 SINFO_FIELDS = ["half width", "width", "first line's end", "height",
                 "how its box is erased", "code", "data"]
 

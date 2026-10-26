@@ -52,7 +52,7 @@ def consts():
     emit("")
     emit(";; screen and road geometry")
     for name in ("SCR_W", "SCR_BYTES", "SCR_H", "TOP_ROWS", "HUD_H",
-                 "BLOCK_BOTTOM", "ROAD_Y", "ROAD_TOP_MIN", "ROAD_TOP_MAX",
+                 "SKY_Y", "BLOCK_BOTTOM", "ROAD_Y", "ROAD_TOP_MIN", "ROAD_TOP_MAX",
                  "ROAD_END", "ROAD_LINES", "ROWS", "NEAR_ROW", "HORIZON_Y",
                  "HALF_MAX", "MIN_HALF",
                  "BAND_SHIFT", "FAR_Z"):
@@ -174,29 +174,29 @@ def gfx():
     emit("SEG_OFF1 EQU #%02X" % G.m0_byte(G.PEN["BLACK"], S.HUD_BG))
     emit("")
 
-    # sky: per line from HUD_H to the panorama, a 2-byte repeating pattern
+    # sky: per line from SKY_Y to the panorama, a 2-byte repeating pattern
     top = S.mountains_top()
     emit(";; sky lines %d..%d: the two bytes that repeat across each line" %
-         (G.HUD_H, S.pano_y0() - 1))
+         (G.SKY_Y, S.pano_y0() - 1))
     emit("sky_pairs")
-    for y in range(G.HUD_H, S.pano_y0()):
+    for y in range(G.SKY_Y, S.pano_y0()):
         p = [S.sky_pen(x, y) for x in range(4)]
         emit("    defb #%02X,#%02X" % (G.m0_byte(p[0], p[1]), G.m0_byte(p[2], p[3])))
     emit("")
 
     # where every line is (hw.asm has the plan)
-    emit(";; CPU address of each of the 272 lines: the HUD (0-63) in page 1")
-    emit(";; with RAM_C1, buffer 0 (buffer 1's is HUD1_OFF on); the sky part")
-    emit(";; (64-151) in page 3 with RAM_C3, as the ring is when it has not")
-    emit(";; turned; 152-159 nowhere; the road part (160-271) in page 2 with")
-    emit(";; RAM_C1, buffer 0 (buffer 1's is #8000 lower)")
+    emit(";; CPU address of each of the 272 lines: the HUD (0-%d) in page 1"
+         % (G.HUD_H - 1))
+    emit(";; with RAM_C1, buffer 0 (buffer 1's is HUD1_OFF on); the road part's")
+    emit(";; memory (%d-271) in page 2 with RAM_C1, buffer 0 (buffer 1's is"
+         % S.ROAD_AREA_Y)
+    emit(";; #8000 lower); the lines between nowhere (the sky part is the ring:")
+    emit(";; ring_col)")
     emit("line_tab")
     for y in range(G.SCR_H):
         row, ras = y >> 3, y & 7
         if y < G.HUD_H:
             a = 0x4000 + ras * 0x800 + row * 96
-        elif y < G.BLOCK_BOTTOM:
-            a = 0x4000 + ras * 0x800 + (row - G.HUD_H // 8) * 96
         elif y < S.ROAD_AREA_Y:
             a = 0
         else:

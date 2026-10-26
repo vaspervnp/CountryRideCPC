@@ -25,6 +25,11 @@ drawn_x     defb 0,0            ; ... and road_x
 curve_wait  defb 0              ; pictures before the curve level may move
 sky_turns   defb 0              ; not 0: the sky turns at this flip
 steer_x     defb 0              ; where the player wants road_x
+car_x       defb 0              ; where the road is from the car, as road_x
+                                ; (the player's: road_x follows it)
+car_off     defb 0              ; the car's pairs right of the middle on the
+                                ; screen: road_x - car_x (car_lines)
+drawn_off   defb 0,0            ; ... as each buffer last showed it
 car_view    defb 0              ; the car seen straight, turning left, right
 drawn_view  defb 0,0            ; ... as each buffer last showed it
 drift_acc   defw 0              ; a curve carrying the car out (steer)
@@ -36,14 +41,15 @@ pic_bent    defb 0              ; 1: this picture's curve level is new to
 heading     defb 0              ; where the sky looks: words right
 head_acc    defw 0              ; turning towards the next word, signed
 
-SPEED_MAX   EQU #0540           ; 5.25 depth units per VSYNC: a stripe in ~3
-SPEED_ACC   EQU 5               ; per VSYNC, 8.8 - full speed in ~5.4 s
-SPEED_BRK   EQU 9
+SPEED_MAX   EQU #0690           ; 6.6 depth units per VSYNC: a kerb stripe
+                                ; (64) in ~5 pictures
+SPEED_ACC   EQU 5               ; per VSYNC, 8.8 - full speed in ~6.7 s
+SPEED_BRK   EQU 12
 GEAR_STEP   EQU SPEED_MAX/6+1   ; speed per gear
 MAX_STEPS   EQU 4               ; 50 Hz steps caught up per picture at most
 HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
                                 ; turn a word: at the strongest level and
-                                ; full speed, a word every 2 pictures
+                                ; full speed, a word every ~1.5 pictures
 
 ;; ---------------------------------------------------------------------------
 ;; game_start - entered from boot.asm with RAM_C1, interrupts on.
@@ -256,15 +262,17 @@ pic_bushes
 ;; cache_steps - after a picture: the road's next steps (cache.asm), whose
 ;; templates cache_job then works out while the picture waits for its flip.
 ;;
-;; Nothing moves on a hill or just before one, nor while the last
+;; No new curve level on a hill or just before one, nor while the last
 ;; picture's hill moved (as the road leaves a hill): a picture whose hill
-;; moves compares each line's row with then's, and a new level or a step
-;; sideways on top of that - or the cache catching up with a level - is too
-;; much. A new level and a step sideways wait for a hill HILL_STEP_AHEAD
-;; track entries ahead: the two pictures either makes heavy (both buffers
-;; draw all of the road moved) are done by then. (The track has no curve
-;; on a hill: a level only waits when it is late; the road waits to move
-;; sideways.)
+;; moves compares each line's row with then's, and a level on top of that
+;; - or the cache catching up with one - is too much. A level waits for a
+;; hill HILL_STEP_AHEAD track entries ahead: the two pictures it makes heavy
+;; (both buffers draw all of the road moved) are done by then. (The track
+;; has no curve on a hill: a level only waits when it is late.) A step
+;; sideways goes on a hill too - with the road 80 lines high a picture
+;; whose hill moves and road moved sideways fits (37.4 ms at worst); while
+;; the hill holds a level back, a step the player wants is worked out in
+;; its place (cp_turn).
 ;;
 ;; The curve level moves a level towards the game's - not within two
 ;; pictures of the last move, so that a buffer's road moves a level at most
@@ -275,24 +283,24 @@ pic_bushes
 ;; when it can); off it, only once the cache has the level worked out
 ;; ahead, and then all of the road moves to it at once (cache_kstep).
 ;;
-;; Then road_x moves two pairs towards steer_x - always two, so it is
-;; always even: with steer_x a pair from it, it waits - the whole cache with
-;; it (cache_step), out of the middle only once the cache has caught up with
-;; the curve level, into it only once it has caught up too. A step the
-;; cache has worked out ahead
-;; (cache_ready) is only copied into place, ~5 ms, and goes whenever this
-;; runs; else it is made there and then, and only if it is sure to be done
-;; before the flip (STEP_LATE): else the road waits a picture, which then
-;; is lighter (nothing moved sideways) and leaves the time. A step holds the
-;; sky's turn and the cache's jobs back for a picture.
+;; Then road_x moves towards steer_x - two or four pairs (STEP_MAX), so it
+;; is always even: with steer_x a pair from it, it waits - the whole cache
+;; with it (cache_step), out of the middle only once the cache has caught
+;; up with the curve level, into it only once it has caught up too. A step
+;; the cache has worked out ahead (cache_ready) is only copied into place,
+;; ~5 ms, and goes whenever this runs; else one of two pairs is made there
+;; and then, and only if it is sure to be done before the flip
+;; (STEP_LATE): else the road waits a picture, which then is lighter
+;; (nothing moved sideways) and leaves the time. A step holds the sky's
+;; turn and the cache's jobs back for a picture.
 ;; ---------------------------------------------------------------------------
 cache_steps
-    ld a,(rp_cmp)               ; the last picture's hill did not move
-    or a
-    ret nz
+    ld a,(rp_cmp)               ; a level only if the last picture's hill
+    or a                        ; did not move
+    jp nz,cache_steps_x
     ld b,HILL_STEP_AHEAD+1      ; nor is a hill here or just ahead
     call hill_near_b
-    ret nz
+    jp nz,cache_steps_x
     ld a,(curve_wait)
     or a
     jr nz,cache_steps_x
@@ -319,17 +327,16 @@ cache_steps_kd
     call cache_curve
     call sky_stay               ; (the next picture has the road bent)
 cache_steps_x
-    ld a,(back_buf)             ; no more than 2 pairs from where the next
-    xor 1                       ; picture's buffer last had it (the margin
-    ld hl,drawn_x               ; it draws): two steps of two in a row would
-    add a,l                     ; make it 4
+    ld a,(back_buf)             ; no more than STEP_MAX pairs from where the
+    xor 1                       ; next picture's buffer last had it (the
+    ld hl,drawn_x               ; margin it draws): two steps in a row would
+    add a,l                     ; make it twice that
     ld l,a
     ASSERT hi(drawn_x) == hi(drawn_x+1)
     ld c,(hl)
     ld a,(steer_x)
     sub c
-    ld b,2
-    call clamp_ab
+    call step_even              ; (player.asm)
     add a,c
     ld hl,road_x
     sub (hl)
@@ -344,6 +351,10 @@ cache_steps_x
 cache_steps_go
     call cache_ready            ; (one worked out ahead: its own gate)
     jr nz,cache_steps_gate
+    ld b,2                      ; else two pairs at most, made there and
+    ld a,c                      ; then
+    call clamp_ab
+    ld c,a
     ld b,STEP_LATE              ; only if it is done before the flip: a
     ld a,(road_curve)           ; pair takes up to ~13.5 ms (two ~14.2 ms) -
     ld e,a                      ; ~14.7 ms (two ~16.1 ms) with the road 8
@@ -359,23 +370,14 @@ cache_steps_go
     jr c,cache_steps_gate
     dec b
 cache_steps_gate
-    ld a,c
-    or a
-    jp p,$+5
-    neg
-    cp 2
-    ret c                       ; (a pair is all it is to go: it waits)
-    ld a,(curve_wait)           ; (nor while a new curve level has the
+    ld a,(curve_wait)           ; (not while a new curve level has the
     or a                        ; road drawn with a margin)
     ret nz
     ld a,(irq_n)
     inc a
     cp b
     ret nc
-    ld b,2                      ; two pairs
     ld a,c
-    call clamp_ab
-    ld c,a
     ld hl,road_x
     add a,(hl)
     jr nz,cache_steps_step
@@ -383,40 +385,49 @@ cache_steps_gate
     or a                        ; caught up (the level's own set is the
     ret nz                      ; same then)
 cache_steps_step
+    xor a
+    ld (step_turn),a            ; (cp_turn)
     ld a,c
     call cache_step
     jp sky_stay                 ; (the next picture has the road moved)
 
 ;; ---------------------------------------------------------------------------
-;; steer - where the road is to go (steer_x), once a picture, and how the
-;; car is seen (car_view).
+;; steer - where the car is on the road (car_x) and where the road is to go
+;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
-;; The player: a pair right of where the road is while left is held - the
-;; car goes left, so the road under it goes right - a pair left while
-;; right is. And a curve carries the car out of it: drift_acc adds up the
-;; curve level x the speed, and every DRIFT_STEP of it is a pair outwards -
-;; out of a right curve the car goes left, the road right. Steering against
-;; it, the two cancel; with neither, the car ends up on the grass. The car
-;; is seen turning while left or right is held (not both).
+;; The player: the car moves CAR_STEP pairs a picture left while left is
+;; held - the road under it goes right: car_x up - right while right is.
+;; The car moves on the screen at once, and the road follows it, as fast as
+;; its steps can (steer_x = car_x): the car is drawn road_x - car_x pairs
+;; right of the middle (car_lines), CAR_LEAD at most. And a curve carries
+;; the car out of it: drift_acc adds up the curve level x the speed, and
+;; every DRIFT_STEP of it is a pair outwards - out of a right curve the car
+;; goes left, the road right. Steering against it, the two cancel; with
+;; neither, the car ends up on the grass. The car is seen turning while
+;; left or right is held (not both).
 ;;
 ;; Until the player first steers, the demo does: a new place every
-;; DEMO_HOLD pictures, the car seen turning while the road moves to it.
+;; DEMO_HOLD pictures, the car seen turning while the road moves to it, the
+;; car in the middle (car_x = road_x).
 ;; ---------------------------------------------------------------------------
 DEMO_HOLD   EQU 128
 HILL_AHEAD  EQU 3               ; track entries (32 depth units) the sky's
                                 ; turn looks ahead for a hill (main)
-HILL_STEP_AHEAD EQU 2           ; ... and a new curve level or a step
-                                ; sideways (~6 pictures at full speed)
+HILL_STEP_AHEAD EQU 2           ; ... and a new curve level (~6 pictures
+                                ; at full speed)
 STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step
-STEER_AHEAD EQU 2               ; pairs steer_x may be from road_x
+CAR_STEP    EQU 3               ; pairs a picture the car moves, steered
+CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
+                                ; screen, road_x - car_x
 DRIFT_STEP  EQU 48              ; curve level x depth units a VSYNC, a pair:
-                                ; ~0.5 pairs a picture on a level 5 curve at
+                                ; ~0.6 pairs a picture on a level 5 curve at
                                 ; full speed
 
 steer
-    call read_keys
+    call read_keys              ; (player.asm)
+    ld (keys_now),a
     ld c,a
     ld a,(player)
     inc a
@@ -425,16 +436,16 @@ steer
     or c
     jp z,steer_demo
     ld (player),a
-    ld a,c                      ; B = the pairs the player moves the road:
-    and 3                       ; left 1, right -1, neither or both 0 - and
-    ld b,0                      ; car_view 1, 2, 0
+    ld a,c                      ; B = the pairs the player moves the car:
+    and 3                       ; left CAR_STEP, right -CAR_STEP, neither
+    ld b,0                      ; or both 0 - and car_view 1, 2, 0
     jr z,steer_keys
     cp 3
     jr z,steer_both
-    inc b
+    ld b,CAR_STEP
     cp 1
     jr z,steer_keys
-    ld b,-1
+    ld b,-CAR_STEP
     jr steer_keys
 steer_both
     xor a
@@ -475,19 +486,16 @@ steer_dset
     ld (drift_acc),hl
 
 steer_to
-    ld a,b                      ; a pair a picture at most, either way, on
-    ld b,1                      ; from where the road was to go - no more
-    call clamp_ab               ; than STEER_AHEAD from where it is (the
-    ld b,a                      ; road goes 2 pairs a step, so it needs
-    ld a,(steer_x)              ; that much), nor ROAD_X_MAX from the
-    add a,b                     ; middle
-    ld hl,road_x
+    ld a,(car_x)                ; the car on, no further than CAR_LEAD from
+    add a,b                     ; where the road is nor ROAD_X_MAX from the
+    ld hl,road_x                ; middle; the road to follow it
     sub (hl)
-    ld b,STEER_AHEAD
+    ld b,CAR_LEAD
     call clamp_ab
     add a,(hl)
     ld b,ROAD_X_MAX
     call clamp_ab
+    ld (car_x),a
     ld (steer_x),a
     ret
 
@@ -520,6 +528,8 @@ steer_demo
     add hl,de
     ld a,(hl)
     ld (steer_x),a
+    ld a,(road_x)               ; (the car in the middle, for when the
+    ld (car_x),a                ; player takes over)
 steer_look                      ; the car turns the way the road is to go
     ld a,(road_x)
     ld b,a
@@ -534,61 +544,6 @@ steer_look_set
     ret
 demo_steer
     defb 0,12,24,ROAD_X_MAX,16,-8,-28,-12
-
-;; ---------------------------------------------------------------------------
-;; read_keys - A: bit 0 = left held (cursor left, O, joystick left), bit 1 =
-;; right (cursor right, P, joystick right). The keyboard is read through the
-;; PSG's port (register 14), the PPI's port A turned round for it. Destroys
-;; BC, DE.
-;; ---------------------------------------------------------------------------
-read_keys
-    ld bc,#F40E                 ; PSG register 14
-    out (c),c
-    ld bc,#F6C0                 ; (latched)
-    out (c),c
-    ld c,0
-    out (c),c
-    ld bc,#F792                 ; PPI port A in
-    out (c),c
-    ld a,#40                    ; row 0: cursor right (bit 1)
-    call rk_row
-    and 2
-    ld e,a
-    ld a,#41                    ; row 1: cursor left (bit 0)
-    call rk_row
-    and 1
-    or e
-    ld e,a
-    ld a,#43                    ; row 3: P (bit 3)
-    call rk_row
-    and 8
-    ld d,a
-    ld a,#44                    ; row 4: O (bit 2)
-    call rk_row
-    and 4
-    or d
-    ld d,a
-    ld a,#49                    ; row 9: joystick left, right (bits 2, 3)
-    call rk_row
-    and #0C
-    or d
-    rrca
-    rrca
-    or e
-    ld e,a
-    ld bc,#F782                 ; port A out again
-    out (c),c
-    ld bc,#F600
-    out (c),c
-    ld a,e
-    ret
-rk_row                          ; A = #40 + row: its keys, 1 = held
-    ld b,#F6
-    out (c),a
-    ld b,#F4
-    in a,(c)
-    cpl
-    ret
 
 ;; ---------------------------------------------------------------------------
 ;; set_palette - HL = 16 Gate Array colour bytes. Border black. Interrupts
@@ -661,7 +616,14 @@ demo_gear_ok
 ;; demo_step - one VSYNC of the demo drive.
 ;; ---------------------------------------------------------------------------
 demo_step
-    ; speed: accelerate for 10 s, cruise for 6 s, brake for 4 s, repeat
+    ld a,(player)               ; once the player has pressed faster or
+    inc a                       ; slower, their speed (player.asm); else -
+    jr z,demo_cycle             ; and for the tools (#FF) - the demo's
+    dec a
+    and #0C
+    jp nz,speed_player
+demo_cycle
+    ; speed: accelerate for 16 s, then brake, repeat every 20 s
     ld hl,(speed_phase)
     inc hl
     ld a,h

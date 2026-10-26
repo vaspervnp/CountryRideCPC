@@ -7,7 +7,7 @@ BUSH_ZNEAR    EQU 72
 BUSH_ZFAR     EQU 1024
 BUSH_MAX      EQU 8   ; bushes drawn at most
 BUSH_PERIOD   EQU 8192   ; the track loops
-BUSH_HILL_MAX EQU 98
+BUSH_HILL_MAX EQU 62
 
 ;; the bushes along the track, by depth: defw z; its size class's sprite
 ;; table; its lateral class's offset table for its side
@@ -24,76 +24,74 @@ bush_tab
     defw 1998,bush_spr1,bush_latL1
     defw 2098,bush_spr0,bush_latL0
     defw 2240,bush_spr0,bush_latR1
-    defw 2598,bush_spr2,bush_latL3
-    defw 2874,bush_spr0,bush_latR1
-    defw 2979,bush_spr1,bush_latR1
-    defw 3116,bush_spr1,bush_latL2
-    defw 3477,bush_spr2,bush_latL4
-    defw 3593,bush_spr1,bush_latR2
-    defw 3816,bush_spr2,bush_latR3
-    defw 4039,bush_spr1,bush_latL1
-    defw 4204,bush_spr0,bush_latR1
-    defw 4308,bush_spr2,bush_latR4
-    defw 4504,bush_spr1,bush_latL2
-    defw 4615,bush_spr1,bush_latL3
-    defw 4765,bush_spr0,bush_latL1
-    defw 4953,bush_spr2,bush_latR4
-    defw 5251,bush_spr1,bush_latL3
-    defw 5542,bush_spr1,bush_latR1
-    defw 5752,bush_spr0,bush_latL1
-    defw 5983,bush_spr2,bush_latR3
-    defw 6170,bush_spr1,bush_latL2
-    defw 6445,bush_spr1,bush_latR1
-    defw 6565,bush_spr2,bush_latL4
-    defw 6788,bush_spr0,bush_latL0
-    defw 7041,bush_spr2,bush_latR3
-    defw 7201,bush_spr1,bush_latR2
-    defw 7417,bush_spr1,bush_latR1
-    defw 7643,bush_spr2,bush_latL4
-    defw 7828,bush_spr0,bush_latL2
-    defw 8072,bush_spr0,bush_latR0
+    defw 2630,bush_spr2,bush_latL3
+    defw 2906,bush_spr0,bush_latR1
+    defw 3011,bush_spr1,bush_latR1
+    defw 3148,bush_spr1,bush_latL2
+    defw 3541,bush_spr2,bush_latL4
+    defw 3657,bush_spr1,bush_latR2
+    defw 3880,bush_spr2,bush_latR3
+    defw 4103,bush_spr1,bush_latL1
+    defw 4268,bush_spr0,bush_latR1
+    defw 4372,bush_spr2,bush_latR4
+    defw 4568,bush_spr1,bush_latL2
+    defw 4679,bush_spr1,bush_latL3
+    defw 4829,bush_spr0,bush_latL1
+    defw 5017,bush_spr2,bush_latR4
+    defw 5315,bush_spr1,bush_latL3
+    defw 5606,bush_spr1,bush_latR1
+    defw 5816,bush_spr0,bush_latL1
+    defw 6047,bush_spr2,bush_latR3
+    defw 6234,bush_spr1,bush_latL2
+    defw 6509,bush_spr1,bush_latR1
+    defw 6629,bush_spr2,bush_latL4
+    defw 6852,bush_spr0,bush_latL0
+    defw 7105,bush_spr2,bush_latR3
+    defw 7265,bush_spr1,bush_latR2
+    defw 7481,bush_spr1,bush_latR1
+    defw 7739,bush_spr2,bush_latL4
+    defw 7924,bush_spr0,bush_latL2
 ;; where each comes into reach (the first zcam its size class draws it
 ;; at), in that order: defw that, the bush
 bush_starts
-    defw 500,bush_tab+4*BUSH_ENTRY
-    defw 505,bush_tab+3*BUSH_ENTRY
-    defw 531,bush_tab+2*BUSH_ENTRY
-    defw 805,bush_tab+5*BUSH_ENTRY
-    defw 1130,bush_tab+6*BUSH_ENTRY
-    defw 1425,bush_tab+7*BUSH_ENTRY
-    defw 1529,bush_tab+8*BUSH_ENTRY
-    defw 1783,bush_tab+9*BUSH_ENTRY
-    defw 1925,bush_tab+10*BUSH_ENTRY
+    defw 468,bush_tab+4*BUSH_ENTRY
+    defw 497,bush_tab+3*BUSH_ENTRY
+    defw 523,bush_tab+2*BUSH_ENTRY
+    defw 797,bush_tab+5*BUSH_ENTRY
+    defw 1122,bush_tab+6*BUSH_ENTRY
+    defw 1417,bush_tab+7*BUSH_ENTRY
+    defw 1521,bush_tab+8*BUSH_ENTRY
+    defw 1775,bush_tab+9*BUSH_ENTRY
+    defw 1917,bush_tab+10*BUSH_ENTRY
     defw 1927,bush_tab+11*BUSH_ENTRY
-    defw 2510,bush_tab+13*BUSH_ENTRY
-    defw 2559,bush_tab+12*BUSH_ENTRY
-    defw 2647,bush_tab+14*BUSH_ENTRY
-    defw 2806,bush_tab+15*BUSH_ENTRY
-    defw 3124,bush_tab+16*BUSH_ENTRY
-    defw 3145,bush_tab+17*BUSH_ENTRY
-    defw 3570,bush_tab+18*BUSH_ENTRY
-    defw 3637,bush_tab+20*BUSH_ENTRY
-    defw 3889,bush_tab+19*BUSH_ENTRY
-    defw 4035,bush_tab+21*BUSH_ENTRY
-    defw 4146,bush_tab+22*BUSH_ENTRY
-    defw 4282,bush_tab+24*BUSH_ENTRY
-    defw 4450,bush_tab+23*BUSH_ENTRY
-    defw 4782,bush_tab+25*BUSH_ENTRY
-    defw 5073,bush_tab+26*BUSH_ENTRY
-    defw 5312,bush_tab+28*BUSH_ENTRY
-    defw 5437,bush_tab+27*BUSH_ENTRY
-    defw 5701,bush_tab+29*BUSH_ENTRY
-    defw 5894,bush_tab+31*BUSH_ENTRY
-    defw 5976,bush_tab+30*BUSH_ENTRY
-    defw 6370,bush_tab+33*BUSH_ENTRY
-    defw 6473,bush_tab+32*BUSH_ENTRY
-    defw 6732,bush_tab+34*BUSH_ENTRY
-    defw 6948,bush_tab+35*BUSH_ENTRY
-    defw 6972,bush_tab+36*BUSH_ENTRY
-    defw 7513,bush_tab+37*BUSH_ENTRY
-    defw 7757,bush_tab+38*BUSH_ENTRY
-    defw 7982,bush_tab+0*BUSH_ENTRY
-    defw 8069,bush_tab+1*BUSH_ENTRY
+    defw 2534,bush_tab+13*BUSH_ENTRY
+    defw 2583,bush_tab+12*BUSH_ENTRY
+    defw 2671,bush_tab+14*BUSH_ENTRY
+    defw 2838,bush_tab+15*BUSH_ENTRY
+    defw 3177,bush_tab+17*BUSH_ENTRY
+    defw 3180,bush_tab+16*BUSH_ENTRY
+    defw 3626,bush_tab+18*BUSH_ENTRY
+    defw 3669,bush_tab+20*BUSH_ENTRY
+    defw 3945,bush_tab+19*BUSH_ENTRY
+    defw 4091,bush_tab+21*BUSH_ENTRY
+    defw 4202,bush_tab+22*BUSH_ENTRY
+    defw 4314,bush_tab+24*BUSH_ENTRY
+    defw 4506,bush_tab+23*BUSH_ENTRY
+    defw 4838,bush_tab+25*BUSH_ENTRY
+    defw 5129,bush_tab+26*BUSH_ENTRY
+    defw 5344,bush_tab+28*BUSH_ENTRY
+    defw 5493,bush_tab+27*BUSH_ENTRY
+    defw 5757,bush_tab+29*BUSH_ENTRY
+    defw 5926,bush_tab+31*BUSH_ENTRY
+    defw 6032,bush_tab+30*BUSH_ENTRY
+    defw 6402,bush_tab+33*BUSH_ENTRY
+    defw 6529,bush_tab+32*BUSH_ENTRY
+    defw 6788,bush_tab+34*BUSH_ENTRY
+    defw 7004,bush_tab+35*BUSH_ENTRY
+    defw 7036,bush_tab+36*BUSH_ENTRY
+    defw 7601,bush_tab+37*BUSH_ENTRY
+    defw 7974,bush_tab+0*BUSH_ENTRY
+    defw 8037,bush_tab+1*BUSH_ENTRY
 bush_starts_end
 ;; the bushes in reach (bush_draw): how many, nearest first, at the start;
 ;; and the next to come into reach
@@ -105,7 +103,7 @@ bush_reach
     ASSERT hi(bush_reach) == hi($-1)
 bush_head
     defw bush_starts+0*4
-BUSH_COUNT    EQU 39
+BUSH_COUNT    EQU 38
 CAR_Y         EQU 240   ; the car's top line
 CAR_TOP       EQU 20   ; its lines from there that differ from view to view
 ;; per car_view (straight, turning left, turning right): where the

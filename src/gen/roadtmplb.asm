@@ -11,25 +11,24 @@
     defs 2,0
     defw empty_core,#0040,lgrassb+48   ; near ('rows', 2, 2)
     defs 2,0
-    defw empty_core,#0040,lgrassb+48   ; near ('rows', 3, 3)
+    defw empty_core,#0040,lgrassb+48   ; near ('rows', 3, 2)
     defs 2,0
     defw empty_core,#0040,lgrassb+48   ; near ('half', 4)
     defs 2,0
     defw rc_1_5_1+0,#0100,#00D5,rc_1_5_1+1   ; near ('half', 5)
     defw rc_1_6_0+0,#0200,#00D5,rc_1_6_0+5   ; near ('half', 6)
-    defw rc_1_7_0+0,#0400,#00D5,rc_1_7_0+7   ; near ('half', 7)
+    defw rc_1_7_1+0,#0400,#00D5,rc_1_7_1+4   ; near ('half', 7)
     defw rc_1_8_0+0,#0600,#00D5,rc_1_8_0+6   ; near ('half', 8)
     defw rc_1_9_1+0,#0800,#00D5,rc_1_9_1+11   ; near ('half', 9)
     defw rc_1_10_0+0,#0900,#00D5,rc_1_10_0+9   ; near ('half', 10)
     defw rc_1_11_1+0,#0B00,#00D5,rc_1_11_1+14   ; near ('half', 11)
-    defw rc_1_12_1+0,#0D00,#0001,rc_1_12_1+16   ; near ('half', 12)
+    defw rc_1_12_0+0,#0C00,#00D5,rc_1_12_0+12   ; near ('half', 12)
     defw rc_1_13_1+0,#0E00,#0001,rc_1_13_1+17   ; near ('half', 13)
     defw rc_1_14_0+0,#0F00,#00F5,rc_1_14_0+15   ; near ('half', 14)
     defw rc_1_15_0+0,#1100,#00F5,rc_1_15_0+23   ; near ('half', 15)
     defw rc_1_16_1+0,#1300,#00F5,rc_1_16_1+19   ; near ('half', 16)
-    defw rc_1_17_0+0,#1440,lgrassb+48   ; near ('half', 17)
-    defs 2,0
-    defw rc_1_18_1+0,#1640,lgrassb+48   ; near ('half', 18)
+    defw rc_1_17_1+0,#1400,#00F5,rc_1_17_1+20   ; near ('half', 17)
+    defw rc_1_18_0+0,#1540,lgrassb+48   ; near ('half', 18)
     defs 2,0
     defw rc_1_19_1+0,#1740,lgrassb+48   ; near ('half', 19)
     defs 2,0
@@ -37,7 +36,7 @@
     defs 2,0
     defw rc_1_21_1+0,#1A40,lgrassb+48   ; near ('half', 21)
     defs 2,0
-    defw rc_1_22_0+0,#1B40,lgrassb+47   ; near ('half', 22)
+    defw rc_1_22_1+0,#1B40,lgrassb+48   ; near ('half', 22)
     defs 2,0
     defw rc_1_23_0+0,#1C40,lgrassb+47   ; near ('half', 23)
     defs 2,0
@@ -51,7 +50,7 @@
     defs 2,0
     defw rc_1_28_0+0,#2240,lgrassb+47   ; near ('half', 28)
     defs 2,0
-    defw rc_1_29_1+0,#2440,lgrassb+47   ; near ('half', 29)
+    defw rc_1_29_0+0,#2340,lgrassb+47   ; near ('half', 29)
     defs 2,0
     defw rc_1_30_1+0,#2540,lgrassb+47   ; near ('half', 30)
     defs 2,0
@@ -61,7 +60,7 @@
     defs 2,0
     defw rc_1_33_1+0,#2840,lgrassb+48   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_0+0,#2940,lgrassb+47   ; near ('half', 34)
+    defw rc_1_34_1+0,#2940,lgrassb+48   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_1+0,#2A40,lgrassb+48   ; near ('half', 35)
     defs 2,0
@@ -85,8 +84,8 @@
     defw rc_1_49_1+8,#3000,#0001,rc_1_49_1+56   ; near ('half', 49)
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
-    ASSERT $ == RA_PL
-    defb 20,20,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,4,14,24,34,44,54,64,74,84,94,104,114,124,134,144,154,164,174,184,194,204,214,224,234,244
+    ASSERT $ == RA_P2L
+    defb 40,40,40,60,80,100,120,140,160,180,200,220,240,4,24,44,64,84,104,124,144,164,184,204,224,244,8,28,48,68,88,108,128,148,168,188,208,228,248,12,32,52,72,92,112,132,152,172,192,212,232
 ;; curve level -6
     defs 8,0
     defw empty_core,#0040,lgrassb+48   ; near ('rows', 2, 0)
@@ -95,32 +94,32 @@
     defs 2,0
     defw empty_core,#0040,lgrassb+48   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#0200,#00D5,rc_1_3_1+2   ; near ('rows', 3, 3)
+    defw rc_1_3_0+0,#0100,#00D5,rc_1_3_0+4   ; near ('rows', 3, 2)
     defw rc_1_4_1+0,#0300,#00D5,rc_1_4_1+3   ; near ('half', 4)
-    defw rc_1_5_0+0,#0400,#00D5,rc_1_5_0+7   ; near ('half', 5)
-    defw rc_1_6_0+0,#0600,#0001,rc_1_6_0+9   ; near ('half', 6)
-    defw rc_1_7_1+0,#0800,#00F5,rc_1_7_1+8   ; near ('half', 7)
-    defw rc_1_8_1+0,#0A00,#00F5,rc_1_8_1+16   ; near ('half', 8)
+    defw rc_1_5_1+0,#0500,#00D5,rc_1_5_1+5   ; near ('half', 5)
+    defw rc_1_6_1+0,#0600,#00D5,rc_1_6_1+6   ; near ('half', 6)
+    defw rc_1_7_0+0,#0700,#0001,rc_1_7_0+10   ; near ('half', 7)
+    defw rc_1_8_0+0,#0900,#00F5,rc_1_8_0+9   ; near ('half', 8)
     defw rc_1_9_1+0,#0B00,#00F5,rc_1_9_1+17   ; near ('half', 9)
     defw rc_1_10_0+0,#0C40,lgrassb+48   ; near ('half', 10)
     defs 2,0
     defw rc_1_11_1+0,#0E40,lgrassb+48   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_0+0,#0F40,lgrassb+47   ; near ('half', 12)
+    defw rc_1_12_1+0,#0F40,lgrassb+48   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#1140,lgrassb+47   ; near ('half', 13)
+    defw rc_1_13_0+0,#1040,lgrassb+47   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_1+0,#1240,lgrassb+47   ; near ('half', 14)
     defs 2,0
-    defw rc_1_15_0+0,#1340,lgrassb+47   ; near ('half', 15)
+    defw rc_1_15_1+0,#1440,lgrassb+47   ; near ('half', 15)
     defs 2,0
     defw rc_1_16_1+0,#1540,lgrassb+47   ; near ('half', 16)
     defs 2,0
-    defw rc_1_17_0+0,#1640,lgrassb+46   ; near ('half', 17)
+    defw rc_1_17_1+0,#1640,lgrassb+47   ; near ('half', 17)
     defs 2,0
     defw rc_1_18_0+0,#1740,lgrassb+46   ; near ('half', 18)
     defs 2,0
-    defw rc_1_19_1+0,#1940,lgrassb+46   ; near ('half', 19)
+    defw rc_1_19_0+0,#1840,lgrassb+46   ; near ('half', 19)
     defs 2,0
     defw rc_1_20_1+0,#1A40,lgrassb+46   ; near ('half', 20)
     defs 2,0
@@ -150,7 +149,7 @@
     defs 2,0
     defw rc_1_33_0+0,#2840,lgrassb+47   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_1+0,#2A40,lgrassb+47   ; near ('half', 34)
+    defw rc_1_34_0+0,#2940,lgrassb+47   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_0+0,#2A40,lgrassb+47   ; near ('half', 35)
     defs 2,0
@@ -174,16 +173,16 @@
     defw rc_1_49_1+8,#3000,#0001,rc_1_49_1+56   ; near ('half', 49)
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
-    ASSERT $ == RA_PH
-    defb 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+    ASSERT $ == RA_P2H
+    defb 0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3
 ;; curve level -5
     defs 8,0
     defw rc_1_2_1+0,#0300,#00F5,rc_1_2_1+3   ; near ('rows', 2, 0)
     defw rc_1_2_1+0,#0440,lgrassb+48   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_0+0,#0440,lgrassb+47   ; near ('rows', 2, 2)
+    defw rc_1_2_1+0,#0540,lgrassb+47   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#0640,lgrassb+47   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#0640,lgrassb+47   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#0740,lgrassb+47   ; near ('half', 4)
     defs 2,0
@@ -191,11 +190,11 @@
     defs 2,0
     defw rc_1_6_1+0,#0A40,lgrassb+46   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_0+0,#0B40,lgrassb+45   ; near ('half', 7)
+    defw rc_1_7_1+0,#0B40,lgrassb+46   ; near ('half', 7)
     defs 2,0
     defw rc_1_8_1+0,#0D40,lgrassb+46   ; near ('half', 8)
     defs 2,0
-    defw rc_1_9_0+0,#0E40,lgrassb+45   ; near ('half', 9)
+    defw rc_1_9_1+0,#0E40,lgrassb+46   ; near ('half', 9)
     defs 2,0
     defw rc_1_10_0+0,#0F40,lgrassb+45   ; near ('half', 10)
     defs 2,0
@@ -203,7 +202,7 @@
     defs 2,0
     defw rc_1_12_1+0,#1240,lgrassb+45   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_0+0,#1340,lgrassb+44   ; near ('half', 13)
+    defw rc_1_13_1+0,#1340,lgrassb+45   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_0+0,#1440,lgrassb+44   ; near ('half', 14)
     defs 2,0
@@ -223,9 +222,9 @@
     defs 2,0
     defw rc_1_22_1+0,#1E40,lgrassb+45   ; near ('half', 22)
     defs 2,0
-    defw rc_1_23_0+0,#1F40,lgrassb+44   ; near ('half', 23)
+    defw rc_1_23_1+0,#1F40,lgrassb+45   ; near ('half', 23)
     defs 2,0
-    defw rc_1_24_0+0,#2040,lgrassb+44   ; near ('half', 24)
+    defw rc_1_24_1+0,#2040,lgrassb+45   ; near ('half', 24)
     defs 2,0
     defw rc_1_25_1+0,#2140,lgrassb+45   ; near ('half', 25)
     defs 2,0
@@ -245,9 +244,9 @@
     defs 2,0
     defw rc_1_33_1+0,#2940,lgrassb+47   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_0+0,#2A40,lgrassb+46   ; near ('half', 34)
+    defw rc_1_34_1+0,#2A40,lgrassb+47   ; near ('half', 34)
     defs 2,0
-    defw rc_1_35_1+0,#2B40,lgrassb+47   ; near ('half', 35)
+    defw rc_1_35_0+0,#2A40,lgrassb+47   ; near ('half', 35)
     defs 2,0
     defw rc_1_36_1+0,#2C40,lgrassb+47   ; near ('half', 36)
     defs 2,0
@@ -255,7 +254,7 @@
     defs 2,0
     defw rc_1_38_1+0,#2D40,lgrassb+48   ; near ('half', 38)
     defs 2,0
-    defw rc_1_39_1+0,#2E40,lgrassb+48   ; near ('half', 39)
+    defw rc_1_39_0+0,#2D40,lgrassb+48   ; near ('half', 39)
     defs 2,0
     defw rc_1_40_1+0,#2F00,#00F5,rc_1_40_1+47   ; near ('half', 40)
     defw rc_1_41_0+0,#2F00,#00F5,rc_1_41_0+53   ; near ('half', 41)
@@ -269,17 +268,17 @@
     defw rc_1_49_1+8,#3000,#0001,rc_1_49_1+56   ; near ('half', 49)
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
-    ASSERT $ == RA_P2L
-    defb 40,40,40,60,80,100,120,140,160,180,200,220,240,4,24,44,64,84,104,124,144,164,184,204,224,244,8,28,48,68,88,108,128,148,168,188,208,228,248,12,32,52,72,92,112,132,152,172,192,212,232
+    ASSERT $ == RA_P4L
+    defb 80,80,80,120,160,200,240,24,64,104,144,184,224,8,48,88,128,168,208,248,32,72,112,152,192,232,16,56,96,136,176,216,0,40,80,120,160,200,240,24,64,104,144,184,224,8,48,88,128,168,208
 ;; curve level -4
     defs 8,0
     defw rc_1_2_0+0,#0740,lgrassb+44   ; near ('rows', 2, 0)
     defs 2,0
-    defw rc_1_2_1+0,#0840,lgrassb+44   ; near ('rows', 2, 1)
+    defw rc_1_2_0+0,#0840,lgrassb+43   ; near ('rows', 2, 1)
     defs 2,0
     defw rc_1_2_1+0,#0940,lgrassb+43   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#0A40,lgrassb+43   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#0A40,lgrassb+43   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#0B40,lgrassb+43   ; near ('half', 4)
     defs 2,0
@@ -287,7 +286,7 @@
     defs 2,0
     defw rc_1_6_0+0,#0D40,lgrassb+42   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_1+0,#0F40,lgrassb+42   ; near ('half', 7)
+    defw rc_1_7_0+0,#0E40,lgrassb+42   ; near ('half', 7)
     defs 2,0
     defw rc_1_8_0+0,#1040,lgrassb+42   ; near ('half', 8)
     defs 2,0
@@ -297,9 +296,9 @@
     defs 2,0
     defw rc_1_11_0+0,#1340,lgrassb+42   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_1+0,#1540,lgrassb+42   ; near ('half', 12)
+    defw rc_1_12_0+0,#1440,lgrassb+42   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#1640,lgrassb+42   ; near ('half', 13)
+    defw rc_1_13_0+0,#1540,lgrassb+42   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_1+0,#1740,lgrassb+42   ; near ('half', 14)
     defs 2,0
@@ -323,9 +322,9 @@
     defs 2,0
     defw rc_1_24_0+0,#2140,lgrassb+43   ; near ('half', 24)
     defs 2,0
-    defw rc_1_25_0+0,#2240,lgrassb+43   ; near ('half', 25)
+    defw rc_1_25_1+0,#2240,lgrassb+44   ; near ('half', 25)
     defs 2,0
-    defw rc_1_26_0+0,#2340,lgrassb+43   ; near ('half', 26)
+    defw rc_1_26_1+0,#2340,lgrassb+44   ; near ('half', 26)
     defs 2,0
     defw rc_1_27_0+0,#2440,lgrassb+44   ; near ('half', 27)
     defs 2,0
@@ -341,7 +340,7 @@
     defs 2,0
     defw rc_1_33_0+0,#2940,lgrassb+46   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_1+0,#2B40,lgrassb+46   ; near ('half', 34)
+    defw rc_1_34_0+0,#2A40,lgrassb+46   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_1+0,#2B40,lgrassb+47   ; near ('half', 35)
     defs 2,0
@@ -366,17 +365,17 @@
     defw rc_1_49_1+8,#3000,#0001,rc_1_49_1+56   ; near ('half', 49)
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
-    ASSERT $ == RA_P2H
-    defb 0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3
+    ASSERT $ == RA_P4H
+    defb 0,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4,5,5,5,5,5,5,5,6,6,6,6,6,6,7,7,7,7,7,7
 ;; curve level -3
     defs 8,0
     defw rc_1_2_0+0,#0C40,lgrassb+39   ; near ('rows', 2, 0)
     defs 2,0
-    defw rc_1_2_0+0,#0C40,lgrassb+39   ; near ('rows', 2, 1)
+    defw rc_1_2_1+0,#0D40,lgrassb+39   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_1+0,#0D40,lgrassb+39   ; near ('rows', 2, 2)
+    defw rc_1_2_0+0,#0D40,lgrassb+38   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#0E40,lgrassb+39   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#0E40,lgrassb+39   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#0F40,lgrassb+39   ; near ('half', 4)
     defs 2,0
@@ -396,9 +395,9 @@
     defs 2,0
     defw rc_1_12_0+0,#1740,lgrassb+39   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_0+0,#1840,lgrassb+39   ; near ('half', 13)
+    defw rc_1_13_1+0,#1840,lgrassb+40   ; near ('half', 13)
     defs 2,0
-    defw rc_1_14_0+0,#1940,lgrassb+39   ; near ('half', 14)
+    defw rc_1_14_1+0,#1940,lgrassb+40   ; near ('half', 14)
     defs 2,0
     defw rc_1_15_0+0,#1A40,lgrassb+40   ; near ('half', 15)
     defs 2,0
@@ -448,7 +447,7 @@
     defs 2,0
     defw rc_1_38_0+0,#2D40,lgrassb+47   ; near ('half', 38)
     defs 2,0
-    defw rc_1_39_0+0,#2E40,lgrassb+47   ; near ('half', 39)
+    defw rc_1_39_1+0,#2E40,lgrassb+48   ; near ('half', 39)
     defs 2,0
     defw rc_1_40_0+0,#2F40,lgrassb+48   ; near ('half', 40)
     defs 2,0
@@ -473,7 +472,7 @@
     defs 2,0
     defw rc_1_2_0+0,#1140,lgrassb+34   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_0+0,#1240,lgrassb+34   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#1240,lgrassb+35   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#1340,lgrassb+35   ; near ('half', 4)
     defs 2,0
@@ -489,13 +488,13 @@
     defs 2,0
     defw rc_1_10_0+0,#1840,lgrassb+36   ; near ('half', 10)
     defs 2,0
-    defw rc_1_11_0+0,#1940,lgrassb+36   ; near ('half', 11)
+    defw rc_1_11_1+0,#1940,lgrassb+37   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_0+0,#1A40,lgrassb+36   ; near ('half', 12)
+    defw rc_1_12_1+0,#1A40,lgrassb+37   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#1B40,lgrassb+37   ; near ('half', 13)
+    defw rc_1_13_0+0,#1A40,lgrassb+37   ; near ('half', 13)
     defs 2,0
-    defw rc_1_14_1+0,#1C40,lgrassb+37   ; near ('half', 14)
+    defw rc_1_14_0+0,#1B40,lgrassb+37   ; near ('half', 14)
     defs 2,0
     defw rc_1_15_1+0,#1D40,lgrassb+38   ; near ('half', 15)
     defs 2,0
@@ -509,7 +508,7 @@
     defs 2,0
     defw rc_1_20_0+0,#2040,lgrassb+39   ; near ('half', 20)
     defs 2,0
-    defw rc_1_21_0+0,#2140,lgrassb+40   ; near ('half', 21)
+    defw rc_1_21_1+0,#2240,lgrassb+40   ; near ('half', 21)
     defs 2,0
     defw rc_1_22_0+0,#2240,lgrassb+40   ; near ('half', 22)
     defs 2,0
@@ -525,7 +524,7 @@
     defs 2,0
     defw rc_1_28_0+0,#2740,lgrassb+42   ; near ('half', 28)
     defs 2,0
-    defw rc_1_29_1+0,#2840,lgrassb+43   ; near ('half', 29)
+    defw rc_1_29_0+0,#2740,lgrassb+43   ; near ('half', 29)
     defs 2,0
     defw rc_1_30_0+0,#2840,lgrassb+43   ; near ('half', 30)
     defs 2,0
@@ -568,9 +567,9 @@
     defs 2,0
     defw rc_1_2_0+0,#1540,lgrassb+30   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_0+0,#1540,lgrassb+30   ; near ('rows', 2, 2)
+    defw rc_1_2_1+0,#1640,lgrassb+30   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_0+0,#1640,lgrassb+30   ; near ('rows', 3, 3)
+    defw rc_1_3_0+0,#1640,lgrassb+30   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#1740,lgrassb+31   ; near ('half', 4)
     defs 2,0
@@ -668,7 +667,7 @@
     defs 2,0
     defw rc_1_2_1+0,#1A40,lgrassb+26   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_0+0,#1A40,lgrassb+26   ; near ('rows', 3, 3)
+    defw rc_1_3_0+0,#1A40,lgrassb+26   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#1B40,lgrassb+27   ; near ('half', 4)
     defs 2,0
@@ -764,9 +763,9 @@
     defs 2,0
     defw rc_1_2_0+0,#1E40,lgrassb+21   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_0+0,#1E40,lgrassb+21   ; near ('rows', 2, 2)
+    defw rc_1_2_1+0,#1E40,lgrassb+22   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_0+0,#1E40,lgrassb+22   ; near ('rows', 3, 3)
+    defw rc_1_3_0+0,#1E40,lgrassb+22   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#1F40,lgrassb+23   ; near ('half', 4)
     defs 2,0
@@ -864,7 +863,7 @@
     defs 2,0
     defw rc_1_2_0+0,#2240,lgrassb+17   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_0+0,#2240,lgrassb+18   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#2340,lgrassb+18   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#2340,lgrassb+19   ; near ('half', 4)
     defs 2,0
@@ -880,13 +879,13 @@
     defs 2,0
     defw rc_1_10_0+0,#2440,lgrassb+24   ; near ('half', 10)
     defs 2,0
-    defw rc_1_11_0+0,#2440,lgrassb+25   ; near ('half', 11)
+    defw rc_1_11_1+0,#2540,lgrassb+25   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_0+0,#2440,lgrassb+26   ; near ('half', 12)
+    defw rc_1_12_1+0,#2540,lgrassb+26   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#2540,lgrassb+27   ; near ('half', 13)
+    defw rc_1_13_0+0,#2540,lgrassb+26   ; near ('half', 13)
     defs 2,0
-    defw rc_1_14_1+0,#2540,lgrassb+28   ; near ('half', 14)
+    defw rc_1_14_0+0,#2540,lgrassb+27   ; near ('half', 14)
     defs 2,0
     defw rc_1_15_1+0,#2640,lgrassb+29   ; near ('half', 15)
     defs 2,0
@@ -900,7 +899,7 @@
     defs 2,0
     defw rc_1_20_0+0,#2740,lgrassb+32   ; near ('half', 20)
     defs 2,0
-    defw rc_1_21_0+0,#2840,lgrassb+33   ; near ('half', 21)
+    defw rc_1_21_1+0,#2840,lgrassb+34   ; near ('half', 21)
     defs 2,0
     defw rc_1_22_0+0,#2840,lgrassb+34   ; near ('half', 22)
     defs 2,0
@@ -916,7 +915,7 @@
     defs 2,0
     defw rc_1_28_0+0,#2A40,lgrassb+39   ; near ('half', 28)
     defs 2,0
-    defw rc_1_29_1+0,#2B40,lgrassb+40   ; near ('half', 29)
+    defw rc_1_29_0+0,#2B40,lgrassb+39   ; near ('half', 29)
     defs 2,0
     defw rc_1_30_0+0,#2B40,lgrassb+40   ; near ('half', 30)
     defs 2,0
@@ -958,11 +957,11 @@
     defs 8,0
     defw rc_1_2_0+0,#2740,lgrassb+12   ; near ('rows', 2, 0)
     defs 2,0
-    defw rc_1_2_0+0,#2740,lgrassb+12   ; near ('rows', 2, 1)
+    defw rc_1_2_1+0,#2740,lgrassb+13   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_1+0,#2740,lgrassb+13   ; near ('rows', 2, 2)
+    defw rc_1_2_0+0,#2640,lgrassb+13   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#2740,lgrassb+14   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#2740,lgrassb+14   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#2740,lgrassb+15   ; near ('half', 4)
     defs 2,0
@@ -982,9 +981,9 @@
     defs 2,0
     defw rc_1_12_0+0,#2740,lgrassb+23   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_0+0,#2740,lgrassb+24   ; near ('half', 13)
+    defw rc_1_13_1+0,#2840,lgrassb+24   ; near ('half', 13)
     defs 2,0
-    defw rc_1_14_0+0,#2740,lgrassb+25   ; near ('half', 14)
+    defw rc_1_14_1+0,#2840,lgrassb+25   ; near ('half', 14)
     defs 2,0
     defw rc_1_15_0+0,#2840,lgrassb+26   ; near ('half', 15)
     defs 2,0
@@ -1052,16 +1051,16 @@
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
     ASSERT $ == RA_C1L
-    defb 37,228,143,60,235,155,57,218,144,71,0,170,86,20,213,150,90,16,201,146,93,41,235,175,129,84,41,0,206,159,124,90,57,19,239,212,187,163,141,116,93,76,61,48,34,22,14,8,4,1,0
+    defb 37,209,126,72,249,145,68,250,153,82,12,178,112,47,220,139,80,23,204,151,98,31,239,191,131,87,45,248,209,172,125,92,60,20,248,221,188,164,143,116,92,76,62,45,34,25,14,8,4,1,0
 ;; curve level 4
     defs 8,0
     defw rc_1_2_0+0,#2C40,lgrassb+7   ; near ('rows', 2, 0)
     defs 2,0
-    defw rc_1_2_1+0,#2C40,lgrassb+8   ; near ('rows', 2, 1)
+    defw rc_1_2_0+0,#2B40,lgrassb+8   ; near ('rows', 2, 1)
     defs 2,0
     defw rc_1_2_1+0,#2B40,lgrassb+9   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#2B40,lgrassb+10   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#2B40,lgrassb+10   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#2B40,lgrassb+11   ; near ('half', 4)
     defs 2,0
@@ -1069,7 +1068,7 @@
     defs 2,0
     defw rc_1_6_0+0,#2A40,lgrassb+13   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_1+0,#2A40,lgrassb+15   ; near ('half', 7)
+    defw rc_1_7_0+0,#2A40,lgrassb+14   ; near ('half', 7)
     defs 2,0
     defw rc_1_8_0+0,#2A40,lgrassb+16   ; near ('half', 8)
     defs 2,0
@@ -1079,9 +1078,9 @@
     defs 2,0
     defw rc_1_11_0+0,#2A40,lgrassb+19   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_1+0,#2A40,lgrassb+21   ; near ('half', 12)
+    defw rc_1_12_0+0,#2A40,lgrassb+20   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#2A40,lgrassb+22   ; near ('half', 13)
+    defw rc_1_13_0+0,#2A40,lgrassb+21   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_1+0,#2A40,lgrassb+23   ; near ('half', 14)
     defs 2,0
@@ -1095,7 +1094,7 @@
     defs 2,0
     defw rc_1_19_0+0,#2A40,lgrassb+28   ; near ('half', 19)
     defs 2,0
-    defw rc_1_20_0+0,#2A40,lgrassb+29   ; near ('half', 20)
+    defw rc_1_20_1+0,#2B40,lgrassb+29   ; near ('half', 20)
     defs 2,0
     defw rc_1_21_0+0,#2B40,lgrassb+30   ; near ('half', 21)
     defs 2,0
@@ -1105,9 +1104,9 @@
     defs 2,0
     defw rc_1_24_0+0,#2B40,lgrassb+33   ; near ('half', 24)
     defs 2,0
-    defw rc_1_25_0+0,#2B40,lgrassb+34   ; near ('half', 25)
+    defw rc_1_25_1+0,#2C40,lgrassb+34   ; near ('half', 25)
     defs 2,0
-    defw rc_1_26_0+0,#2B40,lgrassb+35   ; near ('half', 26)
+    defw rc_1_26_1+0,#2C40,lgrassb+35   ; near ('half', 26)
     defs 2,0
     defw rc_1_27_0+0,#2C40,lgrassb+36   ; near ('half', 27)
     defs 2,0
@@ -1123,7 +1122,7 @@
     defs 2,0
     defw rc_1_33_0+0,#2E40,lgrassb+41   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_1+0,#2E40,lgrassb+43   ; near ('half', 34)
+    defw rc_1_34_0+0,#2E40,lgrassb+42   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_1+0,#2F40,lgrassb+43   ; near ('half', 35)
     defs 2,0
@@ -1151,16 +1150,16 @@
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
     ASSERT $ == RA_C1H
-    defb 9,8,8,8,7,7,7,6,6,6,6,5,5,5,4,4,4,4,3,3,3,3,2,2,2,2,2,2,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    defb 9,8,8,8,7,7,7,6,6,6,6,5,5,5,4,4,4,4,3,3,3,3,2,2,2,2,2,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 ;; curve level 5
     defs 8,0
     defw rc_1_2_1+1,#3040,lgrassb+3   ; near ('rows', 2, 0)
     defs 2,0
     defw rc_1_2_1+0,#3040,lgrassb+4   ; near ('rows', 2, 1)
     defs 2,0
-    defw rc_1_2_0+0,#2F40,lgrassb+4   ; near ('rows', 2, 2)
+    defw rc_1_2_1+0,#2F40,lgrassb+5   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+0,#2F40,lgrassb+6   ; near ('rows', 3, 3)
+    defw rc_1_3_1+0,#2F40,lgrassb+6   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+0,#2F40,lgrassb+7   ; near ('half', 4)
     defs 2,0
@@ -1168,11 +1167,11 @@
     defs 2,0
     defw rc_1_6_1+0,#2E40,lgrassb+10   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_0+0,#2D40,lgrassb+11   ; near ('half', 7)
+    defw rc_1_7_1+0,#2E40,lgrassb+11   ; near ('half', 7)
     defs 2,0
     defw rc_1_8_1+0,#2E40,lgrassb+13   ; near ('half', 8)
     defs 2,0
-    defw rc_1_9_0+0,#2D40,lgrassb+14   ; near ('half', 9)
+    defw rc_1_9_1+0,#2E40,lgrassb+14   ; near ('half', 9)
     defs 2,0
     defw rc_1_10_0+0,#2D40,lgrassb+15   ; near ('half', 10)
     defs 2,0
@@ -1180,7 +1179,7 @@
     defs 2,0
     defw rc_1_12_1+0,#2D40,lgrassb+18   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_0+0,#2C40,lgrassb+19   ; near ('half', 13)
+    defw rc_1_13_1+0,#2D40,lgrassb+19   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_0+0,#2C40,lgrassb+20   ; near ('half', 14)
     defs 2,0
@@ -1200,9 +1199,9 @@
     defs 2,0
     defw rc_1_22_1+0,#2D40,lgrassb+30   ; near ('half', 22)
     defs 2,0
-    defw rc_1_23_0+0,#2C40,lgrassb+31   ; near ('half', 23)
+    defw rc_1_23_1+0,#2D40,lgrassb+31   ; near ('half', 23)
     defs 2,0
-    defw rc_1_24_0+0,#2C40,lgrassb+32   ; near ('half', 24)
+    defw rc_1_24_1+0,#2D40,lgrassb+32   ; near ('half', 24)
     defs 2,0
     defw rc_1_25_1+0,#2D40,lgrassb+33   ; near ('half', 25)
     defs 2,0
@@ -1222,9 +1221,9 @@
     defs 2,0
     defw rc_1_33_1+0,#2F40,lgrassb+41   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_0+0,#2E40,lgrassb+42   ; near ('half', 34)
+    defw rc_1_34_1+0,#2F40,lgrassb+42   ; near ('half', 34)
     defs 2,0
-    defw rc_1_35_1+0,#2F40,lgrassb+43   ; near ('half', 35)
+    defw rc_1_35_0+0,#2F40,lgrassb+42   ; near ('half', 35)
     defs 2,0
     defw rc_1_36_1+0,#2F40,lgrassb+44   ; near ('half', 36)
     defs 2,0
@@ -1250,7 +1249,7 @@
     defw rc_1_50_0+5,#3000,#00D5,rc_1_50_0+53   ; near ('half', 50)
     defs 45,0
     ASSERT $ == RA_DA
-    defb 0,0,0,0,161,178,193,169,147,144,157,170,150,129,126,123,134,145,126,108,105,114,122,106,91,88,84,91,97,82,69,67,71,74,63,52,49,46,47,48,40,32,28,27,26,20,14,10,7,4,2
+    defb 0,0,0,0,183,181,151,171,168,141,160,156,131,148,164,140,116,132,128,106,120,115,96,108,104,86,95,92,76,84,80,65,72,68,55,60,57,45,48,51,40,30,31,28,20,20,17,10,7,4,2
 ;; curve level 6
     defs 8,0
     defw empty_core,#3040,lgrassb+0   ; near ('rows', 2, 0)
@@ -1259,17 +1258,17 @@
     defs 2,0
     defw empty_core,#3040,lgrassb+0   ; near ('rows', 2, 2)
     defs 2,0
-    defw rc_1_3_1+3,#3040,lgrassb+2   ; near ('rows', 3, 3)
+    defw rc_1_3_0+6,#3040,lgrassb+1   ; near ('rows', 3, 2)
     defs 2,0
     defw rc_1_4_1+3,#3040,lgrassb+3   ; near ('half', 4)
     defs 2,0
-    defw rc_1_5_0+5,#3040,lgrassb+4   ; near ('half', 5)
+    defw rc_1_5_1+2,#3040,lgrassb+5   ; near ('half', 5)
     defs 2,0
-    defw rc_1_6_0+4,#3040,lgrassb+6   ; near ('half', 6)
+    defw rc_1_6_1+2,#3040,lgrassb+6   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_1+1,#3040,lgrassb+8   ; near ('half', 7)
+    defw rc_1_7_0+4,#3040,lgrassb+7   ; near ('half', 7)
     defs 2,0
-    defw rc_1_8_1+1,#3040,lgrassb+10   ; near ('half', 8)
+    defw rc_1_8_0+1,#3040,lgrassb+9   ; near ('half', 8)
     defs 2,0
     defw rc_1_9_1+1,#3040,lgrassb+11   ; near ('half', 9)
     defs 2,0
@@ -1277,21 +1276,21 @@
     defs 2,0
     defw rc_1_11_1+0,#3040,lgrassb+14   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_0+0,#2F40,lgrassb+15   ; near ('half', 12)
+    defw rc_1_12_1+0,#3040,lgrassb+15   ; near ('half', 12)
     defs 2,0
-    defw rc_1_13_1+0,#2F40,lgrassb+17   ; near ('half', 13)
+    defw rc_1_13_0+0,#2F40,lgrassb+16   ; near ('half', 13)
     defs 2,0
     defw rc_1_14_1+0,#2F40,lgrassb+18   ; near ('half', 14)
     defs 2,0
-    defw rc_1_15_0+0,#2F40,lgrassb+19   ; near ('half', 15)
+    defw rc_1_15_1+0,#2F40,lgrassb+20   ; near ('half', 15)
     defs 2,0
     defw rc_1_16_1+0,#2F40,lgrassb+21   ; near ('half', 16)
     defs 2,0
-    defw rc_1_17_0+0,#2E40,lgrassb+22   ; near ('half', 17)
+    defw rc_1_17_1+0,#2F40,lgrassb+22   ; near ('half', 17)
     defs 2,0
     defw rc_1_18_0+0,#2E40,lgrassb+23   ; near ('half', 18)
     defs 2,0
-    defw rc_1_19_1+0,#2E40,lgrassb+25   ; near ('half', 19)
+    defw rc_1_19_0+0,#2E40,lgrassb+24   ; near ('half', 19)
     defs 2,0
     defw rc_1_20_1+0,#2E40,lgrassb+26   ; near ('half', 20)
     defs 2,0
@@ -1321,7 +1320,7 @@
     defs 2,0
     defw rc_1_33_0+0,#2F40,lgrassb+40   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_1+0,#2F40,lgrassb+42   ; near ('half', 34)
+    defw rc_1_34_0+0,#2F40,lgrassb+41   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_0+0,#2F40,lgrassb+42   ; near ('half', 35)
     defs 2,0
@@ -1358,7 +1357,7 @@
     defs 2,0
     defw empty_core,#3040,lgrassb+0   ; near ('rows', 2, 2)
     defs 2,0
-    defw empty_core,#3040,lgrassb+0   ; near ('rows', 3, 3)
+    defw empty_core,#3040,lgrassb+0   ; near ('rows', 3, 2)
     defs 2,0
     defw empty_core,#3040,lgrassb+0   ; near ('half', 4)
     defs 2,0
@@ -1366,7 +1365,7 @@
     defs 2,0
     defw rc_1_6_0+8,#3040,lgrassb+2   ; near ('half', 6)
     defs 2,0
-    defw rc_1_7_0+7,#3040,lgrassb+4   ; near ('half', 7)
+    defw rc_1_7_1+5,#3040,lgrassb+4   ; near ('half', 7)
     defs 2,0
     defw rc_1_8_0+4,#3040,lgrassb+6   ; near ('half', 8)
     defs 2,0
@@ -1376,7 +1375,7 @@
     defs 2,0
     defw rc_1_11_1+6,#3040,lgrassb+11   ; near ('half', 11)
     defs 2,0
-    defw rc_1_12_1+5,#3040,lgrassb+13   ; near ('half', 12)
+    defw rc_1_12_0+2,#3040,lgrassb+12   ; near ('half', 12)
     defs 2,0
     defw rc_1_13_1+5,#3040,lgrassb+14   ; near ('half', 13)
     defs 2,0
@@ -1386,9 +1385,9 @@
     defs 2,0
     defw rc_1_16_1+1,#3040,lgrassb+19   ; near ('half', 16)
     defs 2,0
-    defw rc_1_17_0+0,#3040,lgrassb+20   ; near ('half', 17)
+    defw rc_1_17_1+1,#3040,lgrassb+20   ; near ('half', 17)
     defs 2,0
-    defw rc_1_18_1+0,#3040,lgrassb+22   ; near ('half', 18)
+    defw rc_1_18_0+0,#3040,lgrassb+21   ; near ('half', 18)
     defs 2,0
     defw rc_1_19_1+0,#3040,lgrassb+23   ; near ('half', 19)
     defs 2,0
@@ -1396,7 +1395,7 @@
     defs 2,0
     defw rc_1_21_1+0,#3040,lgrassb+26   ; near ('half', 21)
     defs 2,0
-    defw rc_1_22_0+0,#2F40,lgrassb+27   ; near ('half', 22)
+    defw rc_1_22_1+0,#3040,lgrassb+27   ; near ('half', 22)
     defs 2,0
     defw rc_1_23_0+0,#2F40,lgrassb+28   ; near ('half', 23)
     defs 2,0
@@ -1410,7 +1409,7 @@
     defs 2,0
     defw rc_1_28_0+0,#2F40,lgrassb+34   ; near ('half', 28)
     defs 2,0
-    defw rc_1_29_1+0,#2F40,lgrassb+36   ; near ('half', 29)
+    defw rc_1_29_0+0,#2F40,lgrassb+35   ; near ('half', 29)
     defs 2,0
     defw rc_1_30_1+0,#2F40,lgrassb+37   ; near ('half', 30)
     defs 2,0
@@ -1420,7 +1419,7 @@
     defs 2,0
     defw rc_1_33_1+0,#3040,lgrassb+40   ; near ('half', 33)
     defs 2,0
-    defw rc_1_34_0+0,#2F40,lgrassb+41   ; near ('half', 34)
+    defw rc_1_34_1+0,#3040,lgrassb+41   ; near ('half', 34)
     defs 2,0
     defw rc_1_35_1+0,#3040,lgrassb+42   ; near ('half', 35)
     defs 2,0
@@ -1438,8 +1437,7 @@
     defs 2,0
     defw rc_1_42_0+1,#3040,lgrassb+48   ; near ('half', 42)
     defs 2,0
-    defw rc_1_43_0+2,#3040,lgrassb+48   ; near ('half', 43)
-    defs 2,0
+    defw rc_1_43_1+2,#3000,#00F5,rc_1_43_1+50   ; near ('half', 43)
     defw rc_1_44_0+2,#3000,#00F5,rc_1_44_0+56   ; near ('half', 44)
     defw rc_1_45_1+3,#3000,#00F5,rc_1_45_1+51   ; near ('half', 45)
     defw rc_1_46_0+3,#3000,#00F5,rc_1_46_0+51   ; near ('half', 46)

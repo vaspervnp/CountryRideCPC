@@ -9,7 +9,7 @@ GRASS_PAIR  EQU #0303
 ;; the grass's other stripe: its byte is GRASS_X apart; the rows from
 ;; GRASS_ROW on are striped by bit GRASS_SHIFT of (depth + zcam)
 GRASS_X     EQU #F0
-GRASS_ROW   EQU 15
+GRASS_ROW   EQU 14
 GRASS_SHIFT EQU 7
 
 ;; the template sets (see tools/mkroad.py): a set per curve level,
@@ -31,10 +31,10 @@ NFAR        EQU 6   ; the first NFAR have far rows: a slot NGROUPS on
 NFARONLY    EQU 6   ; ... the first NFARONLY nothing else
 ;; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g
 W_NONE      EQU #1C00   ; a row with no bias: W this far off
-RA_PL       EQU #61CD
-RA_PH       EQU #63CD
-RA_P2L      EQU #65CD
-RA_P2H      EQU #67CD
+RA_P2L      EQU #61CD
+RA_P2H      EQU #63CD
+RA_P4L      EQU #65CD
+RA_P4H      EQU #67CD
 RA_AL       EQU #69CD
 RA_AH       EQU #6BCD
 RA_AO       EQU #6DCD
@@ -50,10 +50,11 @@ G_OFF       EQU 112   ; added to a pair position in the cache maths
 ROAD_X_MAX  EQU 32   ; road_x goes this far either way
 PERSP_P     EQU 10   ; a pair of it moves half-width h h * PERSP_P / 256 bytes
 
-;; per road drop (the horizon's, hz_ground): how far the sky part goes
-;; down (scene.sky_drop)
+;; per road drop (the horizon's, hz_ground): the lines from the HUD's
+;; end to the sky part's start - SKY_Y - HUD_H, and as far as the sky
+;; part goes down (scene.sky_drop)
 MACRO SKY_DROP_TABLE
-    defb 0,2,4,6,8,10,12,14,16,16,16,16,16,18,20,22,24,24,24,24,24,26
+    defb 68,70,72,72,74,76,78,80,80,80,80,80,82,84,86,88,88,88,88,88,90,92
 MEND
 SKY_DROP_N  EQU 22
 ;; a curve level's move between |k| = m and m + 1 leaves the groups from
@@ -61,15 +62,15 @@ SKY_DROP_N  EQU 22
 CF_SAME0    EQU 40
 CF_SAME1    EQU 42
 CF_SAME2    EQU 44
-CF_SAME3    EQU 40
+CF_SAME3    EQU 38
 CF_SAME4    EQU 46
-CF_SAME5    EQU 40
-CF_SAME6    EQU 44
+CF_SAME5    EQU 38
+CF_SAME6    EQU 39
 ;; ... the rows from CF_ROW<m> on (255: none; road15.asm: cf_rows)
-CF_ROW0     EQU 87
-CF_ROW1     EQU 91
-CF_ROW2     EQU 95
-CF_ROW3     EQU 87
-CF_ROW4     EQU 100
-CF_ROW5     EQU 87
-CF_ROW6     EQU 95
+CF_ROW0     EQU 67
+CF_ROW1     EQU 70
+CF_ROW2     EQU 74
+CF_ROW3     EQU 63
+CF_ROW4     EQU 77
+CF_ROW5     EQU 63
+CF_ROW6     EQU 65

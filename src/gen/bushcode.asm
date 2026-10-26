@@ -1816,9 +1816,9 @@ car_code1
     ld hl,#00FC
     push hl
     ld hl,#C876
-    jp #7600
+    jp #7740
     ASSERT $ <= #7000
-    ORG #7600
+    ORG #7740
     add hl,sp
     ld sp,hl
     ei
@@ -1941,6 +1941,9 @@ car_code1
     push hl
     ld hl,#8A9B
     push hl
+    jp #7F00
+    ASSERT $ <= #7800
+    ORG #7F00
     ld hl,#0F2A
     push hl
     ld hl,#3FE8
@@ -2064,4 +2067,4 @@ car_code1
     ld hl,#C0E8
     push hl
     jp bush_spr_done
-    ASSERT $ <= #7800
+    ASSERT $ <= #8000

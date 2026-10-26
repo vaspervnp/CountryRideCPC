@@ -42,22 +42,23 @@ SCR_BYTES     EQU 96
 SCR_H         EQU 272
 TOP_ROWS      EQU 20
 HUD_H         EQU 64
-BLOCK_BOTTOM  EQU 152
-ROAD_Y        EQU 163
-ROAD_TOP_MIN  EQU 163
-ROAD_TOP_MAX  EQU 181
+SKY_Y         EQU 132
+BLOCK_BOTTOM  EQU 180
+ROAD_Y        EQU 188
+ROAD_TOP_MIN  EQU 188
+ROAD_TOP_MAX  EQU 202
 ROAD_END      EQU 268
-ROAD_LINES    EQU 105
-ROWS          EQU 109
-NEAR_ROW      EQU 105
-HORIZON_Y     EQU 162
+ROAD_LINES    EQU 80
+ROWS          EQU 84
+NEAR_ROW      EQU 80
+HORIZON_Y     EQU 187
 HALF_MAX      EQU 50
 MIN_HALF      EQU 2
 BAND_SHIFT    EQU 6
-FAR_Z         EQU 700
-FAR_ROW       EQU 11   ; rows 1..FAR_ROW are past FAR_Z
-MOUNT_TOP     EQU 106   ; first line of the mountain strip
-PANO_Y0       EQU 104   ; first line of the panorama (a character row)
+FAR_Z         EQU 660
+FAR_ROW       EQU 9   ; rows 1..FAR_ROW are past FAR_Z
+MOUNT_TOP     EQU 150   ; first line of the mountain strip
+PANO_Y0       EQU 148   ; first line of the panorama (a character row)
 PANO_WORDS    EQU 96   ; panorama width in CRTC words (4 pixels)
 ROAD_AREA_Y   EQU 160   ; first line of the road part's memory
 LAST_Y        EQU 107   ; the road's last line, from ROAD_AREA_Y

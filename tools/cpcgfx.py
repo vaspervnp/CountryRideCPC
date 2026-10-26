@@ -115,35 +115,38 @@ SCR_H = 272
 TOP_ROWS = 20               # character rows held in the first 16K page
 
 # As drawn in memory (the screen is split by raster ruptures - see hw.asm -
-# which moves the sky and the mountains down with the road):
+# which moves the sky and the mountains down with the road). The sky, the
+# mountains and the road take the screen's bottom half; above them is the
+# HUD's navy:
 HUD_H = 64                  # lines 0..63: the HUD on its single-colour ground
-BLOCK_BOTTOM = 152          # lines 64..151: the sky and the mountains, 11 rows
-ROAD_Y = 163                # lines 152..162: ground; 163..267: the road area
-ROAD_TOP_MIN = 163          # road 2/5 of the screen at most ...
-ROAD_TOP_MAX = 181          # ... and 1/3 at least
+SKY_Y = 132                 # lines 64..131: navy; 132..179: the sky part, 6
+BLOCK_BOTTOM = 180          # rows - navy, the dither from 136, the mountains
+ROAD_Y = 188                # lines 180..187: ground; 188..267: the road area
+ROAD_TOP_MIN = 188          # road 3/10 of the screen at most ...
+ROAD_TOP_MAX = 202          # ... and 1/4 at least
 ROAD_END = 268              # the road stops here: lines 268..271 stay black
                             # (a monitor's edge hides them anyway)
-ROAD_LINES = ROAD_END - ROAD_Y      # 105 scanlines redrawn every frame
+ROAD_LINES = ROAD_END - ROAD_Y      # 80 scanlines redrawn every frame
 
 # ---------------------------------------------------------------------------
 # The road.
 #
-# Flat road: screen line y (163..267) shows row r = y - 162, so r runs from
-# 1 (furthest) to 105 (nearest). A row's half-width grows linearly with r.
+# Flat road: screen line y (188..267) shows row r = y - 187, so r runs from
+# 1 (furthest) to 80 (nearest). A row's half-width grows linearly with r.
 # Hills move rows up and down the screen; see src/road.asm. The road's
 # shape is laid out over rows 1..ROWS, as if it went on to the screen's
 # last line; the last rows drawn are NEAR_ROW's.
 # ---------------------------------------------------------------------------
 
-ROWS = SCR_H - ROAD_Y       # 109 rows: the road's shape
-NEAR_ROW = ROAD_LINES       # 105: the nearest row drawn
+ROWS = SCR_H - ROAD_Y       # 84 rows: the road's shape
+NEAR_ROW = ROAD_LINES       # 80: the nearest row drawn
 HORIZON_Y = ROAD_Y - 1      # row r sits on line HORIZON_Y + r when flat
 
 LANES = 4
 LANE_W_BOTTOM = 50          # pixels per lane on the bottom line (car is 45)
 KERB_BOTTOM = 16            # kerb width on the bottom line, pixels
 LINE_BOTTOM = 3             # lane line width on the bottom line, pixels
-MIN_LINE_ROW = 10           # rows further away than this have no lane lines
+MIN_LINE_ROW = 8            # rows further away than this have no lane lines
 
 # Asphalt half-width in bytes is the variant index of a row: MIN_HALF..HALF_MAX.
 HALF_MAX = LANES * LANE_W_BOTTOM // 4      # 50 bytes = 100 pixels
@@ -170,11 +173,15 @@ def line_px(half):
     return max(1, (LINE_BOTTOM * half + HALF_MAX // 2) // HALF_MAX)
 
 
-# Depth of a row: z = DEPTH_K / r. 16 bits; the near row is z ~= 71.
-DEPTH_K = 7760
+# Depth of a row: z = DEPTH_K / r. 16 bits; the near row is z ~= 71, as
+# with the horizon higher (105 lines of road, DEPTH_K 7760): a depth is as
+# far from the car, and a stripe as long, as then.
+DEPTH_K = 5980
 BAND_SHIFT = 6              # a stripe band is 64 depth units long
-FAR_Z = 700                 # beyond this the stripes stop (they would alias:
-                            # the rows are a stripe apart)
+FAR_Z = 660                 # beyond this the stripes stop (they would alias:
+                            # the rows are about a stripe apart - z * z /
+                            # DEPTH_K - and a group of rows is all past it or
+                            # none of it: rows 1-9)
 
 
 def far_mask(r):
@@ -362,7 +369,7 @@ GROUND_PEN = PEN["GRASS_A"]                # the strip between hills and peaks
 # ground, and the grass between a bush's leaves.
 PLAIN_GRASS = PEN["GRASS_A"]
 GRASS_SHIFT = 7
-GRASS_ROW = 15
+GRASS_ROW = 14
 GRASS_STRIPES = True
 
 
@@ -403,7 +410,7 @@ def road_row_pixels(half, band, lanes=LANES):
 # Bushes beside the road. The demo track loops every TRACK_PERIOD depth units
 # (src/game.asm reads its hills and curves at (zcam / 32) mod 256); a bush
 # stands at a depth z on it, on one side, in one of BUSH_SIZES (its height
-# in metres - 1 m is 50/109 of a line per row, the lane being 3.7 m) and at
+# in metres - 1 m is 50/ROWS of a line per row, the lane being 3.7 m) and at
 # a lateral factor from BUSH_LATS: its centre is that many times as far from
 # the road's centre as the outer edge of the kerb.
 #
@@ -420,8 +427,8 @@ BUSH_LAT_OF = [(0, 2), (1, 3), (3, 4)]  # lateral classes each size can have
 BUSH_H = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16]
 BUSH_H_MIN = 4.5                        # lines: a smaller bush is not drawn
 BUSH_ASPECT = 1.2                       # pixels across per line of height
-BUSH_LINES_PER_M = 50 / 109             # lines per metre, per row
-BUSH_ROW_MIN = 7                        # further away a bush is not drawn
+BUSH_LINES_PER_M = 50 / ROWS            # lines per metre, per row
+BUSH_ROW_MIN = 5                        # further away a bush is not drawn
 BUSH_ZNEAR = 72                         # nearer than this it has gone by
 BUSH_ZFAR = 1024                        # the depth tables end here
 BUSH_GAP = (100, 300)                   # depth units from one bush to the next

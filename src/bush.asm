@@ -231,11 +231,16 @@ bd_hill_same
     ld de,0                             ; D: the left's mark, E: the right's
     ld a,(road_curve)
     call bd_side                        ; (flags: the level's)
-    jr z,bd_side_set
-    ld a,(hill)                         ; a curve still on a hill (its level
-    or a                                ; lags the track's): the layout does
-    jr z,bd_side_set                    ; not keep a bush on either side off
-    ld de,#8080                         ; the road there
+    ld a,(hill)
+    jr z,bd_side_crest
+    or a                                ; a curve still on a hill (its level
+    jr z,bd_side_set                    ; lags the track's): the layout does
+    jr bd_side_both                     ; not keep a bush on either side off
+bd_side_crest                           ; the road there; nor on a crest -
+    dec a                               ; one on a row it hides is drawn
+    jp m,bd_side_set                    ; where a nearer, wider row shows,
+bd_side_both                            ; and can touch its kerb
+    ld de,#8080
 bd_side_set
     ld a,e
     ld (b1_inr+1),a
@@ -702,21 +707,47 @@ bush_next_row
     ret
 
 ;; ---------------------------------------------------------------------------
-;; car_lines - after road_project, before road_draw (road_frame): if this
-;; buffer last showed the car seen another way (car_view), the lines at its
-;; top where the views' runs differ (CAR_TOP) are drawn whole - else what
-;; the old view had there and the new one has not would stay on any of them
-;; road_project left as it was. Line ROAD_AREA_Y + y is entry LAST_Y - y.
-;; Destroys AF, B, DE, HL.
+;; car_lines - after road_project, before road_draw (road_frame): where the
+;; car is drawn - road_x - car_x pairs right of the middle (car_off), the
+;; demo's and the tools' in the middle. If this buffer last showed it
+;; elsewhere or seen another way (car_view), the lines at its top where the
+;; views' runs differ (CAR_TOP) are drawn whole - else what the old one had
+;; there and the new one has not would stay on any of them road_project
+;; left as it was. Line ROAD_AREA_Y + y is entry LAST_Y - y.
+;; Destroys AF, BC, DE, HL.
 ;; ---------------------------------------------------------------------------
     ASSERT CAR_TOP > 0 && CAR_Y+CAR_TOP <= ROAD_END
 car_lines
+    ld a,(player)               ; (player 0 or #FF: the middle)
+    inc a
+    cp 2
+    ld a,0
+    jr c,car_lines_off
+    ld a,(car_x)
+    ld b,a
+    ld a,(road_x)
+    sub b
+    ld b,CAR_LEAD+2             ; (road_x can have gone a step on)
+    call clamp_ab
+car_lines_off
+    ld (car_off),a
+    ld c,a
+    ld hl,drawn_off
+    call buf_entry
+    ld a,(hl)
+    ld (hl),c
+    sub c
+    ld c,a                      ; C = 0: in the same place
     ld hl,drawn_view
     call buf_entry
     ld a,(car_view)
     cp (hl)
-    ret z
     ld (hl),a
+    jr nz,car_lines_whole
+    ld a,c
+    or a
+    ret z
+car_lines_whole
     ld hl,(rp_slot)
     ld de,4*(LAST_Y-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
     add hl,de
@@ -753,6 +784,13 @@ car_draw
     ld h,(hl)
     ld l,a                              ; HL = its code
     ex de,hl
+    ld a,(car_off)                      ; car_off pairs right (bytes: twice
+    add a,a                             ; that, signed)
+    ld c,a
+    add a,a
+    sbc a,a
+    ld b,a
+    add hl,bc
     ld a,(tgt_buf)
     or a
     jr z,cd_buf

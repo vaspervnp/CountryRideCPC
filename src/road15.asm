@@ -97,6 +97,7 @@ rp_skip_rest0
     ld a,(rp_dirty)                     ; road_project's way (rp_near_go,
     or a                                ; rp_cmp_go)
     call nz,rp_force
+rp_skip_rest1                           ; (rp_near_cmp: rp_force at the end)
     exx
     ld a,b
     exx
@@ -192,14 +193,17 @@ rp_habs                                 ; A = |h| for level A: |2A - 128|
 ;; rp_mode_rows - the hill moved: the near lines' rows are compared with
 ;; the ones they showed then (rp_cmp). A = 0 if nothing else moved: a line
 ;; that shows another row gets a margin - only its road if it is a nearer
-;; row and the road straight and in the middle. Else such a line is drawn
-;; whole, and the others only with the margin the road's move sideways
-;; needs. Returns A = 0 (rp_mode).
+;; row and the road straight and in the middle - and one that shows the
+;; same row in the same band is skipped. Else such a line is drawn whole,
+;; and the others only with the margin the road's move sideways needs.
+;; Returns A = 0 (rp_mode).
 rp_mode_rows
     ld hl,(#20*256)+0                   ; JR NZ and no second INC A:
     ld c,0                              ; another row, flag 0; far: off
+    ld e,#B7                            ; (OR A: no line skipped)
     or a
     jr nz,rp_rows_op
+    ld e,#BE                            ; (CP (HL))
     ld c,#3C                            ; (INC A)
     ld hl,(#28*256)+0                   ; JR Z: another row, flag 2
     ld a,(road_curve)
@@ -209,6 +213,8 @@ rp_mode_rows
     jr nz,rp_rows_op
     ld hl,(#30*256)+rp_far_hill_dash2-rp_far_near-2   ; JR NC: or a nearer
 rp_rows_op                                            ; one, flag 1
+    ld a,e
+    ld (rp_cmp_sk),a
     ld a,1
     ld (rp_cmp),a
     ld a,h

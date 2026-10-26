@@ -211,11 +211,12 @@ def hud_pens(g, buf):
 
 
 def sky_pens(g):
-    """The sky part as the CRTC shows it: 11 rows of the ring in page 3,
-    from character ring_w0."""
+    """The sky part as the CRTC shows it: its rows of the ring in page 3,
+    from character ring_w0 (lines SKY_Y..BLOCK_BOTTOM-1)."""
+    from cpcgfx import SKY_Y, BLOCK_BOTTOM
     w0 = g.word("RING_W0")
     out = []
-    for i in range(88):
+    for i in range(BLOCK_BOTTOM - SKY_Y):
         r, ras = i >> 3, i & 7
         data = []
         for j in range(48):
@@ -246,7 +247,9 @@ def road_model(g):
     curve = _signed(g.byte("ROAD_CURVE"))
     x = _signed(g.byte("ROAD_X"))
     view = g.game_byte("CAR_VIEW")
-    return scene.road_area(hill, zcam, curve, x=x, view=view), hill, zcam, curve, x
+    off = _signed(g.game_byte("CAR_OFF"))
+    return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off),
+            hill, zcam, curve, x)
 
 
 def road_partial(g):
@@ -323,7 +326,7 @@ def cmd_check():
                              max(xs)))
 
     # The HUD, sky and mountains of a freshly drawn buffer.
-    from cpcgfx import HUD_H
+    from cpcgfx import HUD_H, SKY_Y
     hud_bad = 0
     worst_lag = 0
     for n in range(20):
@@ -347,7 +350,7 @@ def cmd_check():
         got = hud_pens(g, buf)
         wrong = [y for y in range(64) if want[y] != got[y]]
         sky_want = scene.sky_lines(g.byte("RING_HEAD"))
-        wrong += [64 + i for i, row in enumerate(sky_pens(g)) if row != sky_want[i]]
+        wrong += [SKY_Y + i for i, row in enumerate(sky_pens(g)) if row != sky_want[i]]
         if wrong:
             hud_bad += 1
             if hud_bad <= 3:

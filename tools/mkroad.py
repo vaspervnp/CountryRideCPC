@@ -49,7 +49,7 @@ from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, NEAR_ROW, ROAD_END, ROAD_LI
                     ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
                     curve_c1, curve_d, road_shift, shift_tau, CURVE_ROW_GROUPS, PERSP_P,
                     PLAIN_GRASS, ROAD_X_MAX,
-                    GRASS_ROW, GRASS_SHIFT, GRASS_STRIPES, PEN)
+                    GRASS_ROW, GRASS_SHIFT, GRASS_STRIPES, PEN, HUD_H, SKY_Y)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src", "gen", "roadcores.asm")
@@ -261,7 +261,7 @@ def pack_pages(keys, size):
 # Bank 5's per group arrays (cache5.asm), one in the room after each band B
 # template set's near slots: at offset BA_LANE + g, so that L is #CD + g -
 # the last group's at #FF - and the next array two pages on.
-BA_ARRAYS = ["PL", "PH", "P2L", "P2H", "AL", "AH", "AO", "WL", "WH", "FL",
+BA_ARRAYS = ["P2L", "P2H", "P4L", "P4H", "AL", "AH", "AO", "WL", "WH", "FL",
              "C1L", "C1H", "DA", "KK", "H"]
 BA_LANE = 0x1CD
 
@@ -273,9 +273,9 @@ def bank5_arrays(near):
     for g, h, r in near:
         H = core_bytes(0, h, 0)[1]
         p, c1, d = PERSP_P * h, curve_c1(r), curve_d(r)
-        assert 0 <= 2 * p < 1024 and 0 <= c1 * CURVE_K < 32768 and -256 < d <= 0
+        assert 0 <= 4 * p < 2048 and 0 <= c1 * CURVE_K < 32768 and -256 < d <= 0
         none = h < CURVE_ROW_GROUPS
-        vals = dict(PL=p & 255, PH=p >> 8, P2L=2 * p & 255, P2H=2 * p >> 8,
+        vals = dict(P2L=2 * p & 255, P2H=2 * p >> 8, P4L=4 * p & 255, P4H=4 * p >> 8,
                     AL=128 + 64, AH=H, AO=0x80, WL=0, WH=W_NONE >> 8 if none else 0,
                     FL=0 if none else ("hi(rd_tent%d)" % (h & 1)),
                     C1L=c1 & 255, C1H=c1 >> 8, DA=-d, KK=CURVE_K, H=H)
@@ -374,11 +374,13 @@ def main():
     emit("PERSP_P     EQU %d   ; a pair of it moves half-width h h * PERSP_P / 256"
          " bytes" % PERSP_P)
     emit("")
-    emit(";; per road drop (the horizon's, hz_ground): how far the sky part goes")
-    emit(";; down (scene.sky_drop)")
+    emit(";; per road drop (the horizon's, hz_ground): the lines from the HUD's")
+    emit(";; end to the sky part's start - SKY_Y - HUD_H, and as far as the sky")
+    emit(";; part goes down (scene.sky_drop)")
     drops = range(max(scene.ground_drop(h) for h in range(-128, 128, 2)) + 1)
     emit("MACRO SKY_DROP_TABLE")
-    emit("    defb " + ",".join(str(scene.sky_drop(d)) for d in drops))
+    emit("    defb " + ",".join(str(SKY_Y - HUD_H + scene.sky_drop(d))
+                               for d in drops))
     emit("MEND")
     emit("SKY_DROP_N  EQU %d" % len(drops))
     emit(";; a curve level's move between |k| = m and m + 1 leaves the groups from")

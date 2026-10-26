@@ -570,6 +570,8 @@ rp_near_cmp
     ld (rp_cmp_d+1),hl
     ld hl,rp_cmp_go
     ld (rp_skip_jp+1),hl
+    ld hl,rp_skip_rest1                 ; (rp_force once, at the end)
+    ld (rp_skip_rest+1),hl
     pop af
     jp rp_near_skip
 rp_cmp_go                               ; A: the lines left
@@ -587,9 +589,11 @@ rp_cmp_all
     ld b,a                              ; B': lines
     exx
 
-;; One line a turn. Flagged as RP_LINE does if it shows the row it showed
-;; then (IY); another row: as rp_mode_rows says (rp_flx), or 0, all of it,
-;; if the grass's stripe on it is not the one on the row then.
+;; One line a turn. A line that shows the row it showed then (IY) is
+;; already right if it is in the band it was in then too - its template the
+;; one in the list (as rp_near_same) - when nothing but the hill moved; else
+;; flagged as RP_LINE does. Another row: as rp_mode_rows says (rp_flx), or
+;; 0, all of it, if the grass's stripe on it is not the one on the row then.
 rp_line_cmp
     ld a,(bc)                           ; the row this line shows
     inc bc
@@ -605,12 +609,43 @@ rp_zlo7
     inc hl
     exx
     jr nz,rp_other_cmp
+    inc h
+    ld a,ixl
+    and (hl)                            ; 64 (0 for the ground)
+    rrca
+    inc h
+    add a,(hl)                          ; template, high byte
+rp_lvl13
+    add a,0                             ; + the curve level (self-modified)
+    inc e
+    ex de,hl
+rp_cmp_sk
+    cp (hl)                             ; the band of then? (self-modified:
+    ld (hl),a                           ; OR A, never, if more than the hill
+    dec hl                              ; moved - rp_mode_rows, rp_dzset)
+    ex de,hl                            ; (not DEC E: the flags)
+    ld h,hi(rr_tlo)
+    ld a,3
+    jr z,rp_same_cmp                    ; the same: skipped
     ld a,ixl
     add a,a
 rp_dz7
     cp 0                                ; (self-modified, as rp_dz)
     sbc a,a
     inc a                               ; 0: all of it, 1: only the road
+rp_same_cmp
+    or (hl)                             ; template, low byte
+    ld (de),a
+    inc e
+    inc de                              ; next entry's template slot
+    inc e
+    inc e
+    exx
+    dec b
+    exx
+    jr nz,rp_line_cmp
+    jp rp_skip_end                      ; (road15.asm: rp_force, rp_far)
+
 rp_put_cmp
     dec h
     or (hl)                             ; template, low byte
@@ -633,7 +668,7 @@ rp_lvl7
     dec b
     exx
     jr nz,rp_line_cmp
-    jp rp_far
+    jp rp_skip_end
 
 rp_other_cmp                            ; another row (CF: a further one)
     ld a,0
@@ -752,9 +787,9 @@ rp_mode_max
 ;; the road on an only-the-road line (both 0: none, the fast way).
 ;; ---------------------------------------------------------------------------
 RP_MARGIN_MAX EQU 12                    ; more and whole lines are drawn
-RP_HILL_M   EQU 2                       ; a near line's row moved a row
-RP_HILL_STEP EQU 10                     ; hill levels (h/2) it may have moved: h/r
-                                        ; changes by a line at most on row 21
+RP_HILL_M   EQU 3                       ; a line's row moved: the least margin
+RP_HILL_STEP EQU 10                     ; hill levels (h/2) it may have moved
+                                        ; (rp_far_m's margins allow for it)
 
 ;; ---------------------------------------------------------------------------
 ;; rp_sets - the template set road_project takes the templates from: the
@@ -786,6 +821,7 @@ rp_sets_set
     ld (rp_lvl10+1),a
     ld (rp_lvl11+1),a
     ld (rp_lvl12+1),a
+    ld (rp_lvl13+1),a
     ld a,(road_curve)
     add a,CURVE_K
     add a,a
