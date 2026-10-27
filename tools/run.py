@@ -117,7 +117,7 @@ class Game:
         # its CARn.BIN (the magic word at CAR_BLOB), BOOT.BIN has taken it
         # (its high byte 0) and the game has drawn its first pictures (the
         # count is BASIC's memory till then)
-        phase = 0
+        phase, drawn = 0, -1
         for i in range(2000):
             self.c.run_frames(1)
             w = self.word("CAR_BLOB")
@@ -128,9 +128,11 @@ class Game:
                     self.c.type_text(str(self.car + 1))
             elif phase == 1 and not w >> 8:
                 phase = 2
-            elif phase == 2 and 2 <= self.word("FRAMES_DRAWN") < 50:
-                break                           # (BASIC's till the fragments
-                                                # are in place)
+            elif phase == 2:
+                n = self.word("FRAMES_DRAWN")   # (BASIC's till the fragments
+                if 2 <= n < 50 and n == drawn + 1:  # are in place: seen
+                    break                       # counting up, a picture at
+                drawn = n                       # a time)
         else:
             raise SystemExit("the game never drew a picture (PC #%04X)"
                              % self.c.pc)

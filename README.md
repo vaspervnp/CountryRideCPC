@@ -109,7 +109,7 @@ sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
 
 Up to two cars of traffic drive ahead in the lanes, slower than the player,
-who catches up with them and drives by (there are no collisions yet). Each
+who catches up with them and drives by - or bumps into them. Each
 has a closed or an open top - a coupé's cabin, or a windscreen with a driver
 behind it - on a sports car's, a saloon's or a GT's tail, and a colour for
 its top and one for its tail, out of sixteen: hundreds of different cars.
@@ -139,10 +139,9 @@ Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
 to 5.6 seconds. Grip is how fast the car is steered across - a pair a
-picture, 1 1/3 with grip 4 or 5 - and how little a curve carries it out of
-it: a pair for every 120, 144, 168 or 192 of the curve level times the
-speed. (Until 2026-10-27 the car was steered three times as fast, and the
-curves carried it out three times as fast: too fast across.)
+picture at the full lock, 1 1/3 with grip 4 or 5 - and how little a curve
+carries it out of it: on a level 7 curve at its top speed 0.86, 0.72, 0.53
+or 0.50 pairs a picture with grip 2, 3, 4 or 5 (Steering, below).
 
 ![Picking a car](docs/screen-select.png)
 
@@ -270,7 +269,7 @@ same places for every car, as big as the biggest car's needs
 (`tools/mkbush.py`): the three on the level in page 1 beside the bushes'
 and in what is left of the page 2 fragments (with the smallest bush's code
 when page 1 is short), the six on hills (4.4K) in
-bank 7 from `#F500`, after the game, and in the road parts' lines 160-172,
+bank 7 from `#F5A0`, after the game, and in the road parts' lines 160-172,
 which the CRTC never shows and nothing else writes - buffer 0's, and
 buffer 1's first four 2K blocks (a bush reaches line 173 at most, the line
 lists start at 188, and `draw_static` fills only from 184). BOOT.BIN has
@@ -358,9 +357,22 @@ one more picture, so the two never fall on the same picture.
 
 ### Steering
 
-The car moves across the screen at once, a pair (4 pixels) a picture - 1
-1/3 with grip 4 or 5, the fraction adding up in `steer_frac` - while left
-or right is held (`car_x`), and the road - the camera - follows
+The car is driven as Out Run's (the SMS's `L264D`, which
+OutrunOutrunCPC runs as it is) - measured there: its steering, the push of
+its curves and how they come and go, in proportion to its road's width.
+Left or right turns the wheel (`steer_s`) towards the full lock, neither
+brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
+s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
+the full lock the car moves a pair (4 pixels) a picture - 1 1/3 with grip
+4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of its
+193), less as much as it is slower, not at all standing still. A curve
+carries it out of it, in proportion to the curve level and the speed: on
+a level 7 curve at full speed 72% of the full lock (Out Run's common sharp
+curves, radius 60-66: 71-75%; its gentlest 31%, a level 3 curve here);
+the push comes and goes, 0.11 pairs a picture each picture at most (Out
+Run: 5 a step). The two moves add up in `car_x` and its fraction `car_xf`
+(`steer` in `src/game.asm`). The car moves across the screen at once, and
+the road - the camera - follows
 it as fast as its steps go: the car is drawn `road_x` - `car_x` pairs right
 of the middle of the screen, 16 at most (`CAR_LEAD`; the road at most 16
 pairs behind). The road moves under it in perspective: `road_x` is how many
@@ -539,9 +551,10 @@ looks like, and `src/traffic.asm` has to match it.
 - **Time.** A car costs ~0.5 ms a picture, two ~1.3 ms (2.5 ms at worst).
   The HUD, drawn last, has only the time left (below). And if a picture is
   late already when the cars are drawn - 9 interrupts since the flip, 10 ms
-  at most left, with the nearer car at a near size, or 10, 6.7 ms - only a
-  car at a near size is drawn that time: the nearer one, if it is at one,
-  and neither if not (`tr_dropped`). A far car blinks; a near one never.
+  at most left (a picture whose hill moves, as a rule) - only the nearer
+  car is drawn that time; from 10, 6.7 ms, only a car at a near size: the
+  nearer one, if it is at one, and neither if not (`tr_dropped`). A far car
+  blinks; a near one never.
 - **Memory.** The pieces (4K) go where there is room in a RAM configuration
   they can run in: bank 6 after the traffic's code and in the row tables'
   pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
@@ -550,6 +563,31 @@ looks like, and `src/traffic.asm` has to match it.
   the time it copies these there. `src/trafglue.asm` (fragment 3) switches
   to a piece's bank and back. Banks 4 and 5 look free past their code in
   the binary but are not: they hold the cache's sets and the staging sets.
+
+### Collisions
+
+As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
+
+- **What touches the car.** A traffic car or a bush whose base line is on
+  the car's lower half (`HIT_Y`), the two overlapping by more than
+  `HIT_TRIM` bytes in from either's side: what is seen touching it. The
+  traffic's (`tr_one`) and the bushes' (`bush_one`) drawing tells, as it
+  places them, into `coll` (common memory), with the side it was on;
+  `car_lines` leaves the car's place for them in `car_offc`. A bush beside
+  the road can touch the car only when it is on the grass.
+- **A car: a bump.** For a second (`BUMP_T`) the car is shoved away from
+  the one it hit, 0.94 pairs a picture (Out Run: 12 a step for 10 steps),
+  wobbling - its turning views left and right - and no faster than
+  `BUMP_SPEED`, just slower than the traffic, so that the car hit goes on
+  ahead; meanwhile nothing else bumps it. The player steers on.
+- **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
+  it, 1.9 pairs a picture (24 a step) - across the road - wobbling and out
+  of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
+  VSYNC); then it is brought back to the middle of the road, 0.63 pairs a
+  picture (8 a step), and the player drives off again from a standstill.
+
+All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
+road, the traffic and the bushes are drawn as ever, so the checks hold.
 
 ### The HUD
 
@@ -584,7 +622,7 @@ at 5.25, before the road's last four lines were cut, which took off
   turn, at the flip).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.7 ms, 39.7 ms
+steering or steering from side to side: the worst takes 37.7 ms, 39.0 ms
 with the traffic (Steering in numbers, below).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
@@ -614,21 +652,23 @@ the demo, 37.6 ms side to side. Driving with the keys, all four: 0 past
 the flip in 3000, 38.3 ms at worst.)
 
 With the traffic (up to two cars) and the car steered a third as fast
-(2026-10-27) the same took 24.8 / 24.9 / 27.8 ms on average and 39.7 /
-36.9 / 39.0 ms at worst, none past the flip, the road moving 0.116 / 0.068
-/ 0.885 pairs a picture; the other three cars 37.8 / 37.2 / 37.3 ms at
-worst in the demo and 39.6 / 39.2 / 38.7 side to side. Driving with the
-keys, all four: 30.2-30.8 ms on average, 39.5 ms at worst, 0 past the flip
+(2026-10-27) the same took 24.8 / 25.7 / 27.8 ms on average and 39.0 /
+37.8 / 38.2 ms at worst, none past the flip, the road moving 0.116 / 0.139
+/ 0.873 pairs a picture (driven as Out Run's car, bumping and crashing); the other three cars 37.7 / 36.9 / 37.5 ms at
+worst in the demo and 37.6 / 38.4 / 39.2 side to side. Driving with the
+keys, all four: 28.9-29.5 ms on average, 37.9 ms at worst, 0 past the flip
 in 3000 - the HUD with a third of its share in ~6% of the pictures and
-none in ~1%, and the far car left out of 11 to 22 (both cars of 1 in
-12000; Traffic, above).
+none in ~1%, and the far car left out of 28 to 49 (Traffic, above).
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
-`car_x` -18 to 18 and back, 20 times): 42.1-42.9 pictures (1.7 s) a
-crossing with grip 2 or 3, 36.4-37.3 (1.5 s) with grip 4 or 5, the car on
-the screen 9 to 10 pairs from the middle on average. (Steered three times as fast,
-until 2026-10-27: 16.6 pictures, 0.67 s; 36.6 with steps of two pairs and
+`car_x` -18 to 18 and back, 20 times): 56-64 pictures (2.2-2.6 s) a
+crossing with grip 2 or 3, 46-48 (1.9 s) with grip 4 or 5 - from 33 to
+104, as the curves carry the car with it or against it - the car on the
+screen 9 to 10 pairs from the middle on average; 79-82 and 54-61 with the
+traffic bumping it on the way. (Before it was driven as Out Run's,
+42.1-42.9 and 36.4-37.3 pictures; steered three times as
+fast, until 2026-10-27: 16.6 pictures, 0.67 s; 36.6 with steps of two pairs and
 the car at most 12 pairs from the middle, and ~66 with the car kept in
 the middle.) Driving with the
 keys, left and right in turn every 40 pictures (every 12): 27.2 ms
@@ -813,7 +853,7 @@ docs/           screenshots
 
 ## Next
 
-- collisions with the traffic (the cars are drawn and pass; meeting one
-  does nothing yet);
+- the crash's own pictures: the car flipping and spinning, smoke (it
+  wobbles in its turning views now);
 - curves that come from the horizon (the whole road bends at one level now);
 - 3- and 2-lane roads (the generator already has the `LANES` parameter).

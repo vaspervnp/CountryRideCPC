@@ -26,6 +26,11 @@ flip_drop   defb 0          ; ... how far its horizon is down
 flip_head   defb 0          ; ... and where its sky looks (words right)
 flip_last   defb 0          ; vbl_count when the last flip happened
 irq_n       defb 0          ; interrupts since then (the 12th shows the next)
+car_offc    defb 0          ; car_off this picture (car_lines), for
+                            ; traffic_draw
+coll        defb 0          ; what our car touched this picture (traffic_draw,
+                            ; bush_one): bit 7 a car, bit 6 a bush, bit 0
+                            ; it was right of ours (steer)
 main_cfg    defb RAM_C1     ; the RAM configuration the main code is in
                             ; while it waits for a flip (cache_job)
 front_buf   defb 0          ; buffer being shown (0/1)

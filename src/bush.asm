@@ -61,16 +61,8 @@ bd_ranges   defb LAST_Y,0,LAST_Y,0      ; per buffer: the first and last line
 bd_k        defb #7F                    ; the curve level of the last picture
                                         ; (#7F: none yet)
 
-;; per buffer: where its records end (low byte), then the records (in one
-;; page)
-    IF ($ & #FF) > #100-2*(1+BUSH_MAX*BUSH_REC)
-    ALIGN 256
-    ENDIF
-bush_recs0  defb lo(bush_recs0+1)
-    defs BUSH_MAX*BUSH_REC,0
-bush_recs1  defb lo(bush_recs1+1)
-    defs BUSH_MAX*BUSH_REC,0
-    ASSERT hi(bush_recs0) == hi($-1)
+;; (bush_recs0, bush_recs1: per buffer, where its records end (low byte),
+;; then the records - in one page: src/main.asm has them at bank 7's start)
 
 ;; HL = the selected buffer's lines its bushes on the inside stood on
 bd_range_ptr
@@ -614,6 +606,28 @@ b1_flat
     ret c                               ; above the road's top
     cp 128
     ret nc                              ; (well above it)
+    ld c,a                              ; C = its base line
+    cp HIT_Y
+    jr c,b1_free                        ; touching our car: its base line in
+    ld a,(car_off)                      ; the car's lower half, the two
+    add a,a                             ; overlapping, HIT_TRIM bytes in from
+    neg                                 ; either's side (coll)
+    add a,d
+    add a,(ix+SI_HW)
+    sub SCR_BYTES/2
+    ld b,#40                            ; (left of ours)
+    jp m,b1_hit
+    inc b                               ; (right)
+    neg
+b1_hit
+    add a,(ix+SI_HW)
+    add a,CAR_HALF-HIT_TRIM
+    jp m,b1_free
+    jr z,b1_free
+    ld a,b
+    ld (coll),a
+b1_free
+    ld a,c
     sub (ix+SI_H)
     inc a
     ld c,a                              ; C = its top line (signed)
@@ -749,6 +763,7 @@ car_lines_pitch
     call clamp_ab
 car_lines_off
     ld (car_off),a
+    ld (car_offc),a
     ld c,a
     ld hl,drawn_off
     call buf_entry

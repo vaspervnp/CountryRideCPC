@@ -50,8 +50,9 @@ TR_GAP      EQU 160                     ; the last car at least this far
                                         ; ahead of where a new one comes
 TR_PAUSE    EQU 24                      ; pictures at least between two
 TR_LATE     EQU 10                      ; interrupts since the flip: from
-                                        ; this one on, a car at a near size
-                                        ; alone (traffic_draw)
+                                        ; the one before, the nearer car
+                                        ; alone, from this one only at a
+                                        ; near size (traffic_draw)
     ASSERT TR_ZR == 1
     ASSERT TR_SPEED == 3 && TR_ZNEAR < 256 && TR_ZAWAY == #280
 
@@ -357,9 +358,9 @@ td_order                                ; IX the further one, HL the nearer
 td_order_on
     push hl
     xor a                               ; the picture late already: the
-    ld (tr_dropped),a                   ; flip 10 ms away at most and the
-    ld a,(irq_n)                        ; nearer one at a near size (the most
-    cp TR_LATE-1                        ; time): it alone; 6.7 ms: it alone
+    ld (tr_dropped),a                   ; flip 10 ms away at most - a picture
+    ld a,(irq_n)                        ; whose hill moves, as a rule - the
+    cp TR_LATE-1                        ; nearer one alone; 6.7 ms: it alone
     jr c,td_both                        ; if at a near size, else neither
     ld c,a
     inc hl
@@ -373,7 +374,7 @@ td_order_on
     jr c,td_late
     ld a,c
     cp TR_LATE
-    jr c,td_both
+    jr c,td_late
     ld a,2                              ; (neither: tr_one not called)
     ld (tr_dropped),a
     pop hl
@@ -659,7 +660,33 @@ to_in_l
     add a,SCR_BYTES/2
     ld (to_left),a
 
-    ; drawn: its lines noted
+    ; touching our car: its base line in the car's lower half, and the two
+    ; overlapping, HIT_TRIM bytes in from either's side (coll)
+    ld a,(to_lines+1)
+    cp HIT_Y
+    jr c,to_drawn
+    ld a,(hl)
+    srl a
+    ld c,a                              ; C = its half width
+    add a,b
+    ld b,a                              ; B = its centre, from the middle
+    ld a,(car_offc)
+    add a,a                             ; (ours: car_off pairs right)
+    neg
+    add a,b
+    ld b,#80                            ; (left of ours)
+    jp m,to_hit
+    inc b                               ; (right)
+    neg
+to_hit
+    add a,c                             ; - |theirs - ours| + its half width
+    add a,CAR_HALF-HIT_TRIM              ; + ours: still above 0?
+    jp m,to_drawn
+    jr z,to_drawn
+    ld a,b
+    ld (coll),a
+
+to_drawn                                ; drawn: its lines noted
     ld de,(to_lines)
 to_note
     ld hl,0                             ; (self-modified: this buffer's next)

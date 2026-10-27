@@ -114,6 +114,10 @@ OFFROAD_X   EQU 20
 
 speed_player
     ld hl,(speed)
+    ld a,(coll_kind)            ; a crash: to a standstill (game.asm
+    or a                        ; coll_start)
+    ld de,-CRASH_BRK
+    jr nz,sp_less
     ld a,(keys_now)
     ld de,-SPEED_BRK
     bit 3,a

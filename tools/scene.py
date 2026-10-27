@@ -808,13 +808,17 @@ CAR_VIEWS = 9                   # car_view: on the level, uphill, downhill;
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
 # what the game makes of them (mkbush.py: car_stats): the top speed (8.8
 # depth units a VSYNC; 5 is the most the pictures keep up with), the speed
-# gained a VSYNC, the pairs a picture the car is steered (8.8: 1 or 1 1/3)
-# and the drift's step (more: the curves carry it out less)
+# gained a VSYNC, and the steering's and the curves' factors (game.asm
+# steer): k, the full lock moving the car 127 x k / 64 / 256 pairs a
+# picture (1 or 1 1/3), and m, a curve of level L at speed s (8.8)
+# carrying it out L x s / 16 x m / 65536 pairs a picture (the first car
+# 0.72 on a level 7 curve at full speed; more grip, less)
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
 ACCEL = {3: 4, 4: 5, 5: 6}
-GRIP = {2: (0x100, 120), 3: (0x100, 144), 4: (0x155, 168), 5: (0x155, 192)}
-assert all(st < 0x200 and dr < 256 for st, dr in GRIP.values())
+GRIP = {2: (129, 77), 3: (129, 64), 4: (172, 55), 5: (172, 48)}
+assert all(k < 256 and m < 256 for k, m in GRIP.values())
+assert all(v < 0x1000 for v in TOP_SPEED.values())    # (speed / 16: a byte)
 assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
 
 

@@ -105,12 +105,21 @@ roadc_end
     ORG #C000
 game_bank_start
     jp game_start
+;; bush.asm's per buffer: where its records end (low byte), then the records
+;; (in one page)
+BUSH_RECS   EQU 48                      ; (BUSH_MAX x BUSH_REC: below)
+bush_recs0  defb lo(bush_recs0+1)
+    defs BUSH_RECS,0
+bush_recs1  defb lo(bush_recs1+1)
+    defs BUSH_RECS,0
+    ASSERT hi(bush_recs0) == hi($-1)
     INCLUDE "gen/consts_data.asm"
     INCLUDE "gen/gfx.asm"
     INCLUDE "gen/roadground.asm"
     INCLUDE "gen/bush.asm"
     INCLUDE "game.asm"
     INCLUDE "bush.asm"
+    ASSERT BUSH_RECS == BUSH_MAX*BUSH_REC
     INCLUDE "hud.asm"
     INCLUDE "horizon.asm"
     INCLUDE "screen.asm"

@@ -34,8 +34,14 @@ car_view    defb 0              ; the car seen straight, turning left, right
 car_vfull   defb 0              ; ... and uphill (+3) or downhill (+6): the
                                 ; car_view of gen/bush.asm's car_views
 drawn_view  defb 0,0            ; ... as each buffer last showed it
-drift_acc   defw 0              ; a curve carrying the car out (steer)
-steer_frac  defb 0              ; 256ths of a pair the steering added up
+car_xf      defb 0              ; car_x's fraction of a pair (steer)
+steer_s     defw 0              ; the wheel, -127 (right) to 127 (left)
+push_v      defw 0              ; a curve carrying the car out: pairs a
+                                ; picture, 8.8, signed
+coll_t      defb 0              ; pictures left of a bump or a crash
+coll_kind   defb 0              ; 0 a bump (or none), 1 a crash, 2 after
+                                ; it: back to the road's middle
+coll_v      defw 0              ; the shove, pairs a picture, 8.8, signed
 player      defb 0              ; not 0: the player has steered (#FF: the
                                 ; tools do, setting steer_x)
 demo_t      defw 0              ; pictures, for the demo's steering
@@ -409,13 +415,13 @@ cache_steps_step
 ;; car_setup - the car picked (car_id: CARn.BIN) as fast, as quick and as
 ;; steerable as it is: its car_stats put into the code that drives it -
 ;; speed_player's top speed, grass top speed and acceleration, the demo's
-;; (it drives the same car), steer's pairs a picture and drift step.
+;; (it drives the same car), steer's steering and curve push factors.
 ;; Destroys AF, BC, DE, HL.
 ;; ---------------------------------------------------------------------------
 car_setup
     ld a,(car_id)
-    add a,a
     ld l,a
+    add a,a
     add a,a
     add a,l                             ; CAR_STATS_LEN bytes a car
     ld l,a
@@ -438,36 +444,40 @@ car_setup
     ld (demo_acc+1),de
     ld a,(hl)
     inc hl
-    ld (steer_f+1),a                    ; the pairs a picture it is steered
+    ld (steer_k+1),a
     ld a,(hl)
-    inc hl
-    ld (steer_w+1),a
-    ld e,(hl)
-    ld (steer_dl+1),de
-    xor a
-    sub e
+    ld (steer_m+1),a
+    ld a,(steer_k+1)                    ; (the full lock's: 127 x k / 64)
+    ld h,127
     ld e,a
-    sbc a,a
-    ld d,a
-    ld (steer_dr+1),de
+    call mul8
+    call shr6
+    ld (steer_full+1),hl
     ret
-    ASSERT CAR_STATS_LEN == 6
+    ASSERT CAR_STATS_LEN == 5
 
 ;; ---------------------------------------------------------------------------
 ;; steer - where the car is on the road (car_x) and where the road is to go
 ;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
-;; The player: the car moves CAR_STEER pairs a picture left while left is
-;; held - the road under it goes right: car_x up - right while right is; a
-;; fraction of a pair adds up in steer_frac, so 1 1/3 is 1, 1, 2 pairs.
-;; The car moves on the screen at once, and the road follows it, as fast as
-;; its steps can (steer_x = car_x): the car is drawn road_x - car_x pairs
-;; right of the middle (car_lines), CAR_LEAD at most. And a curve carries
-;; the car out of it: drift_acc adds up the curve level x the speed, and
-;; every DRIFT_STEP of it is a pair outwards - out of a right curve the car
-;; goes left, the road right. Steering against it, the two cancel; with
-;; neither, the car ends up on the grass. The car is seen turning while
-;; left or right is held (not both).
+;; The player, as Out Run (SMS: L264D) does it. Left or right turns the
+;; wheel (steer_s) towards 127 or -127, neither brings it back to 0,
+;; STEER_RAMP a picture at most: 0.2 s to the full lock, 0.4 s from one to
+;; the other.
+;; The wheel moves the car - left: car_x up, the road under it going right
+;; - its turn x the car's k / 64 pairs a picture (1 or 1 1/3 at the
+;; full lock): all of it from STEER_SPEED on, as much less as the car is
+;; slower below it, none standing still. And a curve carries the car out of
+;; it - out of a right curve the car goes left, the road right: push_v
+;; goes towards the curve level x the speed / 16 x the car's m / 256
+;; pairs a picture, STEER_RAMP at most. On a level 7 curve at full speed
+;; that is 0.72 pairs a picture for the first car, 72% of its full lock - as
+;; Out Run's common sharp curves carry its car out (radius 60-66: 71-75%),
+;; its gentlest as a level 3 curve (31%). Both moves add up in car_x and its
+;; fraction car_xf. The car moves on the screen at once, and the road
+;; follows it as fast as its steps can (steer_x = car_x): the car is drawn
+;; road_x - car_x pairs right of the middle (car_lines), CAR_LEAD at most.
+;; The car is seen turning while left or right is held (not both).
 ;;
 ;; Until the player first steers, the demo does: a new place every
 ;; DEMO_HOLD pictures, the car seen turning while the road moves to it, the
@@ -481,21 +491,36 @@ HILL_STEP_AHEAD EQU 2           ; ... and a new curve level (~6 pictures
 STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step
-CAR_STEER   EQU #0100           ; pairs a picture the car moves, steered,
-                                ; 8.8 (the first car's; car_setup: each its
-                                ; own)
 HILL_PITCH  EQU 20              ; the hill, either way, from which the car
                                 ; is seen uphill or downhill (car_lines)
 CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
                                 ; screen, road_x - car_x
-DRIFT_STEP  EQU 144             ; curve level x depth units a VSYNC, a pair:
-                                ; ~0.2 pairs a picture on a level 5 curve at
-                                ; full speed (the first car's)
+STEER_RAMP  EQU 28              ; the most the wheel's turn and the push
+                                ; (8.8 pairs a picture) move a picture: Out
+                                ; Run's 64 and 5 a step, ~10.9 steps a second
+STEER_SPEED EQU #0400           ; slower, the wheel moves the car less
+CAR_STEER_K EQU 129             ; (the first car's; car_setup: each its own)
+CAR_PUSH_M  EQU 64
+HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
+                                ; its base line on the car's lower half...
+HIT_TRIM    EQU 2               ; ... the two overlapping, this many bytes in
+BUMP_T      EQU 25              ; a bump (Out Run: a car hit), pictures
+BUMP_V      EQU 240             ; ... the shove away from it, 8.8 pairs a
+                                ; picture (Out Run: 12 a step for 10 steps)
+BUMP_SPEED  EQU TR_SPEED*256-#40 ; ... the speed at most: the car hit goes on
+CRASH_T     EQU 45              ; a crash (a bush), pictures (Out Run: 1.5-2 s)
+CRASH_V     EQU 480             ; ... the shove away from it (24 a step, 20)
+CRASH_BRK   EQU 16              ; ... the speed lost a VSYNC, to a standstill
+BACK_V      EQU 160             ; then back to the middle (8 a step)
+BACK_T      EQU 64              ; ... in this many pictures at most
 
 steer
     call read_keys              ; (player.asm)
     ld (keys_now),a
     ld c,a
+    ld hl,coll                  ; B = what the car touched last picture
+    ld b,(hl)
+    ld (hl),0
     ld a,(player)
     inc a
     jp z,steer_look             ; (#FF: tools/ steer by steer_x)
@@ -503,81 +528,263 @@ steer
     or c
     jp z,steer_demo
     ld (player),a
-    ld a,c                      ; B = the pairs the player moves the car:
-    and 3                       ; left CAR_STEER, right -CAR_STEER, neither
-    ld b,0                      ; or both 0 - and car_view 1, 2, 0
+    ld a,(coll_t)               ; a bump or a crash begins - not in one
+    or a
+    jr nz,steer_coll
+    or b
+    call nz,coll_start
+steer_coll
+    ld a,(coll_kind)            ; (a crash: the wheel back to the middle)
+    or a
+    ld a,c                      ; HL = where the wheel is to go: left 127,
+    ld hl,0                     ; right -127, neither or both 0 - and
+    jr nz,steer_keys            ; car_view 1, 2, 0
+    and 3
     jr z,steer_keys
     cp 3
     jr z,steer_both
-    ld e,a
-    ld a,(steer_frac)
-steer_f
-    add a,lo(CAR_STEER)         ; (car_setup: the car's)
-    ld (steer_frac),a
-steer_w
-    ld a,hi(CAR_STEER)
-    adc a,b
-    ld b,a
-    ld a,e
-    dec e
-    jr z,steer_keys             ; left
-    xor a
-    sub b
-    ld b,a
-    ld a,2                      ; right
+    ld l,127
+    cp 1
+    jr z,steer_keys
+    ld hl,-127
     jr steer_keys
 steer_both
     xor a
 steer_keys
     ld (car_view),a
+    ld de,(steer_s)
+    call ramp
+    ld (steer_s),hl
 
-    ld a,(road_curve)           ; drift_acc += curve level x speed
-    ld e,a
-    ld d,0
-    rla
-    jr nc,steer_dk
-    dec d                       ; DE = the level, sign extended
-steer_dk
-    ld a,(speed+1)
+    ; HL = the wheel's move: |turn| x k / 64 - k the car's, from
+    ; STEER_SPEED on; slower, k x speed / STEER_SPEED
+    ld a,l
     or a
-    jr z,steer_to
-    ld hl,(drift_acc)
-    push bc
-    ld b,a
-steer_dmul
-    add hl,de
-    djnz steer_dmul
-    pop bc
-    ld (drift_acc),hl
-    bit 7,h
-    jr nz,steer_dleft
-steer_dr
-    ld de,-DRIFT_STEP           ; (car_setup: the car's)
-    add hl,de
-    jr nc,steer_to              ; not a pair yet
-    inc b                       ; a pair right
-    jr steer_dset
-steer_dleft
-steer_dl
-    ld de,DRIFT_STEP
-    add hl,de
-    jr c,steer_to
-    dec b                       ; a pair left
-steer_dset
-    ld (drift_acc),hl
+    jr z,steer_moved            ; (HL 0)
+    jp p,$+5
+    neg
+    ld c,a                      ; C = |turn|
+    ld de,(speed)
+    ld a,d
+    cp hi(STEER_SPEED)
+    jr c,steer_slow
+    ld a,c
+    cp 127
+steer_full
+    ld hl,0                     ; (car_setup: the full lock's move)
+    jr z,steer_sign
+steer_k
+    ld e,CAR_STEER_K            ; (car_setup: the car's)
+    jr steer_mul
+steer_slow
+    ASSERT STEER_SPEED == #0400
+    srl d
+    rr e
+    srl d
+    rr e
+    ld h,e                      ; speed / 4 (below #400: a byte)
+    ld a,(steer_k+1)
+    ld e,a
+    call mul8
+    ld e,h
+steer_mul
+    ld h,c
+    call mul8
+    call shr6
+steer_sign
+    ld a,(steer_s)
+    or a
+    call m,neg_hl
+steer_moved
+    push hl
 
-steer_to
-    ld a,(car_x)                ; the car on, no further than CAR_LEAD from
-    add a,b                     ; where the road is nor ROAD_X_MAX from the
-    ld hl,road_x                ; middle; the road to follow it
-    sub (hl)
-    ld b,CAR_LEAD
+    ; HL = the push asked: |level| x (speed / 16 x m) / 256, outwards - m
+    ; the car's
+    ld hl,(speed)
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; H = speed / 16
+steer_m
+    ld e,CAR_PUSH_M             ; (car_setup: the car's)
+    call mul8
+    ex de,hl
+    ld hl,0
+    ld a,(road_curve)
+    or a
+    jr z,steer_pushed
+    ld c,a
+    jp p,$+5
+    neg
+    ld b,a
+steer_pmul
+    add hl,de
+    djnz steer_pmul
+    ld l,h
+    ld h,0
+    bit 7,c
+    call nz,neg_hl
+steer_pushed
+    ld de,(push_v)
+    call ramp
+    ld (push_v),hl
+    pop de
+    add hl,de                   ; the car's move: the wheel's and the push
+    ld a,(coll_t)
+    or a
+    call nz,coll_step
+    ld a,(car_xf)
+    add a,l
+    ld (car_xf),a
+    ld a,(car_x)
+    adc a,h
+    ld hl,road_x                ; the car on, no further than CAR_LEAD from
+    sub (hl)                    ; where the road is nor ROAD_X_MAX from the
+    ld b,CAR_LEAD               ; middle; the road to follow it
     call clamp_ab
     add a,(hl)
     ld b,ROAD_X_MAX
     call clamp_ab
     ld (car_x),a
     ld (steer_x),a
+    ret
+
+;; ramp - HL = where to go, DE = where it is now: HL = moved towards it,
+;; STEER_RAMP at most. Destroys AF.
+ramp
+    or a
+    sbc hl,de
+    bit 7,h
+    jr nz,ramp_neg
+    ld a,h
+    or a
+    jr nz,ramp_up
+    ld a,l
+    cp STEER_RAMP+1
+    jr c,ramp_add
+ramp_up
+    ld hl,STEER_RAMP
+    jr ramp_add
+ramp_neg
+    ld a,h
+    inc a
+    jr nz,ramp_down
+    ld a,l
+    cp -STEER_RAMP
+    jr nc,ramp_add
+ramp_down
+    ld hl,-STEER_RAMP
+ramp_add
+    add hl,de
+    ret
+
+;; mul8 - HL = H x E, unsigned. Destroys B, D, F.
+mul8
+    ld d,0
+    ld l,d
+    ld b,8
+mul8_loop
+    add hl,hl
+    jr nc,$+3
+    add hl,de
+    djnz mul8_loop
+    ret
+
+;; shr6 - HL = HL / 64. Destroys AF.
+shr6
+    xor a
+    add hl,hl
+    rla
+    add hl,hl
+    rla
+    ld l,h
+    ld h,a
+    ret
+
+;; neg_hl - HL = -HL. Destroys AF.
+neg_hl
+    xor a
+    sub l
+    ld l,a
+    sbc a,a
+    sub h
+    ld h,a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; coll_start - B = what the car touched (coll): a bump or a crash begins,
+;; as in Out Run (SMS: L2B84). A car (bit 7): BUMP_T pictures of the car
+;; shoved away from it, and no faster than BUMP_SPEED, so that the one it
+;; hit goes on ahead; meanwhile no other bump. A bush (bit 6), off the
+;; road: a crash, CRASH_T pictures of the car shoved away from it - across
+;; the road - out of control, slowing to a standstill (speed_player); then
+;; back to the middle of the road, BACK_T pictures at most, and off again.
+;; Both wobble (coll_step).
+;; ---------------------------------------------------------------------------
+coll_start
+    ld hl,BUMP_V
+    ld de,BUMP_T                        ; (D: the kind, a bump)
+    bit 6,b
+    jr z,coll_set
+    ld hl,CRASH_V
+    ld de,256+CRASH_T+BACK_T
+coll_set
+    bit 0,b                             ; away: its right of ours, our car
+    call z,neg_hl                       ; left (car_x up)
+    ld (coll_v),hl
+    ld (coll_t),de
+    ASSERT coll_kind == coll_t+1
+    bit 6,b
+    ret nz
+    ld hl,(speed)                       ; a bump: no faster than BUMP_SPEED
+    ld de,BUMP_SPEED
+    or a
+    sbc hl,de
+    ret c
+    ld (speed),de
+    ret
+
+;; coll_step - A = coll_t, not 0: a picture of a bump or a crash. HL = the
+;; car's move: the shove added - or, the crash over, the way back to the
+;; road's middle in its place. Sets car_view: the car wobbles, left and
+;; right. Destroys AF, DE.
+coll_step
+    dec a
+    ld (coll_t),a
+    ld e,a
+    jr nz,coll_on
+    ld (coll_kind),a                    ; (over)
+coll_on
+    ld a,(coll_kind)
+    or a
+    jr z,coll_shove                     ; a bump
+    ld a,e
+    cp BACK_T
+    jr c,coll_back
+coll_shove
+    ld a,e
+    rra
+    and 1
+    inc a
+    ld (car_view),a
+    ld de,(coll_v)
+    add hl,de
+    ret
+coll_back
+    ld a,(car_x)                        ; car_x towards 0
+    ld hl,BACK_V
+    or a
+    jp m,coll_view
+    ld hl,-BACK_V
+    jr nz,coll_view
+    ld (coll_kind),a                    ; there: off again
+    ld (coll_t),a
+    ld (car_xf),a
+    ld l,a
+    ld h,a
+coll_view
+    xor a
+    ld (car_view),a
     ret
 
 ;; clamp_ab - A (signed) no more than B either way. Destroys F.
