@@ -1,11 +1,9 @@
-"""The player's car as a 3D model, for its sprites' views (tools/mkcar.py).
+"""The player's car as a 3D model, and what the other cars' models share
+(tools/cars3d.py, which renders them all: tools/mkcars.py, mkselect.py).
 
-Run inside Blender 4.2 or later (Scripting tab, or exec() through an MCP),
-with OUT_DIR set to where the renders go: it empties the scene, builds the
-car in the game's colours and renders it seen from behind, straight and
-turning left (yawed, its nose to the left) by YAW degrees, to
-OUT_DIR/car_0.png and OUT_DIR/car_left.png. Turning right is the left view
-mirrored.
+Run inside Blender 4.2 or later through cars3d.py. build() empties the
+scene and builds the car; camera() and setup() are the game's camera and a
+flat light for it, seen from behind.
 
 The model is a low, wide sports car with a wing and fat tyres, pointing
 along +Y, its rear face at y = 0. The body is shaded in three steps (dark
@@ -23,7 +21,6 @@ past the body, with hubs that show when it turns.
 """
 
 import math
-import os
 
 import bpy
 import bmesh
@@ -33,7 +30,6 @@ PAL = dict(BLACK=(0, 0, 0), NAVY=(0, 0, 128), WHITE=(255, 255, 255),
            GREY=(128, 128, 128), RED=(255, 0, 0), ORANGE=(255, 128, 0),
            YELLOW=(255, 255, 0), SKY=(0, 128, 255), CAR_DARK=(128, 0, 0))
 
-OUT_DIR = globals().get("OUT_DIR", bpy.app.tempdir)
 YAW = globals().get("YAW", 10.0)          # degrees, turning left
 ELEV = globals().get("ELEV", 3.0)         # degrees: the camera above the rear's foot
 DIST = globals().get("DIST", 12.0)         # metres behind the rear face
@@ -368,24 +364,3 @@ def setup():
     # from above and behind: the deck lit most, the rear face less, the
     # flanks not at all
     sun.rotation_euler = (math.radians(28), 0, 0)
-
-
-def render():
-    car = build()
-    camera()
-    setup()
-    os.makedirs(OUT_DIR, exist_ok=True)
-    paths = []
-    for name, yaw in (("car_0", 0.0), ("car_left", YAW)):
-        a = math.radians(yaw)
-        car.rotation_euler = (0, 0, a)
-        car.location = (PIVOT * math.sin(a), PIVOT * (1 - math.cos(a)), 0)
-        p = os.path.join(OUT_DIR, name + ".png")
-        bpy.context.scene.render.filepath = p
-        bpy.ops.render.render(write_still=True)
-        paths.append(p)
-    return paths
-
-
-if __name__ == "__main__" or globals().get("RUN", False):
-    result = dict(paths=render())

@@ -104,14 +104,37 @@ bush_reach
 bush_head
     defw bush_starts+0*4
 BUSH_COUNT    EQU 38
-CAR_Y         EQU 240   ; the car's top line
-CAR_TOP       EQU 20   ; its lines from there that differ from view to view
-;; per car_view (straight, turning left, turning right): where the
-;; car's first line's run ends in buffer 0, and its code
+CAR_Y         EQU 236   ; the car's top line
+CAR_TOP       EQU 27   ; its lines from there, drawn whole when it changes
+CAR_HILL_ORG  EQU #F500 ; the views on hills from here (CARn.BIN)
+;; per car_view (on the level, uphill, downhill; each straight, turning
+;; left, turning right): where its first line's run ends in buffer 0, and
+;; its code - the first car's; boot.asm copies the picked one's over it
+;; (CARn.BIN, which alone has the views on hills: here the level's)
 car_views
     defw #83F7,car_code0
     defw #83F9,car_code1
     defw #83F7,car_code2
+    defw #83F7,car_code0
+    defw #83F9,car_code1
+    defw #83F7,car_code2
+    defw #83F7,car_code0
+    defw #83F9,car_code1
+    defw #83F7,car_code2
+car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
+;; per car: its top speed, its acceleration (both 8.8 depth units a
+;; VSYNC), the pairs a picture it is steered, the drift's step
+;; (scene.py CAR_LEVELS; car_setup)
+car_stats
+    defw #0690   ; player: speed 5, acceleration 4, grip 3
+    defb 5,3,48
+    defw #0690   ; ferrari: speed 5, acceleration 5, grip 2
+    defb 6,3,40
+    defw #0620   ; lotus: speed 4, acceleration 3, grip 5
+    defb 4,4,64
+    defw #05B0   ; bmw: speed 3, acceleration 5, grip 4
+    defb 6,4,56
+CAR_STATS_LEN EQU 5   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table
 bush_cxs

@@ -98,21 +98,43 @@ def trace(c, n):
 
 
 class Game:
-    def __init__(self):
+    """The game booted from the disc, with car CAR (env, 0-3: the loader's
+    screen picks it by its number) - scene.py set to it too."""
+
+    def __init__(self, car=None):
         CPC = load_emulator().CPC
         self.sym = symbols()
+        self.car = int(os.environ.get("CAR", "0")) if car is None else car
+        import scene
+        scene.set_car(self.car)
         self.c = CPC()
         self.c.run_frames(150)                  # to the BASIC prompt
         self.c.insert_disc(DSK)
+        blob, magic = self.sym["CAR_BLOB"], self.sym["CAR_MAGIC"]
+        self.c.write_ram(blob, bytes(2))
         self.c.type_text('RUN"COUNTRY\n')
-        # load, then wait for the first pictures
-        for _ in range(1500):
+        # load; the car's number now and then until the loader has loaded
+        # its CARn.BIN (the magic word at CAR_BLOB), BOOT.BIN has taken it
+        # (its high byte 0) and the game has drawn its first pictures (the
+        # count is BASIC's memory till then)
+        phase = 0
+        for i in range(2000):
             self.c.run_frames(1)
-            if self.word("FRAMES_DRAWN") >= 2:
-                break
+            w = self.word("CAR_BLOB")
+            if phase == 0:
+                if w == magic:
+                    phase = 1
+                elif i % 100 == 50:
+                    self.c.type_text(str(self.car + 1))
+            elif phase == 1 and not w >> 8:
+                phase = 2
+            elif phase == 2 and 2 <= self.word("FRAMES_DRAWN") < 50:
+                break                           # (BASIC's till the fragments
+                                                # are in place)
         else:
             raise SystemExit("the game never drew a picture (PC #%04X)"
                              % self.c.pc)
+        assert self.game_byte("CAR_ID") == self.car, (self.game_byte("CAR_ID"), self.car)
 
     def byte(self, name, off=0):
         return self.c.read_ram(self.sym[name] + off, 1)[0]
@@ -164,10 +186,24 @@ def cmd_shots():
     whole: flat and straight, behind the top of a crest (road down to 1/3 of
     the screen, ground showing), in a dip (road up to 2/5), and the sharpest
     curve - the demo track never bends on a hill. A shape counts once the
-    curve level has held for 8 VSYNCs, so both buffers were drawn with it."""
-    g = Game()
+    curve level has held for 8 VSYNCs, so both buffers were drawn with it.
+    And the screen the car is picked on, the game loaded, the third car
+    picked (its frame moved twice to the right)."""
     docs = os.path.join(ROOT, "docs")
     os.makedirs(docs, exist_ok=True)
+    c = load_emulator().CPC()
+    c.run_frames(150)
+    c.insert_disc(DSK)
+    c.type_text('RUN"COUNTRY\n')
+    c.run_frames(1000)                          # (all loaded by then)
+    for _ in range(2):
+        c.tap_key("p", 10, 20)
+    c.run_frames(13)                            # (the frame's ink: yellow)
+    path = os.path.join(docs, "screen-select.png")
+    c.screenshot(path, aspect=True)
+    print("wrote", path)
+    del c
+    g = Game()
     want = {"flat": lambda h, k: h == 0 and k == 0,
             "crest": lambda h, k: 90 <= h <= 127 and k == 0,
             "dip": lambda h, k: -128 <= h <= -86 and k == 0,
@@ -246,7 +282,7 @@ def road_model(g):
     hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
     curve = _signed(g.byte("ROAD_CURVE"))
     x = _signed(g.byte("ROAD_X"))
-    view = g.game_byte("CAR_VIEW")
+    view = g.game_byte("CAR_VFULL")
     off = _signed(g.game_byte("CAR_OFF"))
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off),
             hill, zcam, curve, x)
@@ -308,7 +344,8 @@ def cmd_check():
         buf = g.byte("ROAD_BUF")
         want, hill, zcam, curve, x = road_model(g)
         got = road_pens(g, buf, y0, SCR_H)
-        wrong = [y0 + i for i in range(len(want)) if want[i] != got[i]]
+        wrong = [y0 + i for i in range(len(want))
+                 if y0 + i >= scene.ROAD_SHOWN_Y and want[i] != got[i]]
         seen.add(hill)
         curves.add(curve)
         xs.add(x)

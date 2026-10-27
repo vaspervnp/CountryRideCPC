@@ -41,7 +41,8 @@ Insert `build/countryride.dsk` in a CPC 6128, or any emulator of one, and type:
 RUN"COUNTRY
 ```
 
-Steer with the cursor keys, O and P, or a joystick: left and right.
+Pick a car (below), then steer with the cursor keys, O and P, or a
+joystick: left and right.
 Faster: cursor up, Q, space, joystick up or fire; slower: cursor down, A,
 joystick down. Until you first press one of them, the demo drives - and it
 keeps its own speed until you first press faster or slower. With neither
@@ -107,14 +108,61 @@ Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
 
-The car is a red sports car seen from behind, low down, 36 pixels wide
-(44 turning) and 20 lines high, a little above the bottom of the screen: a
-rear wing over the rear window, the lights behind a black grille, fat
-tyres standing out past the body. Steering, it is seen turning, OutRun's
-way: turning left, it turns about its rear axle, its nose going left, the
-left flank and the hubs of its tyres in view. The views are renders of a
-3D model (`tools/car3d.py`, in Blender), turned into the game's pens by
-`tools/mkcar.py`.
+Before the race the player picks one of four sports cars, seen from the
+side on the screen the loader shows while the game loads: a red one with a
+rear wing (ROSSO GT), a wide red one with a grille of black slats right
+across its tail (BERLINETTA, after a Ferrari Testarossa), a low yellow
+wedge with a louvred engine cover (WEDGE TURBO, after a Lotus Esprit) and a
+white saloon with a wing on its boot and stripes in light blue, dark blue
+and red (TOURING, after a BMW M3 of the eighties). 1-4 picks one and
+starts; the arrow keys, O and P or the joystick move the flashing frame,
+and fire, space or return start.
+
+They drive differently - speed, acceleration and grip, shown as bars of
+five (`scene.py` `CAR_LEVELS`; `car_setup` puts them into the code that
+drives the car):
+
+| | Speed | Acceleration | Grip |
+|---|---|---|---|
+| ROSSO GT | 5 | 4 | 3 |
+| BERLINETTA | 5 | 5 | 2 |
+| WEDGE TURBO | 4 | 3 | 5 |
+| TOURING | 3 | 5 | 4 |
+
+Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
+pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
+3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
+to 5.6 seconds. Grip is how fast the car is steered across - 3 pairs a
+picture, 4 with grip 4 or 5 - and how little a curve carries it out of it:
+a pair for every 40, 48, 56 or 64 of the curve level times the speed.
+
+![Picking a car](docs/screen-select.png)
+
+In the race the car is seen from behind, low down, 40 or 44 pixels wide
+and up to 27 lines high, a little above the bottom of the screen. Steering,
+it is seen turning, OutRun's way: turning left, it turns about its rear
+axle, its nose going left, the left flank and the hubs of its tyres in
+view.
+
+The cars are photorealistic renders of 3D models (`tools/cars3d.py`, in
+Blender with Cycles: paint under a clear coat, glass that mirrors the sky,
+rubber, alloy rims, lenses lit from within, a sun behind and a sky), brought
+to mode 0 by `tools/dither.py`: each mode 0 pixel takes the mean colour of
+the 128 render pixels under it, over the asphalt's grey, made more
+saturated and its darks darker, and then the nearest pen - or, where two
+neighbouring pens of a ramp (dark red, red, orange, yellow, white; black,
+navy, blue, sky, pastel, white; the greys) mixed in a checkerboard come
+clearly nearer, that checkerboard: CPC dithering, flat where the paint is
+flat. The asphalt's grey only in a checkerboard, never alone: a grey pixel
+would look like a hole. Each car has nine views - on the level, going
+uphill and going downhill (pitched 8 degrees before the car is squashed as
+low as the game draws it), each straight, turning left and turning right
+(the left view mirrored) - in `tools/carsart.py` (`tools/mkcars.py`, which
+also draws `build/cars-sheet.png`). In the race the car is seen uphill
+where the road ahead climbs - the hill 20 or more into a dip - and
+downhill where it falls away, over a crest (`car_lines`). The side views have the select screen's own sixteen pens (pink
+for the red paint's highlights, pastel cyan for the white car's and the
+glass's: `tools/mkselect.py`).
 
 ## How it works
 
@@ -201,6 +249,21 @@ the part of the renderer that switches banks. These live in 704-byte
 fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts: seven in
 page 0, and the eight in page 2 hold the bushes' tables and their sprites as
 data (one in page 0 is free). `src/hw.asm` has the whole map.
+
+The car's code - a compiled sprite for each of its nine views - has the
+same places for every car, as big as the biggest car's needs
+(`tools/mkbush.py`): the three on the level in page 1 beside the bushes'
+and in what is left of the page 2 fragments, the six on hills (4.3K) in
+bank 7 from `#F500`, after the game, and in the road parts' lines 160-172,
+which the CRTC never shows and nothing else writes - buffer 0's, and
+buffer 1's first four 2K blocks (a bush reaches line 173 at most, the line
+lists start at 188, and `draw_static` fills only from 184). BOOT.BIN has
+the first car's views on the level in place. The loader loads the picked
+car's own `CARn.BIN` at `#2000` - records of where they go and the bytes:
+its code, `car_views` (where each view's first line ends, and its code),
+`car_id` - and the first thing BOOT.BIN does is copy them into place, with
+bank 7 switched in, before it puts the fragments in place. The race takes
+no more memory for four cars than for one.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block; the other
 512 bytes of each block hold the bush sprites and the car as code - the
@@ -465,13 +528,17 @@ demo's speed, up to the top speed (6.6 depth units a VSYNC).
 
 | | Demo | Not steering | Side to side |
 |---|---|---|---|
-| a picture, on average | 22.6 ms | 22.7 ms | 26.5 ms |
-| the worst | 37.4 ms | 33.9 ms | 37.2 ms |
+| a picture, on average | 22.8 ms | 23.1 ms | 26.6 ms |
+| the worst | 37.6 ms | 34.7 ms | 37.2 ms |
 | past the flip | 0 | 0 | 0 |
-| pairs the road moved a picture | 0.116 | 0.137 | 1.043 |
-| curve levels the road is behind the track, off the middle | 0.44 | | 1.26 |
+| pairs the road moved a picture | 0.116 | 0.137 | 1.024 |
+| curve levels the road is behind the track, off the middle | 0.44 | | 1.13 |
 
-Steering across the road (30 runs): 1.035 pairs a picture - 0.545 with
+(The first car; with the cars seen on hills and the car's 27 lines drawn
+whole when its view or place changes. Driving with the keys, cars 1, 2 and
+4: 0 past the flip in 3000, 37.5 ms at worst.)
+
+Steering across the road (30 runs): 1.0 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven
 from `car_x` -18 to 18 and back, 20 times): 16.6 pictures
 (0.67 s) a crossing, the car on the screen 10 pairs from the middle on
@@ -572,14 +639,17 @@ worst instead of 39.3, steering as it was.
 
 `tools/run.py` drives a headless CPC 6128 emulator based on
 [floooh/chips](https://github.com/floooh/chips), with the real ROMs. It boots
-BASIC and types `RUN"COUNTRY`, the way a person would.
+BASIC and types `RUN"COUNTRY`, the way a person would, and on the loader's
+screen the car's number: the first car, or `CAR` (0-3) - the reference
+model then draws that one.
 
 `make check` then:
 
 - measures the frame rate;
 - compares 240 freshly drawn road parts, line by line, bushes and all, with
   what `tools/scene.py` (the Python reference model) says they should be,
-  over hills and curve levels;
+  over hills and curve levels - the lines the CRTC shows: above them is the
+  car's code;
 - does the same for 20 pictures of the HUD and horizon;
 - compares 300 frames of what the emulator actually displayed with the
   buffer on screen, split the way the model says for that frame's drop: 100
@@ -607,7 +677,8 @@ three.
 src/            the game
   main.asm      the build: banks, files on the disc
   hw.asm        ports, CRTC values, memory map
-  boot.asm      takes the machine over, copies the common fragments
+  boot.asm      takes the machine over, puts the picked car's code in
+                place, copies the common fragments
   common.asm    the fragments: variables, interrupts and ruptures, road_draw
   road.asm      road_init, road_project
   road6.asm     road_project's part in bank 6: how lines are drawn
@@ -628,15 +699,19 @@ tools/
   scene.py      the reference model of the whole screen
   mkgfx.py      HUD, sky and mountain graphics -> src/gen/
   mkroad.py     the generated road code, templates and tables -> src/gen/
-  car3d.py      the car as a 3D model: run in Blender, it renders the views
-                -> assets/car/
-  mkcar.py      the car's views as the game's pens -> tools/carart.py
+  car3d.py      the first car as a 3D model, the game's camera (Blender)
+  cars3d.py     all four cars' models, rendered photorealistic in Blender:
+                nine views each from behind, one from the side -> assets/cars/
+  dither.py     renders to mode 0: mean colours, the CPC's checkerboards
+  mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
+  mkcars.py     the cars' views as the game's pens -> tools/carsart.py
+  mkselect.py   the screen the car is picked on -> src/gen/select.scr
   mkbush.py     the bushes along the track, their sprites (as code and as
-                data), the car as code, and tables -> src/gen/
+                data), each car as code (CARn.BIN), and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
-assets/         fonts, the car's renders
-disc/           BASIC loader
+assets/         fonts, the cars' renders
+disc/           BASIC loader: the car picked as the game loads
 docs/           screenshots
 ```
 

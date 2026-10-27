@@ -51,7 +51,8 @@ def load_font(name):
 SMALL = load_font("font_small.txt")
 BIG = load_font("font_big.txt")
 
-SMALL_NAMES = {" ": "SPACE", '"': "QUOTE", "'": "APOS"}
+SMALL_NAMES = {" ": "SPACE", '"': "QUOTE", "'": "APOS", "-": "DASH", ",": "COMMA",
+               ":": "COLON"}
 
 HUD_BG = PEN["NAVY"]
 SHADOW = PEN["BLACK"]
@@ -632,35 +633,61 @@ def draw_bushes(lines, y0, hill, zcam, curve, x=0):
 
 
 # ---------------------------------------------------------------------------
-# The player's car: a low, wide red sports car seen from behind - a rear
-# wing over a small rear window between buttresses, a black grille across
-# the back with the lights behind its slats, the plate on a dark band, fat
-# tyres - fixed in the middle of the screen a little above the bottom (the
-# monitor's edge can hide the last lines) - the road moves under it.
-# Steering, it is seen turning, its nose that way: turning left, the
-# rear face a little narrower and its left flank in view. The views are
-# renders of a 3D model (tools/car3d.py, in Blender) made into rows of
-# pens by tools/mkcar.py: tools/carart.py. Each line is one run of whole
-# pairs (4 pixels), like a bush's, so the engine draws it with PUSHes; it
-# is drawn last, over the road and the bushes. The road under it is drawn
-# afresh with every picture (or left as it was, car and all, when
-# road_project skips the line), so it needs no erasing. The grey at the
-# ends of a run is the asphalt's, rounding it out to whole pairs.
+# The player's car, one of four (picked before the race: tools/mkselect.py,
+# the loader), seen from behind - fixed in the middle of the screen a little
+# above the bottom (the monitor's edge can hide the last lines) unless the
+# player steers it across, the road following. Steering, it is seen turning,
+# its nose that way: turning left, the rear face a little narrower and its
+# left flank in view. The views are photorealistic renders of 3D models
+# (tools/cars3d.py, in Blender) brought to the pens by tools/mkcars.py:
+# tools/carsart.py. Each line is one run of whole pairs (4 pixels), like a
+# bush's, so the engine draws it with PUSHes; it is drawn last, over the
+# road and the bushes. The road under it is drawn afresh with every picture
+# (or left as it was, car and all, when road_project skips the line), so it
+# needs no erasing. The grey at the ends of a run is the asphalt's, rounding
+# it out to whole pairs. Every car's views are over the same lines.
 # ---------------------------------------------------------------------------
 
-from carart import CAR_ART, CAR_ART_LEFT  # noqa: E402
+from carsart import GAME_ART, GAME_GROUND  # noqa: E402
 
-CAR_W = len(CAR_ART[0])         # pixels: the same either side of the middle
-CAR_X = (SCR_W - CAR_W) // 2
-CAR_BOTTOM = SCR_H - 12         # the line below it
+CARS = ["player", "ferrari", "lotus", "bmw"]    # car_id 0-3
+CAR_GROUND = SCR_H - 13         # the line its wheels stand on, on the level
+ROAD_SHOWN_Y = ROAD_Y & ~7      # the road part's first line the CRTC shows:
+                                # the lines above hold the car's code
+                                # (tools/mkbush.py HILL_RUNS)
 CAR_PEN = dict(R="RED", O="ORANGE", Y="YELLOW", K="BLACK", G="GREY",
-               W="WHITE", N="NAVY", S="SKY", D="CAR_DARK")
-CAR_H = len(CAR_ART)
-CAR_Y = CAR_BOTTOM - CAR_H      # its top line
-CAR_ART_RIGHT = [r[::-1] for r in CAR_ART_LEFT]
-CAR_ARTS = [CAR_ART, CAR_ART_LEFT, CAR_ART_RIGHT]   # car_view 0, 1, 2
-assert CAR_W % 4 == 0 and CAR_X % 2 == 0
-assert all(len(a) == CAR_H and all(len(r) == CAR_W for r in a) for a in CAR_ARTS)
+               W="WHITE", N="NAVY", S="SKY", D="CAR_DARK", P="PASTEL",
+               B="BLUE", H="HAZE")
+CAR_H = len(GAME_ART[CARS[0]][0])
+CAR_Y = CAR_GROUND - GAME_GROUND    # its top line (going downhill its nose
+                                    # dips below CAR_GROUND)
+CAR_VIEWS = 9                   # car_view: on the level, uphill, downhill;
+                                # each straight, turning left, turning right
+# per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
+# what the game makes of them (mkbush.py: car_stats): the top speed (8.8
+# depth units a VSYNC; 5 is the most the pictures keep up with), the speed
+# gained a VSYNC, the pairs a picture the car is steered and the drift's
+# step (more: the curves carry it out less)
+CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
+TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
+ACCEL = {3: 4, 4: 5, 5: 6}
+GRIP = {2: (3, 40), 3: (3, 48), 4: (4, 56), 5: (4, 64)}
+assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
+
+
+def set_car(car_id):
+    """The car picked: CAR_ARTS (per car_view), its width CAR_W (pixels,
+    the same either side of the middle) and its left edge CAR_X."""
+    global CAR_ID, CAR_ARTS, CAR_W, CAR_X
+    CAR_ID = car_id
+    CAR_ARTS = GAME_ART[CARS[car_id]]
+    CAR_W = len(CAR_ARTS[0][0])
+    CAR_X = (SCR_W - CAR_W) // 2
+    assert CAR_W % 4 == 0 and CAR_X % 2 == 0
+    assert all(len(r) == CAR_W for a in CAR_ARTS for r in a)
+
+
+set_car(0)
 
 
 def car_runs(view=0):
@@ -681,8 +708,8 @@ def car_runs(view=0):
 
 def draw_car(lines, y0, view=0, off=0):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
-    straight, turning left or turning right (view 0, 1, 2), `off` pairs right
-    of the middle (the game's car_off)."""
+    as car_view `view` says, `off` pairs right of the middle (the game's
+    car_off)."""
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":

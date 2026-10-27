@@ -105,6 +105,7 @@ rk_row                          ; A = #40 + row: its keys, 1 = held
 ;; neither. On the grass - a wheel off the road, car_x OFFROAD_X or more
 ;; either way - the car goes no faster than SPEED_GRASS: over it, it slows
 ;; down by SPEED_DRAG a VSYNC. Goes on with demo_speed_set, HL = the speed.
+;; The top speeds and the acceleration are the car's (car_setup).
 ;; ---------------------------------------------------------------------------
 SPEED_COAST EQU 2
 SPEED_GRASS EQU SPEED_MAX/2
@@ -117,7 +118,8 @@ speed_player
     ld de,-SPEED_BRK
     bit 3,a
     jr nz,sp_less               ; slower
-    ld de,SPEED_ACC
+sp_acc
+    ld de,SPEED_ACC             ; (car_setup: the car's)
     bit 2,a
     jr nz,sp_more               ; faster
     ld de,-SPEED_COAST
@@ -129,11 +131,13 @@ sp_less
 sp_more
     add hl,de
 sp_top                          ; HL = the speed asked: no more than the top
-    ld de,SPEED_MAX
+sp_max
+    ld de,SPEED_MAX             ; (car_setup: the car's)
     ld a,(car_x)
     add a,OFFROAD_X-1
     cp 2*OFFROAD_X-1            ; (CF: on the road)
     jr c,sp_top_de
+sp_grass
     ld de,SPEED_GRASS
 sp_top_de
     or a

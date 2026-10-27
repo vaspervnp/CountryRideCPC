@@ -164,9 +164,11 @@ draw_static
     call fill_lines
 
     ; the ground between the mountains and the road (the road's own ground
-    ; lines go on from it when a crest hides the far road)
-    ld hl,ROAD_AREA_Y
-    ld b,ROAD_Y-ROAD_AREA_Y
+    ; lines go on from it when a crest hides the far road) - from the road
+    ; part's first line shown: the lines above it hold the car's views on
+    ; hills (CARn.BIN)
+    ld hl,ROAD_Y&#F8                    ; (rasm divides in floating point:
+    ld b,ROAD_Y&7                       ; no /8*8)
     ld de,SOLID_GROUND*#101
     call fill_lines
 

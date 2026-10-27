@@ -8,6 +8,9 @@ bushcode.asm.
                   as data
     bushcode.asm  (page 1, #x600-#x7FF of each 2K block: RAM_C1) each sprite
                   as code
+    cars.asm      CAR0.BIN-CAR3.BIN: each car's own code and car_views,
+                  which boot.asm puts in place of the first car's (the
+                  loader loads the picked one's)
 
 scene.py has the art, the layout and the projection the engine has to match;
 src/bush.asm draws them.
@@ -40,6 +43,7 @@ and the last line has no step; then JP bush_spr_done.
 """
 
 import collections
+import copy
 import os
 import sys
 
@@ -428,6 +432,151 @@ class FragCode:
             self.left -= n
 
 
+def ch_slot(ch, label, codes):
+    """Each car's code for one view, placed from where ch is: car 0's in ch
+    (BOOT.BIN), labelled `label`, and ch then padded to the most any car
+    uses of each chunk, so that any car's fits there. Returns per car its
+    pieces for CARn.BIN: (address, its dest, lines), labels car<n>_<label>."""
+    used0, len0 = list(ch.used), [len(o) for o in ch.out]
+    pieces, finals = [], []
+    for n, code in enumerate(codes):
+        c = copy.deepcopy(ch)
+        c.code("car%d_%s" % (n, label), code)
+        pieces.append([(Chunks.start(k) + used0[k], "#%04X" % (Chunks.start(k) + used0[k]),
+                        c.out[k][len0[k]:])
+                       for k in range(len(CODE_CHUNKS)) if c.out[k][len0[k]:]])
+        finals.append(c)
+    most = [max(f.used[k] for f in finals) for k in range(len(CODE_CHUNKS))]
+    ch.code(label, codes[0])
+    for k in range(len(CODE_CHUNKS)):
+        if most[k] > ch.used[k]:
+            ch.out[k].append("    defs %d   ; (another car's is longer)" % (most[k] - ch.used[k]))
+            ch.used[k] = most[k]
+    ch.cur = max(f.cur for f in finals)
+    return pieces
+
+
+def frag_slot(fc, label, codes):
+    """As ch_slot, in the fragments' runs (FragCode) - nothing goes there
+    after it, so no padding. A piece's dest is where BOOT.BIN has it (the
+    fragment's FRAG_ST: boot.asm copies the fragments into place after)."""
+    pieces = []
+    n0, size0, placed0 = len(fc.piece.lines), fc.piece.size, len(fc.sp.placed)
+    run0 = fc.runs[fc.cur][0]
+    for n, code in enumerate(codes):
+        f = copy.deepcopy(fc)
+        first = f.sp.placed[placed0 - 1][3]
+        f.code("car%d_%s" % (n, label), code)
+        ps = [(run0 + size0, first.lines[n0:])]
+        ps += [(a, d.lines) for a, _, _, d in f.sp.placed[placed0:]]
+        pieces.append([(a, "FRAG_ST%d+#%X" % (k, a - frag_addr(k)), lines)
+                       for a, lines in ps if lines
+                       for k in [(a - frag_addr(FRAG_FIRST)) // 0x800 + FRAG_FIRST]])
+    fc.code(label, codes[0])
+    return pieces
+
+
+# The views uphill and downhill (car_view 3-8) - CARn.BIN only - go where
+# the car's code can run (RAM_C1) and nothing else writes: bank 7 from
+# CAR_HILL_ORG on, and the road parts' lines 160-172 of buffer 0 (page 2)
+# and of buffer 1's first four 2K blocks (page 0: the rest of page 0 is
+# where the loader loads CARn.BIN). The CRTC shows the road parts from line
+# 184 (draw_static draws nothing above it), and a bush, standing on line
+# ROAD_Y or lower and BUSH_H lines high at most, reaches line 173.
+CAR_HILL_ORG = 0xF500
+
+
+def hidden_runs(base, blocks):
+    return [(base + b * 0x800, 192 if b < 5 else 96) for b in blocks]
+
+
+HILL_RUNS = ([(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0x8000, range(8))
+             + hidden_runs(0x0000, range(4)))
+
+
+class Runs:
+    """Code in free runs, one after the other, on from one to the next with
+    a JP (as FragCode). pieces: (address, lines) per run used."""
+
+    def __init__(self, runs):
+        self.runs = runs
+        self.cur, self.used = 0, 0
+        self.pieces = []
+
+    def code(self, label, code):
+        if self.runs[self.cur][1] - self.used < 8:
+            self.cur, self.used = self.cur + 1, 0
+        lines = [label]
+        start = self.runs[self.cur][0] + self.used
+        for text, step in code:
+            n = SIZE[kind(text)]
+            if self.runs[self.cur][1] - self.used < n + 3 and not (
+                    text == "jp bush_spr_done" and self.runs[self.cur][1] - self.used >= n):
+                if self.cur + 1 >= len(self.runs):
+                    raise SystemExit("bushes: no room left for the cars' views on hills")
+                lines.append("    jp #%04X" % self.runs[self.cur + 1][0])
+                self.pieces.append((start, lines))
+                self.cur, self.used = self.cur + 1, 0
+                lines, start = [], self.runs[self.cur][0]
+            lines.append("    " + text)
+            self.used += n
+        self.pieces.append((start, lines))
+
+
+def runs_slots(allcars, views):
+    """Each car's code for these views in HILL_RUNS, every view where it is
+    for all cars (after the longest car's last): per car its pieces, and
+    where each view starts."""
+    pieces = [[] for _ in allcars]
+    starts = []
+    r = Runs(HILL_RUNS)
+    for v in views:
+        finals = []
+        for n, cars in enumerate(allcars):
+            c = copy.deepcopy(r)
+            c.pieces = []
+            c.code("car%d_view%d" % (n, v), cars[v][0])
+            pieces[n] += [(a, "#%04X" % a, lines) for a, lines in c.pieces]
+            finals.append(c)
+        if r.runs[r.cur][1] - r.used < 8:
+            starts.append(r.runs[r.cur + 1][0])
+        else:
+            starts.append(r.runs[r.cur][0] + r.used)
+        r = max(finals, key=lambda f: (f.cur, f.used))
+    used = sum(ln for a, ln in HILL_RUNS[:r.cur]) + r.used
+    return pieces, starts, used
+
+
+def cars_asm(pieces, ends, codes):
+    """gen/cars.asm: per car, CARn.BIN - a magic word, then records (defw
+    dest, length, then the bytes) up to a 0: car_views, car_id, its code.
+    codes: per car_view, its code's address (the same for every car)."""
+    lines = [";; Generated by tools/mkbush.py - do not edit.",
+             ";; CAR0.BIN-CAR3.BIN, one a car: what boot.asm copies over the first",
+             ";; car's when the loader has loaded it at CAR_BLOB - car_views (where",
+             ";; each view's first line's run ends, and its code), car_id, and its code",
+             ";; in the same places (mkbush.py: the most any car needs) - the views on",
+             ";; hills where only CARn.BIN puts them. Records: defw dest, length, then",
+             ";; the bytes; a dest of #FFFF ends them (#0000 is one).", ""]
+    for n, ps in enumerate(pieces):
+        lines += ["    BANK", "    ORG CAR_BLOB", "car%d_blob" % n,
+                  "    defw CAR_MAGIC",
+                  "    defw car_views,%d" % (4 * len(codes))]
+        lines += ["    defw #%04X,%s" % (e, c) for e, c in zip(ends[n], codes)]
+        lines += ["    defw car_id,1", "    defb %d" % n]
+        for j, (addr, dest, code) in enumerate(ps):
+            p = "car%d_p%d" % (n, j)
+            lines += ["    defw %s,%s_end-%s" % (dest, p, p),
+                      "%s_ph" % p,
+                      "    ORG #%04X,%s_ph" % (addr, p),
+                      p] + code + ["%s_end" % p,
+                                   "    ORG %s_ph+%s_end-%s" % (p, p, p)]
+        lines += ["    defw #FFFF", "car%d_blob_end" % n,
+                  '    SAVE "CAR%d.BIN",CAR_BLOB,car%d_blob_end-CAR_BLOB,DSK,'
+                  '"build/countryride.dsk"' % (n, n), ""]
+    return lines
+
+
 def main():
     nspr = len(G.BUSH_H)
     assert nspr <= 16                   # the directory's columns
@@ -438,24 +587,38 @@ def main():
 
     # bushcode.asm: the sprites' code, smallest first, as many as there is
     # room for; the rest are only copied
-    cars = [car_code(S.car_runs(v), S.CAR_Y, S.CAR_X // 2) for v in range(3)]
+    # every car's views (the first's is BOOT.BIN's), and where each view's
+    # first line's run ends in buffer 0
+    allcars, ends = [], []
+    for c in range(len(S.CARS)):
+        S.set_car(c)
+        allcars.append([car_code(S.car_runs(v), S.CAR_Y, S.CAR_X // 2)
+                        for v in range(S.CAR_VIEWS)])
+        e = []
+        for v in range(S.CAR_VIEWS):
+            y, (a0, d0) = next((y, r) for y, r in enumerate(S.car_runs(v)) if r[1])
+            e.append(line_addr(S.CAR_Y + y) + S.CAR_X // 2 + a0 + len(d0))
+        ends.append(e)
+    S.set_car(0)
+    # the views on hills: CARn.BIN only (above), the first car's too
+    assert G.ROAD_Y - max(G.BUSH_H) + 1 > 172
+    hill_pieces, hill_starts, hill_used = runs_slots(allcars, range(3, S.CAR_VIEWS))
 
     def build(ks):
         ch = Chunks()
-        ch.code("car_code0", cars[0][0])        # (the car first: it is drawn
-                                                # most; turning right: FragCode)
-        out = {}
-        for k in ks:
+        p0 = ch_slot(ch, "car_code0", [c[0][0] for c in allcars])   # (the car
+        out = {}                                # first: it is drawn most;
+        for k in ks:                            # turning right: FragCode)
             code, us = sprite_code(k)
             out[k] = [code, us, sum(SIZE[kind(t)] for t, s in code)]
         for k in ks:
             ch.code("bush_c%d" % k, out[k][0])
-        ch.code("car_code1", cars[1][0])        # (and turning left after them)
-        return ch, out
-    n = nspr
+        p1 = ch_slot(ch, "car_code1", [c[1][0] for c in allcars])   # (and
+        return ch, out, [a + b for a, b in zip(p0, p1)]     # turning left
+    n = nspr                                                # after them)
     while True:
         try:
-            ch, codes = build(range(n))
+            ch, codes, pieces = build(range(n))
             break
         except SystemExit:
             n -= 1
@@ -505,7 +668,9 @@ def main():
     # the car turning right: code in what is left of fragments 8-14
     # (road15.asm has the rest of fragment 15)
     fc = FragCode(sp, sp.take_runs(frag_addr(FRAG_FIRST + FRAG_COUNT - 1)))
-    fc.code("car_code2", cars[2][0])
+    p2 = frag_slot(fc, "car_code2", [c[2][0] for c in allcars])
+    pieces = [a + b + c for a, b, c in zip(pieces, p2, hill_pieces)]
+    view_code = ["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
 
     lines = [";; Generated by tools/mkbush.py - do not edit.",
              ";; The bush sprites as code (see mkbush.py), and what else does not fit",
@@ -631,21 +796,31 @@ def main():
     emit("bush_head")
     emit("    defw bush_starts+%d*4" % head0)
     emit("BUSH_COUNT    EQU %d" % len(S.BUSHES))
-    # the lines at the car's top whose runs differ from view to view: a
-    # buffer that last showed another view has them drawn whole (car_lines)
-    ext = [[(a, a + len(d)) for a, d in S.car_runs(v)] for v in range(3)]
-    differ = [i for i in range(S.CAR_H) if len({e[i] for e in ext}) > 1]
-    car_top = max(differ) + 1 if differ else 0
+    # the lines of the car: a buffer that last showed another view, or the
+    # car elsewhere, has them drawn whole (car_lines) - all of them, for
+    # any car
     emit("CAR_Y         EQU %d   ; the car's top line" % S.CAR_Y)
-    emit("CAR_TOP       EQU %d   ; its lines from there that differ from view to view"
-         % car_top)
-    emit(";; per car_view (straight, turning left, turning right): where the")
-    emit(";; car's first line's run ends in buffer 0, and its code")
+    emit("CAR_TOP       EQU %d   ; its lines from there, drawn whole when it changes"
+         % S.CAR_H)
+    emit("CAR_HILL_ORG  EQU #%04X ; the views on hills from here (CARn.BIN)" % CAR_HILL_ORG)
+    emit(";; per car_view (on the level, uphill, downhill; each straight, turning")
+    emit(";; left, turning right): where its first line's run ends in buffer 0, and")
+    emit(";; its code - the first car's; boot.asm copies the picked one's over it")
+    emit(";; (CARn.BIN, which alone has the views on hills: here the level's)")
     emit("car_views")
-    for v in range(3):
-        y, (a0, d0) = next((y, r) for y, r in enumerate(S.car_runs(v)) if r[1])
-        end0 = line_addr(S.CAR_Y + y) + S.CAR_X // 2 + a0 + len(d0)
-        emit("    defw #%04X,car_code%d" % (end0, v))
+    for v in range(S.CAR_VIEWS):
+        emit("    defw #%04X,car_code%d" % (ends[0][v % 3], v % 3))
+    emit("car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)")
+    emit(";; per car: its top speed, its acceleration (both 8.8 depth units a")
+    emit(";; VSYNC), the pairs a picture it is steered, the drift's step")
+    emit(";; (scene.py CAR_LEVELS; car_setup)")
+    emit("car_stats")
+    for c, (sp_, ac, gr) in enumerate(S.CAR_LEVELS):
+        steer_, drift = S.GRIP[gr]
+        emit("    defw #%04X   ; %s: speed %d, acceleration %d, grip %d"
+             % (S.TOP_SPEED[sp_], S.CARS[c], sp_, ac, gr))
+        emit("    defb %d,%d,%d" % (S.ACCEL[ac], steer_, drift))
+    emit("CAR_STATS_LEN EQU 5   ; bytes a car")
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")
     emit("bush_cxs")
@@ -653,13 +828,18 @@ def main():
     emit("")
     open(os.path.join(ROOT, "src", "gen", "bush.asm"), "w").write(
         "\n".join(lines) + "\n")
+    open(os.path.join(ROOT, "src", "gen", "cars.asm"), "w").write(
+        "\n".join(cars_asm(pieces, ends, view_code)) + "\n")
     print("bushes: %d on the track, %d sprites, code for %d (%d bytes left in page 1);"
           " %d bytes of fragments %d-%d left"
           % (len(S.BUSHES), nspr, len(codes), ch.free(),
              sp.free(), FRAG_FIRST, FRAG_FIRST + FRAG_COUNT - 1))
-    for v, (car, car_us) in enumerate(cars):
-        print("  the car, view %d: %d lines, %d bytes of code, %d us"
-              % (v, S.CAR_H, sum(SIZE[kind(t)] for t, st in car), car_us))
+    print("  the cars' views on hills: %d of %d bytes" % (hill_used, sum(ln for a, ln in HILL_RUNS)))
+    for c, cars in enumerate(allcars):
+        print("  car %d: %d lines; views %s bytes of code, %s us"
+              % (c, S.CAR_H, "/".join(str(sum(SIZE[kind(t)] for t, st in car))
+                                      for car, us in cars),
+                 "/".join(str(us) for car, us in cars)))
     for k, (code, us, size) in codes.items():
         print("  sprite %2d: %2d lines, %3d bytes of code, %4d us" % (k, G.BUSH_H[k], size, us))
 

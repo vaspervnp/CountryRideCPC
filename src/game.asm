@@ -31,6 +31,8 @@ car_off     defb 0              ; the car's pairs right of the middle on the
                                 ; screen: road_x - car_x (car_lines)
 drawn_off   defb 0,0            ; ... as each buffer last showed it
 car_view    defb 0              ; the car seen straight, turning left, right
+car_vfull   defb 0              ; ... and uphill (+3) or downhill (+6): the
+                                ; car_view of gen/bush.asm's car_views
 drawn_view  defb 0,0            ; ... as each buffer last showed it
 drift_acc   defw 0              ; a curve carrying the car out (steer)
 player      defb 0              ; not 0: the player has steered (#FF: the
@@ -56,6 +58,7 @@ HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
 ;; ---------------------------------------------------------------------------
 game_start
     ld sp,STACK_TOP
+    call car_setup
     call road_reset
     call cache_init             ; the cache sets, for the road in the middle
 
@@ -392,6 +395,53 @@ cache_steps_step
     jp sky_stay                 ; (the next picture has the road moved)
 
 ;; ---------------------------------------------------------------------------
+;; car_setup - the car picked (car_id: CARn.BIN) as fast, as quick and as
+;; steerable as it is: its car_stats put into the code that drives it -
+;; speed_player's top speed, grass top speed and acceleration, the demo's
+;; (it drives the same car), steer's pairs a picture and drift step.
+;; Destroys AF, BC, DE, HL.
+;; ---------------------------------------------------------------------------
+car_setup
+    ld a,(car_id)
+    ld l,a
+    add a,a
+    add a,a
+    add a,l                             ; CAR_STATS_LEN bytes a car
+    ld l,a
+    ld h,0
+    ld de,car_stats
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)                           ; DE = the top speed
+    inc hl
+    ld (sp_max+1),de
+    ld (demo_max+1),de
+    srl d
+    rr e
+    ld (sp_grass+1),de                  ; (on the grass: half)
+    ld e,(hl)
+    inc hl
+    ld d,0
+    ld (sp_acc+1),de
+    ld (demo_acc+1),de
+    ld a,(hl)
+    inc hl
+    ld (steer_l+1),a
+    neg
+    ld (steer_r+1),a
+    ld e,(hl)
+    ld (steer_dl+1),de
+    xor a
+    sub e
+    ld e,a
+    sbc a,a
+    ld d,a
+    ld (steer_dr+1),de
+    ret
+    ASSERT CAR_STATS_LEN == 5
+
+;; ---------------------------------------------------------------------------
 ;; steer - where the car is on the road (car_x) and where the road is to go
 ;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
@@ -419,6 +469,9 @@ STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step
 CAR_STEP    EQU 3               ; pairs a picture the car moves, steered
+                                ; (the first car's; car_setup: each its own)
+HILL_PITCH  EQU 20              ; the hill, either way, from which the car
+                                ; is seen uphill or downhill (car_lines)
 CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
                                 ; screen, road_x - car_x
 DRIFT_STEP  EQU 48              ; curve level x depth units a VSYNC, a pair:
@@ -442,9 +495,11 @@ steer
     jr z,steer_keys
     cp 3
     jr z,steer_both
-    ld b,CAR_STEP
+steer_l
+    ld b,CAR_STEP               ; (car_setup: the car's)
     cp 1
     jr z,steer_keys
+steer_r
     ld b,-CAR_STEP
     jr steer_keys
 steer_both
@@ -472,12 +527,14 @@ steer_dmul
     ld (drift_acc),hl
     bit 7,h
     jr nz,steer_dleft
-    ld de,-DRIFT_STEP
+steer_dr
+    ld de,-DRIFT_STEP           ; (car_setup: the car's)
     add hl,de
     jr nc,steer_to              ; not a pair yet
     inc b                       ; a pair right
     jr steer_dset
 steer_dleft
+steer_dl
     ld de,DRIFT_STEP
     add hl,de
     jr c,steer_to
@@ -642,8 +699,10 @@ demo_phase_ok
     or a
     sbc hl,bc
     jr nc,demo_brake
-    ld hl,SPEED_ACC
+demo_acc
+    ld hl,SPEED_ACC             ; (car_setup: the car's)
     add hl,de
+demo_max
     ld bc,SPEED_MAX
     or a
     sbc hl,bc

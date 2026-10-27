@@ -16,7 +16,7 @@ PYTHON ?= python3
 BUILD  := build
 DSK    := $(BUILD)/countryride.dsk
 
-SRC := $(wildcard src/*.asm) $(wildcard src/gen/*.asm)
+SRC := $(wildcard src/*.asm) $(wildcard src/gen/*.asm) src/gen/select.scr
 
 .PHONY: all gen shots check mockup clean
 
@@ -31,7 +31,8 @@ $(DSK): $(SRC) disc/country.bas | $(BUILD)
 gen:
 	$(PYTHON) tools/mkgfx.py
 	$(PYTHON) tools/mkroad.py
-	$(PYTHON) tools/mkcar.py
+	$(PYTHON) tools/mkcars.py
+	$(PYTHON) tools/mkselect.py
 	$(PYTHON) tools/mkbush.py
 
 shots: $(DSK)

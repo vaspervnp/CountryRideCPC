@@ -17,6 +17,7 @@ boot
     ld bc,#7F00+GA_MODE0
     out (c),c                   ; mode 0, both ROMs off
     SET_RAM RAM_C0
+    call boot_car               ; the car picked, over the first one
 
     ; every pen and the border black while the screens are garbage
     ld bc,#7F00
@@ -94,4 +95,41 @@ crtc_regs
     defb 4,CRTC_R4, 5,CRTC_R5, 6,CRTC_R6, 7,CRTC_R7
     defb 8,0, 9,CRTC_R9, 12,hi(HUD_MA0), 13,lo(HUD_MA0)
     defb #FF
+
+;; boot_car - the car picked (the loader loads its CARn.BIN at CAR_BLOB,
+;; gen/cars.asm): its records copied into place, with RAM_C1 (bank 7 at
+;; #C000) - its code over the first car's in this file, before the
+;; fragments go into place; its views on hills, car_views and car_id. Without
+;; one (no magic word there) the first car stays, seen on the level on
+;; hills too. RAM_C0 after.
+boot_car
+    SET_RAM RAM_C1
+    ld hl,CAR_BLOB
+    ld a,(hl)
+    cp lo(CAR_MAGIC)
+    jr nz,boot_car_done
+    inc hl
+    ld a,(hl)
+    cp hi(CAR_MAGIC)
+    jr nz,boot_car_done
+    ld (hl),0                   ; (used up)
+    inc hl
+boot_car_rec
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,d
+    and e
+    inc a
+    jr z,boot_car_done          ; (a dest of #FFFF: the end - #0000 is one)
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    inc hl
+    ldir
+    jr boot_car_rec
+boot_car_done
+    SET_RAM RAM_C0
+    ret
     ASSERT $ <= #4E00

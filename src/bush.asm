@@ -710,7 +710,8 @@ bush_next_row
 ;; car_lines - after road_project, before road_draw (road_frame): where the
 ;; car is drawn - road_x - car_x pairs right of the middle (car_off), the
 ;; demo's and the tools' in the middle. If this buffer last showed it
-;; elsewhere or seen another way (car_view), the lines at its top where the
+;; elsewhere or seen another way (car_vfull: car_view, and on a slope -
+;; the hill at least HILL_PITCH either way - uphill or downhill), the lines at its top where the
 ;; views' runs differ (CAR_TOP) are drawn whole - else what the old one had
 ;; there and the new one has not would stay on any of them road_project
 ;; left as it was. Line ROAD_AREA_Y + y is entry LAST_Y - y.
@@ -718,6 +719,23 @@ bush_next_row
 ;; ---------------------------------------------------------------------------
     ASSERT CAR_TOP > 0 && CAR_Y+CAR_TOP <= ROAD_END
 car_lines
+    ld a,(hill)                 ; the car seen on a slope: uphill where the
+    ld b,0                      ; road ahead climbs (a dip), downhill where
+    or a                        ; it falls away (a crest)
+    jp p,car_lines_crest
+    neg
+    cp HILL_PITCH
+    jr c,car_lines_pitch
+    ld b,3
+    jr car_lines_pitch
+car_lines_crest
+    cp HILL_PITCH
+    jr c,car_lines_pitch
+    ld b,6
+car_lines_pitch
+    ld a,(car_view)
+    add a,b
+    ld (car_vfull),a
     ld a,(player)               ; (player 0 or #FF: the middle)
     inc a
     cp 2
@@ -740,7 +758,7 @@ car_lines_off
     ld c,a                      ; C = 0: in the same place
     ld hl,drawn_view
     call buf_entry
-    ld a,(car_view)
+    ld a,(car_vfull)
     cp (hl)
     ld (hl),a
     jr nz,car_lines_whole
@@ -768,8 +786,8 @@ car_lines_one
 ;; whatever is there, so it is never taken away. Destroys everything.
 ;; ---------------------------------------------------------------------------
 car_draw
-    ld a,(car_view)                     ; straight, turning left or right:
-    add a,a                             ; car_views (gen/bush.asm)
+    ld a,(car_vfull)                    ; how it is seen: car_views
+    add a,a                             ; (gen/bush.asm)
     add a,a
     ld l,a
     ld h,0

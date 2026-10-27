@@ -13,6 +13,9 @@
 ;;                              memory fragments it copies into place, and
 ;;                              the bush sprites' code, already in place
 ;;                              in page 1
+;;   CARn.BIN   (#2000)         car n's own code, for BOOT.BIN to put in
+;;                              place (the loader loads the picked car's)
+;;   SELECT.SCR (#C000)         the screen the car is picked on
 ;;
 ;; Build: make (see Makefile). README.md describes the memory plan.
 ;; ===========================================================================
@@ -106,7 +109,8 @@ game_bank_start
     INCLUDE "horizon.asm"
     INCLUDE "screen.asm"
 game_bank_end
-    ASSERT game_bank_end <= #10000
+    ASSERT game_bank_end <= CAR_HILL_ORG     ; (the rest: the car's views on
+                                            ; hills, CARn.BIN)
     SAVE "GAME.BIN",#C000,game_bank_end-#C000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
@@ -124,6 +128,19 @@ game_bank_end
     INCLUDE "player.asm"
     ASSERT FRAG_ST1+FRAG_LEN <= #4600
     SAVE "BOOT.BIN",#4000,#4000,DSK,"build/countryride.dsk"
+
+;; ---------------------------------------------------------------------------
+;; the cars: each one's own code and car_views (CARn.BIN, which the loader
+;; loads at CAR_BLOB for the car picked and boot.asm puts in place), and the
+;; screen the car is picked on (SELECT.SCR, tools/mkselect.py)
+;; ---------------------------------------------------------------------------
+CAR_BLOB    EQU #2000                   ; (the loader's MEMORY is below it)
+CAR_MAGIC   EQU #5243                   ; "CR"
+    INCLUDE "gen/cars.asm"
+    BANK
+    ORG #C000
+    INCBIN "gen/select.scr"
+    SAVE "SELECT.SCR",#C000,#4000,DSK,"build/countryride.dsk"
 
     PRINT "bank 4 (ROADA.BIN): ",{hex}roada_end-#4000," bytes"
     PRINT "bank 5 (ROADB.BIN): ",{hex}roadb_end-#4000," bytes"
