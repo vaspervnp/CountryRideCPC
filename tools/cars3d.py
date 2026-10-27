@@ -1,8 +1,9 @@
 """Three more sports cars as 3D models, for their sprites' views
 (tools/mkcars.py): a wide red one with a grille across its tail (after a
 Ferrari Testarossa), a low yellow wedge with a louvred engine cover (after
-a Lotus Esprit) and a white saloon with a wing on its boot and racing
-stripes (after a BMW M3 of the eighties). No badges.
+a Lotus Esprit) and a white saloon with a wing on its boot, flared arches
+and racing stripes (after a BMW M3 of the eighties). No badges. Their
+bodies are curved, as the player's: car3d.py's lofts, arches and fenders.
 
 Run inside Blender 4.2 or later as tools/car3d.py is (exec() through an
 MCP), with TOOLS set to this directory and OUT_DIR to where the renders go:
@@ -37,7 +38,8 @@ PIVOT = c3.PIVOT                           # the rear axle, on the ground
 
 c3.PAL["PASTEL"] = (128, 128, 255)          # the white car's flanks
 col, zl, LZ, CX, Z0 = c3.col, c3.zl, c3.LZ, c3.CX, c3.Z0
-panel, box, prism, solid, wheel = c3.panel, c3.box, c3.prism, c3.solid, c3.wheel
+panel, box, wheel = c3.panel, c3.box, c3.wheel
+Shape, loft, strip, stations = c3.Shape, c3.loft, c3.strip, c3.stations
 
 
 def clear():
@@ -76,15 +78,39 @@ def stripes(name, pen_a, pen_b, period, share):
     return m
 
 
-def mirrored(car, name, mat, c0, c1, n0, n1, depth=0):
+def mirrored(car, name, mat, c0, c1, n0, n1, depth=0, clip=None):
     """A panel on the rear face over columns c0..c1 and its mirror image."""
-    panel(name, mat, col(c0), col(c1), zl(n0), zl(n1), car, depth)
-    panel(name, mat, -col(c1), -col(c0), zl(n0), zl(n1), car, depth)
+    panel(name, mat, col(c0), col(c1), zl(n0), zl(n1), car, depth, clip)
+    panel(name, mat, -col(c1), -col(c0), zl(n0), zl(n1), car, depth, clip)
 
 
-def both(fn, *a):
+def on(sh):
+    """A line just under a body's top: what its cabin and sails stand on."""
+    return lambda y: sh.top(y) - 0.03
+
+
+def spans(length):
+    """A flank's stretches clear of the wheel arches, as (y0, y1)."""
+    r0 = c3.REAR_AXLE - c3.REAR_R - c3.ARCH_GAP
+    r1 = c3.REAR_AXLE + c3.REAR_R + c3.ARCH_GAP
+    f0 = c3.FRONT_AXLE - c3.FRONT_R - c3.ARCH_GAP
+    f1 = c3.FRONT_AXLE + c3.FRONT_R + c3.ARCH_GAP
+    return [(0.1, r0 - 0.01), (r1 + 0.01, f0 - 0.01), (f1 + 0.01, length - 0.15)]
+
+
+def body_and_arches(car, sh, length, mat, well, notch=0.6):
+    """A body: `sh` lofted from the rear face to the nose, the wheel
+    arches cut into it."""
+    cut, edges = c3.arches([(c3.REAR_AXLE, c3.REAR_R), (c3.FRONT_AXLE, c3.FRONT_R)])
+    return loft("body", [mat, well], sh, stations(0.0, length, 0.04, edges), car,
+                cut=cut, notch=notch, well=1)
+
+
+def sills(car, sh, mat):
+    """Black sills along the flanks behind and between the arches."""
     for sx in (-1, 1):
-        fn(sx, *a)
+        for y0, y1 in spans(0)[:2]:
+            strip("sill", mat, sh, stations(y0, y1, 0.05), Z0 + c3.NOTCH_MIN, zl(1), car, side=sx)
 
 
 def wheels(car, tyre_out, tyre_w, k, n, hub, front_in=0.04):
@@ -105,67 +131,74 @@ def exhaust(car, mat, x, z, r=None):
 
 def ferrari():
     """Wide and flat: the tail a grille of black slats right across, the
-    lights glowing through at its ends; a long flat engine cover between
-    two sails; strakes along the flanks into the side intakes."""
+    lights glowing through at its ends; broad hips over the rear wheels; a
+    long flat engine cover between two sails; strakes along the flanks into
+    the side intakes."""
     body = c3.toon("BODY", [(0.0, "CAR_DARK"), (0.35, "RED"), (0.97, "ORANGE")])
     k, d, w = c3.flat("BLACK"), c3.flat("CAR_DARK"), c3.flat("WHITE")
-    r, o = c3.flat("RED"), c3.flat("ORANGE")
+    r = c3.flat("RED")
     n, gl = c3.flat("NAVY"), c3.glass()
     car = bpy.data.objects.new("Car", None)
     bpy.context.collection.objects.link(car)
 
-    xr = -col(1.5)
     top = 8                                         # the rear face's lines
-    plan = [(-xr, 0.0), (xr, 0.0), (1.0, 0.15), (1.0, 3.2), (-1.0, 3.2), (-1.0, 0.15)]
-    prism("body", body, plan, Z0, zl(top), car)
-    solid("nose", body,
-          [(-1.0, 3.2, Z0), (1.0, 3.2, Z0), (0.92, 4.45, Z0), (-0.92, 4.45, Z0)],
-          [(-1.0, 3.2, zl(top)), (1.0, 3.2, zl(top)), (0.86, 4.45, zl(4)), (-0.86, 4.45, zl(4))], car)
+    sh = Shape([(0, 0.91), (0.06, 0.96), (0.2, 0.99), (0.45, 1.0), (1.6, 1.0), (2.6, 0.96),
+                (3.5, 0.955), (4.05, 0.93), (4.3, 0.83), (4.42, 0.66), (4.45, 0.55)],
+               Z0,
+               [(0, zl(top - 0.6)), (0.1, zl(top - 0.1)), (0.25, zl(top + 0.05)), (1.8, zl(top + 0.1)),
+                (3.25, zl(top - 0.4)), (3.9, zl(6.2)), (4.3, zl(4.6)), (4.45, zl(3.4))],
+               [(0, 5.5), (0.6, 5.0), (3.5, 4.2), (4.45, 2.6)])
+    body_and_arches(car, sh, 4.45, body, k)
+    tail = sh.outline(0.0, 0.02)
+    c3.fenders("fender", body, k, [
+        (c3.REAR_AXLE, c3.REAR_R, 0.84, 0.18, (zl(top), zl(9.4), zl(top)), (0.3, 0.3)),
+        (c3.FRONT_AXLE, c3.FRONT_R, 0.856, 0.16, (zl(top - 0.4), zl(8.6), zl(3.6)),
+         (0.3, 0.12))], car)
     # the cabin, set forward: a small upright rear window, glass all round
-    solid("cabin", gl,
-          [(-0.55, 1.75, zl(top)), (0.55, 1.75, zl(top)), (0.68, 3.25, zl(top)), (-0.68, 3.25, zl(top))],
-          [(-0.44, 2.0, zl(top + 6)), (0.44, 2.0, zl(top + 6)), (0.47, 2.65, zl(top + 6)),
-           (-0.47, 2.65, zl(top + 6))], car)
-    box("roof", body, -0.47, 0.47, 1.95, 2.7, zl(top + 5.9), zl(top + 6.4), car)
+    # under a flat roof
+    cabin = Shape([(1.75, 0.55), (2.4, 0.66), (3.3, 0.72)], on(sh),
+                  [(1.75, zl(top + 0.4)), (2.0, zl(top + 5.4)), (2.35, zl(top + 6)),
+                   (2.7, zl(top + 5.7)), (3.3, zl(top - 0.1))], 3.0)
+    loft("cabin", [gl, body], cabin, stations(1.75, 3.3, 0.03), car,
+         slot=lambda y, x, z, u: 1 if 2.0 < y < 2.75 and abs(u - 0.5) < 0.2 else 0)
     # the sails: from the roof's back corners down to the tail
+    sail = Shape([(0.2, 0.15), (2.0, 0.08)], on(sh),
+                 [(0.2, zl(top + 0.5)), (1.1, zl(top + 1.6)), (2.0, zl(top + 5.2))], 4.0,
+                 [(0.2, 0.82), (2.0, 0.52)])
     for sx in (-1, 1):
-        pts = [(0.98, 0.2, zl(top)), (0.66, 0.2, zl(top)), (0.55, 2.0, zl(top)), (0.98, 2.0, zl(top))]
-        tp = [(0.96, 0.2, zl(top + 0.4)), (0.76, 0.2, zl(top + 0.4)), (0.44, 2.0, zl(top + 6)),
-              (0.56, 2.0, zl(top + 6))]
-        solid("sail", body, [(sx * x, y, z) for x, y, z in pts],
-              [(sx * x, y, z) for x, y, z in tp], car)
+        loft("sail", [body], sail, stations(0.2, 2.0, 0.05), car, side=sx)
     # the engine cover between them: black louvres at its back
-    for i, y in enumerate((0.35, 0.6, 0.85)):
-        box("louvre", k, -0.55, 0.55, y, y + 0.1, zl(top), zl(top + 0.25), car)
-    # the tail: the lit edge, then the grille - slats over the lights at the
-    # ends, a dark glow between - over a black band, the plate
-    panel("rim", o, col(1.5), -col(1.5), zl(top - 1), zl(top), car)
-    panel("grille", k, col(1.5), -col(1.5), zl(0), zl(top - 1), car)
+    for y in (0.35, 0.6, 0.85):
+        z = sh.top(y)
+        box("louvre", k, -0.55, 0.55, y, y + 0.1, z - 0.02, z + 0.015, car)
+    # the tail: the grille - slats over the lights at the ends, a dark glow
+    # between - over a black band, the plate; cut to its rounded outline
+    panel("grille", k, col(1.5), -col(1.5), zl(0), zl(top - 1), car, 0, tail)
     for row in (2, 4, 6):
-        panel("glow", d, col(9), -col(9), zl(row - 1), zl(row), car, 1)
-        mirrored(car, "light", r, 2.5, 9, row - 1, row, 1)
+        panel("glow", d, col(9), -col(9), zl(row - 1), zl(row), car, 1, tail)
+        mirrored(car, "light", r, 2.5, 9, row - 1, row, 1, tail)
     panel("frame", k, col(13), -col(13), zl(0), zl(2), car, 2)
     panel("plate", w, col(14), -col(14), zl(0), zl(2), car, 3)
     # under the body: black, and two pairs of exhausts
     panel("diffuser", k, col(5), -col(5), LZ, Z0, car)
-    box("under", k, col(5), -col(5), 0.0, 4.3, LZ, Z0, car)
+    box("under", k, col(5), -col(5), 0.0, 4.1, LZ, Z0, car)
     for sx in (-1, 1):
         for cc in (9.5, 12):
             exhaust(car, w, sx * -col(cc), 2 * LZ)
     # strakes along the flanks into the side intakes
+    sills(car, sh, k)
     for sx in (-1, 1):
-        box("sill", k, sx * 1.0 - 0.005, sx * 1.0 + 0.005, 0.15, 4.3, Z0, zl(0.7), car)
         for row in (1.5, 3, 4.5, 6):
-            box("strake", k, sx * 1.0 - 0.005, sx * 1.0 + 0.005, 1.5, 3.1,
-                zl(row), zl(row + 0.6), car)
+            strip("strake", k, sh, stations(1.45, 3.15, 0.05), zl(row), zl(row + 0.6), car, side=sx)
     wheels(car, 1.02, 0.36, k, n, c3.flat("GREY"), front_in=0.02)
     return car
 
 
 def lotus():
-    """A wedge: low at the nose, its tail flat and upright with a lip on top;
-    over the engine a sloping cover of black louvres between two sails; the
-    lights on a black panel."""
+    """A wedge, its edges rounded: low at the nose, its tail upright with a
+    lip on top; over the engine a cover of black louvres sloping up to the
+    roof between two sails; the lights on a black panel; the fenders
+    swelling over the front wheels."""
     body = c3.toon("BODY", [(0.0, "ORANGE"), (0.35, "YELLOW")])
     k, w = c3.flat("BLACK"), c3.flat("WHITE")
     r, o = c3.flat("RED"), c3.flat("ORANGE")
@@ -174,112 +207,110 @@ def lotus():
     car = bpy.data.objects.new("Car", None)
     bpy.context.collection.objects.link(car)
 
-    hw = 0.95                                       # half its width
-    xr = -col(2)
-    top = 7
-    plan = [(-xr, 0.0), (xr, 0.0), (hw, 0.15), (hw, 1.7), (-hw, 1.7), (-hw, 0.15)]
-    prism("tail", body, plan, Z0, zl(top), car)
-    # the wedge: from the tail's top down to the nose
-    solid("wedge", body,
-          [(-hw, 1.7, Z0), (hw, 1.7, Z0), (0.88, 4.2, Z0), (-0.88, 4.2, Z0)],
-          [(-hw, 1.7, zl(top)), (hw, 1.7, zl(top)), (0.8, 4.2, zl(2.5)), (-0.8, 4.2, zl(2.5))], car)
-    # the lip over the tail
-    box("lip", body, -xr, xr, -0.04, 0.12, zl(top), zl(top + 0.6), car)
-    # the louvred cover, sloping up to the roof, between the sails
-    solid("louvres", lv,
-          [(-0.62, 0.15, zl(top)), (0.62, 0.15, zl(top)), (0.66, 1.7, zl(top)), (-0.66, 1.7, zl(top))],
-          [(-0.55, 0.15, zl(top + 0.2)), (0.55, 0.15, zl(top + 0.2)), (0.5, 1.7, zl(top + 5.5)),
-           (-0.5, 1.7, zl(top + 5.5))], car)
-    for sx in (-1, 1):
-        pts = [(hw - 0.02, 0.15, zl(top)), (0.62, 0.15, zl(top)), (0.62, 1.75, zl(top)),
-               (hw - 0.02, 1.75, zl(top))]
-        tp = [(hw - 0.04, 0.15, zl(top + 0.3)), (0.66, 0.15, zl(top + 0.3)), (0.5, 1.75, zl(top + 5.6)),
-              (0.64, 1.75, zl(top + 5.6))]
-        solid("sail", body, [(sx * x, y, z) for x, y, z in pts],
-              [(sx * x, y, z) for x, y, z in tp], car)
-    # the cabin: glass sides, a flat roof, the windscreen raked far forward
-    solid("cabin", gl,
-          [(-0.66, 1.7, zl(top)), (0.66, 1.7, zl(top)), (0.78, 3.4, zl(4.3)), (-0.78, 3.4, zl(4.3))],
-          [(-0.5, 1.75, zl(top + 5.5)), (0.5, 1.75, zl(top + 5.5)), (0.52, 2.5, zl(top + 5.5)),
-           (-0.52, 2.5, zl(top + 5.5))], car)
-    box("roof", body, -0.52, 0.52, 1.72, 2.5, zl(top + 5.4), zl(top + 5.9), car)
+    top = 8.2
+    sh = Shape([(0, 0.86), (0.06, 0.91), (0.2, 0.94), (0.45, 0.95), (1.8, 0.95), (2.6, 0.93),
+                (3.5, 0.93), (3.9, 0.9), (4.1, 0.8), (4.2, 0.62)],
+               Z0,
+               [(0, zl(top - 0.6)), (0.07, zl(top + 0.4)), (0.2, zl(top + 0.1)), (0.5, zl(top - 0.1)),
+                (1.7, zl(top - 0.8)), (3.3, zl(5.6)), (3.9, zl(4.8)), (4.1, zl(3.9)), (4.2, zl(2.8))],
+               [(0, 5.5), (0.6, 5.0), (3.0, 4.0), (4.2, 2.6)])
+    body_and_arches(car, sh, 4.2, body, k)
+    tail = sh.outline(0.0, 0.02)
+    c3.fenders("fender", body, k, [
+        (c3.REAR_AXLE, c3.REAR_R, 0.81, 0.17, (zl(top - 0.2), zl(9.4), zl(top - 0.6)), (0.3, 0.3)),
+        (c3.FRONT_AXLE, c3.FRONT_R, 0.842, 0.15, (zl(6.0), zl(8.3), zl(3.6)), (0.3, 0.05))],
+        car)
+    # over the engine the louvres between the sails, up to the cabin: glass
+    # sides, a flat roof, the windscreen raked far forward
+    def slot(y, x, z, u):
+        if y < 1.75:
+            return 1 if abs(u - 0.5) < 0.2 else 2
+        return 2 if 1.8 < y < 2.55 and abs(u - 0.5) < 0.2 else 0
+    gh = Shape([(0.25, 0.62), (1.7, 0.68), (2.5, 0.72), (3.4, 0.8)], on(sh),
+               [(0.25, zl(top + 0.5)), (1.7, zl(top + 4.3)), (2.1, zl(top + 4.8)),
+                (2.5, zl(top + 4.6)), (3.4, zl(5.8))], 3.0)
+    loft("cabin", [gl, lv, body], gh, stations(0.25, 3.4, 0.03), car, slot=slot)
     # the tail: a black panel with the lights, a black bumper, the plate
-    panel("panel", k, col(2), -col(2), zl(2), zl(5), car)
+    panel("panel", k, col(2), -col(2), zl(2), zl(5), car, 0, tail)
     for row, mat in ((5, r), (4, r), (3, o)):
-        mirrored(car, "light", mat, 2.5, 9, row - 1, row, 1)
-    panel("bumper", k, col(2), -col(2), zl(0), zl(1), car)
+        mirrored(car, "light", mat, 2.5, 9, row - 1, row, 1, tail)
+    panel("bumper", k, col(2), -col(2), zl(0), zl(1), car, 0, tail)
     panel("frame", k, col(13), -col(13), zl(0), zl(3), car, 2)
     panel("plate", w, col(14), -col(14), zl(0.5), zl(2.5), car, 3)
     panel("diffuser", k, col(6), -col(6), LZ, Z0, car)
-    box("under", k, col(6), -col(6), 0.0, 4.1, LZ, Z0, car)
+    box("under", k, col(6), -col(6), 0.0, 3.9, LZ, Z0, car)
     exhaust(car, w, -col(11), 2 * LZ)
     exhaust(car, w, col(11), 2 * LZ)
+    sills(car, sh, k)
     for sx in (-1, 1):
-        box("sill", k, sx * hw - 0.005, sx * hw + 0.005, 0.15, 4.1, Z0, zl(1), car)
-        box("intake", k, sx * hw - 0.005, sx * hw + 0.005, 1.6, 2.4, zl(3), zl(5.5), car)
-        # over the front wheel, which stands higher than the bonnet: its
-        # arch (behind the tyre, seen above it)
-        box("arch", body, sx * 0.6, sx * 0.9, c3.FRONT_AXLE - 0.4, c3.FRONT_AXLE + 0.4,
-            zl(2), zl(7), car)
-    wheels(car, 0.97, 0.32, k, n, c3.flat("GREY"), front_in=0.0)  # (out past
-    return car                                                     # the sill)
+        strip("intake", k, sh, stations(1.5, 2.3, 0.05), zl(3), zl(5.5), car, side=sx)
+    wheels(car, 0.97, 0.32, k, n, c3.flat("GREY"), front_in=0.0)
+    return car
 
 
 def bmw():
-    """A boxy saloon: an upright boot with a wing on it, wide lights, flared
-    arches over the wheels, a tall cabin; stripes in light blue, dark blue
-    and red along it."""
+    """A saloon, square but its corners rounded: an upright boot with a wing
+    on it, wide lights, flared arches over the wheels, a tall cabin with
+    broad rear pillars; stripes in light blue, dark blue and red along it."""
     body = c3.toon("BODY", [(0.0, "PASTEL"), (0.35, "WHITE")])
-    k, w, g = c3.flat("BLACK"), c3.flat("WHITE"), c3.flat("GREY")
+    k, w = c3.flat("BLACK"), c3.flat("WHITE")
     r, o = c3.flat("RED"), c3.flat("ORANGE")
     n, s, gl = c3.flat("NAVY"), c3.flat("SKY"), c3.glass()
     car = bpy.data.objects.new("Car", None)
     bpy.context.collection.objects.link(car)
 
     hw = 0.85
-    xr = hw - 0.05
     top = 10                                        # the boot lid's line
-    plan = [(-xr, 0.0), (xr, 0.0), (hw, 0.1), (hw, 4.3), (-hw, 4.3), (-hw, 0.1)]
-    prism("body", body, plan, Z0, zl(top), car)
+    sh = Shape([(0, 0.8), (0.06, 0.835), (0.18, hw), (4.15, hw), (4.28, 0.82), (4.36, 0.74),
+                (4.4, 0.6)],
+               Z0,
+               [(0, zl(top - 0.5)), (0.12, zl(top)), (3.2, zl(top)), (3.4, zl(top - 0.4)),
+                (4.2, zl(top - 1.8)), (4.4, zl(top - 3.6))],
+               [(0, 6.0), (4.0, 6.0), (4.4, 4.0)])
+    body_and_arches(car, sh, 4.4, body, k)
+    tail = sh.outline(0.0, 0.02)
+    c3.fenders("fender", body, k, [
+        (c3.REAR_AXLE, c3.REAR_R, 0.8, 0.17, (zl(8.5), zl(9.4), zl(8.5)), (0.3, 0.3)),
+        (c3.FRONT_AXLE, c3.FRONT_R, 0.83, 0.15, (zl(8.5), zl(8.6), zl(7.0)), (0.3, 0.12))],
+        car, p=5.0)
     # the cabin: a sloping rear window between broad pillars, a tall roof
-    solid("cabin", gl,
-          [(-0.74, 0.95, zl(top)), (0.74, 0.95, zl(top)), (0.76, 3.2, zl(top)), (-0.76, 3.2, zl(top))],
-          [(-0.6, 1.45, zl(top + 8)), (0.6, 1.45, zl(top + 8)), (0.6, 2.6, zl(top + 8)),
-           (-0.6, 2.6, zl(top + 8))], car)
-    box("roof", body, -0.61, 0.61, 1.4, 2.65, zl(top + 7.9), zl(top + 8.4), car)
-    for sx in (-1, 1):                              # the broad rear pillars
-        pts = [(0.78, 0.9, zl(top)), (0.46, 0.9, zl(top)), (0.46, 1.5, zl(top)), (0.78, 1.5, zl(top))]
-        tp = [(0.74, 0.9, zl(top + 0.3)), (0.5, 0.9, zl(top + 0.3)), (0.36, 1.5, zl(top + 8)),
-              (0.61, 1.5, zl(top + 8))]
-        solid("pillar", body, [(sx * x, y, z) for x, y, z in pts],
-              [(sx * x, y, z) for x, y, z in tp], car)
+    def slot(y, x, z, u):
+        f = abs(u - 0.5)
+        if y < 1.55:                                # the rear window, the
+            return 0 if f < 0.17 else 1             # pillars
+        if y < 2.62:                                # the roof, the side
+            return 1 if f < 0.24 else 0             # windows
+        return 1 if f > 0.45 else 0                 # the windscreen
+    cabin = Shape([(0.95, 0.76), (2.0, 0.74), (3.2, 0.78)], on(sh),
+                  [(0.95, zl(top + 0.2)), (1.45, zl(top + 7.6)), (1.6, zl(top + 8.2)),
+                   (2.5, zl(top + 8.2)), (2.65, zl(top + 7.8)), (3.2, zl(top))], 4.5)
+    loft("cabin", [gl, body], cabin, stations(0.95, 3.2, 0.03), car, slot=slot)
     # the wing on the boot lid's back edge
     box("wing", body, -0.74, 0.74, 0.02, 0.32, zl(top + 1), zl(top + 2), car)
     panel("wing_k", k, -0.74, 0.74, zl(top + 1), zl(top + 1.5), car)
     for sx in (-1, 1):
-        box("stand", k, sx * 0.55 - 0.03, sx * 0.55 + 0.03, 0.1, 0.25, zl(top), zl(top + 1), car)
+        box("stand", k, sx * 0.55 - 0.03, sx * 0.55 + 0.03, 0.1, 0.25, zl(top - 0.3), zl(top + 1), car)
     # the rear face: the lights either side of a black panel with the plate,
     # stripes across under them, a black bumper
     for row, mat in ((8, r), (7, r), (6, o), (5, r)):
-        mirrored(car, "light", mat, 3.7, 11, row - 1, row, 1)
-    mirrored(car, "reverse", w, 10, 11, 4, 5, 2)
+        mirrored(car, "light", mat, 3.7, 11, row - 1, row, 1, tail)
+    mirrored(car, "reverse", w, 10, 11, 4, 5, 2, tail)
     panel("panel", k, col(11), -col(11), zl(4), zl(8), car)
     panel("frame", k, col(13), -col(13), zl(4), zl(7), car, 2)
     panel("plate", w, col(14), -col(14), zl(4.5), zl(6.5), car, 3)
     for row, mat in ((4, s), (3, n), (2, r)):
-        panel("stripe", mat, -xr, xr, zl(row - 1), zl(row), car, 1)
-    panel("bumper", k, -xr, xr, zl(0), zl(1), car, 1)
+        panel("stripe", mat, -hw, hw, zl(row - 1), zl(row), car, 1, tail)
+    panel("bumper", k, -hw, hw, zl(0), zl(1), car, 1, tail)
     panel("diffuser", k, col(7), -col(7), LZ, Z0, car)
-    box("under", k, col(7), -col(7), 0.0, 4.2, LZ, Z0, car)
+    box("under", k, col(7), -col(7), 0.0, 4.1, LZ, Z0, car)
     exhaust(car, w, col(9), 2 * LZ)
-    # along each flank: the stripes, the arches flared out over the wheels
+    # along each flank, between the arches: the stripes and the bumper
     for sx in (-1, 1):
-        for row, mat in ((4, s), (3, n), (2, r)):
-            box("stripe", mat, sx * hw - 0.005, sx * hw + 0.005, 0.1, 4.3, zl(row - 1), zl(row), car)
-        box("bumper", k, sx * hw - 0.005, sx * hw + 0.005, 0.1, 4.3, zl(0), zl(1), car)
-        for y in (c3.REAR_AXLE, c3.FRONT_AXLE):
-            box("arch", body, sx * hw - (0.0 if sx > 0 else 0.08), sx * hw + (0.08 if sx > 0 else 0.0),
-                y - 0.42, y + 0.42, zl(1), zl(4.5), car)
+        for y0, y1 in spans(4.4):
+            ys = stations(y0, y1, 0.05)
+            for row, mat in ((4, s), (3, n), (2, r)):
+                strip("stripe", mat, sh, ys, zl(row - 1), zl(row), car, side=sx)
+            strip("bumper", k, sh, ys, Z0 + c3.NOTCH_MIN, zl(1), car, side=sx)
     wheels(car, 0.95, 0.3, k, n, c3.flat("GREY"), front_in=0.0)   # (out past
                                                                    # the arches)
     return car
@@ -347,7 +378,7 @@ def photo_materials(paint):
 PART = {"body": "paint", "nose": "paint", "deck": "paint", "roof": "paint",
         "buttress": "paint", "wing": "paint", "sail": "paint", "tail": "paint",
         "wedge": "paint", "lip": "paint", "pillar": "paint", "arch": "paint",
-        "rim": "paint", "cabin": "glass", "wing_k": "plastic", "pylon": "plastic",
+        "rim": "paint", "fender": "paint", "cabin": "glass", "wing_k": "plastic", "pylon": "plastic",
         "stand": "plastic", "grille": "plastic", "frame": "plastic", "diffuser": "plastic",
         "under": "plastic", "sill": "plastic", "strake": "plastic", "louvre": "plastic",
         "panel": "plastic", "bumper": "plastic", "intake": "plastic", "band": "plastic",
@@ -358,6 +389,11 @@ BY_PEN = {"light": dict(RED="red", ORANGE="amber"),
           "wing_r": dict(RED="red_paint"), "wing_o": dict(ORANGE="orange_paint")}
 
 
+# a part's further materials (a cabin's roof, an arch's walls), by the pen
+# they had
+SLOT = {"BODY": "paint", "GLASS": "glass", "BLACK": "plastic", "LOUVRES": "plastic"}
+
+
 def photoreal(paint):
     """Every part of the car built given its real material."""
     P = photo_materials(paint)
@@ -365,12 +401,15 @@ def photoreal(paint):
         if ob.type != "MESH":
             continue
         part = ob.name.split(".")[0]
-        old = ob.data.materials[0].name.split(".")[0] if ob.data.materials else ""
+        olds = [m.name.split(".")[0] for m in ob.data.materials]
+        old = olds[0] if olds else ""
         if part.startswith("tyre"):
             mat = P["rim"] if part.endswith("_hub") else P["rubber"]
             for i in range(len(ob.data.materials)):
                 ob.data.materials[i] = mat
             continue
+        for i in range(1, len(olds)):
+            ob.data.materials[i] = P[SLOT[olds[i]]]
         if part == "louvres":                       # slats over glass
             key = "plastic"
         elif part in BY_PEN:
@@ -383,6 +422,7 @@ def photoreal(paint):
             bev = ob.modifiers.new("bevel", "BEVEL")
             bev.width = 0.03
             bev.segments = 2
+            bev.limit_method = "ANGLE"          # (a loft's own edges are not)
 
 
 def photo_setup(sun_rot):

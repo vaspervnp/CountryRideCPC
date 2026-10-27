@@ -7,7 +7,7 @@ bushcode.asm.
                   projected with, the sprite directory, each sprite's lines
                   as data
     bushcode.asm  (page 1, #x600-#x7FF of each 2K block: RAM_C1) each sprite
-                  as code
+                  as code (but one, in the fragments, if there is no room)
     cars.asm      CAR0.BIN-CAR3.BIN: each car's own code and car_views,
                   which boot.asm puts in place of the first car's (the
                   loader loads the picked one's)
@@ -463,10 +463,13 @@ def frag_slot(fc, label, codes):
     pieces = []
     n0, size0, placed0 = len(fc.piece.lines), fc.piece.size, len(fc.sp.placed)
     run0 = fc.runs[fc.cur][0]
+    fc.spare = None                     # what the longest leaves of the runs
     for n, code in enumerate(codes):
         f = copy.deepcopy(fc)
         first = f.sp.placed[placed0 - 1][3]
         f.code("car%d_%s" % (n, label), code)
+        left = f.left + sum(ln for a, ln in f.runs[f.cur + 1:])
+        fc.spare = left if fc.spare is None else min(fc.spare, left)
         ps = [(run0 + size0, first.lines[n0:])]
         ps += [(a, d.lines) for a, _, _, d in f.sp.placed[placed0:]]
         pieces.append([(a, "FRAG_ST%d+#%X" % (k, a - frag_addr(k)), lines)
@@ -585,8 +588,8 @@ def main():
     rows = range(G.ROWS + 1)
     sp = Space()
 
-    # bushcode.asm: the sprites' code, smallest first, as many as there is
-    # room for; the rest are only copied
+    # bushcode.asm: the sprites' code, smallest first (one of them in the
+    # fragments if page 1 has no room for all)
     # every car's views (the first's is BOOT.BIN's), and where each view's
     # first line's run ends in buffer 0
     allcars, ends = [], []
@@ -615,13 +618,25 @@ def main():
             ch.code("bush_c%d" % k, out[k][0])
         p1 = ch_slot(ch, "car_code1", [c[1][0] for c in allcars])   # (and
         return ch, out, [a + b for a, b in zip(p0, p1)]     # turning left
-    n = nspr                                                # after them)
-    while True:
+                                                            # after them)
+
+    def fits(ks):
         try:
-            ch, codes, pieces = build(range(n))
-            break
+            return build(ks)
         except SystemExit:
-            n -= 1
+            return None
+    # if page 1 is too full, the smallest sprite's code that makes room
+    # goes in the fragments instead (beside the car turning right)
+    in_frags = []
+    got = fits(range(nspr))
+    for k in sorted(range(nspr), key=lambda k: len(sprite_code(k)[0])) if not got else []:
+        got = fits([j for j in range(nspr) if j != k])
+        if got:
+            in_frags = [k]
+            break
+    if not got:
+        raise SystemExit("bushes: no room left in page 1 for the cars' views")
+    ch, codes, pieces = got
     # bushdata.asm
     sp.page("bush_rz1", "the row a bush zr ahead stands on, zr < 512: zr / 2",
             [G.bush_row(2 * i) for i in range(256)])
@@ -668,6 +683,10 @@ def main():
     # the car turning right: code in what is left of fragments 8-14
     # (road15.asm has the rest of fragment 15)
     fc = FragCode(sp, sp.take_runs(frag_addr(FRAG_FIRST + FRAG_COUNT - 1)))
+    for k in in_frags:
+        code, us = sprite_code(k)
+        fc.code("bush_c%d" % k, code)
+        codes[k] = [code, us, sum(SIZE[kind(t)] for t, s in code)]
     p2 = frag_slot(fc, "car_code2", [c[2][0] for c in allcars])
     pieces = [a + b + c for a, b, c in zip(pieces, p2, hill_pieces)]
     view_code = ["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
@@ -831,17 +850,18 @@ def main():
     open(os.path.join(ROOT, "src", "gen", "cars.asm"), "w").write(
         "\n".join(cars_asm(pieces, ends, view_code)) + "\n")
     print("bushes: %d on the track, %d sprites, code for %d (%d bytes left in page 1);"
-          " %d bytes of fragments %d-%d left"
+          " %d bytes of fragments %d-%d left, and %d where the car turning right is"
           % (len(S.BUSHES), nspr, len(codes), ch.free(),
-             sp.free(), FRAG_FIRST, FRAG_FIRST + FRAG_COUNT - 1))
+             sp.free(), FRAG_FIRST, FRAG_FIRST + FRAG_COUNT - 1, fc.spare))
     print("  the cars' views on hills: %d of %d bytes" % (hill_used, sum(ln for a, ln in HILL_RUNS)))
     for c, cars in enumerate(allcars):
         print("  car %d: %d lines; views %s bytes of code, %s us"
               % (c, S.CAR_H, "/".join(str(sum(SIZE[kind(t)] for t, st in car))
                                       for car, us in cars),
                  "/".join(str(us) for car, us in cars)))
-    for k, (code, us, size) in codes.items():
-        print("  sprite %2d: %2d lines, %3d bytes of code, %4d us" % (k, G.BUSH_H[k], size, us))
+    for k, (code, us, size) in sorted(codes.items()):
+        print("  sprite %2d: %2d lines, %3d bytes of code, %4d us%s"
+              % (k, G.BUSH_H[k], size, us, " (in the fragments)" if k in in_frags else ""))
 
 
 if __name__ == "__main__":

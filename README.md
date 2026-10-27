@@ -146,7 +146,14 @@ view.
 
 The cars are photorealistic renders of 3D models (`tools/cars3d.py`, in
 Blender with Cycles: paint under a clear coat, glass that mirrors the sky,
-rubber, alloy rims, lenses lit from within, a sun behind and a sky), brought
+rubber, alloy rims, lenses lit from within, a sun behind and a sky). Their
+bodies are curved: each is lofted along the car through rounded sections
+(superellipses, from nearly square to round) whose width, height and
+roundness follow smooth curves from the tail to the nose (`tools/car3d.py`
+`Shape`, `loft`) - a rear face with rounded shoulders, hips over the rear
+wheels and a waist at the doors, a bubble of a cabin with a painted roof,
+sails, a nose rounded in plan and in profile - with the wheel arches cut
+into them and fenders swelling over the wheels. They are brought
 to mode 0 by `tools/dither.py`: each mode 0 pixel takes the mean colour of
 the 128 render pixels under it, over the asphalt's grey, made more
 saturated and its darks darker, and then the nearest pen - or, where two
@@ -253,7 +260,8 @@ data (one in page 0 is free). `src/hw.asm` has the whole map.
 The car's code - a compiled sprite for each of its nine views - has the
 same places for every car, as big as the biggest car's needs
 (`tools/mkbush.py`): the three on the level in page 1 beside the bushes'
-and in what is left of the page 2 fragments, the six on hills (4.3K) in
+and in what is left of the page 2 fragments (with the smallest bush's code
+when page 1 is short), the six on hills (4.4K) in
 bank 7 from `#F500`, after the game, and in the road parts' lines 160-172,
 which the CRTC never shows and nothing else writes - buffer 0's, and
 buffer 1's first four 2K blocks (a bush reaches line 173 at most, the line
@@ -476,8 +484,9 @@ art and works out where they go, and `src/bush.asm` has to match it.
   too.
 
 The tables and the sprites as data are in the page 2 fragments, which are
-mapped whatever the bank; the code in page 1 (RAM C1, as the game runs);
-the track and the drawing in bank 7.
+mapped whatever the bank; the code in page 1 (RAM C1, as the game runs) -
+the smallest sprite's in the fragments if page 1 has no room left; the
+track and the drawing in bank 7.
 
 ### The HUD
 
@@ -510,7 +519,7 @@ at 5.25, before the road's last four lines were cut, which took off
   turn, at the flip).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.4 ms (Steering
+steering or steering from side to side: the worst takes 37.7 ms (Steering
 in numbers, below).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
@@ -529,14 +538,15 @@ demo's speed, up to the top speed (6.6 depth units a VSYNC).
 | | Demo | Not steering | Side to side |
 |---|---|---|---|
 | a picture, on average | 22.8 ms | 23.1 ms | 26.6 ms |
-| the worst | 37.6 ms | 34.7 ms | 37.2 ms |
+| the worst | 37.7 ms | 34.7 ms | 37.2 ms |
 | past the flip | 0 | 0 | 0 |
 | pairs the road moved a picture | 0.116 | 0.137 | 1.024 |
 | curve levels the road is behind the track, off the middle | 0.44 | | 1.13 |
 
 (The first car; with the cars seen on hills and the car's 27 lines drawn
-whole when its view or place changes. Driving with the keys, cars 1, 2 and
-4: 0 past the flip in 3000, 37.5 ms at worst.)
+whole when its view or place changes. The other three: 35.9 ms at worst in
+the demo, 37.6 ms side to side. Driving with the keys, all four: 0 past
+the flip in 3000, 38.3 ms at worst.)
 
 Steering across the road (30 runs): 1.0 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven
@@ -699,7 +709,8 @@ tools/
   scene.py      the reference model of the whole screen
   mkgfx.py      HUD, sky and mountain graphics -> src/gen/
   mkroad.py     the generated road code, templates and tables -> src/gen/
-  car3d.py      the first car as a 3D model, the game's camera (Blender)
+  car3d.py      the first car as a 3D model, the game's camera, curved
+                shapes (lofts, arches, fenders) for all the cars (Blender)
   cars3d.py     all four cars' models, rendered photorealistic in Blender:
                 nine views each from behind, one from the side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
