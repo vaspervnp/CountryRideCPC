@@ -123,18 +123,26 @@ car_views
     defw #83F7,car_code2
 car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
 ;; per car: its top speed, its acceleration (both 8.8 depth units a
-;; VSYNC), the pairs a picture it is steered, the drift's step
+;; VSYNC), the pairs a picture it is steered (8.8), the drift's step
 ;; (scene.py CAR_LEVELS; car_setup)
 car_stats
     defw #0690   ; player: speed 5, acceleration 4, grip 3
-    defb 5,3,48
+    defb 5
+    defw #0100
+    defb 144
     defw #0690   ; ferrari: speed 5, acceleration 5, grip 2
-    defb 6,3,40
+    defb 6
+    defw #0100
+    defb 120
     defw #0620   ; lotus: speed 4, acceleration 3, grip 5
-    defb 4,4,64
+    defb 4
+    defw #0155
+    defb 192
     defw #05B0   ; bmw: speed 3, acceleration 5, grip 4
-    defb 6,4,56
-CAR_STATS_LEN EQU 5   ; bytes a car
+    defb 6
+    defw #0155
+    defb 168
+CAR_STATS_LEN EQU 6   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table
 bush_cxs

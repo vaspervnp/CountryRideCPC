@@ -287,7 +287,11 @@ def traffic_cars(g):
         if r[0]:
             out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - 2,
                         colour[r[6], r[7]], colour[r[8], r[9]]))
-    if len(out) == 2 and g.bank(6, g.sym["TR_DROPPED"], 1)[0]:
+    dropped = g.bank(6, g.sym["TR_DROPPED"], 1)[0]
+    if dropped == 2:
+        # the picture was late already and no car at a near size: neither
+        return []
+    if len(out) == 2 and dropped:
         # the picture was late already: the further one was not drawn
         out.remove(max(out, key=lambda car: (car[0] - zcam) & 0xFFFF))
     return out

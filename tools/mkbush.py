@@ -887,15 +887,17 @@ def main():
         emit("    defw #%04X,car_code%d" % (ends[0][v % 3], v % 3))
     emit("car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)")
     emit(";; per car: its top speed, its acceleration (both 8.8 depth units a")
-    emit(";; VSYNC), the pairs a picture it is steered, the drift's step")
+    emit(";; VSYNC), the pairs a picture it is steered (8.8), the drift's step")
     emit(";; (scene.py CAR_LEVELS; car_setup)")
     emit("car_stats")
     for c, (sp_, ac, gr) in enumerate(S.CAR_LEVELS):
         steer_, drift = S.GRIP[gr]
         emit("    defw #%04X   ; %s: speed %d, acceleration %d, grip %d"
              % (S.TOP_SPEED[sp_], S.CARS[c], sp_, ac, gr))
-        emit("    defb %d,%d,%d" % (S.ACCEL[ac], steer_, drift))
-    emit("CAR_STATS_LEN EQU 5   ; bytes a car")
+        emit("    defb %d" % S.ACCEL[ac])
+        emit("    defw #%04X" % steer_)
+        emit("    defb %d" % drift)
+    emit("CAR_STATS_LEN EQU 6   ; bytes a car")
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")
     emit("bush_cxs")

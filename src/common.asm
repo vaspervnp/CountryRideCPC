@@ -26,9 +26,6 @@ flip_drop   defb 0          ; ... how far its horizon is down
 flip_head   defb 0          ; ... and where its sky looks (words right)
 flip_last   defb 0          ; vbl_count when the last flip happened
 irq_n       defb 0          ; interrupts since then (the 12th shows the next)
-tr_heavy    defb 0          ; the traffic drawn last picture (traffic.asm): a
-                            ; car 1, one of the near sizes 2 - from 2, the HUD
-                            ; gives way when the road moves (draw_picture)
 main_cfg    defb RAM_C1     ; the RAM configuration the main code is in
                             ; while it waits for a flip (cache_job)
 front_buf   defb 0          ; buffer being shown (0/1)

@@ -138,9 +138,11 @@ drives the car):
 Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - 3 pairs a
-picture, 4 with grip 4 or 5 - and how little a curve carries it out of it:
-a pair for every 40, 48, 56 or 64 of the curve level times the speed.
+to 5.6 seconds. Grip is how fast the car is steered across - a pair a
+picture, 1 1/3 with grip 4 or 5 - and how little a curve carries it out of
+it: a pair for every 120, 144, 168 or 192 of the curve level times the
+speed. (Until 2026-10-27 the car was steered three times as fast, and the
+curves carried it out three times as fast: too fast across.)
 
 ![Picking a car](docs/screen-select.png)
 
@@ -356,8 +358,9 @@ one more picture, so the two never fall on the same picture.
 
 ### Steering
 
-The car moves across the screen at once, 3 pairs (12 pixels) a picture
-while left or right is held (`car_x`), and the road - the camera - follows
+The car moves across the screen at once, a pair (4 pixels) a picture - 1
+1/3 with grip 4 or 5, the fraction adding up in `steer_frac` - while left
+or right is held (`car_x`), and the road - the camera - follows
 it as fast as its steps go: the car is drawn `road_x` - `car_x` pairs right
 of the middle of the screen, 16 at most (`CAR_LEAD`; the road at most 16
 pairs behind). The road moves under it in perspective: `road_x` is how many
@@ -534,11 +537,11 @@ looks like, and `src/traffic.asm` has to match it.
   next picture road_project draws the road on those it would skip
   (`rp_force`) - a car is always on the road.
 - **Time.** A car costs ~0.5 ms a picture, two ~1.3 ms (2.5 ms at worst).
-  When the traffic took long, the HUD gives way (below); and if a picture
-  is late already when the cars are drawn - 10 interrupts since the flip,
-  6.7 ms at most left, or 9 with the nearer car at a near size - only the
-  nearer one is drawn that time (17 to 53 pictures in 3000 driving with
-  the keys, one or two at a time; the far car blinks, the near one never).
+  The HUD, drawn last, has only the time left (below). And if a picture is
+  late already when the cars are drawn - 9 interrupts since the flip, 10 ms
+  at most left, with the nearer car at a near size, or 10, 6.7 ms - only a
+  car at a near size is drawn that time: the nearer one, if it is at one,
+  and neither if not (`tr_dropped`). A far car blinks; a near one never.
 - **Memory.** The pieces (4K) go where there is room in a RAM configuration
   they can run in: bank 6 after the traffic's code and in the row tables'
   pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
@@ -552,12 +555,12 @@ looks like, and `src/traffic.asm` has to match it.
 
 The HUD shows a copy of the game's values, taken every 4 pictures (6.25 times
 a second). The gauges have 8 segments. Each buffer remembers what it shows.
-Only what changed is redrawn, within a share of about 1.1 ms a picture (a
-third of that when the curve level moves or the road moves sideways; then,
-every other picture of each buffer, a gauge segment goes before the total
-time - and none at all, its copy waiting too, if besides the traffic took
-long the picture before: two cars, or a near one); the rest waits for the
-buffer's next picture. Text and gauges sit on
+Only what changed is redrawn, last in a picture, with the time left: a
+share of about 1.1 ms a picture up to the 10th interrupt since the flip, a
+third of it at the 10th (then, every other picture of each buffer, a gauge
+segment goes before the total time), none from the 11th - its copy waiting
+too, for a picture that has the time; the rest waits for the buffer's next
+picture. Text and gauges sit on
 the HUD's plain background, so drawing is plain copying, never masking.
 
 ### Timing
@@ -581,7 +584,7 @@ at 5.25, before the road's last four lines were cut, which took off
   turn, at the flip).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.7 ms, 39.8 ms
+steering or steering from side to side: the worst takes 37.7 ms, 39.7 ms
 with the traffic (Steering in numbers, below).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
@@ -610,20 +613,24 @@ whole when its view or place changes. The other three: 35.9 ms at worst in
 the demo, 37.6 ms side to side. Driving with the keys, all four: 0 past
 the flip in 3000, 38.3 ms at worst.)
 
-With the traffic (up to two cars, 2026-10-27) the same took 24.7 / 25.0 /
-27.7 ms on average and 39.8 / 38.4 / 37.9 ms at worst, none past the flip,
-the road moving 0.116 / 0.139 / 0.904 pairs a picture; the other three
-cars 37.4 / 37.4 / 38.4 ms at worst in the demo and 39.1 / 38.7 / 38.1
-side to side. Driving with the keys, all four: 28.6-29.6 ms on average,
-39.8 ms at worst, 0 past the flip in 3000 - the HUD giving way and the far
-car left out of 17 to 53 pictures (Traffic, above).
+With the traffic (up to two cars) and the car steered a third as fast
+(2026-10-27) the same took 24.8 / 24.9 / 27.8 ms on average and 39.7 /
+36.9 / 39.0 ms at worst, none past the flip, the road moving 0.116 / 0.068
+/ 0.885 pairs a picture; the other three cars 37.8 / 37.2 / 37.3 ms at
+worst in the demo and 39.6 / 39.2 / 38.7 side to side. Driving with the
+keys, all four: 30.2-30.8 ms on average, 39.5 ms at worst, 0 past the flip
+in 3000 - the HUD with a third of its share in ~6% of the pictures and
+none in ~1%, and the far car left out of 11 to 22 (both cars of 1 in
+12000; Traffic, above).
 
-Steering across the road (30 runs): 1.0 pairs a picture - 0.545 with
-steps of two pairs only. With the keys (faster held, the car driven
-from `car_x` -18 to 18 and back, 20 times): 16.6 pictures
-(0.67 s) a crossing, the car on the screen 10 pairs from the middle on
-average; 36.6 pictures with steps of two pairs and the car at most 12 pairs
-from the middle, and ~66 with the car kept in the middle. Driving with the
+Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
+steps of two pairs only. With the keys (faster held, the car driven from
+`car_x` -18 to 18 and back, 20 times): 42.1-42.9 pictures (1.7 s) a
+crossing with grip 2 or 3, 36.4-37.3 (1.5 s) with grip 4 or 5, the car on
+the screen 9 to 10 pairs from the middle on average. (Steered three times as fast,
+until 2026-10-27: 16.6 pictures, 0.67 s; 36.6 with steps of two pairs and
+the car at most 12 pairs from the middle, and ~66 with the car kept in
+the middle.) Driving with the
 keys, left and right in turn every 40 pictures (every 12): 27.2 ms
 (28.2 ms) a picture on average, 37.5 ms (38.0 ms) at worst, none past the
 flip in 3000. Before steps went on hills, 22.6 / 22.1 / 23.8 ms on average, 33.0 / 32.5 / 34.9 at

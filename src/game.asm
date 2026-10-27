@@ -35,6 +35,7 @@ car_vfull   defb 0              ; ... and uphill (+3) or downhill (+6): the
                                 ; car_view of gen/bush.asm's car_views
 drawn_view  defb 0,0            ; ... as each buffer last showed it
 drift_acc   defw 0              ; a curve carrying the car out (steer)
+steer_frac  defb 0              ; 256ths of a pair the steering added up
 player      defb 0              ; not 0: the player has steered (#FF: the
                                 ; tools do, setting steer_x)
 demo_t      defw 0              ; pictures, for the demo's steering
@@ -206,22 +207,24 @@ draw_screen_hud
     ret
 
 ;; ---------------------------------------------------------------------------
-;; draw_picture - A = buffer: HUD changes, last time's bushes taken away,
-;; the road, then this picture's bushes and the car (bush.asm).
+;; draw_picture - A = buffer: last time's bushes taken away, the road, then
+;; this picture's bushes and the car (bush.asm), and last the HUD's changes.
 ;;
 ;; The road's curve level and road_x are the cache's (cache_idle): one
 ;; level for both buffers. When this buffer last showed another level, the
 ;; road has moved sideways on most lines and road_project draws them with a
-;; margin of grass (~6 ms more): the HUD then has a smaller share, and the
-;; sky's turn waits for the next picture (pic_bent). The HUD has the
-;; smaller share too when road_x has moved since then - and none at all
-;; when, besides, the traffic took long the last picture (tr_heavy: two
-;; cars, or a near one).
+;; margin of grass (~6 ms more), and the sky's turn waits for the next
+;; picture (pic_bent).
+;;
+;; The HUD has the time that is left: its whole share up to the 10th
+;; interrupt since the flip (~2 ms at most: done 35.3 ms after the flip),
+;; the smaller one at the 10th (~0.8 ms: 37.5 ms), none from the 11th - and
+;; then its copy waits too, for a picture that has the time.
 ;; ---------------------------------------------------------------------------
+HUD_FULL_BY EQU 10              ; the interrupt from which the HUD has less
 draw_picture
     push af
     call select_buf
-    ld b,HUD_SHARE
     ld c,0
     ld hl,drawn_curve
     call buf_entry              ; HL = the level this buffer was drawn with
@@ -229,41 +232,14 @@ draw_picture
     cp (hl)
     ld (hl),a
     jr z,draw_picture_x
-    ld b,HUD_SHARE_LOW          ; a new level
-    inc c
+    inc c                       ; a new level
 draw_picture_x
     ld a,c
     ld (pic_bent),a
     ld hl,drawn_x
     call buf_entry
     ld a,(road_x)
-    cp (hl)
     ld (hl),a
-    jr z,draw_picture_hud
-draw_picture_low                ; the road moved sideways
-    ld b,HUD_SHARE_LOW
-draw_picture_hud
-    ld a,b
-    cp HUD_SHARE
-    jr z,draw_picture_q         ; (the road has not moved)
-    ld a,(tr_heavy)
-    cp 2
-    ld a,b
-    jr c,draw_picture_q
-    xor a                       ; it has, and the traffic is heavy: none
-draw_picture_q
-    ld (hud_quota),a
-    or a                        ; (none: its next copy waits too)
-    jr z,draw_picture_hud_kept
-    ld hl,hud_tick              ; the HUD's values, every HUD_EVERY pictures
-    dec (hl)
-    jr nz,draw_picture_hud_kept
-    ld (hl),HUD_EVERY
-    call demo_gauges
-    call hud_snapshot
-draw_picture_hud_kept
-    call hud_update
-pic_hud                         ; (tools: how long each part takes)
     SET_RAM RAM_C1
     call bush_erase             ; last time's bushes, before the road
 pic_erased
@@ -273,7 +249,28 @@ pic_erased
 pic_road
     call bush_draw              ; this picture's on top of it
 pic_bushes
-    jp car_draw                 ; and the car on top of all
+    call car_draw               ; and the car on top of all
+pic_car
+    ld a,(irq_n)                ; the HUD, with the time left (RAM_C1)
+    ld b,HUD_SHARE
+    cp HUD_FULL_BY
+    jr c,draw_picture_q
+    ld b,HUD_SHARE_LOW
+    jr z,draw_picture_q
+    ld b,0
+draw_picture_q
+    ld a,b
+    ld (hud_quota),a
+    or a                        ; (none: its next copy waits too)
+    ret z
+    ld hl,hud_tick              ; the HUD's values, every HUD_EVERY pictures
+    dec (hl)
+    jr nz,draw_picture_hud
+    ld (hl),HUD_EVERY
+    call demo_gauges
+    call hud_snapshot
+draw_picture_hud
+    jp hud_update
 
 ;; ---------------------------------------------------------------------------
 ;; cache_steps - after a picture: the road's next steps (cache.asm), whose
@@ -417,8 +414,8 @@ cache_steps_step
 ;; ---------------------------------------------------------------------------
 car_setup
     ld a,(car_id)
-    ld l,a
     add a,a
+    ld l,a
     add a,a
     add a,l                             ; CAR_STATS_LEN bytes a car
     ld l,a
@@ -441,9 +438,10 @@ car_setup
     ld (demo_acc+1),de
     ld a,(hl)
     inc hl
-    ld (steer_l+1),a
-    neg
-    ld (steer_r+1),a
+    ld (steer_f+1),a                    ; the pairs a picture it is steered
+    ld a,(hl)
+    inc hl
+    ld (steer_w+1),a
     ld e,(hl)
     ld (steer_dl+1),de
     xor a
@@ -453,14 +451,15 @@ car_setup
     ld d,a
     ld (steer_dr+1),de
     ret
-    ASSERT CAR_STATS_LEN == 5
+    ASSERT CAR_STATS_LEN == 6
 
 ;; ---------------------------------------------------------------------------
 ;; steer - where the car is on the road (car_x) and where the road is to go
 ;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
-;; The player: the car moves CAR_STEP pairs a picture left while left is
-;; held - the road under it goes right: car_x up - right while right is.
+;; The player: the car moves CAR_STEER pairs a picture left while left is
+;; held - the road under it goes right: car_x up - right while right is; a
+;; fraction of a pair adds up in steer_frac, so 1 1/3 is 1, 1, 2 pairs.
 ;; The car moves on the screen at once, and the road follows it, as fast as
 ;; its steps can (steer_x = car_x): the car is drawn road_x - car_x pairs
 ;; right of the middle (car_lines), CAR_LEAD at most. And a curve carries
@@ -482,15 +481,16 @@ HILL_STEP_AHEAD EQU 2           ; ... and a new curve level (~6 pictures
 STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
                                 ; steps
 STEP_LATE   EQU 8               ; ... and no road_x step
-CAR_STEP    EQU 3               ; pairs a picture the car moves, steered
-                                ; (the first car's; car_setup: each its own)
+CAR_STEER   EQU #0100           ; pairs a picture the car moves, steered,
+                                ; 8.8 (the first car's; car_setup: each its
+                                ; own)
 HILL_PITCH  EQU 20              ; the hill, either way, from which the car
                                 ; is seen uphill or downhill (car_lines)
 CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
                                 ; screen, road_x - car_x
-DRIFT_STEP  EQU 48              ; curve level x depth units a VSYNC, a pair:
-                                ; ~0.6 pairs a picture on a level 5 curve at
-                                ; full speed
+DRIFT_STEP  EQU 144             ; curve level x depth units a VSYNC, a pair:
+                                ; ~0.2 pairs a picture on a level 5 curve at
+                                ; full speed (the first car's)
 
 steer
     call read_keys              ; (player.asm)
@@ -504,17 +504,27 @@ steer
     jp z,steer_demo
     ld (player),a
     ld a,c                      ; B = the pairs the player moves the car:
-    and 3                       ; left CAR_STEP, right -CAR_STEP, neither
+    and 3                       ; left CAR_STEER, right -CAR_STEER, neither
     ld b,0                      ; or both 0 - and car_view 1, 2, 0
     jr z,steer_keys
     cp 3
     jr z,steer_both
-steer_l
-    ld b,CAR_STEP               ; (car_setup: the car's)
-    cp 1
-    jr z,steer_keys
-steer_r
-    ld b,-CAR_STEP
+    ld e,a
+    ld a,(steer_frac)
+steer_f
+    add a,lo(CAR_STEER)         ; (car_setup: the car's)
+    ld (steer_frac),a
+steer_w
+    ld a,hi(CAR_STEER)
+    adc a,b
+    ld b,a
+    ld a,e
+    dec e
+    jr z,steer_keys             ; left
+    xor a
+    sub b
+    ld b,a
+    ld a,2                      ; right
     jr steer_keys
 steer_both
     xor a

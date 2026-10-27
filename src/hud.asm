@@ -77,14 +77,14 @@ buf_entry
 ;; picture's share of time allows.
 ;;
 ;; The share is hud_quota units - HUD_SHARE, about 1.1 ms, or HUD_SHARE_LOW
-;; when the road bends further (draw_picture) - a small digit or a gauge
+;; when the picture has taken long (draw_picture) - a small digit or a gauge
 ;; segment costs one, a big digit two. The total time's changed digits come
 ;; first, then at most one of the rest - the TIME digits, the gear, a segment
 ;; of either gauge. With the small share, every other time a gauge segment
-;; goes first, so that the gauges keep up while the road bends further for a
-;; while. Anything left waits for the next picture of this buffer, 80 ms
-;; away; each buffer has two pictures to show a copy before the next. A
-;; share of 0: nothing this picture.
+;; goes first, so that the gauges keep up through a run of long pictures.
+;; Anything left waits for the next picture of this buffer, 80 ms away; each
+;; buffer has two pictures to show a copy before the next. A share of 0:
+;; nothing this picture.
 ;; ---------------------------------------------------------------------------
 HUD_SHARE   EQU 3
 HUD_SHARE_LOW EQU 1

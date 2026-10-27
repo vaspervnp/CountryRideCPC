@@ -50,7 +50,8 @@ TR_GAP      EQU 160                     ; the last car at least this far
                                         ; ahead of where a new one comes
 TR_PAUSE    EQU 24                      ; pictures at least between two
 TR_LATE     EQU 10                      ; interrupts since the flip: from
-                                        ; this one on, one car (traffic_draw)
+                                        ; this one on, a car at a near size
+                                        ; alone (traffic_draw)
     ASSERT TR_ZR == 1
     ASSERT TR_SPEED == 3 && TR_ZNEAR < 256 && TR_ZAWAY == #280
 
@@ -58,7 +59,8 @@ tr_cars     defs TR_MAX*TR_REC,0
 tr_seed     defw #ACE1
 tr_wait     defb TR_PAUSE
 tr_zcam     defw 0                      ; zcam the last picture
-tr_dropped  defb 0                      ; the further car was not drawn
+tr_dropped  defb 0                      ; 1: the further car was not
+                                        ; drawn, 2: neither (traffic_draw)
 tr_rngp     defw tr_drawn               ; (rp_force_all) this buffer's
 tr_drawn    defb LAST_Y,0,LAST_Y,0      ; per buffer: its cars' lines, first
             defb LAST_Y,0,LAST_Y,0      ; and last (from ROAD_AREA_Y)
@@ -326,8 +328,6 @@ td_curve
     jr z,$+5
     ld hl,#BCCB                         ; (res 7,h)
     ld (tp_buf),hl
-    xor a
-    ld (tr_heavy),a                     ; (none yet)
     ld hl,(tr_rngp)                     ; its cars' lines: none yet
     ld (to_note+1),hl
     ld (hl),LAST_Y
@@ -348,13 +348,20 @@ td_curve
     ld ix,tr_cars+TR_REC
     ld hl,tr_cars
 td_order                                ; IX the further one, HL the nearer
+    ld a,(hl)                           ; (TR_ON) the nearer off: the other
+    or a                                ; is the nearer
+    jr nz,td_order_on
+    push ix
+    ex (sp),hl
+    pop ix
+td_order_on
     push hl
-    xor a                               ; the picture late already and both
-    ld (tr_dropped),a                   ; on: the further one is not drawn
-    ld a,(irq_n)                        ; this time - the flip 6.7 ms away at
-    cp TR_LATE-1                        ; most, or 10 ms and the nearer one
-    jr c,td_both                        ; near enough for a near size (the
-    jr nz,td_late                       ; most time)
+    xor a                               ; the picture late already: the
+    ld (tr_dropped),a                   ; flip 10 ms away at most and the
+    ld a,(irq_n)                        ; nearer one at a near size (the most
+    cp TR_LATE-1                        ; time): it alone; 6.7 ms: it alone
+    jr c,td_both                        ; if at a near size, else neither
+    ld c,a
     inc hl
     ld a,(hl)
     inc hl
@@ -363,12 +370,19 @@ td_order                                ; IX the further one, HL the nearer
     ld de,TR_ZNEARSIZE
     or a
     sbc hl,de
-    jr nc,td_both
+    jr c,td_late
+    ld a,c
+    cp TR_LATE
+    jr c,td_both
+    ld a,2                              ; (neither: tr_one not called)
+    ld (tr_dropped),a
+    pop hl
+    ret
 td_late
-    ld a,(tr_cars+TR_ON)
-    ld hl,tr_cars+TR_REC+TR_ON
-    and (hl)
-    jr z,td_both
+    ld a,(ix+TR_ON)
+    or a
+    jr z,td_near                        ; (the further one off anyway)
+    ld a,1
     ld (tr_dropped),a
     jr td_near
 td_both
@@ -645,9 +659,7 @@ to_in_l
     add a,SCR_BYTES/2
     ld (to_left),a
 
-    ; drawn: its lines noted, and its weight (tr_heavy)
-    ld hl,tr_heavy
-    inc (hl)
+    ; drawn: its lines noted
     ld de,(to_lines)
 to_note
     ld hl,0                             ; (self-modified: this buffer's next)
@@ -685,8 +697,6 @@ to_note
     ld b,0
     jp tr_piece
 to_near_size
-    ld hl,tr_heavy
-    inc (hl)
     ld c,a
     push bc
     add a,(ix+TR_TOP)
