@@ -257,13 +257,28 @@ def horizon(top):
     full = [[S.sky_pen(x, y) for x in range(S.PANORAMA_W)] for y in range(y0, top)]
     full += rows
     enc = encode_rows(full)
-    emit(";; the panorama, lines %d..%d, by columns: for each of the %d words"
-         % (y0, G.BLOCK_BOTTOM - 1, S.PANO_WORDS))
-    emit(";; across, its two bytes on each line, top to bottom")
-    emit("PANO_COL_BYTES EQU %d" % (2 * len(enc)))
-    emit("panorama_cols")
+    assert len(enc) % 8 == 0
+    nrows = len(enc) // 8
     cols = [[b for row in enc for b in row[2 * c:2 * c + 2]] for c in range(S.PANO_WORDS)]
-    defb_rows(emit, cols)
+    # a column's character rows - its two bytes on each of 8 lines, top to
+    # bottom: 16 bytes - are many columns' (the sky, the mountains' bodies):
+    # each different one is kept once
+    rows, ptrs = {}, []
+    for col in cols:
+        ptrs.append([rows.setdefault(tuple(col[16 * r:16 * r + 16]), len(rows))
+                     for r in range(nrows)])
+    emit(";; the panorama, lines %d..%d: for each of the %d words across, its"
+         % (y0, G.BLOCK_BOTTOM - 1, S.PANO_WORDS))
+    emit(";; %d character rows' addresses in pano_rows - each row its two bytes on"
+         % nrows)
+    emit(";; each of its 8 lines, top to bottom, %d different ones of %d"
+         % (len(rows), nrows * S.PANO_WORDS))
+    emit("PANO_COL_ROWS EQU %d" % nrows)
+    emit("pano_cols")
+    for p in ptrs:
+        emit("    defw " + ",".join("pano_rows+%d" % (16 * i) for i in p))
+    emit("pano_rows")
+    defb_rows(emit, sorted(rows, key=rows.get))
     emit("")
     return lines
 

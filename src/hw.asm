@@ -62,9 +62,11 @@ CRTC_R9     EQU 7           ; 8 lines per character row
 ;;           rest of each 2K block holds the common fragments.
 ;;
 ;; The Z80 sees page 1 at #4000 with RAM_C1, page 3 there with RAM_C3. The
-;; HUDs take the first #600 bytes of each 2K block of page 1; the rest of
-;; each block (#x600-#x7FF) is the bush sprites' code (bushcode.asm), which
-;; runs with RAM_C1.
+;; HUDs take the first #600 bytes of each 2K block of page 1 - the HUD part
+;; shows seven of a HUD's eight character rows, and the eighth (#x2A0 and
+;; #x5A0, 96 bytes each) holds code of the car's views on hills
+;; (tools/mkbush.py HUD_ROW7); the rest of each block (#x600-#x7FF) is the
+;; bush sprites' code (bushcode.asm), which runs with RAM_C1.
 HUD_MA0     EQU #1000       ; CRTC start of buffer 0's HUD: page 1
 HUD1_OFF    EQU HUD_ROWS*96 ; buffer 1's HUD, bytes on
 HUD_MA1     EQU HUD_MA0+HUD1_OFF/2
@@ -131,7 +133,7 @@ FRAG2       EQU #1540       ; road_draw and the grass blocks
 FRAG3       EQU #1D40       ; line list, buffer 0
 FRAG4       EQU #2540       ; line list, buffer 1
 FRAG5       EQU #2D40       ; road_init, rp_near_cmp
-FRAG6       EQU #3540       ; (free)
+FRAG6       EQU #3540       ; the road cache's state and common code (cache.asm)
 FRAG7       EQU #3D40       ; road_project
 FRAG8       EQU #8540       ; page 2: the bush tables and sprites (bushdata.asm)
 FRAG15      EQU #BD40       ; ... up to here

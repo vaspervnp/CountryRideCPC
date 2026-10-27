@@ -157,9 +157,11 @@ draw_label
 ;; HUD ground and its labels, the ground at the top of the road part.
 ;; ---------------------------------------------------------------------------
 draw_static
-    ; the HUD, on the top colour of the sky
+    ; the HUD, on the top colour of the sky - its first seven character
+    ; rows: the eighth is never shown (the CRTC's R6), and holds code
+    ; (tools/mkbush.py HUD_ROW7)
     ld hl,0
-    ld b,HUD_H
+    ld b,HUD_H-8
     ld de,SOLID_NAVY*#101
     call fill_lines
 

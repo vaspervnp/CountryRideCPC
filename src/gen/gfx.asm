@@ -541,392 +541,256 @@ curve_profile
     defb #00,#00,#00,#00,#00,#01,#02,#03,#04,#05,#06,#07,#07,#07,#07,#07
     defb #07,#07,#07,#07,#07,#07,#07,#07,#07,#06,#05,#04,#03,#02,#01,#00
 
-;; the panorama, lines 148..179, by columns: for each of the 96 words
-;; across, its two bytes on each line, top to bottom
-PANO_COL_BYTES EQU 64
-panorama_cols
+;; the panorama, lines 148..179: for each of the 96 words across, its
+;; 4 character rows' addresses in pano_rows - each row its two bytes on
+;; each of its 8 lines, top to bottom, 150 different ones of 384
+PANO_COL_ROWS EQU 4
+pano_cols
+    defw pano_rows+0,pano_rows+16,pano_rows+32,pano_rows+48
+    defw pano_rows+0,pano_rows+16,pano_rows+64,pano_rows+80
+    defw pano_rows+0,pano_rows+16,pano_rows+96,pano_rows+112
+    defw pano_rows+0,pano_rows+16,pano_rows+128,pano_rows+144
+    defw pano_rows+0,pano_rows+16,pano_rows+160,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+192,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+208,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+224,pano_rows+176
+    defw pano_rows+0,pano_rows+240,pano_rows+256,pano_rows+176
+    defw pano_rows+0,pano_rows+272,pano_rows+288,pano_rows+176
+    defw pano_rows+0,pano_rows+304,pano_rows+320,pano_rows+176
+    defw pano_rows+0,pano_rows+336,pano_rows+352,pano_rows+176
+    defw pano_rows+0,pano_rows+368,pano_rows+384,pano_rows+400
+    defw pano_rows+0,pano_rows+416,pano_rows+432,pano_rows+448
+    defw pano_rows+0,pano_rows+464,pano_rows+480,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+432,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+512,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+528,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+544,pano_rows+560
+    defw pano_rows+0,pano_rows+16,pano_rows+576,pano_rows+592
+    defw pano_rows+0,pano_rows+608,pano_rows+624,pano_rows+640
+    defw pano_rows+0,pano_rows+656,pano_rows+672,pano_rows+688
+    defw pano_rows+0,pano_rows+16,pano_rows+704,pano_rows+720
+    defw pano_rows+0,pano_rows+16,pano_rows+736,pano_rows+752
+    defw pano_rows+0,pano_rows+16,pano_rows+768,pano_rows+784
+    defw pano_rows+0,pano_rows+16,pano_rows+800,pano_rows+816
+    defw pano_rows+0,pano_rows+16,pano_rows+832,pano_rows+848
+    defw pano_rows+0,pano_rows+16,pano_rows+864,pano_rows+816
+    defw pano_rows+0,pano_rows+16,pano_rows+880,pano_rows+896
+    defw pano_rows+0,pano_rows+16,pano_rows+912,pano_rows+928
+    defw pano_rows+0,pano_rows+16,pano_rows+944,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+960,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+976,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+96,pano_rows+992
+    defw pano_rows+0,pano_rows+16,pano_rows+160,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1008,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1024,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1040,pano_rows+176
+    defw pano_rows+0,pano_rows+240,pano_rows+1056,pano_rows+176
+    defw pano_rows+0,pano_rows+1072,pano_rows+848,pano_rows+176
+    defw pano_rows+0,pano_rows+1088,pano_rows+1104,pano_rows+176
+    defw pano_rows+0,pano_rows+1120,pano_rows+1136,pano_rows+176
+    defw pano_rows+1152,pano_rows+1168,pano_rows+1184,pano_rows+176
+    defw pano_rows+1200,pano_rows+1216,pano_rows+1104,pano_rows+176
+    defw pano_rows+1232,pano_rows+1248,pano_rows+1264,pano_rows+176
+    defw pano_rows+0,pano_rows+1280,pano_rows+1296,pano_rows+1312
+    defw pano_rows+0,pano_rows+464,pano_rows+480,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1328,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1344,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1360,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1376,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1392,pano_rows+1408
+    defw pano_rows+0,pano_rows+16,pano_rows+1424,pano_rows+1440
+    defw pano_rows+0,pano_rows+16,pano_rows+1456,pano_rows+1472
+    defw pano_rows+0,pano_rows+16,pano_rows+1488,pano_rows+1504
+    defw pano_rows+0,pano_rows+16,pano_rows+1520,pano_rows+1536
+    defw pano_rows+0,pano_rows+16,pano_rows+1552,pano_rows+1568
+    defw pano_rows+0,pano_rows+16,pano_rows+1584,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1600,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1616,pano_rows+176
+    defw pano_rows+0,pano_rows+240,pano_rows+1632,pano_rows+1648
+    defw pano_rows+0,pano_rows+1664,pano_rows+1680,pano_rows+176
+    defw pano_rows+0,pano_rows+1696,pano_rows+1712,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+576,pano_rows+1728
+    defw pano_rows+0,pano_rows+16,pano_rows+1744,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1760,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1776,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1792,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+1808,pano_rows+1408
+    defw pano_rows+0,pano_rows+16,pano_rows+1824,pano_rows+1840
+    defw pano_rows+0,pano_rows+16,pano_rows+1856,pano_rows+1872
+    defw pano_rows+0,pano_rows+16,pano_rows+1888,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1904,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1920,pano_rows+176
+    defw pano_rows+0,pano_rows+16,pano_rows+1936,pano_rows+176
+    defw pano_rows+0,pano_rows+1952,pano_rows+1968,pano_rows+176
+    defw pano_rows+0,pano_rows+1664,pano_rows+1680,pano_rows+176
+    defw pano_rows+0,pano_rows+1984,pano_rows+2000,pano_rows+176
+    defw pano_rows+0,pano_rows+2016,pano_rows+2032,pano_rows+176
+    defw pano_rows+0,pano_rows+2048,pano_rows+1680,pano_rows+176
+    defw pano_rows+0,pano_rows+416,pano_rows+2064,pano_rows+896
+    defw pano_rows+0,pano_rows+464,pano_rows+2080,pano_rows+2096
+    defw pano_rows+0,pano_rows+608,pano_rows+2112,pano_rows+496
+    defw pano_rows+0,pano_rows+2128,pano_rows+2144,pano_rows+496
+    defw pano_rows+0,pano_rows+2160,pano_rows+2176,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+2192,pano_rows+496
+    defw pano_rows+0,pano_rows+16,pano_rows+768,pano_rows+2208
+    defw pano_rows+0,pano_rows+16,pano_rows+1520,pano_rows+2224
+    defw pano_rows+0,pano_rows+16,pano_rows+1824,pano_rows+2240
+    defw pano_rows+0,pano_rows+16,pano_rows+2256,pano_rows+2272
+    defw pano_rows+0,pano_rows+16,pano_rows+2288,pano_rows+672
+    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2320
+    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2336
+    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2352
+    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2368
+    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2384
+pano_rows
     defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#30
     defb #B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#74,#74,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#FC,#74,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#FC
     defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#30,#B0,#75,#FF,#75,#FF,#30,#FE,#74,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#BA,#74,#FE,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#74,#F4,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#3C
     defb #B4,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#3C,#34,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#9C,#30,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#3C,#30,#3C,#30,#3C,#30,#3C,#38,#3C,#38,#3C,#38,#3C,#38
     defb #3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#30,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#C0,#30
     defb #C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#FC,#C0,#FC,#C0,#FC,#C0
     defb #FC,#E8,#FC,#E8,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#FC,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#D0,#30,#C0,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#30,#30,#30,#30,#30,#30,#90,#30,#C0,#30,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#90,#30
     defb #C0,#90,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#90,#30,#C0,#90,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#75,#FF,#75,#FF
     defb #30,#FF,#30,#FF,#30,#FF,#30,#75,#30,#75,#30,#75,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#90,#30,#C0,#90,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#FF,#BA
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #75,#FF,#75,#FF,#75,#FF,#30,#FF,#30,#FF,#30,#FF,#30,#FC,#74,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #BA,#B0,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#FF,#B0,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FE,#FE,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#FF,#FA,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#3C,#FE,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#FF,#FF,#FF,#3C,#BE,#3C,#3C,#3C
     defb #3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B4,#34,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B4,#34,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
-    defb #3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #38,#30,#38,#30,#3C,#30,#3C,#30,#3C,#30,#3C,#38,#3C,#38,#3C,#E8
     defb #FC,#E8,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#C0,#C0,#C0,#C0
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#E8,#C0,#E8,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#30,#B0,#30,#70,#30,#30,#30,#30,#30,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#30,#B0,#C0,#70,#C0,#D0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#B0,#90,#30
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#30,#30,#30,#30,#30,#30
     defb #90,#30,#C0,#D4,#C0,#D4,#C0,#D4,#C0,#D4,#C0,#D4,#C0,#D4,#C0,#D4
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#FF,#70,#75,#FF,#75,#FF,#74,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#74,#FF,#FC,#FE,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#FC,#F4,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#3C
     defb #3C,#3C,#3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#3C,#3C,#3C,#FC,#3C
-    defb #FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#34,#34,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#9C,#34,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
     defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#9C
     defb #34,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
     defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#38,#34,#38,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
     defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#30,#CC,#30,#64,#30,#30
     defb #30,#30,#30,#30,#38,#30,#38,#30,#38,#30,#3C,#30,#3C,#30,#3C,#30
     defb #3C,#38,#3C,#38,#3C,#E8,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#30,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#E8,#C0
     defb #FC,#C0,#FC,#C0,#FC,#C0,#FC,#E8,#FC,#E8,#FC,#E8,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #C0,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#D0,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#30,#C0,#90,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#30,#30,#30,#30,#30,#30,#90,#30,#C0,#90,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #FF,#FF,#75,#FF,#75,#FF,#75,#FF,#30,#FF,#30,#FF,#30,#FF,#90,#FF
     defb #C0,#D5,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#C0,#FF,#C0,#D5,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#FA,#30,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#D5,#FF,#C0,#FF,#C0,#D5,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#BA,#B0,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FE,#FF,#FC,#D4,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#FF,#BA,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FE,#FF,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#FF,#70,#FF,#FF,#FF,#FE
     defb #FE,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#3C,#3C,#3C,#3C,#3C
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#3C,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#34,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#3C,#FC,#3C,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#3C
     defb #B4,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC
     defb #3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#34,#34,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#38,#30
     defb #38,#30,#38,#30,#3C,#30,#3C,#30,#3C,#30,#FC,#38,#FC,#E8,#FC,#E8
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#E8,#C0,#FC,#C0,#FC,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #30,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#C0,#30,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#30,#B0,#30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#30,#C0,#30,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#30,#B0,#30,#FF,#30,#FF,#90,#75,#C0,#D5,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#BA,#70,#FF,#FF,#FF,#FF,#FF,#FF,#D5,#FF
-    defb #C0,#D5,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#C0,#FC,#C0,#FC,#C0,#FC,#C0,#FC,#C0,#FC,#C0,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#FF,#FF,#FF,#FE
     defb #FF,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#F4,#70,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#74,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#F4,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B4,#74,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B4,#34,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#FC,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#34,#34,#3C,#3C,#3C,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C
     defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #38,#30,#3C,#30,#3C,#38,#3C,#38,#3C,#38,#3C,#3C,#3C,#3C,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #38,#30,#38,#30,#38,#30,#3C,#30,#3C,#30,#3C,#C0,#FC,#E8,#FC,#E8
-    defb #FC,#E8,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC,#FC
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#E8,#C0,#E8,#C0,#E8,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#75,#FF,#75,#FF
     defb #30,#75,#30,#30,#30,#30,#C0,#30,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#BA,#B0,#FF,#FF
     defb #FF,#FF,#75,#FF,#30,#75,#30,#30,#30,#30,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#BA,#30
     defb #FF,#BA,#FF,#FF,#FF,#FF,#75,#FF,#30,#75,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#FF,#30,#FF,#FF,#FF,#FF,#FF,#FF,#D5,#FF,#C0,#FF,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#FF,#FA,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
     defb #C0,#FF,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#FF,#BA,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#D5,#FF,#C0,#D5,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#FF,#FF,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#D5,#FF,#C0,#FF,#C0,#C0,#C0,#C0
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#FA,#70,#FF,#FF,#FF,#FF
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#D5,#FF
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#FF,#F0,#FF,#FF
-    defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
     defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#70
     defb #FF,#F0,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#70
     defb #F0,#F0,#FA,#70,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#70
     defb #F0,#F0,#F0,#70,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#70
     defb #F0,#F0,#F0,#70,#BA,#30,#BA,#30,#BA,#30,#BA,#30,#BA,#30,#BA,#30
-    defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
-    defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30
-    defb #B0,#B0,#70,#30,#B0,#B0,#30,#70,#B0,#B0,#70,#70,#B0,#F0,#70,#70
     defb #F0,#F0,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
 

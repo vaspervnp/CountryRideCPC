@@ -413,7 +413,7 @@ def cmd_check():
         worst_lag = max(worst_lag, lag)
         want = scene.hud(**vals)
         got = hud_pens(g, buf)
-        wrong = [y for y in range(64) if want[y] != got[y]]
+        wrong = [y for y in range(scene.HUD_SHOWN) if want[y] != got[y]]
         sky_want = scene.sky_lines(g.byte("RING_HEAD"))
         wrong += [SKY_Y + i for i, row in enumerate(sky_pens(g)) if row != sky_want[i]]
         if wrong:

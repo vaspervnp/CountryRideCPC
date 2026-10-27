@@ -154,27 +154,36 @@ ring_col_sky
     RING_ROW
     dec ixl
     jr nz,ring_col_sky
-    ex de,hl                    ; the mountain rows: the panorama's column
-    ld a,(rc_col)
+    ex de,hl                    ; the mountain rows: the panorama's column,
+    ld a,(rc_col)               ; a row at a time where pano_cols says
     ld l,a
     ld h,0
     add hl,hl
     add hl,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl                   ; * 64
-    ASSERT PANO_COL_BYTES == 64
-    ld bc,panorama_cols
+    add hl,hl                   ; * 8
+    ASSERT PANO_COL_ROWS == 4 && PANO_COL_ROWS == (BLOCK_BOTTOM-PANO_Y0)/8
+    ld bc,pano_cols
     add hl,bc
+    ld ixl,PANO_COL_ROWS
+ring_col_pano                   ; (HL: the row's address in pano_cols, DE
+    ld c,(hl)                   ; the screen)
+    inc hl
+    ld b,(hl)
+    inc hl
+    ld (ring_col_next+1),hl
+    ld h,b
+    ld l,c
     ld sp,hl
     ex de,hl
     ld de,#800
-    ld ixl,(BLOCK_BOTTOM-PANO_Y0)/8
-ring_col_pano
     RING_ROW
+    ex de,hl
+ring_col_next
+    ld hl,0                     ; (self-modified: the next row's address)
     dec ixl
     jr nz,ring_col_pano
+    ex de,hl
+    ld de,#800
     ld sp,green_pairs           ; the row after: the ground's green
     RING_ROW
 ring_col_sp

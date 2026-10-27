@@ -107,7 +107,7 @@ BUSH_COUNT    EQU 38
 CAR_Y         EQU 236   ; the car's top line
 CAR_HALF      EQU 11   ; its half width, bytes
 CAR_TOP       EQU 27   ; its lines from there, drawn whole when it changes
-CAR_HILL_ORG  EQU #F5A0 ; the views on hills from here (CARn.BIN)
+CAR_HILL_ORG  EQU #F900 ; the views on hills from here (CARn.BIN)
 ;; per car_view (on the level, uphill, downhill; each straight, turning
 ;; left, turning right): where its first line's run ends in buffer 0, and
 ;; its code - the first car's; boot.asm copies the picked one's over it

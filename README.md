@@ -225,7 +225,10 @@ row count and R5 lines.
   characters (2K). The sky part is 6 rows of 48 characters in that ring.
   Moving its start address one character scrolls it a word (4 pixels)
   sideways for good; only the column that comes in has to be written, from
-  the panorama (384 pixels, stored by columns in bank 7). That takes
+  the panorama (384 pixels in bank 7: per column of a word, its four
+  character rows' addresses, each row - 16 bytes, two a line - kept once:
+  150 different ones of 384, the sky and the mountains' bodies being many
+  columns'; 3.2K instead of 6K). That takes
   ~1.4 ms, done at the flip, before the sky part is on screen, so it never
   tears. The dithered sky repeats every word, so only the mountains seem to
   move.
@@ -260,27 +263,32 @@ The banks hold the rest:
 Some code and data must be reachable from every RAM configuration: the
 variables they share, the interrupt handler, the stack, the line lists and
 the part of the renderer that switches banks. These live in 704-byte
-fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts: seven in
-page 0, and the eight in page 2 hold the bushes' tables and their sprites as
-data (one in page 0 is free). `src/hw.asm` has the whole map.
+fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts: the
+eight in page 0, and the eight in page 2 hold the bushes' tables and their
+sprites as data (and, in what is left, some of the car's and the traffic's
+code). `src/hw.asm` has the whole map.
 
 The car's code - a compiled sprite for each of its nine views - has the
 same places for every car, as big as the biggest car's needs
 (`tools/mkbush.py`): the three on the level in page 1 beside the bushes'
 and in what is left of the page 2 fragments (with the smallest bush's code
-when page 1 is short), the six on hills (4.4K) in
-bank 7 from `#F5A0`, after the game, and in the road parts' lines 160-172,
-which the CRTC never shows and nothing else writes - buffer 0's, and
-buffer 1's first four 2K blocks (a bush reaches line 173 at most, the line
-lists start at 188, and `draw_static` fills only from 184). BOOT.BIN has
-the first car's views on the level in place. The loader loads the picked
-car's own `CARn.BIN` at `#2000` - records of where they go and the bytes:
-its code, `car_views` (where each view's first line ends, and its code),
-`car_id` - and the first thing BOOT.BIN does is copy them into place, with
-bank 7 switched in, before it puts the fragments in place. The race takes
-no more memory for four cars than for one.
+when page 1 is short), the six on hills (4.5K) in what the CRTC never
+shows and nothing else writes: the HUDs' eighth character rows (the HUD
+part shows seven: `R6`), bank 7 from `#F900`, after the game, and the road
+parts' lines 160-172 - buffer 0's, and buffer 1's first four 2K blocks (a
+bush reaches line 173 at most, the line lists start at 188, and
+`draw_static` fills only from 184). BOOT.BIN has the first car's views on
+the level in place. The loader loads the picked car's own `CARn.BIN` at
+`#2000` - records of where they go and the bytes: its code, `car_views`
+(where each view's first line ends, and its code), `car_id`. BOOT.BIN
+first puts the fragments in place - but 4-6, whose places the file lies
+on - then copies the records into place, with bank 7 switched in, and then
+fragments 4-6. The race takes no more memory for four cars than for one.
 
-Page 1 has the HUDs in the first `#600` bytes of each 2K block; the other
+Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
+eighth character row of each, never shown, holds code of the car's views
+on hills: 13 runs of 96 bytes, those BOOT.BIN's own fragments have left
+by then (`tools/mkbush.py` `HUD_ROW7`); the other
 512 bytes of each block hold the bush sprites and the car as code - the
 seventh block's first half, at `#7600`, the keys and the player's speed
 (`src/player.asm`), and the last block's first half, at `#7E00`, the part

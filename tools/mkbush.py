@@ -481,9 +481,9 @@ def frag_slot(fc, label, codes):
             fc.after = [(a + ln - f.left, f.left)] + f.runs[f.cur + 1:]
         ps = [(run0 + size0, first.lines[n0:])]
         ps += [(a, d.lines) for a, _, _, d in f.sp.placed[placed0:]]
-        pieces.append([(a, "FRAG_ST%d+#%X" % (k, a - frag_addr(k)), lines)
-                       for a, lines in ps if lines
-                       for k in [(a - frag_addr(FRAG_FIRST)) // 0x800 + FRAG_FIRST]])
+        # (into the fragments in place: boot.asm has copied 8-15 out of
+        # BOOT.BIN before boot_car)
+        pieces.append([(a, "#%04X" % a, lines) for a, lines in ps if lines])
     fc.code(label, codes[0])
     return pieces
 
@@ -495,14 +495,21 @@ def frag_slot(fc, label, codes):
 # where the loader loads CARn.BIN). The CRTC shows the road parts from line
 # 184 (draw_static draws nothing above it), and a bush, standing on line
 # ROAD_Y or lower and BUSH_H lines high at most, reaches line 173.
-CAR_HILL_ORG = 0xF5A0
+CAR_HILL_ORG = 0xF900
 
 
 def hidden_runs(base, blocks):
     return [(base + b * 0x800, 192 if b < 5 else 96) for b in blocks]
 
 
-HILL_RUNS = ([(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0x8000, range(8))
+# ... and first the HUDs' eighth character rows in page 1, which the CRTC
+# never shows (its R6: seven rows): 96 bytes of each HUD in each 2K block,
+# #x2A0 and #x5A0 - those free when boot_car copies the car's records in
+# (boot.asm): not where fragments 4-6 are still stored then (#x2A0 of
+# blocks 2 and 3), nor boot_car itself (#x5A0 of block 1).
+HUD_ROW7 = [(0x4000 + b * 0x800 + off, 96) for b in range(8) for off in (0x2A0, 0x5A0)
+            if not (off == 0x2A0 and b in (2, 3)) and not (off == 0x5A0 and b == 1)]
+HILL_RUNS = (HUD_ROW7 + [(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0x8000, range(8))
              + hidden_runs(0x0000, range(4)))
 # The traffic's pieces left over from the fragments go - in every CARn.BIN,
 # after the car's records - in what the views on hills leave of HILL_RUNS in
@@ -600,6 +607,7 @@ def cars_asm(pieces, ends, codes, traffic):
                       p] + code + ["%s_end" % p,
                                    "    ORG %s_ph+%s_end-%s" % (p, p, p)]
         lines += ["    defw #FFFF", "car%d_blob_end" % n,
+                  "    ASSERT car%d_blob_end <= FRAG7   ; (in place before boot_car)" % n,
                   '    SAVE "CAR%d.BIN",CAR_BLOB,car%d_blob_end-CAR_BLOB,DSK,'
                   '"build/countryride.dsk"' % (n, n), ""]
     return lines
@@ -722,7 +730,9 @@ def main():
     free += [[a, min(ln, end15 - a)] for a, ln in sorted(sp.runs + [(h, 0x80) for h in sp.halves])
              if frag_addr(FRAG_FIRST + FRAG_COUNT - 1) <= a < end15]
     runs, at = [[a, ln, []] for a, ln in free], 0
-    hidden0 = [(a, ln) for a, ln in hill_left if a < 0xC000 and ln > 0] + TRAF_HIDDEN
+    hidden0 = [(a, ln) for a, ln in hill_left            # (not page 1 nor bank 7:
+               if (a < 0x4000 or 0x8000 <= a < 0xC000) and ln > 0] + TRAF_HIDDEN  # the
+    # traffic runs with RAM_C4/C6)
     hidden = [[a, ln, []] for a, ln in hidden0]
     hat = 0
     for code in TRAFLEFT:

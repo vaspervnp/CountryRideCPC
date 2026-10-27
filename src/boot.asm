@@ -17,7 +17,6 @@ boot
     ld bc,#7F00+GA_MODE0
     out (c),c                   ; mode 0, both ROMs off
     SET_RAM RAM_C0
-    call boot_car               ; the car picked, over the first one
 
     ; every pen and the border black while the screens are garbage
     ld bc,#7F00
@@ -31,14 +30,24 @@ boot_ink
     jr c,boot_ink
 
     ; the common fragments, stored two to a 2K block of this file (main.asm,
-    ; FRAG_ST0..): 0-7 to page 0, 8-15 to page 2
+    ; FRAG_ST0..): 0-7 to page 0, 8-15 to page 2 - but 4-6, where the car's
+    ; file is (CAR_BLOB), only after boot_car
     ld hl,FRAG_ST0
     ld de,FRAG0
     ld a,FRAG_COUNT
 boot_frag
     push de
     ld bc,FRAG_LEN
+    cp FRAG_COUNT-6             ; (A: FRAG_COUNT - the fragment)
+    jr c,boot_frag_cp
+    cp FRAG_COUNT-3
+    jr nc,boot_frag_cp
+    add hl,bc                   ; (4-6: later; B 0, as after LDIR)
+    ld b,0
+    jr boot_frag_on
+boot_frag_cp
     ldir
+boot_frag_on
     pop de
     bit 0,a                     ; the second of a block's two: on to the
     jr z,boot_frag_dst          ; next block
@@ -61,6 +70,8 @@ boot_frag_next
     ex de,hl
     dec a
     jr nz,boot_frag
+    call boot_car               ; the car picked, over the first one; then
+                                ; fragments 4-6
 
     ; IM 2 through the table at #0600
     ld a,hi(IM2_TABLE)
@@ -98,10 +109,11 @@ crtc_regs
 
 ;; boot_car - the car picked (the loader loads its CARn.BIN at CAR_BLOB,
 ;; gen/cars.asm): its records copied into place, with RAM_C1 (bank 7 at
-;; #C000) - its code over the first car's in this file, before the
-;; fragments go into place; its views on hills, car_views and car_id. Without
-;; one (no magic word there) the first car stays, seen on the level on
-;; hills too. RAM_C0 after.
+;; #C000) - its code over the first car's in this file; its views on hills,
+;; some in the HUDs' eighth rows, which the fragments before have left free;
+;; car_views and car_id. Without one (no magic word there) the first car
+;; stays, seen on the level on hills too. Then fragments 4-6, over the
+;; car's file. RAM_C0 after.
 boot_car
     SET_RAM RAM_C1
     ld hl,CAR_BLOB
@@ -130,6 +142,18 @@ boot_car_rec
     ldir
     jr boot_car_rec
 boot_car_done
+    ld hl,FRAG_ST4
+    ld de,FRAG4
+    ld bc,FRAG_LEN
+    ldir
+    ld de,FRAG5                         ; (FRAG_ST5 follows)
+    ld bc,FRAG_LEN
+    ldir
+    ld hl,FRAG_ST6
+    ld de,FRAG6
+    ld bc,FRAG_LEN
+    ldir
     SET_RAM RAM_C0
     ret
     ASSERT $ <= #4E00
+    ASSERT FRAG_ST5 == FRAG_ST4+FRAG_LEN

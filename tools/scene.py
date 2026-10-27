@@ -955,13 +955,18 @@ def sky_drop(drop):
     return s
 
 
+# The HUD part shows seven of its eight character rows (src/common.asm: R6);
+# the eighth is border - its memory holds code (tools/mkbush.py HUD_ROW7)
+HUD_SHOWN = HUD_H - 8
+
+
 def shown(hud_pens, sky, road, drop):
     """What the CRTC shows: the three parts, split for a drop."""
     out = []
     first_road = road_from(drop)
     sd = sky_drop(drop)
     for y in range(SCR_H):
-        if y < HUD_H:
+        if y < HUD_SHOWN:
             out.append(hud_pens[y])
         elif y < SKY_Y + sd:
             out.append([BORDER_TOP] * SCR_W)
