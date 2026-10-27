@@ -489,8 +489,18 @@ def main():
              ";; into a template for every road line.", ""]
     emit = lines.append
 
-    def page(name, vals, comment):
+    hooks = [0]
+
+    def align():
+        """To the next page: before it, what the rows leave of this one
+        (rowhole<n>.asm, here in src/gen: tools/mktrafcode.py lays traffic
+        code there)."""
+        emit('    INCLUDE "rowhole%d.asm"' % hooks[0])
+        hooks[0] += 1
         emit("    ALIGN 256")
+
+    def page(name, vals, comment):
+        align()
         emit("%s   ; %s" % (name, comment))
         for i in range(0, len(vals), 8):
             emit("    defb " + ",".join(vals[i:i + 8]))
@@ -538,7 +548,7 @@ def main():
     page("rr_mask", mk, "64; 128 past FAR_Z; 0 for the ground")
     page("rr_thi", th, "band 0 template, high byte")
     page("rr_tlo2", tl2, "far rows: band 2 template, low byte")
-    emit("    ALIGN 256")
+    align()
     emit(";; Line list order is bottom line first. For each entry, where SP starts:")
     emit(";; the end of that line, relative to the bottom half's base (#8000 for")
     emit(";; buffer 0, #0000 for buffer 1).")
@@ -561,7 +571,7 @@ def main():
         maps.append(bottom_first)
         ground.append(sum(1 for r in rows if r is None))
         near.append(sum(1 for r in rows if r and row_depth(r) <= FAR_Z))
-    emit("    ALIGN 256")
+    align()
     emit("HILL_MAX EQU %d   ; the strongest crest the road top allows" % hill_max)
     emit(";; per hill level (hill = 2*level - 128): lines at the top that are")
     emit(";; ground, and lines at the bottom that show striped rows")

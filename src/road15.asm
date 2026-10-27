@@ -63,9 +63,7 @@ rp_skip_put
     exx
     jr nz,rp_skip_line
 rp_skip_end
-    ld a,(rp_dirty)
-    or a
-    call nz,rp_force
+    call rp_force_all                   ; (traffic.asm)
     jp rp_far
 rp_skip_diff                            ; the stripe of then? (the level's
     ld ixh,a                            ; set may be another: the row is
@@ -94,9 +92,8 @@ rp_skip_rf
 rp_skip_rest                            ; a row that moved: the rest
     jp rp_skip_rest0                    ; (self-modified: rp_seg_in, out)
 rp_skip_rest0
-    ld a,(rp_dirty)                     ; road_project's way (rp_near_go,
-    or a                                ; rp_cmp_go)
-    call nz,rp_force
+    call rp_force_all                   ; road_project's way (rp_near_go,
+                                        ; rp_cmp_go)
 rp_skip_rest1                           ; (rp_near_cmp: rp_force at the end)
     exx
     ld a,b

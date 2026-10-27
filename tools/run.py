@@ -273,9 +273,30 @@ def _signed(v):
     return v - 256 if v > 127 else v
 
 
+def traffic_cars(g):
+    """The traffic's cars on now (src/traffic.asm: tr_cars, bank 6) as
+    scene.traffic_items takes them - their paints back to colours."""
+    rec, n = g.sym["TR_REC"], g.sym["TR_MAX"]
+    raw = g.bank(6, g.sym["TR_CARS"], n * rec)
+    pal = g.bank(6, g.sym["TR_COLOURS"], 32)
+    colour = {(pal[2 * c], pal[2 * c + 1]): c for c in range(16)}
+    zcam, pl = g.word("ZCAM"), g.sym["TR_PIECE_LEN"]
+    out = []
+    for i in range(0, n * rec, rec):
+        r = raw[i:i + rec]
+        if r[0]:
+            out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - 2,
+                        colour[r[6], r[7]], colour[r[8], r[9]]))
+    if len(out) == 2 and g.bank(6, g.sym["TR_DROPPED"], 1)[0]:
+        # the picture was late already: the further one was not drawn
+        out.remove(max(out, key=lambda car: (car[0] - zcam) & 0xFFFF))
+    return out
+
+
 def road_model(g):
     """What scene.py says the road part should be for the engine's inputs
-    now: lines ROAD_AREA_Y..271, the road, the bushes and the car."""
+    now: lines ROAD_AREA_Y..271, the road, the traffic, the bushes and the
+    car."""
     import scene
     zcam = g.word("ZCAM")
     hill = _signed(g.byte("HILL"))
@@ -284,7 +305,8 @@ def road_model(g):
     x = _signed(g.byte("ROAD_X"))
     view = g.game_byte("CAR_VFULL")
     off = _signed(g.game_byte("CAR_OFF"))
-    return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off),
+    return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
+                            traffic=traffic_cars(g)),
             hill, zcam, curve, x)
 
 

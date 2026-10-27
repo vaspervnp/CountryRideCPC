@@ -7,7 +7,7 @@
 ;;
 ;;   ROADA.BIN  bank 4 (#4000)  road templates and cores for stripe band A
 ;;   ROADB.BIN  bank 5 (#4000)  road cores and templates for stripe band B
-;;   ROADC.BIN  bank 6 (#4000)  road rows and hill tables
+;;   ROADC.BIN  bank 6 (#4000)  road rows and hill tables, the traffic
 ;;   GAME.BIN   bank 7 (#C000)  the game: main loop, HUD, graphics
 ;;   BOOT.BIN   base   (#4000)  takes the machine over, then the common
 ;;                              memory fragments it copies into place, and
@@ -60,6 +60,7 @@ roada_start
     INCLUDE "gen/roada.asm"
     INCLUDE "gen/roadgeoa.asm"
     INCLUDE "cache4.asm"
+    INCLUDE "gen/trafcode_4.asm"        ; (traffic sprite pieces: room)
 roada_end
     ASSERT roada_end <= #8000
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
@@ -81,13 +82,18 @@ roadb_end
     SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
-;; bank 6: road rows and hill tables
+;; bank 6: road rows and hill tables; the traffic (its code, its tables
+;; and pieces of its sprites - the rest in banks 4 and 7, the fragments and
+;; the hidden lines, tools/mktrafcode.py)
 ;; ---------------------------------------------------------------------------
     BANK
     ORG #4000
 roadc_start
     INCLUDE "gen/roadrows.asm"
     INCLUDE "road6.asm"
+    INCLUDE "traffic.asm"
+    INCLUDE "gen/traffic.asm"
+    INCLUDE "gen/trafcode_6.asm"
 roadc_end
     ASSERT roadc_end <= #8000
     SAVE "ROADC.BIN",#4000,roadc_end-#4000,DSK,"build/countryride.dsk"

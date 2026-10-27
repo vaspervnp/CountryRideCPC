@@ -83,7 +83,8 @@ buf_entry
 ;; of either gauge. With the small share, every other time a gauge segment
 ;; goes first, so that the gauges keep up while the road bends further for a
 ;; while. Anything left waits for the next picture of this buffer, 80 ms
-;; away; each buffer has two pictures to show a copy before the next.
+;; away; each buffer has two pictures to show a copy before the next. A
+;; share of 0: nothing this picture.
 ;; ---------------------------------------------------------------------------
 HUD_SHARE   EQU 3
 HUD_SHARE_LOW EQU 1
@@ -98,6 +99,8 @@ hud_update
     or a
     ret nz                      ; nothing new since it was brought up to date
     ld a,(hud_quota)
+    or a
+    ret z                       ; no share this picture
     ld (hud_budget),a
     cp HUD_SHARE
     jr nc,hud_update_total

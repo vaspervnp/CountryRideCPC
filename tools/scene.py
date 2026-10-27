@@ -16,7 +16,7 @@ import os
 
 from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, SKY_Y, BLOCK_BOTTOM, ROAD_Y, ROWS,
                     ROAD_END, NEAR_ROW,
-                    HORIZON_Y, road_shift, player_shift, curve_group,
+                    HORIZON_Y, road_shift, player_shift, curve_group, curve_shift,
                     far_mask,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
                     PLAIN_GRASS, grass_pen, TRACK_PERIOD, BUSH_SIZES, BUSH_LATS, BUSH_LAT_OF,
@@ -24,7 +24,7 @@ from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, SKY_Y, BLOCK_BOTTOM,
                     BUSH_SEED, BUSH_BIG_GAP, BUSH_MAX, BUSH_IN_REACH, bush_row,
                     bush_sprite_of, bush_lat, bush_centre, bush_zvis,
                     m0_byte, m0_decode,
-                    row_half_bytes, row_depth, road_row_pixels, pen_rgb)
+                    row_half_bytes, row_depth, road_row_pixels, kerb_px, pen_rgb)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -633,6 +633,148 @@ def draw_bushes(lines, y0, hill, zcam, curve, x=0):
 
 
 # ---------------------------------------------------------------------------
+# The traffic (src/traffic.asm): up to two cars ahead in the road's four
+# lanes, seen from behind - each a top (closed, or open with its driver) on
+# a bottom (a sports car's, a saloon's or a GT's tail), with two colours,
+# its top's and its bottom's, for the art's paint (K in tools/trafficart.py,
+# which tools/mktraffic.py makes of tools/traffic3d.py's renders). A car
+# stands on a row as a bush does, from how far ahead it is - its line from
+# its row and the hill, its size from its row - and is drawn only whole: on
+# the screen, on the road (below its top) and over the near lines. Over the
+# road, under the bushes and the player's car; the furthest first. The
+# paint's two pens (a checkerboard) are a byte one way round on the car's
+# even lines (from its top), the other way on its odd ones.
+# ---------------------------------------------------------------------------
+
+from trafficart import TRAFFIC_ART  # noqa: E402
+
+TRAFFIC_SCALES = [1.1, 0.92, 0.75, 0.62, 0.5, 0.39, 0.29, 0.2]   # traffic3d.py's
+TRAFFIC_CAR_ROW = 72        # a size is right for row TRAFFIC_CAR_ROW x its scale
+TRAFFIC_ROW_MIN = 12        # further, no car is drawn
+TRAFFIC_TOPS = list(TRAFFIC_ART[0]["tops"])          # closed, open
+TRAFFIC_BOTTOMS = list(TRAFFIC_ART[0]["bottoms"])    # sport, saloon, gt
+TRAFFIC_PAINT = "K"
+# the colours a car's paint can take (0-15): a pen, or two in a checkerboard
+TRAFFIC_COLOURS = [("RED",), ("ORANGE",), ("YELLOW",), ("WHITE",), ("BLUE",), ("SKY",),
+                   ("PASTEL",), ("GRASS_A",), ("BUSH",), ("MAUVE",), ("CAR_DARK",),
+                   ("BLACK",), ("RED", "ORANGE"), ("BLUE", "SKY"), ("SKY", "WHITE"),
+                   ("GRASS_A", "GRASS_B")]
+assert len(TRAFFIC_COLOURS) == 16
+
+
+def traffic_size(r):
+    """The size a car on row r is drawn at (None: none)."""
+    if r < TRAFFIC_ROW_MIN:
+        return None
+    ideal = [TRAFFIC_CAR_ROW * s for s in TRAFFIC_SCALES]
+    return min(range(len(TRAFFIC_SCALES)), key=lambda k: abs(ideal[k] / r - r / ideal[k]))
+
+
+def traffic_width(size):
+    """A size's width, bytes."""
+    return len(TRAFFIC_ART[size]["tops"][TRAFFIC_TOPS[0]][0]) // 2
+
+
+def traffic_lefts(r, wb):
+    """For row r and a car wb bytes wide: its left, in bytes from the road's
+    centre, in the inner and the outer right lane - centred in it, between
+    the lane lines (band A's pixels), rounded towards the middle."""
+    half = row_half_bytes(r)
+    pens, total = road_row_pixels(half, 0)
+    right = pens[total:]                        # from the centre outwards
+    lines = [i for i, p in enumerate(right) if p == PEN["WHITE"]]
+    edge = len(right) - kerb_px(half)           # the asphalt's end
+    if lines:
+        mid_end = max(i for i in lines if i < 4) + 1 if any(i < 4 for i in lines) else 0
+        nxt = min(i for i in lines if i >= mid_end + 1)
+        nxt_end = max(i for i in lines if i < nxt + 4) + 1
+        lanes = (mid_end, nxt), (nxt_end, edge)
+    else:
+        c = 2 * (half // 2)
+        lanes = (0, c), (c, edge)
+    return [((lo + hi) - 2 * wb) // 2 // 2 for lo, hi in lanes]
+
+
+def traffic_edge(r):
+    """How far either side of its centre row r's road reaches, in whole bytes:
+    its asphalt and its kerb (the engine draws whole pairs, past it)."""
+    half = row_half_bytes(r)
+    return half + kerb_px(half) // 2
+
+
+def traffic_centre(k, r, x=0):
+    """The road's centre on row r at curve level k, road_x x: where its
+    template group is - a left curve's the right one's mirrored (the engine
+    has the shifts of levels 1..CURVE_K: src/traffic.asm)."""
+    s = curve_shift(abs(k), r)
+    return SCR_W // 4 + (s if k >= 0 else -s) + player_shift(k, x, r)
+
+
+def traffic_rows(size, top, bottom):
+    """A car's rows (letters, '.' none) and the line its bottom starts on."""
+    a = TRAFFIC_ART[size]
+    if a["whole"]:
+        bottom = next(iter(a["bottoms"]))       # the further sizes' only one
+    return a["tops"][top] + a["bottoms"][bottom], a["split"]
+
+
+def traffic_items(hill, zcam, curve, cars, x=0):
+    """The cars on screen, in the order they are drawn - the furthest first:
+    (size, left byte, top line, rows, split, top colour, bottom colour).
+    cars: (z, lane, top, bottom, top colour, bottom colour) each - lanes 0-3
+    left to right, tops and bottoms as TRAFFIC_TOPS and TRAFFIC_BOTTOMS.
+    `hill` as the road engine draws it (effective_hill). A car is kept on the
+    road its top line shows, its row's further than its own - narrower,
+    more bent: only the road is drawn afresh where it was (rp_force)."""
+    rows = project(hill)
+    far = next(r for r in rows if r)            # the furthest row in sight
+    road_top = ROAD_Y + ground_lines(hill)
+    near = sum(1 for r in rows if r and row_depth(r) <= FAR_Z)
+    out = []
+    for z, lane, top, bottom, ctop, cbot in cars:
+        zr = (z - zcam) % 65536
+        r = bush_row(zr)
+        if not r or r < far:
+            continue
+        size = traffic_size(r)
+        if size is None:
+            continue
+        q = abs(hill) // r
+        y = HORIZON_Y + r + (q if hill >= 0 else -q)
+        art, split = traffic_rows(size, TRAFFIC_TOPS[top], TRAFFIC_BOTTOMS[bottom])
+        y0 = y - len(art) + 1
+        if y >= ROAD_END or y0 < road_top or ROAD_END - 1 - y0 >= near:
+            continue
+        wb = traffic_width(size)
+        lat = traffic_lefts(r, wb)[0 if lane in (1, 2) else 1]
+        cx = traffic_centre(curve, r, x)
+        left = cx + lat if lane >= 2 else cx - lat - wb
+        rt = rows[y0 - ROAD_Y]                  # the row its top line shows
+        ct, edge = traffic_centre(curve, rt, x), traffic_edge(rt)
+        left = ct + max(min(left - ct, edge - wb), -edge)
+        if left < 0 or left + wb > SCR_W // 2:
+            continue
+        out.append((zr, size, left, y0, art, split, ctop, cbot))
+    out.sort(key=lambda t: -t[0])
+    return [t[1:] for t in out]
+
+
+def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0):
+    """Draw the cars into `lines` (pen rows, the first being line y0)."""
+    for size, left, top, art, split, ctop, cbot in traffic_items(hill, zcam, curve, cars, x):
+        for j, row in enumerate(art):
+            colour = TRAFFIC_COLOURS[ctop if j < split else cbot]
+            pens = [PEN[p] for p in (colour * 2 if len(colour) == 1 else colour)]
+            for i, c in enumerate(row):
+                if c == ".":
+                    continue
+                if c == TRAFFIC_PAINT:
+                    pen = pens[(i + j) & 1]
+                else:
+                    pen = PEN[CAR_PEN[c]]
+                lines[top + j - y0][2 * left + i] = pen
+
+# ---------------------------------------------------------------------------
 # The player's car, one of four (picked before the race: tools/mkselect.py,
 # the loader), seen from behind - fixed in the middle of the screen a little
 # above the bottom (the monitor's edge can hide the last lines) unless the
@@ -768,12 +910,15 @@ def sky_lines(heading=0):
 
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
-              car_off=0):
+              car_off=0, traffic=()):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
-    bushes and the car (seen as car_view `view`, car_off pairs right of the
-    middle). `hill` as the road engine draws it (effective_hill)."""
+    traffic (traffic_items' cars), the bushes and the car (seen as car_view
+    `view`, car_off pairs right of the middle). `hill` as the road engine
+    draws it (effective_hill)."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
              + road_lines(hill, zcam, curve, x))
+    if traffic:
+        draw_traffic(lines, ROAD_AREA_Y, hill, zcam, curve, traffic, x)
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x)
     if car:

@@ -33,6 +33,8 @@ gen:
 	$(PYTHON) tools/mkroad.py
 	$(PYTHON) tools/mkcars.py
 	$(PYTHON) tools/mkselect.py
+	$(PYTHON) tools/mktraffic.py
+	$(PYTHON) tools/mktrafcode.py
 	$(PYTHON) tools/mkbush.py
 
 shots: $(DSK)

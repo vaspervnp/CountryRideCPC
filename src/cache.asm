@@ -108,18 +108,20 @@ cb_hl
     jp (hl)
 
 ;; ---------------------------------------------------------------------------
-;; rp_force - after rp_near_skip (road15.asm) or rp_line_cmp: the near
-;; lines a bush on the inside stood on (rp_dlo..rp_dhi) that were skipped
-;; get their road drawn after all - taking the bush away put grass there:
-;; flag 3 becomes 1 (or 2: rp_flag2_road); the others stay as they are.
-;; Line ROAD_AREA_Y + y is entry LAST_Y - y. Keeps BC, DE.
+;; rp_force - (rp_force_all, after rp_near_skip - road15.asm - or
+;; rp_line_cmp) the near lines IX says, first and last - a bush on the
+;; inside stood on them (rp_dlo..rp_dhi), or a car - that were skipped get
+;; their road drawn after all - taking the bush away put grass there, the
+;; car is on the road: flag 3 becomes 1 (or 2: rp_flag2_road); the others
+;; stay as they are. Line ROAD_AREA_Y + y is entry LAST_Y - y. Keeps BC,
+;; DE.
 ;; ---------------------------------------------------------------------------
 rp_force
-    ld a,(rp_dhi)
+    ld a,(ix+1)
     cpl
     add a,LAST_Y+1
-    ld l,a                              ; L = the first entry, LAST_Y - rp_dhi
-    ld a,(rp_dlo)
+    ld l,a                              ; L = the first entry, LAST_Y - last
+    ld a,(ix+0)
     cpl
     add a,LAST_Y+1
     ld h,a                              ; H = the last, LAST_Y - rp_dlo ...

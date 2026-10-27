@@ -117,13 +117,6 @@ main_draw
     jr z,main_curve_free
     dec (hl)
 main_curve_free
-    ld hl,hud_tick              ; the HUD's values, every HUD_EVERY pictures
-    dec (hl)
-    jr nz,main_hud_kept
-    ld (hl),HUD_EVERY
-    call demo_gauges
-    call hud_snapshot
-main_hud_kept
     ld a,(back_buf)
     call draw_picture
 picture_done                    ; (tools/run.py looks at the picture here)
@@ -201,6 +194,8 @@ main_flipped
 draw_screen
     call select_buf
     call draw_static
+    ld a,HUD_SHARE
+    ld (hud_quota),a
     ld b,16
 draw_screen_hud
     push bc
@@ -219,7 +214,9 @@ draw_screen_hud
 ;; road has moved sideways on most lines and road_project draws them with a
 ;; margin of grass (~6 ms more): the HUD then has a smaller share, and the
 ;; sky's turn waits for the next picture (pic_bent). The HUD has the
-;; smaller share too when road_x has moved since then.
+;; smaller share too when road_x has moved since then - and none at all
+;; when, besides, the traffic took long the last picture (tr_heavy: two
+;; cars, or a near one).
 ;; ---------------------------------------------------------------------------
 draw_picture
     push af
@@ -247,7 +244,24 @@ draw_picture_low                ; the road moved sideways
     ld b,HUD_SHARE_LOW
 draw_picture_hud
     ld a,b
+    cp HUD_SHARE
+    jr z,draw_picture_q         ; (the road has not moved)
+    ld a,(tr_heavy)
+    cp 2
+    ld a,b
+    jr c,draw_picture_q
+    xor a                       ; it has, and the traffic is heavy: none
+draw_picture_q
     ld (hud_quota),a
+    or a                        ; (none: its next copy waits too)
+    jr z,draw_picture_hud_kept
+    ld hl,hud_tick              ; the HUD's values, every HUD_EVERY pictures
+    dec (hl)
+    jr nz,draw_picture_hud_kept
+    ld (hl),HUD_EVERY
+    call demo_gauges
+    call hud_snapshot
+draw_picture_hud_kept
     call hud_update
 pic_hud                         ; (tools: how long each part takes)
     SET_RAM RAM_C1

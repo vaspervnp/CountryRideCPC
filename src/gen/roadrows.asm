@@ -10,6 +10,7 @@
 ;; TMPL_B - TMPL_A = #2000 above band 0 - mask 64 rotated right once is
 ;; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and
 ;; band 0's or band 2's template.
+    INCLUDE "rowhole0.asm"
     ALIGN 256
 rr_tlo   ; band 0 template, low byte
     defb #00,#08,#10,#10,#18,#20,#28,#28
@@ -30,6 +31,7 @@ rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;
     defb 27,28,30,32,33,35,37,38,40,42,43,45,47,48,50,52
     defb 53,55,57,58,60,62,63,65,67,69,70,72,74,75,77,79
     defb 80,82,84,85,255
+    INCLUDE "rowhole1.asm"
     ALIGN 256
 rr_depth   ; depth, low byte
     defb 0,92,174,201,215,172,229,86
@@ -43,6 +45,7 @@ rr_depth   ; depth, low byte
     defb 93,92,91,89,88,87,85,84
     defb 83,82,81,80,79,78,77,76
     defb 75
+    INCLUDE "rowhole2.asm"
     ALIGN 256
 rr_mask   ; 64; 128 past FAR_Z; 0 for the ground
     defb 0,128,128,128,128,128,128,128
@@ -56,6 +59,7 @@ rr_mask   ; 64; 128 past FAR_Z; 0 for the ground
     defb 64,64,64,64,64,64,64,64
     defb 64,64,64,64,64,64,64,64
     defb 64
+    INCLUDE "rowhole3.asm"
     ALIGN 256
 rr_thi   ; band 0 template, high byte
     defb #40,#40,#40,#40,#40,#40,#40,#40
@@ -69,6 +73,7 @@ rr_thi   ; band 0 template, high byte
     defb #41,#41,#41,#41,#41,#41,#41,#41
     defb #41,#41,#41,#41,#41,#41,#41,#41
     defb #41
+    INCLUDE "rowhole4.asm"
     ALIGN 256
 rr_tlo2   ; far rows: band 2 template, low byte
     defb #00,#A0,#A8,#A8,#B0,#B8,#C0,#C0
@@ -82,6 +87,7 @@ rr_tlo2   ; far rows: band 2 template, low byte
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0
+    INCLUDE "rowhole5.asm"
     ALIGN 256
 ;; Line list order is bottom line first. For each entry, where SP starts:
 ;; the end of that line, relative to the bottom half's base (#8000 for
@@ -167,6 +173,7 @@ line_ends
     defw #3180   ; line 190
     defw #2980   ; line 189
     defw #2180   ; line 188
+    INCLUDE "rowhole6.asm"
     ALIGN 256
 HILL_MAX EQU 62   ; the strongest crest the road top allows
 ;; per hill level (hill = 2*level - 128): lines at the top that are
@@ -189,6 +196,7 @@ level_near
     defb 68,68,68,68,67,67,67,67,67,66,66,66,66,66,65,65
     defb 65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65
     defb 65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65
+    INCLUDE "rowhole7.asm"
     ALIGN 256
 rr_thi2   ; far rows: band 2 template, high byte
     defb #40,#41,#41,#41,#41,#41,#41,#41

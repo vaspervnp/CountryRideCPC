@@ -4,11 +4,11 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 ![The road on the flat](docs/screen-flat.png)
 
-This is the first milestone: the screen layout, the road engine and the
-player's car. A demo drive runs a four-lane road over a looping run of
-crests, dips and curves - never a curve on a hill - with bushes of different
-sizes beside it at random intervals, at 25 frames a second, and fills the HUD
-with plausible numbers. Press left or right and you steer: the car stays in
+This is the first milestone: the screen layout, the road engine, the
+player's car and the traffic. A demo drive runs a four-lane road over a
+looping run of crests, dips and curves - never a curve on a hill - with
+bushes of different sizes beside it at random intervals and cars on it, at
+25 frames a second, and fills the HUD with plausible numbers. Press left or right and you steer: the car stays in
 the middle of the screen and the road moves under it, and a curve carries
 the car out of it unless you steer against it.
 
@@ -107,6 +107,12 @@ it is still 10 pixels wide, kerb to kerb.
 Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
+
+Up to two cars of traffic drive ahead in the lanes, slower than the player,
+who catches up with them and drives by (there are no collisions yet). Each
+has a closed or an open top - a coupé's cabin, or a windscreen with a driver
+behind it - on a sports car's, a saloon's or a GT's tail, and a colour for
+its top and one for its tail, out of sixteen: hundreds of different cars.
 
 Before the race the player picks one of four sports cars, seen from the
 side on the screen the loader shows while the game loads: a red one with a
@@ -245,9 +251,9 @@ The banks hold the rest:
 
 | Bank | Contents | Seen at |
 |---|---|---|
-| 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A | `#4000` (C4) |
+| 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A; traffic sprite code | `#4000` (C4) |
 | 5 | road code (`#4000`), the next step's staging set (`#5E00`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
-| 6 | the road's row tables and the precomputed hill tables | `#4000` (C6) |
+| 6 | the road's row tables and the precomputed hill tables; the traffic: its code, tables and most of its sprites' code | `#4000` (C6) |
 | 7 | the game (main loop, HUD, graphics, the panorama) | `#C000` (C1/C3) |
 
 Some code and data must be reachable from every RAM configuration: the
@@ -488,6 +494,60 @@ mapped whatever the bank; the code in page 1 (RAM C1, as the game runs) -
 the smallest sprite's in the fragments if page 1 has no room left; the
 track and the drawing in bank 7.
 
+### Traffic
+
+Up to two cars drive ahead at 3 depth units a VSYNC; the player catches up
+with them and passes. Their art is rendered in Blender
+(`tools/traffic3d.py`): a common body, two tops (closed: a coupé's cabin;
+open: a windscreen, headrests and a driver) and three tails (a sports car's
+round lamps, a saloon's wide clusters, a GT's light bar), at eight sizes;
+`tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`). What
+takes the car's colour is black in the art, so any top goes with any tail
+and each has a colour of its own out of 16 (a pen, or two in a
+checkerboard). The three nearest sizes come in two pieces, top and tail;
+the five further ones in one, a closed or open top on the saloon's tail,
+still in two colours. `tools/scene.py` says where a car goes and what it
+looks like, and `src/traffic.asm` has to match it.
+
+- **Coming and going.** A car comes 512 depth units ahead, at the horizon,
+  in a lane, with a top, a tail and colours at random, no sooner than half
+  a second to two after the last one and at least 160 units behind it; it
+  goes when it has gone by or got away.
+- **Projection.** As a bush's: its row from its depth, its size from its
+  row, its line from *h / r*, and it is drawn only whole - on the screen,
+  on the road (below its top) and over near lines. Its place is its lane's,
+  centred between the lane lines, from the road's centre on its row: the
+  curve level's shift for its template group (`tr_cs`, mirrored for left
+  curves) and road_x's share of it (`rd_gp`). Its top lines stand on
+  further rows, narrower and bent more: it is kept on the road its top
+  line shows (`tr_edge`), so it never stands out over the grass.
+- **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
+  but its paint comes from registers. A byte is all paint or none, so a
+  word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
+  pens in a checkerboard make a byte one way round on even lines, the other
+  on odd ones), and a word half paint takes its paint byte from E or IYL: a
+  painted car costs no more than a plain one. Pieces that end the same way
+  share their last lines (~800 bytes less). A near size's top is drawn in
+  its colour, then its tail in its own; a further size loads its tail's
+  colour at the line its top ends.
+- **Erasing.** Each buffer remembers the lines its cars stood on; at its
+  next picture road_project draws the road on those it would skip
+  (`rp_force`) - a car is always on the road.
+- **Time.** A car costs ~0.5 ms a picture, two ~1.3 ms (2.5 ms at worst).
+  When the traffic took long, the HUD gives way (below); and if a picture
+  is late already when the cars are drawn - 10 interrupts since the flip,
+  6.7 ms at most left, or 9 with the nearer car at a near size - only the
+  nearer one is drawn that time (17 to 53 pictures in 3000 driving with
+  the keys, one or two at a time; the far car blinks, the near one never).
+- **Memory.** The pieces (4K) go where there is room in a RAM configuration
+  they can run in: bank 6 after the traffic's code and in the row tables'
+  pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
+  fragment 4, the fragments' free runs and, in every `CARn.BIN`, the road
+  parts' hidden lines - buffer 1's blocks 4-6 too, which boot has read by
+  the time it copies these there. `src/trafglue.asm` (fragment 3) switches
+  to a piece's bank and back. Banks 4 and 5 look free past their code in
+  the binary but are not: they hold the cache's sets and the staging sets.
+
 ### The HUD
 
 The HUD shows a copy of the game's values, taken every 4 pictures (6.25 times
@@ -495,7 +555,9 @@ a second). The gauges have 8 segments. Each buffer remembers what it shows.
 Only what changed is redrawn, within a share of about 1.1 ms a picture (a
 third of that when the curve level moves or the road moves sideways; then,
 every other picture of each buffer, a gauge segment goes before the total
-time); the rest waits for the buffer's next picture. Text and gauges sit on
+time - and none at all, its copy waiting too, if besides the traffic took
+long the picture before: two cars, or a near one); the rest waits for the
+buffer's next picture. Text and gauges sit on
 the HUD's plain background, so drawing is plain copying, never masking.
 
 ### Timing
@@ -519,8 +581,8 @@ at 5.25, before the road's last four lines were cut, which took off
   turn, at the flip).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.7 ms (Steering
-in numbers, below).
+steering or steering from side to side: the worst takes 37.7 ms, 39.8 ms
+with the traffic (Steering in numbers, below).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -547,6 +609,14 @@ demo's speed, up to the top speed (6.6 depth units a VSYNC).
 whole when its view or place changes. The other three: 35.9 ms at worst in
 the demo, 37.6 ms side to side. Driving with the keys, all four: 0 past
 the flip in 3000, 38.3 ms at worst.)
+
+With the traffic (up to two cars, 2026-10-27) the same took 24.7 / 25.0 /
+27.7 ms on average and 39.8 / 38.4 / 37.9 ms at worst, none past the flip,
+the road moving 0.116 / 0.139 / 0.904 pairs a picture; the other three
+cars 37.4 / 37.4 / 38.4 ms at worst in the demo and 39.1 / 38.7 / 38.1
+side to side. Driving with the keys, all four: 28.6-29.6 ms on average,
+39.8 ms at worst, 0 past the flip in 3000 - the HUD giving way and the far
+car left out of 17 to 53 pictures (Traffic, above).
 
 Steering across the road (30 runs): 1.0 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven
@@ -656,10 +726,10 @@ model then draws that one.
 `make check` then:
 
 - measures the frame rate;
-- compares 240 freshly drawn road parts, line by line, bushes and all, with
-  what `tools/scene.py` (the Python reference model) says they should be,
-  over hills and curve levels - the lines the CRTC shows: above them is the
-  car's code;
+- compares 240 freshly drawn road parts, line by line, bushes and traffic
+  and all, with what `tools/scene.py` (the Python reference model) says
+  they should be, over hills and curve levels - the lines the CRTC shows:
+  above them is the car's code;
 - does the same for 20 pictures of the HUD and horizon;
 - compares 300 frames of what the emulator actually displayed with the
   buffer on screen, split the way the model says for that frame's drop: 100
@@ -700,6 +770,8 @@ src/            the game
   cachemac.asm  making a cache template (both banks)
   game.asm      main loop, demo drive, steering
   bush.asm      the bushes: projected, drawn, taken away
+  traffic.asm   the traffic: cars coming and going, projected, drawn
+  trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
   horizon.asm   how far the horizon drops, the sky ring
   screen.asm    buffers, blitting, the static picture
@@ -717,16 +789,24 @@ tools/
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views as the game's pens -> tools/carsart.py
   mkselect.py   the screen the car is picked on -> src/gen/select.scr
+  traffic3d.py  the traffic's tops and tails at eight sizes (Blender)
+                -> assets/traffic/
+  mktraffic.py  the traffic's art as the game's pens -> tools/trafficart.py
+  mktrafcode.py the traffic's sprites as code, where they go, the tables
+                -> src/gen/ (and src/gen/trafleft.py for mkbush.py)
   mkbush.py     the bushes along the track, their sprites (as code and as
-                data), each car as code (CARn.BIN), and tables -> src/gen/
+                data), each car as code (CARn.BIN), what is left of the
+                traffic's code, and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
-assets/         fonts, the cars' renders
+assets/         fonts, the cars' and the traffic's renders
 disc/           BASIC loader: the car picked as the game loads
 docs/           screenshots
 ```
 
 ## Next
 
+- collisions with the traffic (the cars are drawn and pass; meeting one
+  does nothing yet);
 - curves that come from the horizon (the whole road bends at one level now);
 - 3- and 2-lane roads (the generator already has the `LANES` parameter).

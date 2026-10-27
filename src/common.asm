@@ -26,6 +26,9 @@ flip_drop   defb 0          ; ... how far its horizon is down
 flip_head   defb 0          ; ... and where its sky looks (words right)
 flip_last   defb 0          ; vbl_count when the last flip happened
 irq_n       defb 0          ; interrupts since then (the 12th shows the next)
+tr_heavy    defb 0          ; the traffic drawn last picture (traffic.asm): a
+                            ; car 1, one of the near sizes 2 - from 2, the HUD
+                            ; gives way when the road moves (draw_picture)
 main_cfg    defb RAM_C1     ; the RAM configuration the main code is in
                             ; while it waits for a flip (cache_job)
 front_buf   defb 0          ; buffer being shown (0/1)
@@ -60,6 +63,7 @@ rd_save_sp  defw 0
 rp_dirty    defb 0          ; a bush may have covered the far road (bush.asm)
 rp_dlo      defb 0          ; ... and the lines it stood on, from
 rp_dhi      defb 0          ; ROAD_AREA_Y (rp_force)
+    ASSERT rp_dhi == rp_dlo+1   ; (rp_force: IX)
 
 ;; --- profiling (read by tools/run.py) ---------------------------------------
 frames_drawn defw 0         ; pictures completed
@@ -233,11 +237,15 @@ frag1_start
 ;; ---------------------------------------------------------------------------
 road_frame
     SET_RAM RAM_C6
+    call traffic_pre            ; (traffic.asm)
     call road_project
 rf_projected                    ; (tools: timing)
     SET_RAM RAM_C1
     call car_lines              ; (bush.asm)
     call road_draw
+rf_drawn                        ; (tools: timing)
+    SET_RAM RAM_C6
+    call traffic_draw
     SET_RAM RAM_C1
     ret
 
@@ -1225,6 +1233,7 @@ rp_zsets
     ld (rp_zlo11+1),a
     ret
 
+    INCLUDE "trafglue.asm"
     ASSERT $ <= FRAG3+FRAG_LEN
 
     ORG FRAG4,FRAG_ST4
@@ -1395,4 +1404,5 @@ rp_dzset_go
     ld (rp_dz8+1),a
     ret
 
+    INCLUDE "gen/trafcode_f4.asm"
     ASSERT $ <= FRAG4+FRAG_LEN
