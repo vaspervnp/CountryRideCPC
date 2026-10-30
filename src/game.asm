@@ -5,11 +5,12 @@
 ;; the buffer that is not on screen, then the interrupt handler shows it at
 ;; the next VSYNC that is at least two frames after the last one.
 ;;
-;; A plain four-lane road loops over a run of crests, dips and curves. The
-;; demo drives it until fire is pressed; then the car stops, the count goes
-;; 3-2-1 and the player races the clock: TIME counts down, each checkpoint
-;; (CP_DIST on) gives more, and at 0 the car stops and the demo drives
-;; again (rules_vbl).
+;; A plain four-lane road over crests, dips and curves (course.asm). The
+;; demo drives a loop of them until fire is pressed; then the car stops on
+;; the flat, the count goes 3-2-1 and the player races the clock over the
+;; stages of the course: TIME counts down, the checkpoint at each stage's
+;; end gives more, the last one is the finish, and at 0 the car stops; then
+;; the demo drives again (rules_vbl).
 ;; ===========================================================================
 
 back_buf    defb 1              ; the buffer being drawn
@@ -24,8 +25,6 @@ MODE_OVER   EQU 3               ; time up: to a standstill, GAME OVER
 START_TIME  EQU 70              ; seconds on the clock at the start
 START_X     EQU -6              ; road_x at the start: the car in the third
                                 ; lane from the left (lanes 12.5 pairs wide)
-CP_DIST     EQU 12288           ; depth units from a checkpoint to the next
-                                ; (a lap and a half: 37 s at 6.6 a VSYNC)
 EXT_FIRST   EQU 50              ; seconds the first checkpoint gives,
 EXT_DROP    EQU 2               ; ... each next one this many fewer,
 EXT_MIN     EQU 36              ; ... down to these
@@ -34,6 +33,7 @@ COUNT_T     EQU 150             ; VSYNCs of the count, 3-2-1
 GO_T        EQU 50              ; ... GO! shown
 EXT_T       EQU 125             ; ... EXTENDED TIME shown
 OVER_T      EQU 150             ; ... GAME OVER shown, standing still
+STAGE_T     EQU 100             ; ... STAGE n shown (after GO!, EXTENDED TIME)
 BLINK       EQU 64              ; PRESS FIRE: shown BLINK_ON of every BLINK
 BLINK_ON    EQU 44
 
@@ -43,7 +43,9 @@ mode_t      defb 0              ; VSYNCs left of the count or of GAME OVER
 msg_t       defb 0              ; ... of GO! or EXTENDED TIME (0: none)
 blink_t     defb 0
 count_gear  defb 0              ; the count's digit, in the gear's place
-cp_z        defw 0              ; zcam at the last checkpoint, or the start
+cp_z        defw 0              ; where the stage starts: the last checkpoint
+stage       defb 0              ; the stage (0 ..; STAGES: the race finished)
+msg_next    defb 0              ; the message after this one (msg_t)
 cp_ext      defb EXT_FIRST      ; seconds the next checkpoint gives
 keys_was    defb 0              ; read_keys at the last picture (fire's press)
 car_free    defb 0              ; 1: the player steers, the car on the screen
@@ -101,6 +103,7 @@ game_start
     ld sp,STACK_TOP
     call car_setup
     call road_reset
+    call course_fill            ; the track's first entries (course.asm)
     call cache_init             ; the cache sets, for the road in the middle
 
     ; draw the parts that never change into both buffers, then a first
@@ -1000,13 +1003,16 @@ demo_gear_ok
     ld de,(cp_z)
     or a
     sbc hl,de
-    ld de,CP_DIST/GAUGE_SEGS
-    ld b,0
+    ld de,STAGE_LEN/GAUGE_SEGS
+    ld b,1
+    jp m,demo_cp_set            ; (the race's track not reached yet: GO)
+    dec b
 demo_cp
     inc b
     or a
     sbc hl,de
     jr nc,demo_cp
+demo_cp_set
     ld a,b
     cp GAUGE_SEGS+1
     jr c,$+4
@@ -1096,19 +1102,21 @@ demo_speed_set
 demo_z_ok
     ld (zcam),hl
 
-    ; the hill and the curve under the camera: hill_profile and
-    ; curve_profile[(zcam / 32) mod 256]
+    ; the hill and the curve under the camera, the track worked out a few
+    ; entries on (course.asm): HILL_RING and CURVE_RING[(zcam / 32) mod 64]
+    call course_fill
+    ld hl,(zcam)
     add hl,hl
     add hl,hl
     add hl,hl                   ; H = zcam / 32
-    ld l,h
-    ld h,0
-    ld de,hill_profile
-    add hl,de
+    ld a,h
+    and RING_MASK
+    or lo(HILL_RING)
+    ld l,a
+    ld h,hi(HILL_RING)
     ld a,(hl)
     ld (hill),a
-    ld de,curve_profile-hill_profile
-    add hl,de
+    res 6,l                     ; (CURVE_RING)
     ld a,(hl)
     ld (curve),a
 
@@ -1182,11 +1190,15 @@ rules_start
     ld (hl),a
     inc hl
     ld (hl),a
+    ld (stage),a
+    ld (msg_next),a
     ld a,START_TIME
     ld (time_left),a
     ld a,EXT_FIRST
     ld (cp_ext),a
-    ret
+    ld hl,course_hold           ; the road to the flat, and straight on
+    ld a,1
+    jp course_set
 
 ;; ---------------------------------------------------------------------------
 ;; rules_vbl - (demo_step) a VSYNC of the race's rules.
@@ -1204,7 +1216,7 @@ rules_vbl
     dec a
     jr z,rules_ready
     dec a
-    jr z,rules_race
+    jp z,rules_race
     dec a
     jp z,rules_over
     ld hl,blink_t               ; the demo: PRESS FIRE blinks
@@ -1256,8 +1268,15 @@ rules_go
     ld (push_v),hl
     ld a,(road_x)
     ld (car_x),a
-    ld hl,(zcam)
-    ld (cp_z),hl
+    ld hl,(crs_z)               ; the course from the next entry worked
+    ld (cp_z),hl                ; out on: the first stage starts there
+    ld hl,course_race
+    xor a
+    call course_set             ; (A = 0 after)
+    inc a
+    ld (msg_texts+MSG_STAGE_N),a
+    ld a,MSG_STAGE
+    ld (msg_next),a
     ld a,50
     ld (time_vbls),a
     ld a,MODE_RACE
@@ -1271,14 +1290,20 @@ rules_msg                       ; message A for B VSYNCs
     ret
 
 rules_race
-    ld hl,msg_t                 ; GO! or EXTENDED TIME shown long enough
-    ld a,(hl)
+    ld hl,msg_t                 ; GO! or EXTENDED TIME shown long enough:
+    ld a,(hl)                   ; the next, if any (STAGE n)
     or a
     jr z,rules_total
     dec (hl)
     jr nz,rules_total
-    xor a
-    ld (msg),a                  ; (MSG_NONE)
+    ld hl,msg_next
+    ld a,(hl)
+    ld (hl),0
+    ld (msg),a
+    or a
+    jr z,rules_total
+    ld a,STAGE_T
+    ld (msg_t),a
 
     ; TOTAL TIME counts up two hundredths a VSYNC: m'ss"cc
 rules_total
@@ -1318,18 +1343,30 @@ rules_tt_set
     ld (hl),a
 rules_tt_done
 
-    ; a checkpoint: CP_DIST on from the last
+    ; a checkpoint: the stage's end - the next stage, its colours; past the
+    ; last, the finish
     ld hl,(zcam)
     ld de,(cp_z)
     or a
     sbc hl,de
-    ld de,CP_DIST
+    ld de,STAGE_LEN
     or a
     sbc hl,de
-    jr c,rules_clock
+    jp m,rules_clock            ; (signed: at GO it is ahead of the car)
     ld hl,(cp_z)
     add hl,de
     ld (cp_z),hl
+    ld hl,stage
+    inc (hl)
+    ld a,(hl)
+    cp STAGES
+    jr z,rules_finish
+    call stage_colours
+    ld a,(stage)
+    inc a
+    ld (msg_texts+MSG_STAGE_N),a
+    ld a,MSG_STAGE
+    ld (msg_next),a
     ld a,(cp_ext)
     ld b,a
     ld a,(time_left)
@@ -1357,14 +1394,19 @@ rules_clock
     ld hl,time_left
     dec (hl)
     ret nz
+    ld a,MSG_TIME_UP
+rules_end                       ; the race over: message A, to a standstill
+    ld (msg),a
     ld a,MODE_OVER
     ld (game_mode),a
     xor a
     ld (mode_t),a
     ld (msg_t),a
-    ld a,MSG_TIME_UP
-    ld (msg),a
+    ld (msg_next),a
     ret
+rules_finish
+    ld a,MSG_FINISH
+    jr rules_end
 
 rules_over
     ld a,(mode_t)
@@ -1380,17 +1422,24 @@ rules_over
     inc a
     cp 3
     ret nc
+    ld a,(stage)                ; (finished: FINISH stays)
+    cp STAGES
     ld a,MSG_GAME_OVER
+    jr nz,$+4
+    ld a,MSG_FINISH
     ld (msg),a
     ld a,OVER_T
 rules_over_t
     dec a
     ld (mode_t),a
     ret nz
-    ld (game_mode),a            ; (MODE_DEMO) the demo drives on from here
-    ld (blink_t),a
-    ld (coll_t),a
+    ld (game_mode),a            ; (MODE_DEMO) the demo drives on from here,
+    ld (blink_t),a              ; its loop after the road is brought to the
+    ld (coll_t),a               ; flat, in the first stage's colours
     ld (coll_kind),a
-    ret
+    call stage_colours
+    ld hl,course_demo
+    ld a,1
+    jp course_set
 
 zfrac       defb 0

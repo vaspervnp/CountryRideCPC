@@ -18,16 +18,45 @@ select_buf
 
 ;; ---------------------------------------------------------------------------
 ;; line_addr - HL = line (0..63, 160..271) -> HL = its address in the target
-;; buffer. Destroys AF, DE.
+;; buffer: with RAM_C1, buffer 0's HUD at HUD_BASE (lines 0-63), its road
+;; part's memory at BOT0_BASE (from ROAD_AREA_Y on); a character row 96
+;; bytes, its lines #800 apart. Destroys AF, DE.
 ;; ---------------------------------------------------------------------------
 line_addr
-    add hl,hl
-    ld de,line_tab
-    add hl,de
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
+    ld a,l
+    and 7
+    add a,a
+    add a,a
+    add a,a
+    ld d,a                      ; D: its line in the row, #800s
+    srl h
+    rr l
+    srl h
+    rr l
+    srl h
+    rr l                        ; L = its character row
+    ld a,l
+    sub ROAD_ROW
+    jr c,line_addr_top
     ld l,a
+    ld a,hi(BOT0_BASE)-hi(HUD_BASE)
+    add a,d
+    ld d,a
+line_addr_top
+    ld a,l
+    add a,a
+    add a,l
+    ld l,a
+    ld h,0
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; 96 a row
+    ld a,h
+    add a,d
+    add a,hi(HUD_BASE)
+    ld h,a
     ld a,(tgt_buf)
     or a
     ret z
@@ -39,6 +68,7 @@ line_addr_hud
     ld de,HUD1_OFF              ; its HUD HUD1_OFF on
     add hl,de
     ret
+    ASSERT ROAD_AREA_Y % 8 == 0 && ((HUD_BASE|BOT0_BASE) & #FF) == 0
 
 ;; ---------------------------------------------------------------------------
 ;; fill_lines - fill whole lines with a two-byte pattern.

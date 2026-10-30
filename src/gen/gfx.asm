@@ -129,6 +129,9 @@ small_digits
 ; G
     defb #94,#68,#C0,#68,#14,#C0,#28,#C0,#40,#28,#3C,#C0,#28,#94,#40,#28
     defb #94,#40,#94,#3C,#40,#C0,#00,#40
+; H
+    defb #68,#94,#C0,#28,#94,#40,#28,#94,#40,#3C,#3C,#40,#28,#14,#40,#28
+    defb #94,#40,#28,#94,#40,#80,#C0,#40
 ; I
     defb #94,#3C,#C0,#C0,#28,#40,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0
     defb #28,#C0,#94,#3C,#C0,#C0,#00,#40
@@ -178,14 +181,19 @@ MSG_GO            EQU 3
 MSG_EXTENDED_TIME EQU 4
 MSG_TIME_UP       EQU 5
 MSG_GAME_OVER     EQU 6
+MSG_STAGE         EQU 7
+MSG_FINISH        EQU 8
+MSG_STAGE_N       EQU 100   ; (msg_texts) STAGE's digit, the game's
 msg_texts
     defb 10,10,10,10,10,10,10,10,10,10,10,10,10   ; 
-    defb 10,21,22,14,23,23,10,15,17,22,14,10,10   ; PRESS FIRE
-    defb 10,10,16,14,24,10,22,14,12,13,28,10,10   ; GET READY
-    defb 10,10,10,10,10,16,20,11,10,10,10,10,10   ; GO!
-    defb 14,27,24,14,19,13,14,13,10,24,17,18,14   ; EXTENDED TIME
-    defb 10,10,10,24,17,18,14,10,25,21,10,10,10   ; TIME UP
-    defb 10,10,16,12,18,14,10,20,26,14,22,10,10   ; GAME OVER
+    defb 10,22,23,14,24,24,10,15,18,23,14,10,10   ; PRESS FIRE
+    defb 10,10,16,14,25,10,23,14,12,13,29,10,10   ; GET READY
+    defb 10,10,10,10,10,16,21,11,10,10,10,10,10   ; GO!
+    defb 14,28,25,14,20,13,14,13,10,25,18,19,14   ; EXTENDED TIME
+    defb 10,10,10,25,18,19,14,10,26,22,10,10,10   ; TIME UP
+    defb 10,10,16,12,19,14,10,21,27,14,23,10,10   ; GAME OVER
+    defb 10,10,10,24,25,12,16,14,10,1,10,10,10   ; STAGE 1
+    defb 10,10,10,15,18,20,18,24,17,10,10,10,10   ; FINISH
 
 ;; labels: defb width in bytes, then 8 lines of bytes
 lbl_time
@@ -310,323 +318,52 @@ sky_pairs
     defb #8C,#CC
     defb #4C,#4C
 
-;; CPU address of each of the 272 lines: the HUD (0-63) in page 1
-;; with RAM_C1, buffer 0 (buffer 1's is HUD1_OFF on); the road part's
-;; memory (160-271) in page 2 with RAM_C1, buffer 0 (buffer 1's is
-;; #8000 lower); the lines between nowhere (the sky part is the ring:
-;; ring_col)
-line_tab
-    defw #4000   ; 0
-    defw #4800   ; 1
-    defw #5000   ; 2
-    defw #5800   ; 3
-    defw #6000   ; 4
-    defw #6800   ; 5
-    defw #7000   ; 6
-    defw #7800   ; 7
-    defw #4060   ; 8
-    defw #4860   ; 9
-    defw #5060   ; 10
-    defw #5860   ; 11
-    defw #6060   ; 12
-    defw #6860   ; 13
-    defw #7060   ; 14
-    defw #7860   ; 15
-    defw #40C0   ; 16
-    defw #48C0   ; 17
-    defw #50C0   ; 18
-    defw #58C0   ; 19
-    defw #60C0   ; 20
-    defw #68C0   ; 21
-    defw #70C0   ; 22
-    defw #78C0   ; 23
-    defw #4120   ; 24
-    defw #4920   ; 25
-    defw #5120   ; 26
-    defw #5920   ; 27
-    defw #6120   ; 28
-    defw #6920   ; 29
-    defw #7120   ; 30
-    defw #7920   ; 31
-    defw #4180   ; 32
-    defw #4980   ; 33
-    defw #5180   ; 34
-    defw #5980   ; 35
-    defw #6180   ; 36
-    defw #6980   ; 37
-    defw #7180   ; 38
-    defw #7980   ; 39
-    defw #41E0   ; 40
-    defw #49E0   ; 41
-    defw #51E0   ; 42
-    defw #59E0   ; 43
-    defw #61E0   ; 44
-    defw #69E0   ; 45
-    defw #71E0   ; 46
-    defw #79E0   ; 47
-    defw #4240   ; 48
-    defw #4A40   ; 49
-    defw #5240   ; 50
-    defw #5A40   ; 51
-    defw #6240   ; 52
-    defw #6A40   ; 53
-    defw #7240   ; 54
-    defw #7A40   ; 55
-    defw #42A0   ; 56
-    defw #4AA0   ; 57
-    defw #52A0   ; 58
-    defw #5AA0   ; 59
-    defw #62A0   ; 60
-    defw #6AA0   ; 61
-    defw #72A0   ; 62
-    defw #7AA0   ; 63
-    defw #0000   ; 64
-    defw #0000   ; 65
-    defw #0000   ; 66
-    defw #0000   ; 67
-    defw #0000   ; 68
-    defw #0000   ; 69
-    defw #0000   ; 70
-    defw #0000   ; 71
-    defw #0000   ; 72
-    defw #0000   ; 73
-    defw #0000   ; 74
-    defw #0000   ; 75
-    defw #0000   ; 76
-    defw #0000   ; 77
-    defw #0000   ; 78
-    defw #0000   ; 79
-    defw #0000   ; 80
-    defw #0000   ; 81
-    defw #0000   ; 82
-    defw #0000   ; 83
-    defw #0000   ; 84
-    defw #0000   ; 85
-    defw #0000   ; 86
-    defw #0000   ; 87
-    defw #0000   ; 88
-    defw #0000   ; 89
-    defw #0000   ; 90
-    defw #0000   ; 91
-    defw #0000   ; 92
-    defw #0000   ; 93
-    defw #0000   ; 94
-    defw #0000   ; 95
-    defw #0000   ; 96
-    defw #0000   ; 97
-    defw #0000   ; 98
-    defw #0000   ; 99
-    defw #0000   ; 100
-    defw #0000   ; 101
-    defw #0000   ; 102
-    defw #0000   ; 103
-    defw #0000   ; 104
-    defw #0000   ; 105
-    defw #0000   ; 106
-    defw #0000   ; 107
-    defw #0000   ; 108
-    defw #0000   ; 109
-    defw #0000   ; 110
-    defw #0000   ; 111
-    defw #0000   ; 112
-    defw #0000   ; 113
-    defw #0000   ; 114
-    defw #0000   ; 115
-    defw #0000   ; 116
-    defw #0000   ; 117
-    defw #0000   ; 118
-    defw #0000   ; 119
-    defw #0000   ; 120
-    defw #0000   ; 121
-    defw #0000   ; 122
-    defw #0000   ; 123
-    defw #0000   ; 124
-    defw #0000   ; 125
-    defw #0000   ; 126
-    defw #0000   ; 127
-    defw #0000   ; 128
-    defw #0000   ; 129
-    defw #0000   ; 130
-    defw #0000   ; 131
-    defw #0000   ; 132
-    defw #0000   ; 133
-    defw #0000   ; 134
-    defw #0000   ; 135
-    defw #0000   ; 136
-    defw #0000   ; 137
-    defw #0000   ; 138
-    defw #0000   ; 139
-    defw #0000   ; 140
-    defw #0000   ; 141
-    defw #0000   ; 142
-    defw #0000   ; 143
-    defw #0000   ; 144
-    defw #0000   ; 145
-    defw #0000   ; 146
-    defw #0000   ; 147
-    defw #0000   ; 148
-    defw #0000   ; 149
-    defw #0000   ; 150
-    defw #0000   ; 151
-    defw #0000   ; 152
-    defw #0000   ; 153
-    defw #0000   ; 154
-    defw #0000   ; 155
-    defw #0000   ; 156
-    defw #0000   ; 157
-    defw #0000   ; 158
-    defw #0000   ; 159
-    defw #8000   ; 160
-    defw #8800   ; 161
-    defw #9000   ; 162
-    defw #9800   ; 163
-    defw #A000   ; 164
-    defw #A800   ; 165
-    defw #B000   ; 166
-    defw #B800   ; 167
-    defw #8060   ; 168
-    defw #8860   ; 169
-    defw #9060   ; 170
-    defw #9860   ; 171
-    defw #A060   ; 172
-    defw #A860   ; 173
-    defw #B060   ; 174
-    defw #B860   ; 175
-    defw #80C0   ; 176
-    defw #88C0   ; 177
-    defw #90C0   ; 178
-    defw #98C0   ; 179
-    defw #A0C0   ; 180
-    defw #A8C0   ; 181
-    defw #B0C0   ; 182
-    defw #B8C0   ; 183
-    defw #8120   ; 184
-    defw #8920   ; 185
-    defw #9120   ; 186
-    defw #9920   ; 187
-    defw #A120   ; 188
-    defw #A920   ; 189
-    defw #B120   ; 190
-    defw #B920   ; 191
-    defw #8180   ; 192
-    defw #8980   ; 193
-    defw #9180   ; 194
-    defw #9980   ; 195
-    defw #A180   ; 196
-    defw #A980   ; 197
-    defw #B180   ; 198
-    defw #B980   ; 199
-    defw #81E0   ; 200
-    defw #89E0   ; 201
-    defw #91E0   ; 202
-    defw #99E0   ; 203
-    defw #A1E0   ; 204
-    defw #A9E0   ; 205
-    defw #B1E0   ; 206
-    defw #B9E0   ; 207
-    defw #8240   ; 208
-    defw #8A40   ; 209
-    defw #9240   ; 210
-    defw #9A40   ; 211
-    defw #A240   ; 212
-    defw #AA40   ; 213
-    defw #B240   ; 214
-    defw #BA40   ; 215
-    defw #82A0   ; 216
-    defw #8AA0   ; 217
-    defw #92A0   ; 218
-    defw #9AA0   ; 219
-    defw #A2A0   ; 220
-    defw #AAA0   ; 221
-    defw #B2A0   ; 222
-    defw #BAA0   ; 223
-    defw #8300   ; 224
-    defw #8B00   ; 225
-    defw #9300   ; 226
-    defw #9B00   ; 227
-    defw #A300   ; 228
-    defw #AB00   ; 229
-    defw #B300   ; 230
-    defw #BB00   ; 231
-    defw #8360   ; 232
-    defw #8B60   ; 233
-    defw #9360   ; 234
-    defw #9B60   ; 235
-    defw #A360   ; 236
-    defw #AB60   ; 237
-    defw #B360   ; 238
-    defw #BB60   ; 239
-    defw #83C0   ; 240
-    defw #8BC0   ; 241
-    defw #93C0   ; 242
-    defw #9BC0   ; 243
-    defw #A3C0   ; 244
-    defw #ABC0   ; 245
-    defw #B3C0   ; 246
-    defw #BBC0   ; 247
-    defw #8420   ; 248
-    defw #8C20   ; 249
-    defw #9420   ; 250
-    defw #9C20   ; 251
-    defw #A420   ; 252
-    defw #AC20   ; 253
-    defw #B420   ; 254
-    defw #BC20   ; 255
-    defw #8480   ; 256
-    defw #8C80   ; 257
-    defw #9480   ; 258
-    defw #9C80   ; 259
-    defw #A480   ; 260
-    defw #AC80   ; 261
-    defw #B480   ; 262
-    defw #BC80   ; 263
-    defw #84E0   ; 264
-    defw #8CE0   ; 265
-    defw #94E0   ; 266
-    defw #9CE0   ; 267
-    defw #A4E0   ; 268
-    defw #ACE0   ; 269
-    defw #B4E0   ; 270
-    defw #BCE0   ; 271
-
-;; demo hill profile, (zcam / 32) mod 256 -> hill
-hill_profile
-    defb #00,#00,#00,#00,#00,#00,#00,#09,#13,#1C,#24,#2D,#35,#3C,#43,#49
-    defb #4F,#54,#58,#5B,#5D,#5F,#5F,#5F,#5D,#5B,#58,#54,#4F,#49,#43,#3C
-    defb #35,#2D,#24,#1C,#13,#09,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#F7,#EE,#E6
-    defb #DE,#D6,#CE,#C7,#C0,#BA,#B5,#B1,#AD,#AA,#A8,#A6,#A6,#A6,#A8,#AA
-    defb #AD,#B1,#B5,#BA,#C0,#C7,#CE,#D6,#DE,#E6,#EE,#F7,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#07,#0E,#15,#1C,#22,#28,#2D,#31,#35,#38,#3A,#3C,#3C
-    defb #3C,#3A,#38,#35,#31,#2D,#28,#22,#1C,#15,#0E,#07,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#0C,#19,#24,#2F,#3A,#43,#4B
-    defb #52,#58,#5C,#5E,#5F,#5E,#5C,#58,#52,#4B,#43,#3A,#2F,#24,#19,#0C
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-
-;; demo curve levels, (zcam / 32) mod 256 -> level (signed); must
-;; follow hill_profile
-curve_profile
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#01,#02,#03,#04,#05
-    defb #05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05,#05
-    defb #05,#05,#05,#04,#03,#02,#01,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#FF,#FE,#FD,#FC,#FB,#FA,#F9,#F9,#F9,#F9,#F9,#F9,#F9,#F9,#F9
-    defb #F9,#F9,#F9,#F9,#F9,#F9,#F9,#FA,#FB,#FC,#FD,#FE,#FF,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#FF,#FE,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD,#FD
-    defb #FD,#FE,#FF,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#01,#02,#03,#04,#05,#06,#07,#07,#07,#07,#07
-    defb #07,#07,#07,#07,#07,#07,#07,#07,#07,#06,#05,#04,#03,#02,#01,#00
+;; the track: segments (n, v) - n entries of straight road (v = 0), a
+;; curve to level v (|v| <= CURVE_K) or a hill of v (|v| >= 16); then
+;; 0,0: round again, or 0,1: straight on for good (tools/course.py)
+;; the demo's loop
+course_demo
+    defb 6,0,32,95,4,0,30,5,4,0,32,-90,4,0,30,-7
+    defb 4,0,26,60,4,0,20,-3,4,0,24,95,4,0,28,7
+    defb 0,0
+;; the race: 5 stages of 384 entries, then the finish
+course_race
+    defb 12,0,24,3,12,0,28,70,6,0,30,-4,4,0,24,4
+    defb 12,0,32,-60,6,0,32,5,12,0,24,80,6,0,28,-5
+    defb 12,0,30,-70,6,0,30,3,14,0,30,0,40,95,20,0
+    defb 30,7,24,0,36,-90,16,0,26,-7,30,0,40,95,20,0
+    defb 30,6,16,0,26,0,8,0,30,90,4,0,28,-90,6,0
+    defb 24,-5,12,0,26,95,4,0,32,-80,6,0,30,6,12,0
+    defb 24,85,4,0,30,-90,6,0,22,-6,12,0,28,90,36,0
+    defb 8,0,60,5,6,0,56,-6,12,0,32,70,6,0,48,6
+    defb 6,0,44,-4,12,0,30,-80,6,0,40,7,18,0,8,0
+    defb 22,6,22,-6,4,0,24,7,12,0,28,80,4,0,20,-7
+    defb 20,7,12,0,30,-90,4,0,24,-6,24,6,12,0,26,95
+    defb 4,0,28,-7,56,0,64,0
+    defb 0,1
+course_hold
+    defb 0,1
+STAGES    EQU 5
+STAGE_LEN EQU 12288   ; depth units a stage
+HILL_RAMP EQU 12
+;; a quarter of a sine, 0..255
+sine_q
+    defb 0,6,13,19,25,31,37,44,50,56,62,68,74,80,86,92
+    defb 98,103,109,115,120,126,131,136,142,147,152,157,162,167,171,176
+    defb 180,185,189,193,197,201,205,208,212,215,219,222,225,228,231,233
+    defb 236,238,240,242,244,246,247,249,250,251,252,253,254,254,255,255
+    defb 255
+;; the pens a stage colours (#FF: no more), and each stage's colours
+;; for them: BLUE, SKY, PASTEL, HAZE, GRASS_A, BUSH, GRASS_B, MAUVE
+stage_pen_ids
+    defb 2,3,4,5,8,9,13,15,#FF
+STAGE_GROUND EQU 4   ; (the ground's: the border below the mountains)
+stage_hw
+    defb #55,#57,#5F,#5B,#52,#56,#5A,#5D   ; COUNTRYSIDE
+    defb #55,#57,#5F,#43,#43,#5E,#4A,#5C   ; DESERT
+    defb #55,#57,#5F,#4B,#5B,#56,#4B,#57   ; ALPS
+    defb #58,#47,#4E,#43,#56,#54,#42,#45   ; SUNSET
+    defb #44,#44,#55,#45,#56,#54,#44,#58   ; NIGHT
 
 ;; the panorama, lines 148..179: for each of the 96 words across, its
 ;; 4 character rows' addresses in pano_rows - each row its two bytes on

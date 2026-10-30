@@ -123,7 +123,9 @@ bush_recs1  defb lo(bush_recs1+1)
     INCLUDE "hud.asm"
     INCLUDE "horizon.asm"
     INCLUDE "screen.asm"
+    INCLUDE "course.asm"
 game_bank_end
+    ASSERT game_bank_end <= CURVE_RING && HILL_RING+64 <= CAR_HILL_ORG
     ASSERT game_bank_end <= CAR_HILL_ORG     ; (the rest: the car's views on
                                             ; hills, CARn.BIN)
     SAVE "GAME.BIN",#C000,game_bank_end-#C000,DSK,"build/countryride.dsk"

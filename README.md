@@ -4,10 +4,11 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 ![The road on the flat](docs/screen-flat.png)
 
-A four-lane road loops over a run of crests, dips and curves - never a
-curve on a hill - with bushes of different sizes beside it at random
-intervals and cars on it, at 25 frames a second. A demo drives it until
-you press fire; then you race the clock (The race, below). You steer: the
+A four-lane road runs over crests, dips and curves - never a curve on a
+hill - with bushes of different sizes beside it at random intervals and
+cars on it, at 25 frames a second. A demo drives a loop of it until you
+press fire; then you race the clock over five stages, each in its own
+colours (The race, below). You steer: the
 road moves under the car, and a curve carries the car out of it unless
 you steer against it.
 
@@ -115,21 +116,45 @@ its top and one for its tail, out of sixteen: hundreds of different cars.
 
 ### The race
 
-Fire pressed while the demo drives, GET READY: the car brakes to a
-standstill in the third lane from the left, the count goes 3, 2, 1 in the
-gear's place, and GO! - the player drives, from a standstill. TIME starts at
-70 seconds and counts down; TOTAL TIME counts up. Every 12288 depth units
-(a lap and a half of the track: 37 seconds at the top speed of 6.6 a VSYNC)
-is a checkpoint, and the CHECKPOINT gauge fills on the way to it: there
-TIME gets 50 more seconds (EXTENDED TIME), 2 fewer at each next one, down
-to 36, and never over 99. At 0, TIME UP: the car brakes to a standstill,
-still steered, GAME OVER, and the demo drives on from there; TOTAL TIME
-keeps what the race lasted until the next one. (`rules_vbl` in
-`src/game.asm`; the numbers are its `START_TIME`, `CP_DIST`, `EXT_FIRST`,
-`EXT_DROP`, `EXT_MIN`.)
+Fire pressed while the demo drives, GET READY: the road ahead flattens
+out and straightens, the car brakes to a standstill in the third lane from
+the left, the count goes 3, 2, 1 in the gear's place, and GO! - the player
+drives, from a standstill. TIME starts at 70 seconds and counts down; TOTAL
+TIME counts up.
 
-The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, EXTENDED
-TIME, TIME UP, GAME OVER - are the HUD's last line (The HUD, below).
+The course is five stages of 12288 depth units each (about 40-50 seconds),
+each with its own track and colours - the sky near the horizon, the haze,
+the far mountains, the grass and the bushes:
+
+| Stage | Track | Colours |
+|---|---|---|
+| 1 COUNTRYSIDE | curves and hills by turns | green and lime |
+| 2 DESERT | long straights, big crests, sharp curves | sand, dark red rock |
+| 3 ALPS | hill after hill | snow and ice |
+| 4 SUNSET | long sweeping curves | an orange and pink sky, dark grass |
+| 5 NIGHT | winding | a dark sky, dark grass and navy |
+
+| ![COUNTRYSIDE](docs/screen-stage1.png) | ![DESERT](docs/screen-stage2.png) | ![ALPS](docs/screen-stage3.png) |
+|---|---|---|
+| ![SUNSET](docs/screen-stage4.png) | ![NIGHT](docs/screen-stage5.png) | |
+
+The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
+50 more seconds (EXTENDED TIME), 2 fewer at each next one, down to 36, and
+never over 99; then the next stage's number shows, and its colours are
+there at once. Past the fifth, FINISH: the car brakes to a standstill on
+the straight that follows, and TOTAL TIME is the race's. At 0, TIME UP:
+the car brakes to a standstill, still steered, GAME OVER. Either way the
+demo then drives on from there, its loop and its colours back after the
+road has flattened out. (`rules_vbl` in `src/game.asm`; the numbers are
+its `START_TIME`, `EXT_FIRST`, `EXT_DROP`, `EXT_MIN`; the stages are
+`tools/course.py`.) The autopilot used for testing - keeping to a lane,
+out of the traffic's way, often bumping it - finishes with 41 seconds left
+in the ROSSO GT, 30 in the BERLINETTA and 10 in the TOURING, and runs out
+of time in the last stage in the WEDGE TURBO.
+
+The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
+EXTENDED TIME, TIME UP, FINISH, GAME OVER - are the HUD's last line (The
+HUD, below).
 
 ### The cars
 
@@ -281,7 +306,7 @@ The banks hold the rest:
 | 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A; traffic sprite code | `#4000` (C4) |
 | 5 | road code (`#4000`), the next step's staging set (`#5E00`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
 | 6 | the road's row tables and the precomputed hill tables; the traffic: its code, tables and most of its sprites' code | `#4000` (C6) |
-| 7 | the game (main loop, HUD, graphics, the panorama) | `#C000` (C1/C3) |
+| 7 | the game (main loop, HUD, graphics, the panorama, the track's rings at `#F000`) | `#C000` (C1/C3) |
 
 Some code and data must be reachable from every RAM configuration: the
 variables they share, the interrupt handler, the stack, the line lists and
@@ -359,6 +384,26 @@ Each frame:
 Hills move row *r* down (on a crest) or up (in a dip) by *h / r* lines, with
 occlusion behind a crest. The line-to-row mapping is precomputed for 128 hill
 levels, so a hill costs nothing extra per frame.
+
+### The track
+
+The game reads the track an entry - 32 depth units - at a time: the hill
+and the curve level under the camera, and a few entries on (whether a hill
+is near, the next curve level to work out). Those come from two rings of
+64 entries in bank 7 (`#F000`), which `course_fill` keeps worked out 8
+entries ahead of the camera from a list of segments: n entries straight,
+a curve to level v and back, one level an entry, or a hill of height v,
+a sine from a quarter-sine table. Two bytes a segment: the demo's loop is
+16 of them (`course_demo`), the race's five stages 92 (`course_race`).
+Any list can follow from the next entry on, after the road is first
+brought to the flat - a curve level and 12 of hill an entry - so the race
+starts on a straight wherever the demo was, and the demo takes its loop up
+again wherever the race ended. `tools/course.py` has the lists and the
+model of all this, to the bit, and makes sure the road never bends on a
+hill - and, in the race, that a hill comes 12 entries or more after a
+curve: the road can still be a level or two into the curve there, and a
+picture with the road bent on a hill that moves is the heaviest there is
+(with 6 entries, 39.9 ms).
 
 ### Curves
 
@@ -676,7 +721,9 @@ at 5.25, before the road's last four lines were cut, which took off
 
 In 3000 pictures none runs past its flip in the demo, with the player not
 steering or steering from side to side: the worst takes 37.7 ms, 39.0 ms
-with the traffic (Steering in numbers, below).
+with the traffic (Steering in numbers, below). Over the race's five
+stages, driven by the autopilot in each of the four cars and zigzagging
+from side to side with the keys, none does either: the worst takes 38.6 ms.
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -877,6 +924,8 @@ src/            the game
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
   game.asm      main loop, the race's rules, demo drive, steering
+  course.asm    the track worked out a few entries ahead, the stages'
+                colours
   bush.asm      the bushes: projected, drawn, taken away
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
@@ -887,7 +936,9 @@ src/            the game
 tools/
   cpcgfx.py     palette, mode 0 encoding, road geometry
   scene.py      the reference model of the whole screen
-  mkgfx.py      HUD, sky and mountain graphics -> src/gen/
+  mkgfx.py      HUD, sky and mountain graphics, the track's lists -> src/gen/
+  course.py     the demo's loop and the race's stages, and the model of
+                how the game works them out
   mkroad.py     the generated road code, templates and tables -> src/gen/
   car3d.py      the first car as a 3D model, the game's camera, curved
                 shapes (lofts, arches, fenders) for all the cars (Blender)

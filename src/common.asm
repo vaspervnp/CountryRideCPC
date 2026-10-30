@@ -420,8 +420,9 @@ irq_road
     CRTC_HL 13
     ld bc,#7F10
     out (c),c
-    ld c,BORDER_LOW_HW
-    out (c),c
+irq_ground
+    ld c,BORDER_LOW_HW                  ; (self-modified: the stage's ground,
+    out (c),c                           ; stage_colours)
     jp isr_out
     ASSERT SKY_Y+5 < 170 && BLOCK_BOTTOM > 175
 

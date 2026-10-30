@@ -120,8 +120,11 @@ def gfx():
     emit("MSG_Y EQU %d" % S.HUD["message"][1])
     emit("MSG_SPACE EQU %d" % S.MSG_GLYPHS.index(" "))
     for n, m in enumerate(S.MESSAGES):
-        name = "MSG_" + (m.replace(" ", "_").strip("!") if m else "NONE")
+        name = "MSG_" + (m.replace(" ", "_").strip("!_0123456789") if m else "NONE")
         emit("%-17s EQU %d" % (name, n))
+    stage = S.MESSAGES.index("STAGE 1")
+    emit("MSG_STAGE_N       EQU %d   ; (msg_texts) STAGE's digit, the game's"
+         % (S.MSG_W * stage + S.msg_cells(stage).index(1)))
     emit("msg_texts")
     for n in range(len(S.MESSAGES)):
         emit("    defb " + ",".join(str(v) for v in S.msg_cells(n)) + "   ; " + S.MESSAGES[n])
@@ -199,61 +202,40 @@ def gfx():
         emit("    defb #%02X,#%02X" % (G.m0_byte(p[0], p[1]), G.m0_byte(p[2], p[3])))
     emit("")
 
-    # where every line is (hw.asm has the plan)
-    emit(";; CPU address of each of the 272 lines: the HUD (0-%d) in page 1"
-         % (G.HUD_H - 1))
-    emit(";; with RAM_C1, buffer 0 (buffer 1's is HUD1_OFF on); the road part's")
-    emit(";; memory (%d-271) in page 2 with RAM_C1, buffer 0 (buffer 1's is"
-         % S.ROAD_AREA_Y)
-    emit(";; #8000 lower); the lines between nowhere (the sky part is the ring:")
-    emit(";; ring_col)")
-    emit("line_tab")
-    for y in range(G.SCR_H):
-        row, ras = y >> 3, y & 7
-        if y < G.HUD_H:
-            a = 0x4000 + ras * 0x800 + row * 96
-        elif y < S.ROAD_AREA_Y:
-            a = 0
-        else:
-            a = 0x8000 + ras * 0x800 + (row - S.ROAD_AREA_Y // 8) * 96
-        emit("    defw #%04X   ; %d" % (a, y))
-    emit("")
-
-    # The demo's track, indexed by (zcam / 32) mod 256: stretches of flat
-    # straight road, hills (a crest ahead is positive, a dip negative) and
-    # curves, one at a time - the road never bends on a hill. A curve moves
-    # one level an entry towards its level and back, so the road bends into
-    # it and out of it.
-    import math
-    track = [("flat", 6), ("hill", 32, 95), ("flat", 4), ("curve", 30, 5),
-             ("flat", 4), ("hill", 32, -90), ("flat", 4), ("curve", 30, -7),
-             ("flat", 4), ("hill", 26, 60), ("flat", 4), ("curve", 20, -3),
-             ("flat", 4), ("hill", 24, 95), ("flat", 4), ("curve", 28, 7)]
-    hills, curve = [], []
-    for kind, n, *arg in track:
-        for t in range(n):
-            h = k = 0
-            if kind == "hill":
-                h = int(round(arg[0] * math.sin(math.pi * t / n)))
-            elif kind == "curve":
-                k = arg[0]
-                k = max(-abs(k), min(abs(k), min(t, n - 1 - t))) * (1 if k > 0 else -1)
-            hills.append(h)
-            curve.append(k)
-    assert len(hills) == 256
-    assert all(h == 0 or k == 0 for h, k in zip(hills, curve))
-    assert max(map(abs, curve)) <= G.CURVE_K
-    assert all(abs(a - b) <= 1 for a, b in zip(curve, curve[1:] + curve[:1]))
-    emit(";; demo hill profile, (zcam / 32) mod 256 -> hill")
-    emit("hill_profile")
-    for i in range(0, 256, 16):
-        emit("    defb " + ",".join("#%02X" % (v & 0xFF) for v in hills[i:i + 16]))
-    emit("")
-    emit(";; demo curve levels, (zcam / 32) mod 256 -> level (signed); must")
-    emit(";; follow hill_profile")
-    emit("curve_profile")
-    for i in range(0, 256, 16):
-        emit("    defb " + ",".join("#%02X" % (v & 0xFF) for v in curve[i:i + 16]))
+    # The track (tools/course.py): segment lists the game works out a few
+    # entries ahead of the camera (course_fill).
+    import course as T
+    def seg_list(name, comment, segs, end):
+        emit(";; " + comment)
+        emit(name)
+        for i in range(0, len(segs), 8):
+            emit("    defb " + ",".join("%d,%d" % (n, v) for n, v in segs[i:i + 8]))
+        emit("    defb 0,%d" % end)
+    emit(";; the track: segments (n, v) - n entries of straight road (v = 0), a")
+    emit(";; curve to level v (|v| <= CURVE_K) or a hill of v (|v| >= 16); then")
+    emit(";; 0,0: round again, or 0,1: straight on for good (tools/course.py)")
+    seg_list("course_demo", "the demo's loop", T.DEMO, 0)
+    seg_list("course_race", "the race: %d stages of %d entries, then the finish"
+             % (len(T.STAGES), T.STAGE_LEN), T.race(), 1)
+    emit("course_hold")
+    emit("    defb 0,1")
+    emit("STAGES    EQU %d" % len(T.STAGES))
+    emit("STAGE_LEN EQU %d   ; depth units a stage" % (T.STAGE_LEN * T.ENTRY))
+    emit("HILL_RAMP EQU %d" % T.HILL_RAMP)
+    emit(";; a quarter of a sine, 0..255")
+    emit("sine_q")
+    for i in range(0, len(T.SINE_Q), 16):
+        emit("    defb " + ",".join(str(v) for v in T.SINE_Q[i:i + 16]))
+    emit(";; the pens a stage colours (#FF: no more), and each stage's colours")
+    emit(";; for them: %s" % ", ".join(T.STAGE_PENS))
+    emit("stage_pen_ids")
+    emit("    defb " + ",".join(str(G.PEN[p]) for p in T.STAGE_PENS) + ",#FF")
+    emit("STAGE_GROUND EQU %d   ; (the ground's: the border below the mountains)"
+         % T.STAGE_PENS.index(G.PENS[G.GROUND_PEN][0]))
+    emit("stage_hw")
+    for i, st in enumerate(T.STAGES):
+        emit("    defb " + ",".join("#%02X" % (0x40 + G.FIRMWARE[c][0]) for c in T.stage_fw(i))
+             + "   ; " + st["name"])
     emit("")
 
     lines += horizon(top)

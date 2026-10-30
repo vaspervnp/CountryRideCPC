@@ -232,6 +232,49 @@ def cmd_shots():
             print("wrote %s (hill %d, curve %d)" % (path, h, k))
         if len(taken) == len(want):
             break
+    del g
+    shots_stages(docs)
+
+
+def shots_stages(docs):
+    """A screenshot of each stage of the race: fire, faster held, the car
+    kept in its lane, the clock held at 99 so that it sees them all - each
+    6 s or more into its stage (STAGE n wiped by then), once a curve of
+    level 3 or more has held for 8 VSYNCs (the ALPS: a hill of 60 or
+    more)."""
+    g = Game()
+    c, S = g.c, g.sym
+    c.key_down('q')
+    held, key, start, last, steady, taken = None, None, None, None, 0, set()
+    for i in range(50 * 400):
+        c.run_frames(1)
+        if g.game_byte("GAME_MODE") != 2:
+            continue
+        g.game_poke("TIME_LEFT", 99)
+        stage = g.game_byte("STAGE")
+        if stage != start:
+            start, since = stage, i
+        x = _signed(g.game_byte("CAR_X"))
+        want = 0x08 if x < -7 else 0x09 if x > -5 else None
+        if want != key:
+            if key is not None:
+                c.key_up(key)
+            if want is not None:
+                c.key_down(want)
+            key = want
+        h, k = _signed(g.byte("HILL")), _signed(g.byte("ROAD_CURVE"))
+        steady = steady + 1 if k == last else 0
+        last = k
+        shape = h >= 60 if stage == 2 else abs(k) >= 3
+        if stage in taken or i - since < 300 or steady < 8 or not shape:
+            continue
+        path = os.path.join(docs, "screen-stage%d.png" % (stage + 1))
+        at_vsync(g)
+        g.shot(path)
+        taken.add(stage)
+        print("wrote %s (hill %d, curve %d)" % (path, h, k))
+        if len(taken) == 5:
+            break
 
 
 def _pens(data):

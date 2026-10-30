@@ -143,6 +143,14 @@ IM2_TABLE   EQU #0600       ; 257 bytes of IM2_VEC
 IM2_VEC     EQU #07         ; ... so the vector is #0707
 STACK_TOP   EQU #1000
 
+;; --- Bank 7, past the game's code (RAM_C1, RAM_C3) ---------------------------
+;; The track a few entries ahead of the camera, per entry (zcam / 32) mod 64:
+;; its curve level and its hill (course.asm). Then from CAR_HILL_ORG the
+;; car's views on hills (CARn.BIN).
+CURVE_RING  EQU #F000
+HILL_RING   EQU CURVE_RING+64
+RING_MASK   EQU 63
+
 ;; set the RAM configuration; destroys BC
 MACRO SET_RAM cfg
     ld bc,#7F00+{cfg}

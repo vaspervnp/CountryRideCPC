@@ -288,9 +288,10 @@ cache_want
     add hl,hl
     add hl,hl
     add hl,hl
-    ld e,h                              ; E = the track entry there
-    ld hl,curve_profile
-    add hl,de
+    ld a,h                              ; the track entry there
+    and RING_MASK
+    ld l,a
+    ld h,hi(CURVE_RING)
     ld a,(hl)
     ld hl,road_curve
     sub (hl)

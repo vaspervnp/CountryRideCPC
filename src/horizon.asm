@@ -210,14 +210,13 @@ hill_near_b
     add hl,hl
     add hl,hl
     add hl,hl                   ; H = zcam / 32
+    ld d,hi(HILL_RING)
 hill_near_one
-    ld e,h
-    ld d,0
-    push hl
-    ld hl,hill_profile
-    add hl,de
-    ld a,(hl)
-    pop hl
+    ld a,h
+    and RING_MASK
+    or lo(HILL_RING)
+    ld e,a
+    ld a,(de)
     or a
     ret nz
     inc h
