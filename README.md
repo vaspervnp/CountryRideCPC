@@ -469,7 +469,13 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   piece (each group moved a level, placed, and its share for the bushes
   worked out afresh: ~2 ms, up to ~3 ms). The road takes the level only
   once it is ready, and then all of it at once, copied into place like a
-  step (~5 ms): no picture shows the road at two levels. Until then no
+  step (~5 ms): no picture shows the road at two levels. A level dropped
+  (a hill holds it back while the player wants a step) is put back a
+  piece at a time, and wanted again before that is done, goes on from
+  where it is (`cache_drop`): until 2026-10-30 the staging sets were made
+  the cache's again first, which put the old level's templates back for
+  groups whose sums were at the new one, and the far lines showed them
+  for seconds. Until then no
   step goes - the level goes first; but once one has gone, a step the
   player wants is worked out before the next (`cp_turn`): on a winding
   road a level is nearly always wanted, and the road would not follow the

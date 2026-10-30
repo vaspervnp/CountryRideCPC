@@ -409,6 +409,13 @@ cj_go
 ;; it has moved put back (undo5; a level's a piece at a time, undok5, till
 ;; the flip is near), the staging sets no longer the cache's. NZ. RAM_C1
 ;; in and out. Destroys everything.
+;;
+;; A level part put back can go on (cache_pre: wanted again): the groups
+;; before pre_g are as prk5 left them, those it put back keep their a and
+;; staged templates (undok5 puts the a's back last), which prk5 then finds
+;; in place. The staging sets stay as they are for that till all are put
+;; back - made the cache's again (rs5, rs4), they would keep the old
+;; level's templates for groups whose a is the new one's.
 ;; ---------------------------------------------------------------------------
 cache_drop
     ld a,(pre_g)
@@ -421,8 +428,6 @@ cache_drop
     ld hl,undok5
     ld de,cr_ret
     call cache_both
-    xor a
-    ld (pre_sync),a
     ld a,(pre_k)
     or a
     jr z,cd_g
@@ -431,6 +436,7 @@ cache_drop
     ret nz
 cd_g
     xor a
+    ld (pre_sync),a
     ld (pre_g),a
 cd_s
     ld (pre_s),a
