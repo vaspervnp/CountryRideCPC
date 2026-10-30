@@ -798,7 +798,7 @@ car_lines_off
     sub SPIN_VIEW-1
     ld (car_vfull),a
 car_lines_seen
-    call car_jump               ; (jump.asm: in the air, all it needs)
+    call car_air                ; (in the air, all it needs: jump.asm)
     ret nz
     ld hl,drawn_off
     call buf_entry
@@ -830,12 +830,97 @@ car_lines_one
     ret
 
 ;; ---------------------------------------------------------------------------
+;; car_air - (car_lines) the car thrown up (jump.asm car_jump); while the
+;; jump is on, the shadow's lines whole too (car_shadow drew it in one buffer
+;; or the other). Keeps C; NZ: in the air.
+car_air
+    ld a,(jump_t)
+    ld hl,(drawn_up)
+    or l
+    or h
+    jp z,car_jump                       ; (its quick way: on the ground)
+    ld hl,(rp_slot)
+    ld de,4*(LAST_Y-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
+    add hl,de                           ; the car's last line's entry
+    ld e,4
+    ld b,SHADOW_H
+    call cjm_line
+    jp car_jump
+
+;; ---------------------------------------------------------------------------
+;; car_shadow - (car_draw) the car up in the air: its shadow on the road
+;; where it would stand, under its middle - SHADOW_H lines of black, SHADOW_W
+;; bytes less two a row up, the first and the last SHADOW_IN less; and as it
+;; comes down to the road (car_up back to 0), a thud. Destroys everything.
+;; ---------------------------------------------------------------------------
+SHADOW_W    EQU 26
+SHADOW_IN   EQU 6
+SHADOW_H    EQU 3
+
+car_shadow
+    ld a,(car_up)
+    ld hl,shadow_up
+    ld c,(hl)
+    ld (hl),a
+    or a
+    jr nz,cs_draw
+    or c
+    ret z                               ; (on the road)
+    ld a,lo(fx_bump)                    ; come down: a thud (sound.asm)
+    ld (fx_new),a
+    ret
+cs_draw
+    add a,a
+    cpl
+    add a,SHADOW_W+1
+    ld c,a                              ; C = its middle line's bytes
+    ld hl,CAR_Y+CAR_TOP-SHADOW_H
+    call line_addr
+    ld a,(car_off)                      ; the car's middle (car_draw's)
+    add a,a
+    add a,SCR_BYTES/2
+    ld e,a
+    ld d,0
+    add hl,de
+    ld a,c
+    sub SHADOW_IN
+    call cs_line
+    ld a,c
+    call cs_line
+    ld a,c
+    sub SHADOW_IN
+;; HL = a line's middle, A = its black bytes (even), around it; HL = the
+;; next line's middle (the same character row)
+cs_line
+    push hl
+    ld b,a
+    srl a
+    ld e,a
+    ld d,0
+    or a
+    sbc hl,de
+    xor a
+cs_byte
+    ld (hl),a
+    inc hl
+    djnz cs_byte
+    pop hl
+    ld de,#800
+    add hl,de
+    ret
+    ASSERT SOLID_BLACK == 0 && (CAR_Y+CAR_TOP-SHADOW_H) % 8 + SHADOW_H <= 8
+
+shadow_up   defb 0                      ; car_up the last picture
+
+;; ---------------------------------------------------------------------------
 ;; car_draw - the player's car into the selected buffer, over the road and
 ;; the bushes: its code (bushcode.asm, scene.py's art) pushes it the way a
 ;; bush's does. It is in the same place in every picture and drawn over
-;; whatever is there, so it is never taken away. Destroys everything.
+;; whatever is there, so it is never taken away; up in the air, its shadow
+;; first. Destroys everything.
 ;; ---------------------------------------------------------------------------
 car_draw
+    call car_shadow
     ld a,(car_vfull)                    ; how it is seen: car_views
     add a,a                             ; (gen/bush.asm)
     add a,a

@@ -45,6 +45,8 @@ blink_t     defb 0
 count_gear  defb 0              ; the count's digit, in the gear's place
 cp_z        defw 0              ; where the stage starts: the last checkpoint
 stage       defb 0              ; the stage (0 ..; STAGES: the race finished)
+stage_id    defb 0              ; ... which of tools/course.py's STAGES (from
+                                ; its fork on: the next one's, stage_fork)
 msg_next    defb 0              ; the message after this one (msg_t)
 cp_ext      defb EXT_FIRST      ; seconds the next checkpoint gives
 keys_was    defb 0              ; read_keys at the last picture (fire's press)
@@ -104,10 +106,7 @@ game_start
     call game_init              ; the car, the parts that never change in
                                 ; both buffers (init.asm: first, as the
                                 ; track's rings go over it)
-    call prop_init              ; (props.asm)
     call course_fill            ; the track's first entries (course.asm)
-    xor a                       ; the music's volumes 0 (sndgame.asm)
-    call snd_mute
     call cache_init             ; the cache sets, for the road in the middle
 
     ; a first picture into each buffer, and only then light the palette
@@ -1168,9 +1167,10 @@ rules_go
     ld (car_x),a
     ld hl,(crs_z)               ; the course from the next entry worked
     ld (cp_z),hl                ; out on: the first stage starts there
-    ld hl,course_race
-    ld de,props_race
+    ld hl,course_st0
+    ld de,props_st0
     xor a
+    ld (stage_id),a
     call course_set             ; (A = 0 after)
     inc a
     ld (msg_texts+MSG_STAGE_N),a
@@ -1243,7 +1243,8 @@ rules_tt_set
 rules_tt_done
 
     ; a checkpoint: the stage's end - the next stage, its colours; past the
-    ; last, the finish
+    ; last, the finish. FORK_Z before it, the fork's message: the stage on
+    ; the left and the one on the right (stage_fork)
     ld hl,(zcam)
     ld de,(cp_z)
     or a
@@ -1251,7 +1252,17 @@ rules_tt_done
     ld de,STAGE_LEN
     or a
     sbc hl,de
-    jp m,rules_clock            ; (signed: at GO it is ahead of the car)
+    jp p,rules_cp               ; (signed: at GO it is ahead of the car;
+    ld de,FORK_Z                ; DE = STAGE_LEN there)
+    add hl,de
+    jr nc,rules_clock
+    ld a,(stage)
+    cp STAGES-1
+    jr nc,rules_clock           ; (the last: the finish)
+    add a,MSG_FORK
+    ld (msg),a
+    jr rules_clock
+rules_cp
     ld hl,(cp_z)
     add hl,de
     ld (cp_z),hl
@@ -1260,6 +1271,7 @@ rules_tt_done
     ld a,(hl)
     cp STAGES
     jr z,rules_finish
+    ld a,(stage_id)
     call stage_colours
     ld a,(stage)
     inc a

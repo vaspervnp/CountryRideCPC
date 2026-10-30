@@ -91,39 +91,96 @@ def stage(segs):
     return segs + [F(STAGE_LEN - n)]
 
 
-# The race: five stages, each its colours (pen: firmware colour) - the sky,
-# the haze, the far mountains, the grass and the bushes.
+# The race: five stages, one after the other - the first, then at each
+# stage's end a fork: the stage on the left or the one on the right, as the
+# car is left or right of the road's middle when the track ahead is worked
+# out past the stage's end (course.asm course_entry, COURSE_AHEAD entries
+# before its checkpoint). Stage 2 l + 1 + side follows a stage of level l
+# (next_stage): the left ones are the first race's, the right ones others.
+# Each its colours (pen: firmware colour) - the sky, the haze, the far
+# mountains, the grass and the bushes - and its trees; its name for the
+# fork's message.
 STAGES = [
-    dict(name="COUNTRYSIDE", pens={},
+    dict(name="COUNTRYSIDE", pens={}, trees=["dead"],
          segs=stage([F(12), C(24, 3), F(12), H(28, 70), F(6), C(30, -4),
                      F(4), C(24, 4), F(12), H(32, -60), F(6), C(32, 5),
                      F(12), H(24, 80), F(6), C(28, -5), F(12), H(30, -70),
                      F(6), C(30, 3)])),
     dict(name="DESERT",                         # long straights, big crests
          pens=dict(HAZE=25, GRASS_A=25, GRASS_B=24, BUSH=12, MAUVE=3),
+         trees=["palm", "dead", "stump"],
          segs=stage([F(30), H(40, 95), F(20), C(30, 7), F(24), H(36, -90),
                      F(16), C(26, -7), F(30), H(40, 95), F(20), C(30, 6),
                      F(16)])),
-    dict(name="ALPS",                           # hill after hill
+    dict(name="RIVIERA",                        # the coast: sweeping, gentle
+         pens=dict(HAZE=20, GRASS_A=22, GRASS_B=19, BUSH=9, MAUVE=2),
+         trees=["palm"],
+         segs=stage([F(12), C(40, 4), F(10), C(36, -5), F(12), H(28, 60),
+                     F(8), C(44, 5), F(8), C(30, -3), F(12), H(32, -70),
+                     F(8), C(40, -6), F(10), C(36, 4), F(10)])),
+    dict(name="SUMMIT",                         # hill after hill
          pens=dict(HAZE=26, GRASS_A=23, GRASS_B=26, BUSH=9, MAUVE=11),
+         trees=["dead"],
          segs=stage([F(8), H(30, 90), F(4), H(28, -90), F(6), C(24, -5),
                      F(12), H(26, 95), F(4), H(32, -80), F(6), C(30, 6),
                      F(12), H(24, 85), F(4), H(30, -90), F(6), C(22, -6),
                      F(12), H(28, 90)])),
+    dict(name="MESA",                           # canyons: deep dips, sharp
+         pens=dict(HAZE=16, GRASS_A=15, GRASS_B=12, BUSH=3, MAUVE=3),
+         trees=["dead", "stump"],
+         segs=stage([F(14), H(36, -95), F(10), H(30, 85), F(12), C(26, 7),
+                     F(8), C(26, -6), F(14), H(40, -90), F(10), C(30, 6),
+                     F(12), H(28, 95), F(6), H(26, -80), F(12), C(24, -7),
+                     F(12)])),
     dict(name="SUNSET",                         # long sweeping curves
          pens=dict(BLUE=4, SKY=16, PASTEL=15, HAZE=25, GRASS_A=9, GRASS_B=19,
                    BUSH=0, MAUVE=7),
+         trees=["palm", "stump"],
          segs=stage([F(8), C(60, 5), F(6), C(56, -6), F(12), H(32, 70),
                      F(6), C(48, 6), F(6), C(44, -4), F(12), H(30, -80),
                      F(6), C(40, 7)])),
+    dict(name="AUTUMN",                         # winding, over hills
+         pens=dict(HAZE=25, GRASS_A=12, GRASS_B=9, BUSH=15, MAUVE=7),
+         trees=["dead", "stump"],
+         segs=stage([F(10), C(28, 5), F(6), C(28, -5), F(12), H(30, 75),
+                     F(6), C(24, 6), C(24, -6), F(12), H(26, -85), F(8),
+                     C(32, 4), F(6), C(26, -7), F(12), H(30, 80), F(8),
+                     C(28, 5)])),
     dict(name="NIGHT",                          # winding
          pens=dict(BLUE=1, SKY=1, PASTEL=2, HAZE=7, GRASS_A=9, GRASS_B=1,
                    BUSH=0, MAUVE=4),
+         trees=["palm"],
          segs=stage([F(8), C(22, 6), C(22, -6), F(4), C(24, 7), F(12),
                      H(28, 80), F(4), C(20, -7), C(20, 7), F(12), H(30, -90),
                      F(4), C(24, -6), C(24, 6), F(12), H(26, 95), F(4),
                      C(28, -7)])),
+    dict(name="STORM",                          # grey skies, hard curves
+         pens=dict(BLUE=1, SKY=13, PASTEL=14, HAZE=13, GRASS_A=9, GRASS_B=13,
+                   BUSH=0, MAUVE=1),
+         trees=["dead"],
+         segs=stage([F(20), H(36, 90), F(12), C(30, -7), F(10), C(30, 7),
+                     F(14), H(32, -95), F(12), H(28, 70), F(6), C(26, -6),
+                     F(8), C(22, 6), F(14), H(30, -80), F(6), C(30, 5),
+                     F(10)])),
 ]
+LEVELS = 5                      # stages a race
+FORK_AHEAD = 64                 # entries before a stage's end its fork's
+                                # message is shown from (game.asm)
+FIRST_ROUTE = (0, 1, 3, 5, 7)   # the left at every fork
+
+
+def next_stage(level, right):
+    """The stage after one of level `level` (0..LEVELS-2): its fork's left
+    (right = 0) or right one."""
+    return 2 * level + 1 + right
+
+
+def routes():
+    out = [(0,)]
+    for level in range(LEVELS - 1):
+        out = [r + (next_stage(level, side),) for r in out for side in (0, 1)]
+    return out
+
 
 # The props beside the road (tools/mkprops.py has their sprites, src/props.asm
 # stands and draws them): a curve sign at the start of every curve of level
@@ -140,8 +197,6 @@ PROP_ROOM = dict(palm=1, stump=1, dead=1, limit=1, curve=1, curve_r=1)
                                 # bushes in reach at most while one is in
                                 # sight (src/props.asm: for the time)
 SIGN_LAT, TREE_LATS = 1, (1, 2)  # bush lateral classes (cpcgfx.BUSH_LATS)
-STAGE_TREES = [["dead"], ["palm", "dead", "stump"], ["dead"], ["palm", "stump"],
-               ["palm"]]
 TREE_EVERY = 1200               # depth units between trees, about - on a
 TREE_SEG = 8                    # segment this long or longer
 
@@ -180,16 +235,18 @@ def props_want(segs, trees=False, seed=1, z0=0):
     return [(z0 + z, p, k, sd, lt, z0 + lo, z0 + hi) for z, p, k, sd, lt, lo, hi in want]
 
 
-def props_kept(want, trees, loop=0):
+def props_kept(want, trees, loop=0, zmax=None):
     """Those of the props wanted kept, the curve signs first, then the limit
     signs, then the trees - each where it is wanted or, a tree, the nearest
     to it that it can be: none nearer another than PROP_GAP (round the loop
-    too). The trees kept are the kinds in `trees` by turns (a function of
-    the depth: a stage's). [(z, kind, side, lat)], nearest first."""
+    too), a stage's (zmax) none nearer its ends than half that. The trees
+    kept are the kinds in `trees` by turns (a function of the depth).
+    [(z, kind, side, lat)], nearest first."""
     out = []
+    zmin = 0 if zmax is None else PROP_GAP // 2
 
     def free(z):
-        return (z >= 0 and (not loop or z < loop)
+        return (z >= zmin and (not loop or z < loop) and (zmax is None or z <= zmax)
                 and all(abs(z - z2) >= PROP_GAP and (not loop or loop - abs(z - z2) >= PROP_GAP)
                         for z2, _, _, _ in out))
     for z, pri, kind, side, lat, lo, hi in sorted(want, key=lambda w: (w[1], w[0])):
@@ -208,15 +265,22 @@ def props_kept(want, trees, loop=0):
 
 
 def demo_props():
-    return props_kept(props_want(DEMO, True), lambda z: STAGE_TREES[0],
+    return props_kept(props_want(DEMO, True), lambda z: STAGES[0]["trees"],
                       len(entries(DEMO)) * ENTRY)
 
 
-def race_props():
-    want = []
-    for i, st in enumerate(STAGES):
-        want += props_want(st["segs"], bool(STAGE_TREES[i]), i + 1, i * STAGE_LEN * ENTRY)
-    return props_kept(want, lambda z: STAGE_TREES[min(z // (STAGE_LEN * ENTRY), len(STAGES) - 1)])
+def stage_props(i):
+    """Stage i's props, from its first entry: whatever stage comes before
+    or after it, never two nearer than PROP_GAP."""
+    st = STAGES[i]
+    return props_kept(props_want(st["segs"], True, i + 1), lambda z: st["trees"],
+                      zmax=STAGE_LEN * ENTRY - PROP_GAP // 2)
+
+
+def race_props(route=FIRST_ROUTE):
+    """A race's props along `route`, from its first stage's first entry."""
+    return [(z + k * STAGE_LEN * ENTRY, kind, side, lat)
+            for k, i in enumerate(route) for z, kind, side, lat in stage_props(i)]
 
 
 def prop_list(props, loop=0):
@@ -252,8 +316,20 @@ CURVE_HILL = 12                 # straight entries at least from a curve to a
                                 # late (~39.9 ms with 6)
 
 
-def race():
-    return [s for st in STAGES for s in st["segs"]] + FINISH
+def race(route=FIRST_ROUTE):
+    """A race's segments along `route` (its stages), then the finish."""
+    return [s for i in route for s in STAGES[i]["segs"]] + FINISH
+
+
+def fork_text(level, width):
+    """The message at the end of a stage of level `level`: the next stage on
+    the left, the left, and the one on the right, the right - `width` long."""
+    left, right = (STAGES[next_stage(level, side)]["name"] for side in (0, 1))
+    return left + " " * (width - len(left) - len(right)) + right
+
+
+FORK_W = max(len(STAGES[next_stage(l, 0)]["name"]) + len(STAGES[next_stage(l, 1)]["name"]) + 2
+             for l in range(LEVELS - 1))
 
 
 def stage_fw(i):
@@ -269,22 +345,25 @@ def check():
         assert all(abs(a[1] - b[1]) <= 1 for a, b in zip(es, es[1:]))
         assert all(n > 0 for n, v in segs)
     assert len(entries(DEMO)) == 256
-    flat = None                         # (straight since the last curve)
-    for n, v in race():
-        if v == 0:
-            flat = None if flat is None else flat + n
-        elif abs(v) <= G.CURVE_K:
-            flat = 0
-        else:
-            assert flat is None or flat >= CURVE_HILL, (n, v, flat)
-            flat = None
+    for route in routes():
+        flat = None                     # (straight since the last curve)
+        for n, v in race(route):
+            if v == 0:
+                flat = None if flat is None else flat + n
+            elif abs(v) <= G.CURVE_K:
+                flat = 0
+            else:
+                assert flat is None or flat >= CURVE_HILL, (route, n, v, flat)
+                flat = None
+    assert len(STAGES) == 2 * LEVELS - 1
     for st in STAGES:
         assert len(entries(st["segs"])) == STAGE_LEN
         assert all(p in STAGE_PENS for p in st["pens"])
 
 
 check()
-for _props, _loop in ((demo_props(), len(entries(DEMO)) * ENTRY), (race_props(), 0)):
+for _props, _loop in ([(demo_props(), len(entries(DEMO)) * ENTRY)]
+                      + [(stage_props(i), 0) for i in range(len(STAGES))]):
     assert all(b[0] - a[0] >= PROP_GAP for a, b in zip(_props, _props[1:]))
     if _loop:
         assert _props[0][0] + _loop - _props[-1][0] >= PROP_GAP
@@ -297,9 +376,13 @@ if __name__ == "__main__":
         print("%-12s %3d segments, hills %d entries, curves %d" % (
             st["name"], len(st["segs"]), sum(1 for h, k in es if h),
             sum(1 for h, k in es if k)))
-    print("race: %d segments, %d bytes" % (len(race()), 2 * len(race()) + 2))
-    for name, props in (("demo", demo_props()), ("race", race_props())):
+    segs = sum(len(st["segs"]) for st in STAGES) + len(FINISH)
+    print("stages: %d segments, %d bytes" % (segs, 2 * segs + 2 * len(STAGES) + 2))
+    for name, props in [("demo", demo_props())] + [(st["name"], stage_props(i))
+                                                   for i, st in enumerate(STAGES)]:
         kinds = {}
         for z, kind, side, lat in props:
             kinds[kind] = kinds.get(kind, 0) + 1
         print("%s props: %d (%s), %d bytes" % (name, len(props), kinds, len(prop_list(props, 8192 if name == "demo" else 0))))
+    for l in range(LEVELS - 1):
+        print("fork %d: [%s]" % (l, fork_text(l, FORK_W)))

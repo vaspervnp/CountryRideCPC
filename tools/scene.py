@@ -156,9 +156,13 @@ HUD = dict(
 # what the game says (game.asm's MSG_ constants, in this order). STAGE's
 # digit is the game's, and so is the last: one of the best times, its place
 # and the time (race.asm).
+import course as _course  # noqa: E402
+
 MESSAGES = ["", "PRESS FIRE", "GET READY", "GO!", "EXTENDED TIME", "TIME UP",
             "GAME OVER", "STAGE 1", "FINISH", "PAUSE", "TOP TIMES", "1 0'00\"00"]
 MSG_ENTRY = len(MESSAGES) - 1
+MSG_FORK = len(MESSAGES)            # a stage's fork's: its stages left and right
+MESSAGES += [_course.fork_text(level, _course.FORK_W) for level in range(_course.LEVELS - 1)]
 MSG_W = max(len(m) for m in MESSAGES)
 MSG_X = (SCR_W - 6 * MSG_W) // 2 // 2 * 2
 # the glyphs: the digits, then a space and the letters the messages use
@@ -687,7 +691,6 @@ def draw_bushes(lines, y0, hill, zcam, curve, x=0, only=None):
 # the row has (prop_size_of), cut by the screen's sides; before the bushes.
 # ---------------------------------------------------------------------------
 from propsart import PROPS_ART, LETTERS as PROP_LETTERS  # noqa: E402
-import course as _course  # noqa: E402
 
 
 def prop_sprite(kind, size):
@@ -975,11 +978,20 @@ def car_runs(view=0):
     return out
 
 
+SHADOW_W, SHADOW_IN, SHADOW_H = 26, 6, 3     # (bush.asm car_shadow, bytes)
+
+
 def draw_car(lines, y0, view=0, off=0, up=0):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
     as car_view `view` says, `off` pairs right of the middle (the game's
     car_off), `up` character rows higher (thrown up in a crash: jump.asm's
-    car_up)."""
+    car_up) - its shadow on the road under it then (bush.asm car_shadow)."""
+    if up:
+        w = SHADOW_W - 2 * up
+        mid = SCR_W // 2 + 4 * off
+        for k, ww in enumerate((w - SHADOW_IN, w, w - SHADOW_IN)):
+            for x in range(mid - ww, mid + ww):
+                lines[CAR_Y + CAR_H - SHADOW_H + k - y0][x] = PEN["BLACK"]
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":

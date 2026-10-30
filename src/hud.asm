@@ -315,11 +315,11 @@ hud_msg
     ld a,(hv_msg)               ; DE = the message's glyphs (MSG_W a message)
     ld l,a
     add a,a
-    add a,l
     add a,a
     add a,a
-    add a,l
-    ASSERT MSG_W == 13
+    add a,a
+    sub l
+    ASSERT MSG_W == 15
     ld l,a
     ld h,0
     ld de,msg_texts

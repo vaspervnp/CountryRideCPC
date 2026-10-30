@@ -177,6 +177,7 @@ SOUND_BLOB  EQU #98C0                   ; buffer 0's lines 179 on in its fourth
     ORG SOUND_BLOB
     defw CAR_MAGIC
     INCLUDE "sound.asm"
+    INCLUDE "labels.asm"
     defw #FFFF
 sound_end
     ASSERT sound_end <= FRAG8+3*#800       ; (fragment 11's place)

@@ -5,10 +5,12 @@
 ;; and its curve level under the camera, and a few entries on (hill_near,
 ;; cache_want). Those come from rings of 64 entries, HILL_RING and
 ;; CURVE_RING, which course_fill keeps worked out COURSE_AHEAD entries ahead
-;; of the camera from a list of segments (gfx.asm: course_demo, the race's
-;; course_race; tools/course.py has the model, to the bit): so the track is
-;; as long as its list, and another list can follow from any entry on -
-;; the road first brought to the flat (course_set).
+;; of the camera from a list of segments (gfx.asm: course_demo, each of the
+;; race's stages' course_stN; tools/course.py has the model, to the bit):
+;; so the track is as long as its list, and another list can follow from
+;; any entry on - the road first brought to the flat (course_set). A
+;; stage's list ends at a fork: the next stage's follows, the one on the
+;; side of the road the car is on then (stage_fork).
 ;; ===========================================================================
 
 COURSE_AHEAD EQU 8              ; entries kept worked out past the camera's
@@ -132,7 +134,10 @@ ce_next                                 ; the next segment
     ld b,a
     ret z
     ld hl,(crs_start)                   ; 0,0: round again
-    ld (crs_ptr),hl
+    dec c
+    call z,stage_fork                   ; 0,2: the next stage's (its props
+    ld (crs_ptr),hl                     ; from its first entry on)
+    ld (crs_start),hl
     jr ce_next
 ce_load
     inc hl
@@ -228,6 +233,46 @@ ce_hill_p
     jr ce_hill_p
 ce_hill_pq
     ld (crs_q),a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; stage_fork - (course_entry, at a stage's list's end) the next stage, from
+;; the stage's fork: past one of level l (stage), the left one - 2 l + 1 -
+;; with the car left of the road's middle or on it, else the right one
+;; (stage_id: its colours at the checkpoint); past the last, the finish.
+;; HL = its segments; its props pending (as course_set has them).
+;; ---------------------------------------------------------------------------
+stage_fork
+    ld a,(stage)
+    cp STAGES-1
+    ld hl,course_finish
+    ld de,props_none
+    jr nc,sf_props
+    add a,a
+    inc a
+    ld e,a
+    ld a,(car_x)                        ; (where the road is from the car:
+    rlca                                ; less than 0, the car on its right)
+    ld a,e
+    adc a,0
+    ld (stage_id),a
+    add a,a
+    add a,a
+    ld l,a
+    ld h,0
+    ld de,stage_lists
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    ex de,hl                            ; HL = its segments, DE = its props
+sf_props
+    ld (prp_pend),de
     ret
 
 ;; ---------------------------------------------------------------------------

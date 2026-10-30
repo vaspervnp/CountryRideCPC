@@ -8,9 +8,9 @@ A four-lane road runs over crests, dips and curves - never a curve on a
 hill - with bushes of different sizes beside it at random intervals, now
 and then a palm, a dead tree or a road sign, and cars on it, at 25 frames
 a second. A demo drives a loop of it until you
-press fire; then you race the clock over five stages, each in its own
-colours (The race, below), to music, the engine's note rising with the
-speed. You steer: the
+press fire; then you race the clock over five stages - at each one's end
+the road forks, nine stages in all - each in its own colours (The race,
+below), to music, the engine's note rising with the speed. You steer: the
 road moves under the car, and a curve carries the car out of it unless
 you steer against it.
 
@@ -124,26 +124,36 @@ the left, the count goes 3, 2, 1 in the gear's place, and GO! - the player
 drives, from a standstill. TIME starts at 70 seconds and counts down; TOTAL
 TIME counts up.
 
-The course is five stages of 12288 depth units each (about 40-50 seconds),
+A race is five stages of 12288 depth units each (about 40-50 seconds),
 each with its own track and colours - the sky near the horizon, the haze,
-the far mountains, the grass and the bushes:
+the far mountains, the grass and the bushes. The first is always the
+countryside; at the end of each of the others' predecessors the road
+forks, as in the arcade: the HUD's message line shows the two stages that
+can come next, the one on the left on its left and the other on its right
+(`DESERT  RIVIERA`), and the car takes the one on the side of the road
+it is on - left of the middle or on it, or right of it - as the track
+past the checkpoint is worked out, 8 entries (0.7 s) before it. Sixteen
+routes, nine stages:
 
-| Stage | Track | Colours |
+| Stage | Left | Right |
 |---|---|---|
-| 1 COUNTRYSIDE | curves and hills by turns | green and lime |
-| 2 DESERT | long straights, big crests, sharp curves | sand, dark red rock |
-| 3 ALPS | hill after hill | snow and ice |
-| 4 SUNSET | long sweeping curves | an orange and pink sky, dark grass |
-| 5 NIGHT | winding | a dark sky, dark grass and navy |
+| 1 | COUNTRYSIDE: curves and hills by turns; green and lime | |
+| 2 | DESERT: long straights, big crests, sharp curves; sand, dark red rock | RIVIERA: the coast, sweeping and gentle; sea green, a cyan haze |
+| 3 | SUMMIT: hill after hill; snow and ice | MESA: canyons, deep dips, sharp curves; orange rock, a pink haze |
+| 4 | SUNSET: long sweeping curves; an orange and pink sky, dark grass | AUTUMN: winding over hills; lime and olive, orange bushes |
+| 5 | NIGHT: winding; a dark sky, dark grass and navy | STORM: grey skies, hard curves |
 
-| ![COUNTRYSIDE](docs/screen-stage1.png) | ![DESERT](docs/screen-stage2.png) | ![ALPS](docs/screen-stage3.png) |
+| ![COUNTRYSIDE](docs/screen-countryside.png) | ![DESERT](docs/screen-desert.png) | ![RIVIERA](docs/screen-riviera.png) |
 |---|---|---|
-| ![SUNSET](docs/screen-stage4.png) | ![NIGHT](docs/screen-stage5.png) | |
+| ![SUMMIT](docs/screen-summit.png) | ![MESA](docs/screen-mesa.png) | ![SUNSET](docs/screen-sunset.png) |
+| ![AUTUMN](docs/screen-autumn.png) | ![NIGHT](docs/screen-night.png) | ![STORM](docs/screen-storm.png) |
 
 Beside the road, few and far between, stand each stage's trees - dead
-trees in the countryside and the Alps; tall thin palms, short thick ones
-and dead trees in the desert; both palms at sunset; tall palms at night -
-and before every sharp curve its signs (Props, below).
+trees in the countryside, on the summit and in the storm; tall thin
+palms, short thick ones and dead trees in the desert; palms on the
+riviera; dead trees and stumps in the mesa and the autumn; both palms at
+sunset; tall palms at night - and before every sharp curve its signs
+(Props, below).
 
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
 50 more seconds (EXTENDED TIME), 2 fewer at each next one, down to 36, and
@@ -160,8 +170,8 @@ in the ROSSO GT, 30 in the BERLINETTA and 10 in the TOURING, and runs out
 of time in the last stage in the WEDGE TURBO.
 
 The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
-EXTENDED TIME, TIME UP, FINISH, GAME OVER, PAUSE - are the HUD's last line
-(The HUD, below).
+a fork's two stages, EXTENDED TIME, TIME UP, FINISH, GAME OVER, PAUSE - are
+the HUD's last line (The HUD, below).
 
 ESC holds the race - or the count before it, or the braking after it -
 where it is: the picture stays, the sound stops, PAUSE shows; ESC again
@@ -380,6 +390,9 @@ twelve 96-byte pieces - buffer 0's line 174 has the crash's jump - in
 pages 0 and 2: whatever the RAM configuration; a bush's top is
 on line 183 at the highest, a prop's on 179, both checked by
 `tools/mkbush.py`); what the main loop runs is in `RACE.BIN` (below).
+`SOUND.BIN` has the HUD's words too, as masks with the code that draws
+them (`src/labels.asm`), put in buffer 1's road lines 194-258, which
+nothing draws until the first picture.
 `boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
 pause and the best times, and the start of a race, which bank 7 had no
 room left for: `src/race.asm`) is records too, loaded at `#A0C0` and put
@@ -452,11 +465,15 @@ is near, the next curve level to work out). Those come from two rings of
 entries ahead of the camera from a list of segments: n entries straight,
 a curve to level v and back, one level an entry, or a hill of height v,
 a sine from a quarter-sine table. Two bytes a segment: the demo's loop is
-16 of them (`course_demo`), the race's five stages 92 (`course_race`).
-Any list can follow from the next entry on, after the road is first
-brought to the flat - a curve level and 12 of hill an entry - so the race
-starts on a straight wherever the demo was, and the demo takes its loop up
-again wherever the race ended. `tools/course.py` has the lists and the
+16 of them (`course_demo`), the race's nine stages 14 to 21 each
+(`course_st0`..). Any list can follow from the next entry on, after the
+road is first brought to the flat - a curve level and 12 of hill an entry
+- so the race starts on a straight wherever the demo was, and the demo
+takes its loop up again wherever the race ended. A stage's list ends at
+its fork: the next stage's list follows at once (each starts and ends on
+a straight), the left one or the right one as the car is then
+(`stage_fork`), with its props (`stage_lists`); past the fifth, the
+finish's straight. `tools/course.py` has the lists and the
 model of all this, to the bit, and makes sure the road never bends on a
 hill - and, in the race, that a hill comes 12 entries or more after a
 curve: the road can still be a level or two into the curve there, and a
@@ -673,10 +690,12 @@ right, a speed limit. The demo has dead trees and the signs.
   first, then the trees, about 1200 depth units apart, on any segment of 8
   entries or more (a straight, a hill, a curve's outside), each as near
   where it is wanted as it can be - but none nearer another than 760, so
-  that one is gone by before the next is 800 ahead. The list
-  (`src/gen/gfx.asm`) is two bytes a prop: its depth from the last in 16
-  units, and its kind, side and lateral class (a bush's). `course_set`
-  gives a course its list, which starts with the course's first entry.
+  that one is gone by before the next is 800 ahead - a stage's none
+  nearer its ends than 380, whichever stage comes before or after it. The
+  list (`src/gen/gfx.asm`, one a stage) is two bytes a prop: its depth from
+  the last in 16 units, and its kind, side and lateral class (a bush's).
+  `course_set` gives a course its list, which starts with the course's
+  first entry; a fork the next stage's.
 - **In sight.** The nearest that has not gone by, from 800 depth units
   ahead (`src/props.asm`). As one comes nearest, its kind's eight sprites
   go into the bush sprite records 8-15, and a table gives each row the
@@ -790,14 +809,17 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   or faster the crash throws the car up as it spins, a character row - 8
   lines - at a time, as its views' code is made for its rows (`car_draw`
   starts it higher: `car_raise`): up to 6 rows, 48 lines, in 6 pictures,
-  held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`).
-  Never higher than the road's top in the picture (`car_jump`): over a
-  crest the ground behind it is not drawn again. In each buffer the car's
+  held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
+  its shadow on the road under it, three black lines, smaller the higher
+  it is, and a thud as it comes down (`car_shadow`). Never higher than the
+  road's top in the picture (`car_jump`): over a crest the ground behind
+  it is not drawn again. In each buffer the car's
   lines where it was shown last and where it is now are drawn whole - the
-  grass's middle line's own template too (`cj_mark`) - and while it is up
-  the far lines' road is drawn even where it is as it was (`jump_frame`,
-  as `traffic_pre` has it for a car up there), so nothing of it stays
-  behind (`src/jump.asm`).
+  grass's middle line's own template too (`cj_mark`), the shadow's lines
+  while the jump is on (`car_air`) - and while it is up the far lines'
+  road is drawn even where it is as it was (`jump_frame`, as `traffic_pre`
+  has it for a car up there), so nothing of it stays behind
+  (`src/jump.asm`).
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -814,7 +836,11 @@ too, for a picture that has the time; the rest waits for the buffer's next
 picture. Text and gauges sit on
 the HUD's plain background, so drawing is plain copying, never masking.
 The big digits (the speed, the countdown) are kept at half their height,
-each of their lines drawn twice.
+each of their lines drawn twice. The words - TIME, SPEED, TOTAL TIME,
+CHECKPOINT - are drawn once, as the game starts, from their letters'
+masks: the pen where a mask is set, the shadow a pixel right and a line
+down, the ground elsewhere (`src/labels.asm`: 156 bytes of masks for 604
+of pixels, in `SOUND.BIN`, put where the first picture's road goes).
 
 The last line holds the game's message: 13 cells of the small font's
 glyphs (the digits and the 19 letters the messages use, 24 bytes each),
@@ -954,6 +980,14 @@ hills (its rows up cut to 4 or 5 over a crest), every picture the same as
 `scene.py` draws it; 33.7-34.3 ms on average in the air, 38.4 ms at
 worst, none past the flip. Races over the course 37.9-38.6 ms at worst,
 none past the flip.
+
+With the forks and the car's shadow (2026-10-31): races along five of the
+sixteen routes with the autopilot, and two zigzagging to the fourth stage
+- every stage on two or more - 37.7-38.8 ms at worst, none past the
+flip, the track's rings
+and the props as `tools/course.py` has them for the route taken; crashes
+at the top speed 34.5 ms on average in the air, 38.0 ms at worst; the
+demo, the player not steering and side to side 37.6 / 37.7 / 37.5 ms.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -1121,6 +1155,7 @@ src/            the game
   init.asm      what runs once as the game starts (over the track's rings)
   sound.asm     the sound: the interrupt's player - music, engine,
                 effects (SOUND.BIN)
+  labels.asm    the HUD's words, drawn once from masks (SOUND.BIN)
   sndgame.asm   ... what the game tells it: the engine's note, the
                 effects, the music on or off (RACE.BIN)
   race.asm      the pause, the best times, the start of a race (RACE.BIN)

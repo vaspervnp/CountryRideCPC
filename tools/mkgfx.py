@@ -3,6 +3,7 @@
 
     src/gen/consts.asm   palette, pen bytes, screen and road geometry
     src/gen/gfx.asm      HUD glyphs, labels, gauge colours, sky, mountains
+    src/gen/labels.asm   the HUD's words as masks (src/labels.asm)
 
 Both are committed, so a build needs only rasm; python3 (with Pillow for the
 mock-up only) is needed when the art changes.
@@ -122,11 +123,12 @@ def gfx():
     emit("MSG_X EQU %d" % (S.MSG_X // 2))
     emit("MSG_Y EQU %d" % S.HUD["message"][1])
     emit("MSG_SPACE EQU %d" % S.MSG_GLYPHS.index(" "))
-    for n, m in enumerate(S.MESSAGES):
+    for n, m in enumerate(S.MESSAGES[:S.MSG_FORK]):
         name = "MSG_" + (m.replace(" ", "_").strip("!_0123456789") if m else "NONE")
         if n == S.MSG_ENTRY:
             name = "MSG_ENTRY"
         emit("%-17s EQU %d" % (name, n))
+    emit("MSG_FORK          EQU %d   ; + a stage's level: its fork's" % S.MSG_FORK)
     stage = S.MESSAGES.index("STAGE 1")
     emit("MSG_STAGE_N       EQU %d   ; (msg_texts) STAGE's digit, the game's"
          % (S.MSG_W * stage + S.msg_cells(stage).index(1)))
@@ -143,11 +145,9 @@ def gfx():
         emit("    defb " + ",".join(str(v) for v in S.msg_cells(n)) + "   ; " + S.MESSAGES[n])
     emit("")
 
-    # labels: width in bytes, 8 lines
+    # labels: width in bytes, 8 lines (the HUD's words: labels(), as masks)
     emit(";; labels: defb width in bytes, then 8 lines of bytes")
-    labels = [("lbl_time", "TIME", S.LABEL_PEN), ("lbl_speed", "SPEED", S.LABEL_PEN),
-              ("lbl_total", "TOTAL TIME", S.LABEL_PEN), ("lbl_cp", "CHECKPOINT", S.LABEL_PEN),
-              ("lbl_apos", "'", S.VALUE_PEN), ("lbl_quote", '"', S.VALUE_PEN)]
+    labels = [("lbl_apos", "'", S.VALUE_PEN), ("lbl_quote", '"', S.VALUE_PEN)]
     widths = {}
     for name, text, pen in labels:
         rows = pad_even(S.small_text(text, pen))
@@ -226,24 +226,35 @@ def gfx():
         emit("    defb 0,%d" % end)
     emit(";; the track: segments (n, v) - n entries of straight road (v = 0), a")
     emit(";; curve to level v (|v| <= CURVE_K) or a hill of v (|v| >= 16); then")
-    emit(";; 0,0: round again, or 0,1: straight on for good (tools/course.py)")
+    emit(";; 0,0: round again, 0,1: straight on for good, or 0,2: a stage's end,")
+    emit(";; the next as the fork goes (tools/course.py)")
     seg_list("course_demo", "the demo's loop", T.DEMO, 0)
-    seg_list("course_race", "the race: %d stages of %d entries, then the finish"
-             % (len(T.STAGES), T.STAGE_LEN), T.race(), 1)
-    emit("course_hold")
-    emit("    defb 0,1")
+    for i, st in enumerate(T.STAGES):
+        seg_list("course_st%d" % i, "stage %d, %s" % (i, st["name"]), st["segs"], 2)
+    seg_list("course_finish", "past the last checkpoint", T.FINISH, 1)
+    emit("course_hold EQU course_finish+%d   ; (straight on: its end)" % (2 * len(T.FINISH)))
     emit(";; the props along each (src/props.asm): per prop the depth from the last")
     emit(";; (the first: from the course's start) in 16 units, then its kind |")
     emit(";; lateral class << 4 | #80 on the left; at the end the depth to the")
     emit(";; course's end and #FF (round again), or 0,#FE (tools/course.py prop_list)")
-    for name, lst in (("props_demo", T.prop_list(T.demo_props(), len(T.entries(T.DEMO)) * T.ENTRY)),
-                      ("props_race", T.prop_list(T.race_props())),
-                      ("props_none", [0, 0xFE])):
+    for name, lst in ([("props_demo", T.prop_list(T.demo_props(), len(T.entries(T.DEMO)) * T.ENTRY))]
+                      + [("props_st%d" % i, T.prop_list(T.stage_props(i)))
+                         for i in range(len(T.STAGES))]):
         emit(name)
         for i in range(0, len(lst), 16):
             emit("    defb " + ",".join("#%02X" % v for v in lst[i:i + 16]))
-    emit("STAGES    EQU %d" % len(T.STAGES))
+    assert lst[-2:] == [0, 0xFE]
+    emit("props_none EQU $-2   ; (none: the last list's end)")
+    emit(";; per stage: its segments and its props (stage_fork)")
+    emit("stage_lists")
+    for i in range(len(T.STAGES)):
+        emit("    defw course_st%d,props_st%d" % (i, i))
+    for level in range(T.LEVELS - 1):
+        assert [T.next_stage(level, side) for side in (0, 1)] == [2 * level + 1, 2 * level + 2]
+    emit("STAGES    EQU %d   ; a race's (its levels: 2 l + 1 + side follows level l's)"
+         % T.LEVELS)
     emit("STAGE_LEN EQU %d   ; depth units a stage" % (T.STAGE_LEN * T.ENTRY))
+    emit("FORK_Z    EQU %d   ; ... from its end on, its fork's message" % (T.FORK_AHEAD * T.ENTRY))
     emit("HILL_RAMP EQU %d" % T.HILL_RAMP)
     emit(";; a quarter of a sine, 0..255")
     emit("sine_q")
@@ -303,13 +314,68 @@ def horizon(top):
     return lines
 
 
+LABELS = [("TIME", "TIME_LBL"), ("SPEED", "SPEED_LBL"), ("TOTAL TIME", "TOTAL_LBL"),
+          ("CHECKPOINT", "CP_LBL")]
+
+
+def label_mask(text):
+    """A label's mask, as scene.small_text lays its letters out before the
+    shadow: rows of '#' and '.'."""
+    rows = [""] * 7
+    for ch in text:
+        g = S.SMALL[S.SMALL_NAMES.get(ch, ch)]
+        for j in range(7):
+            rows[j] += g[j] + "."
+    return [r[:-1] for r in rows]
+
+
+def labels():
+    """src/gen/labels.asm: the HUD's words as masks, for src/labels.asm."""
+    lines = [";; Generated by tools/mkgfx.py - do not edit.", ""]
+    emit = lines.append
+    vals = dict(GROUND=S.HUD_BG, SHADOW=S.SHADOW, PEN=S.LABEL_PEN)
+    for a in vals.values():             # (a right pixel's bits: a left one's
+        assert G.m0_byte(0, a) == G.m0_byte(a, 0) >> 1     # a bit on)
+        for b in vals.values():
+            assert G.m0_byte(a, b) == G.m0_byte(a, 0) | G.m0_byte(b, 0) >> 1
+    emit(";; a left pixel's bits: the ground, the shadow, the pen")
+    for k, p in vals.items():
+        emit("LBL_%-7s EQU #%02X" % (k, G.m0_byte(p, 0)))
+    widths = []
+    emit(";; per label: x (bytes), y, its mask's width (pixels), bytes a row,")
+    emit(";; then its rows, first pixel in bit 7; #FF at the end")
+    emit("lbl_masks")
+    for text, pos in LABELS:
+        mask = label_mask(text)
+        w = len(mask[0])
+        nb = (w + 7) // 8
+        widths.append(w)
+        # (as gfx() had them: scene.small_text, padded to even)
+        want = encode_rows(pad_even(S.small_text(text)))
+        assert len(want) == 8 and len(want[0]) == (w + 2) // 2
+        emit("; " + text)
+        emit("    defb %s_X,%s_Y,%d,%d" % (pos, pos, w, nb))
+        flat = []
+        for r in mask:
+            bits = r.ljust(nb * 8, ".")
+            flat += [int(bits[i:i + 8].replace("#", "1").replace(".", "0"), 2)
+                     for i in range(0, nb * 8, 8)]
+        emit("    defb " + ",".join("#%02X" % b for b in flat))
+    emit("    defb #FF")
+    emit("LBL_PIXELS  EQU %d   ; (the widest mask's pixels, its shadow's, padded)"
+         % (max(widths) + 2))
+    emit("LBL_OUT_W   EQU %d   ; (its bytes)" % ((max(widths) + 2) // 2))
+    return lines
+
+
 def main():
     gen = os.path.join(ROOT, "src", "gen")
     os.makedirs(gen, exist_ok=True)
     open(os.path.join(gen, "consts.asm"), "w").write("\n".join(consts()) + "\n")
     open(os.path.join(gen, "consts_data.asm"), "w").write("\n".join(consts_data()) + "\n")
     open(os.path.join(gen, "gfx.asm"), "w").write("\n".join(gfx()) + "\n")
-    print("src/gen/consts.asm, src/gen/gfx.asm written")
+    open(os.path.join(gen, "labels.asm"), "w").write("\n".join(labels()) + "\n")
+    print("src/gen/consts.asm, src/gen/gfx.asm, src/gen/labels.asm written")
 
 
 if __name__ == "__main__":

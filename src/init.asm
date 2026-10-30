@@ -6,7 +6,9 @@
 
 ;; ---------------------------------------------------------------------------
 ;; game_init - (game_start) the car picked, the road forgotten, the sky ring
-;; and both buffers' HUDs and what never changes in them.
+;; and both buffers' HUDs and what never changes in them; the music's
+;; volumes 0 (sndgame.asm); prop_spr last (props.asm: over this code's
+;; rest).
 ;; ---------------------------------------------------------------------------
 game_init
     call car_setup
@@ -17,7 +19,12 @@ game_init
     xor a
     call draw_screen
     ld a,1
-    jp draw_screen
+    call draw_screen
+    xor a
+    call snd_mute
+    jp prop_init
+gi_end
+    ASSERT gi_end <= prop_spr
 
 ;; ---------------------------------------------------------------------------
 ;; car_setup - the car picked (car_id: CARn.BIN) as fast, as quick and as
@@ -113,19 +120,8 @@ draw_static
     ld de,SOLID_BLACK*#101
     call fill_lines
 
-    ; the labels
-    ld ix,lbl_time
-    ld bc,TIME_LBL_X*256+TIME_LBL_Y
-    call draw_label
-    ld ix,lbl_speed
-    ld bc,SPEED_LBL_X*256+SPEED_LBL_Y
-    call draw_label
-    ld ix,lbl_total
-    ld bc,TOTAL_LBL_X*256+TOTAL_LBL_Y
-    call draw_label
-    ld ix,lbl_cp
-    ld bc,CP_LBL_X*256+CP_LBL_Y
-    call draw_label
+    ; the labels: the words (labels.asm, from their masks), the marks
+    call lbl_draw
     ld ix,lbl_apos
     ld bc,(TOTAL_VAL_X+TOTAL_APOS_X)*256+TOTAL_VAL_Y
     call draw_label
