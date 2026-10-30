@@ -94,13 +94,16 @@ def gfx():
 
     # big glyphs: 4 bytes x 18 lines
     names = [str(d) for d in range(10)] + ["N"]
-    emit(";; big glyphs, 4 bytes x 18 lines: 0-9 then N (gear neutral)")
+    emit(";; big glyphs, 4 bytes x 18 lines, each line twice: 9 lines kept;")
+    emit(";; 0-9 then N (gear neutral)")
     emit("BIG_W EQU 4")
     emit("BIG_H EQU 18")
     emit("big_glyphs")
     for n in names:
         emit("; " + n)
-        defb_rows(emit, encode_rows(S.big_glyph(n)))
+        rows = encode_rows(S.big_glyph(n))
+        assert all(rows[i] == rows[i + 1] for i in range(0, len(rows), 2))
+        defb_rows(emit, rows[::2])
     emit("")
 
     emit(";; small glyphs, 3 bytes x 8 lines: the digits 0-9, then the space")
@@ -219,6 +222,16 @@ def gfx():
              % (len(T.STAGES), T.STAGE_LEN), T.race(), 1)
     emit("course_hold")
     emit("    defb 0,1")
+    emit(";; the props along each (src/props.asm): per prop the depth from the last")
+    emit(";; (the first: from the course's start) in 16 units, then its kind |")
+    emit(";; lateral class << 4 | #80 on the left; at the end the depth to the")
+    emit(";; course's end and #FF (round again), or 0,#FE (tools/course.py prop_list)")
+    for name, lst in (("props_demo", T.prop_list(T.demo_props(), len(T.entries(T.DEMO)) * T.ENTRY)),
+                      ("props_race", T.prop_list(T.race_props())),
+                      ("props_none", [0, 0xFE])):
+        emit(name)
+        for i in range(0, len(lst), 16):
+            emit("    defb " + ",".join("#%02X" % v for v in lst[i:i + 16]))
     emit("STAGES    EQU %d" % len(T.STAGES))
     emit("STAGE_LEN EQU %d   ; depth units a stage" % (T.STAGE_LEN * T.ENTRY))
     emit("HILL_RAMP EQU %d" % T.HILL_RAMP)

@@ -7,6 +7,7 @@
 ;; ===========================================================================
 
 tgt_buf     defb 0              ; buffer being drawn into
+blit_odd    defb 0              ; (blit_twice: the line's second time)
 
 ;; ---------------------------------------------------------------------------
 ;; select_buf - A = buffer (0/1). Destroys AF, BC.
@@ -71,34 +72,6 @@ line_addr_hud
     ASSERT ROAD_AREA_Y % 8 == 0 && ((HUD_BASE|BOT0_BASE) & #FF) == 0
 
 ;; ---------------------------------------------------------------------------
-;; fill_lines - fill whole lines with a two-byte pattern.
-;;   HL = first line, B = number of lines, DE = pattern (E left, D right)
-;; Destroys AF, BC, DE, HL.
-;; ---------------------------------------------------------------------------
-fill_lines
-    push bc
-    push de
-    push hl
-    call line_addr
-    pop bc                      ; line number
-    pop de
-    push de
-    push bc
-    ld b,SCR_BYTES/2
-fill_lines_byte
-    ld (hl),e
-    inc hl
-    ld (hl),d
-    inc hl
-    djnz fill_lines_byte
-    pop hl
-    inc hl
-    pop de
-    pop bc
-    djnz fill_lines
-    ret
-
-;; ---------------------------------------------------------------------------
 ;; blit - copy a block into the HUD (lines 0..63).
 ;;   HL = source, B = x (bytes), C = y, D = width (1..BLIT_MAX), E = height
 ;; The line address is worked out once and then stepped: the next line is
@@ -151,6 +124,15 @@ blit_ldi
     ldi
     REND
     pop de
+blit_twice
+    jr blit_down                ; (self-modified: 0 - draw_big's, each line
+    ld a,(blit_odd)             ; twice: the first time back over it)
+    xor 1
+    ld (blit_odd),a
+    jr z,blit_down
+    ld bc,-BIG_W
+    add hl,bc
+blit_down
     ld a,d
     add a,8
     ld d,a
@@ -170,66 +152,6 @@ blit_ldi
 blit_next_row
     ld iyl,8
     jr blit_row
-
-;; ---------------------------------------------------------------------------
-;; draw_label - IX = label (defb width, then 8 lines), B = x, C = y.
-;; ---------------------------------------------------------------------------
-draw_label
-    ld d,(ix+0)
-    ld e,8
-    push ix
-    pop hl
-    inc hl
-    jp blit
-
-;; ---------------------------------------------------------------------------
-;; draw_static - everything of the selected buffer that never changes: the
-;; HUD ground and its labels, the ground at the top of the road part.
-;; ---------------------------------------------------------------------------
-draw_static
-    ; the HUD, on the top colour of the sky - its first seven character
-    ; rows: the eighth is never shown (the CRTC's R6), and holds code
-    ; (tools/mkbush.py HUD_ROW7)
-    ld hl,0
-    ld b,HUD_H-8
-    ld de,SOLID_NAVY*#101
-    call fill_lines
-
-    ; the ground between the mountains and the road (the road's own ground
-    ; lines go on from it when a crest hides the far road) - from the road
-    ; part's first line shown: the lines above it hold the car's views on
-    ; hills (CARn.BIN)
-    ld hl,ROAD_Y&#F8                    ; (rasm divides in floating point:
-    ld b,ROAD_Y&7                       ; no /8*8)
-    ld de,SOLID_GROUND*#101
-    call fill_lines
-
-    ; under the road, the screen's last lines: black (the road stops at
-    ; ROAD_END)
-    ld hl,ROAD_END
-    ld b,SCR_H-ROAD_END
-    ld de,SOLID_BLACK*#101
-    call fill_lines
-
-    ; the labels
-    ld ix,lbl_time
-    ld bc,TIME_LBL_X*256+TIME_LBL_Y
-    call draw_label
-    ld ix,lbl_speed
-    ld bc,SPEED_LBL_X*256+SPEED_LBL_Y
-    call draw_label
-    ld ix,lbl_total
-    ld bc,TOTAL_LBL_X*256+TOTAL_LBL_Y
-    call draw_label
-    ld ix,lbl_cp
-    ld bc,CP_LBL_X*256+CP_LBL_Y
-    call draw_label
-    ld ix,lbl_apos
-    ld bc,(TOTAL_VAL_X+TOTAL_APOS_X)*256+TOTAL_VAL_Y
-    call draw_label
-    ld ix,lbl_quote
-    ld bc,(TOTAL_VAL_X+TOTAL_QUOTE_X)*256+TOTAL_VAL_Y
-    jp draw_label
 
 ;; ---------------------------------------------------------------------------
 ;; draw_ring - the sky ring, shared by both buffers, looking straight on:
@@ -258,5 +180,3 @@ draw_ring_col
     cp SCR_BYTES/2
     jr c,draw_ring_col
     ret
-
-

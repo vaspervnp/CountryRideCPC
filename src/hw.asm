@@ -127,7 +127,7 @@ TOTAL_ROWS  EQU CRTC_R4+1
 ;; can all see. They hold everything that has to be shared: fragments 0-7 in
 ;; page 0, 8-15 in page 2.
 FRAG_LEN    EQU #2C0
-FRAG0       EQU #0540       ; variables, IM 2 table, interrupt handler
+FRAG0       EQU #0540       ; variables, interrupt handler, prop_draw's lines
 FRAG1       EQU #0D40       ; trampolines, stack
 FRAG2       EQU #1540       ; road_draw and the grass blocks
 FRAG3       EQU #1D40       ; line list, buffer 0
@@ -139,8 +139,8 @@ FRAG8       EQU #8540       ; page 2: the bush tables and sprites (bushdata.asm)
 FRAG15      EQU #BD40       ; ... up to here
 FRAG_COUNT  EQU 16
 
-IM2_TABLE   EQU #0600       ; 257 bytes of IM2_VEC
-IM2_VEC     EQU #07         ; ... so the vector is #0707
+IM1_JP      EQU #0038       ; IM 1's JP isr: buffer 1's line 160, hidden
+                            ; (tools/mkbush.py HILL_RUNS leaves it out)
 STACK_TOP   EQU #1000
 
 ;; --- Bank 7, past the game's code (RAM_C1, RAM_C3) ---------------------------

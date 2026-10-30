@@ -68,7 +68,7 @@ CHUNK_LENS = [0x200] * 6 + [0xC0, 0x100]  # seventh's first #140 bytes,
                                         # player.asm; the eighth's first
                                         # half, #7E00, the cache's)
 SINFO_FIELDS = ["half width", "width", "first line's end", "height",
-                "how its box is erased", "code", "data"]
+                "how its box is erased", "code", "data", "half width it is hit in"]
 
 
 def frag_addr(k):
@@ -509,8 +509,11 @@ def hidden_runs(base, blocks):
 # blocks 1-3), nor boot_car itself (#x5A0 of block 1).
 HUD_ROW7 = [(0x4000 + b * 0x800 + off, 96) for b in range(8) for off in (0x2A0, 0x5A0)
             if not (off == 0x2A0 and b in (1, 2, 3)) and not (off == 0x5A0 and b == 1)]
+# (#0038-#003A, in buffer 1's block 0, is IM 1's JP to the interrupt handler:
+# boot.asm)
+IM1_JP = 0x0038
 HILL_RUNS = (HUD_ROW7 + [(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0x8000, range(8))
-             + hidden_runs(0x0000, range(4)))
+             + [(0x0000, IM1_JP), (IM1_JP + 3, 192 - IM1_JP - 3)] + hidden_runs(0x0000, range(1, 4)))
 # The traffic's pieces left over from the fragments go - in every CARn.BIN,
 # after the car's records - in what the views on hills leave of HILL_RUNS in
 # pages 0 and 2 (mapped whatever the configuration), then in buffer 1's
@@ -572,6 +575,129 @@ def runs_slots(allcars, views):
     used = sum(ln for a, ln in HILL_RUNS[:r.cur]) + r.used
     a, ln = HILL_RUNS[r.cur]
     return pieces, starts, used, [(a + r.used, ln - r.used)] + HILL_RUNS[r.cur + 1:]
+
+
+# --- the props --------------------------------------------------------------
+# The props beside the road (src/props.asm): each kind's sprites from
+# tools/propsart.py (tools/mkprops.py), PROP_SIZES of them, smallest first.
+PROP_REC0 = 8                   # bush_sinfo's records 8..15: the prop in sight's
+                                # sprites, smallest first (props.asm: prop_take)
+PROP_TOP = 173 - S.ROAD_AREA_Y  # lines from ROAD_AREA_Y a prop may be drawn on:
+                                # 160-172 hold code (HILL_RUNS)
+
+
+def prop_sprite(kind, rows):
+    """A prop's sprite as the game has it (src/props.asm, prop_draw): its
+    centre's byte, its width, its column's lines (the trunk or the post:
+    its last lines, alike, one run of a byte or two), its height; the
+    column's run - a byte (its first byte from the left | its bytes << 4)
+    and its bytes; then the lines above the column, as groups of the same
+    line - its lines, then the line's runs, each a byte (the bytes from the
+    end of the run before, or from the left | its bytes << 4 | #80 on the
+    line's last) and its bytes."""
+    import mkprops
+    import propsart
+    pen = {c: G.PEN[name] for c, name in propsart.LETTERS.items()}
+
+    def run_bytes(pairs):
+        return [G.m0_byte(pen[p[0]], pen[p[1]]) for p in pairs]
+    groups = mkprops.groups(rows)
+    w = len(rows[0]) // 2
+    assert w <= 16, (kind, w)                    # (a byte's left nibble)
+    cl, col = groups[-1]
+    assert len(col) == 1 and len(col[0][1]) <= 2, (kind, len(rows))
+    out = [G.prop_hw(kind, w), w, cl, len(rows)]
+    x, pairs = col[0]
+    out.append(x | len(pairs) << 4)
+    out += run_bytes(pairs)
+    for n, runs in groups[:-1]:
+        assert runs and n < 256, (kind, len(rows))
+        out.append(n)
+        end = 0
+        for j, (x, pairs) in enumerate(runs):
+            assert 0 <= x - end <= 15 and 1 <= len(pairs) <= 7, (kind, len(rows))
+            out.append(x - end | len(pairs) << 4 | (0x80 if j == len(runs) - 1 else 0))
+            out += run_bytes(pairs)
+            end = x + len(pairs)
+    return out
+
+
+def prop_sprites():
+    """{(kind, size): its sprite's bytes}, for course.PROP_KINDS."""
+    import course
+    import propsart
+    assert list(propsart.PROPS_ART) == course.PROP_KINDS
+    out = {}
+    for kind in course.PROP_KINDS:
+        hs = sorted(propsart.PROPS_ART[kind])
+        assert hs == G.prop_heights(kind if kind != "curve_r" else "curve"), kind
+        for s, h in enumerate(hs):
+            out[kind, s] = prop_sprite(kind, propsart.PROPS_ART[kind][h])
+    return out
+
+
+PROP_NEAR, PROP_OFF = 5, 12     # (src/propdraw.asm pd_near)
+
+
+def props_off_road(props):
+    """That a prop's erase boxes (props.asm prop_draw) lie on no road where
+    bush_one leaves it off the inside (a straight with no crest, or a curve's
+    outside on the flat) - but the smaller sizes, which pd_near puts on the
+    inside on a straight with the road PROP_OFF or more pairs off the
+    middle (the road's far rows hardly move with road_x, theirs do). Over
+    hills, curve levels and road_x (every other), depths every 4 units."""
+    import course as T
+    grass = {G.PEN["GRASS_A"], G.PEN["GRASS_B"]}
+    bad = []
+    for hill in (0, -10, -26, -42, -64, -90, -128):
+        h = min(S.level_hill(S.hill_level(hill)), S.HILL_MAX)
+        top = next(r for r in S.project(h) if r)
+        for k in range(-G.CURVE_K, G.CURVE_K + 1):
+            if k and hill:
+                continue                # (a curve on a hill: both inside)
+            for x in range(-32, 33, 2):
+                lines = S.road_lines(h, 0, k, x)
+                for zr in range(G.BUSH_ZNEAR, T.PROP_ZVIS, 4):
+                    r = G.bush_row(zr)
+                    if not r or r < top:
+                        continue
+                    q = abs(h) // r
+                    y = G.HORIZON_Y + r + (q if h >= 0 else -q)
+                    s = G.prop_size_of(r)
+                    if y < G.ROAD_Y or (s < PROP_NEAR and not k and abs(x) >= PROP_OFF):
+                        continue
+                    for kind in T.PROP_KINDS:
+                        hw, w, cl, hh, col = props[kind, s][:5]
+                        for side in (-1, 1):
+                            if k * side > 0:
+                                continue        # (the inside)
+                            for lat in sorted(set(T.TREE_LATS) | {T.SIGN_LAT}):
+                                cx = (G.bush_centre(k, r) + G.player_shift(k, x, r)
+                                      + side * min(G.bush_lat(lat, r), 127))
+                                if not 0 <= cx < G.SCR_W // 2:
+                                    continue
+                                left, ty = cx - hw, y - hh + 1
+                                for by, bn, bx, bw in ((ty, hh - cl, left, w),
+                                                       (ty + hh - cl, cl, left + (col & 15), 2)):
+                                    x0, x1 = max(bx, 0), min(bx + bw, G.SCR_W // 2)
+                                    if bn <= 0 or x1 <= x0:
+                                        continue
+                                    xr = min(x0 + (x1 - x0 + 1) // 2 * 2, G.SCR_W // 2)
+                                    xl = xr - (x1 - x0 + 1) // 2 * 2
+                                    if any(lines[yy - G.ROAD_Y][px] not in grass
+                                           for yy in range(max(by, G.ROAD_Y), by + bn)
+                                           for px in range(2 * max(xl, 0), 2 * xr)):
+                                        bad.append((kind, s, hill, k, x, zr, side, lat))
+    assert not bad, bad[:5]
+
+
+def prop_label(kind, s):
+    return "prop_%s%d" % (kind, s)
+
+
+def defb_lines(data):
+    return ["    defb " + ",".join("#%02X" % v for v in data[j:j + 16])
+            for j in range(0, len(data), 16)]
 
 
 def cars_asm(pieces, ends, codes, traffic):
@@ -713,6 +839,20 @@ def main():
         except SystemExit:              # what is left of page 1
             ch.bytes(label, comment, sprite_data(k))
 
+    # the props: each kind's sprites' directory, and the sprites, biggest
+    # first, in what is left of page 1 - the rest in the hidden lines with
+    # the traffic's pieces (below). (The courses' lists: mkgfx.py, gfx.asm.)
+    import course as T
+    props = prop_sprites()
+    ch.data("prop_dir", [prop_label(pk, s) for pk in T.PROP_KINDS
+                         for s in range(G.PROP_SIZES)])
+    props_left = []
+    for (pk, s), data in sorted(props.items(), key=lambda kv: -len(kv[1])):
+        try:
+            ch.bytes(prop_label(pk, s), "%s, size %d: %d lines" % (pk, s, data[3]), data)
+        except SystemExit:
+            props_left.append((pk, s))
+
     # the car turning right: code in what is left of fragments 8-14
     # (road15.asm has the rest of fragment 15)
     fc = FragCode(sp, sp.take_runs(frag_addr(FRAG_FIRST + FRAG_COUNT - 1)))
@@ -752,6 +892,17 @@ def main():
             piece.size = ln - rm
             sp.placed.append((a, None, None, piece))
             traf_used += ln - rm
+    # the props' sprites page 1 has no room for: after the traffic's pieces,
+    # each in the run that fits it best
+    for pk, s in props_left:
+        data = props[pk, s]
+        fits = [r for r in hidden if r[1] >= len(data)]
+        if not fits:
+            raise SystemExit("props: no room in the hidden lines for %s %d" % (pk, s))
+        r = min(fits, key=lambda r: r[1])
+        r[2] += ["%s   ; %s, size %d: %d lines" % (prop_label(pk, s), pk, s, data[3])]
+        r[2] += defb_lines(data)
+        r[1] -= len(data)
     traf_hidden = [(r[0], "#%04X" % r[0], r[2]) for r in hidden if r[2]]
     traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden))
     pieces = [a + b + c for a, b, c in zip(pieces, p2, hill_pieces)]
@@ -801,7 +952,8 @@ def main():
                     emit("    defb %d,%d,%d,%d   ; sprite %d" % (wb // 2, wb, a0 + len(d0),
                                                                len(spans), s))
                     emit("    defw be_r%d,%s,bush_d%d" % (wb // 2, code, s))
-                    emit("    defs 6,0")
+                    emit("    defb %d" % (wb // 2))
+                    emit("    defs 5,0")
             else:
                 for j in range(0, len(data), 16):
                     emit("    defb " + ",".join("#%02X" % v for v in data[j:j + 16]))
@@ -916,6 +1068,50 @@ def main():
     emit(";; per curve level 0..CURVE_K: its centre table")
     emit("bush_cxs")
     emit("    defw " + ",".join("bush_cx%d" % i for i in range(G.CURVE_K + 1)))
+    emit("")
+    # the props: every row a prop is drawn on (BUSH_ZNEAR up to PROP_ZVIS
+    # ahead) has a size, and their tops are on PROP_TOP or lower, whatever
+    # the hill (bush_one: a crest no stronger than BUSH_HILL_MAX)
+    sizes = [G.prop_size_of(r) for r in range(G.ROWS + 1)]
+    assert all(sizes[G.bush_row(zr)] is not None for zr in range(G.BUSH_ZNEAR, T.PROP_ZVIS)
+               if G.bush_row(zr))      # (row 0: below the screen)
+    first = [sizes.index(s) for s in range(G.PROP_SIZES)]
+    assert all(sizes[r] == max(s for s in range(G.PROP_SIZES) if first[s] <= r)
+               for r in range(first[0], G.ROWS + 1))
+    top = 999
+    for r in range(first[0], G.ROWS + 1):
+        h = max(props[pk, sizes[r]][3] for pk in T.PROP_KINDS)
+        for hill in range(-128, S.HILL_MAX + 1, 2):
+            q = abs(hill) // r
+            y = G.HORIZON_Y + r + (q if hill >= 0 else -q) - S.ROAD_AREA_Y
+            if G.ROAD_Y - S.ROAD_AREA_Y <= y < 128:
+                top = min(top, y - h + 1)
+    assert top >= PROP_TOP, top
+    props_off_road(props)
+    emit(";; the props (src/props.asm)")
+    emit("PROP_REC0     EQU %d   ; bush_sinfo's records from here on: the prop in"
+         % PROP_REC0)
+    emit("                      ; sight's sprites")
+    emit("PROP_SIZES    EQU %d" % G.PROP_SIZES)
+    emit("PROP_KINDS    EQU %d" % len(T.PROP_KINDS))
+    emit("PROP_ZVIS     EQU %d   ; drawn from this far ahead" % T.PROP_ZVIS)
+    emit("PROP_TOP      EQU %d    ; and on lines from ROAD_AREA_Y + this on (above:"
+         % PROP_TOP)
+    emit("                      ; code; their tops are on line %d at the highest)"
+         % top)
+    emit("PROP_BOX      EQU %d   ; the widest sprite, bytes"
+         % max(d[1] for d in props.values()))
+    emit(";; per size, the first row it is drawn on (prop_init)")
+    emit("prop_rows")
+    emit("    defb " + ",".join(str(r) for r in first))
+    emit(";; per lateral class, its offset tables: right, left")
+    emit("prop_lats")
+    emit("    defw " + ",".join("bush_latR%d,bush_latL%d" % (c, c)
+                              for c in range(len(G.BUSH_LATS))))
+    emit(";; per kind (%s): the bushes that may be in reach while it is in sight"
+         % ", ".join(T.PROP_KINDS))
+    emit("prop_rooms")
+    emit("    defb " + ",".join(str(T.PROP_ROOM[k]) for k in T.PROP_KINDS))
     emit("")
     open(os.path.join(ROOT, "src", "gen", "bush.asm"), "w").write(
         "\n".join(lines) + "\n")

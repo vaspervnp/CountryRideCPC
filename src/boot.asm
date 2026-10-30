@@ -3,7 +3,7 @@
 ;;
 ;; By the time this runs the loader has put the road engine in banks 4 and 5
 ;; and the game in bank 7 (see disc/country.bas). This takes the machine over
-;; from the firmware: ROMs off, the common fragments copied into place, IM 2,
+;; from the firmware: ROMs off, the common fragments copied into place, IM 1,
 ;; the overscan CRTC set, and on to the game in bank 7. Nothing returns to
 ;; BASIC. The rest of the file is the fragments, and the bush sprites' code,
 ;; which is loaded where it runs.
@@ -73,10 +73,7 @@ boot_frag_next
     call boot_car               ; the car picked, over the first one; then
                                 ; fragments 3-6
 
-    ; IM 2 through the table at #0600
-    ld a,hi(IM2_TABLE)
-    ld i,a
-    im 2
+    im 1                        ; (boot_car has put its JP in place)
 
     ; the overscan screen, showing buffer 0
     ld hl,crtc_regs
@@ -114,7 +111,7 @@ crtc_regs
 ;; left free;
 ;; car_views and car_id. Without one (no magic word there) the first car
 ;; stays, seen on the level on hills too (and turning when spun). Then
-;; fragments 3-6, over the car's file. RAM_C0 after.
+;; fragments 3-6, over the car's file, and IM 1's JP. RAM_C0 after.
 boot_car
     SET_RAM RAM_C1
     ld hl,CAR_BLOB
@@ -158,6 +155,10 @@ boot_car_done
     ld de,FRAG6
     ld bc,FRAG_LEN
     ldir
+    ld a,#C3                            ; IM 1's RST #38: JP isr (in a hidden
+    ld (IM1_JP),a                       ; line, which the car's records have
+    ld hl,isr                           ; left out)
+    ld (IM1_JP+1),hl
     SET_RAM RAM_C0
     ret
     ASSERT $ <= #4E00

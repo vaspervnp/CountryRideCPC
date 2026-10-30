@@ -13,9 +13,10 @@
 ;;   bush_erase  the selected buffer's bushes of last time go (before the
 ;;               road is drawn, which puts back any road a bush stood on)
 ;;   road_frame
-;;   bush_draw   the bushes that have come into reach join those in reach
-;;               (bush_reach, nearest first, mkbush.py); those on the screen
-;;               are drawn, each noted for the next bush_erase of this buffer
+;;   bush_draw   the prop in sight (props.asm) is drawn; the bushes that
+;;               have come into reach join those in reach (bush_reach,
+;;               nearest first, mkbush.py); those on the screen are drawn,
+;;               each noted for the next bush_erase of this buffer
 ;;
 ;; A bush moves sideways with the road (road_x: as far as its row does,
 ;; cpcgfx.player_shift). One on the inside of a
@@ -53,6 +54,8 @@ SI_H        EQU 3                       ; height
 SI_WAY      EQU 4                       ; how its box is erased (be_r<pairs>)
 SI_CODE     EQU 6                       ; its code
 SI_DATA     EQU 8                       ; its lines as data
+SI_HIT      EQU 10                      ; half the width it is hit in
+;; (records PROP_REC0 on are the prop in sight's sprites, props.asm)
 
 bd_rec      defw 0                      ; where the next erase record goes
 bd_ranges   defb LAST_Y,0,LAST_Y,0      ; per buffer: the first and last line
@@ -183,16 +186,18 @@ be_r3   BE_WAY 3
 be_r4   BE_WAY 4
 be_r5   BE_WAY 5
 be_r6   BE_WAY 6
-    ASSERT BUSH_BOX <= 12
+be_r7   BE_WAY 7
+be_r8   BE_WAY 8
+    ASSERT BUSH_BOX <= 16 && PROP_BOX <= 16
 
-;; the way for a box of 1..6 pairs
+;; the way for a box of 1..8 pairs
 be_ways
-    defw be_r1,be_r2,be_r3,be_r4,be_r5,be_r6
+    defw be_r1,be_r2,be_r3,be_r4,be_r5,be_r6,be_r7,be_r8
 
 ;; ---------------------------------------------------------------------------
-;; bush_draw - the bushes ahead into the selected buffer, nearest first
-;; (they hardly ever overlap), BUSH_MAX at most, each noted for the next
-;; bush_erase of this buffer. Destroys everything.
+;; bush_draw - the prop in sight, then the bushes ahead into the selected
+;; buffer, nearest first (they hardly ever overlap), BUSH_MAX at most, each
+;; noted for the next bush_erase of this buffer. Destroys everything.
 ;; ---------------------------------------------------------------------------
 bush_draw
     ; the road's hill: even, no stronger a crest than BUSH_HILL_MAX; the
@@ -285,11 +290,18 @@ bd_curve_same
 bd_buf
     ld (b1_buf),hl
     ld (bc_buf),hl
+    ld (pd_buf),hl
+    ld (pb_buf),hl
     call bush_rec_ptr                   ; no records yet
     ld (bd_head+1),hl
     inc hl
     ld (bd_rec),hl
-    ld a,l
+
+    ; the prop in sight first (props.asm), then BUSH_MAX bushes at most
+    call prop_reach
+    call prop_one
+bd_props_done                           ; (tools: timing)
+    ld a,(bd_rec)
     add a,BUSH_MAX*BUSH_REC
     ld (bd_lim+1),a
 
@@ -411,17 +423,22 @@ bd_side_l
     ret
 
 ;; bush_join - DE = a bush that has come into reach: into bush_reach, after
-;; those nearer
+;; those nearer - unless a prop in sight while it is leaves no room for it
+;; (prop_room)
 bush_join
+    ld (bj_bush+1),de
+    ex de,hl
+    call bj_ahead
+    ld (bj_its+1),hl
+    ld a,(bush_nreach)
+    ld b,a
+    call prop_room
+    ret nz                              ; (it is never in reach)
     ld hl,bush_nreach
     ld a,(hl)
     cp BUSH_RMAX
     ret nc                              ; (never: mkbush.py)
     inc (hl)
-    ld (bj_bush+1),de
-    ex de,hl
-    call bj_ahead
-    ld (bj_its+1),hl
     ld a,(bush_nreach)
     add a,a
     add a,lo(bush_reach)-2
@@ -483,7 +500,8 @@ bj_ahead
 
 ;; ---------------------------------------------------------------------------
 ;; bush_one - DE = how far ahead a bush is (in reach), HL = its sprite table
-;; in bush_tab: draw it, if it is in sight, and note its box.
+;; in bush_tab: draw it, if it is in sight, and note its box. (A prop's too:
+;; prop_one, with b1_way to prop_draw.)
 ;; ---------------------------------------------------------------------------
 bush_one
     ; the row it stands on
@@ -620,7 +638,7 @@ b1_flat
     inc b                               ; (right)
     neg
 b1_hit
-    add a,(ix+SI_HW)
+    add a,(ix+SI_HIT)
     add a,CAR_HALF-HIT_TRIM
     jp m,b1_free
     jr z,b1_free
@@ -634,8 +652,11 @@ b1_free
     ld a,iyh
     or a
     call nz,bd_note
-
+b1_way
+    jp b1_bush                          ; (self-modified: prop_draw for a prop,
+                                        ; prop_one)
     ; which way: its code if it is all on the screen
+b1_bush
     ld a,c
     or a
     jp m,bush_copy                      ; cut off at the top

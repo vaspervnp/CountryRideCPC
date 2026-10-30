@@ -234,6 +234,59 @@ def cmd_shots():
             break
     del g
     shots_stages(docs)
+    shots_props(docs)
+
+
+def shots_props(docs):
+    """A screenshot of each kind of prop (src/props.asm) near, beside the
+    road: the race driven as in shots_stages; a picture with the prop
+    130-200 depth units ahead, its sprite all on the screen, the car in its
+    lane, taken as it is shown."""
+    import scene
+    g = Game()
+    c, S = g.c, g.sym
+    c.key_down('q')
+    key, taken = None, set()
+    want_kinds = {"palm", "stump", "dead", "limit", "curve"}
+    for i in range(25 * 400):
+        run_to(c, S["PICTURE_DONE"])
+        if g.game_byte("GAME_MODE") != 2:
+            continue
+        g.game_poke("TIME_LEFT", 99)
+        prop = prop_in_sight(g)
+        x = _signed(g.game_byte("CAR_X"))
+        want = 0x08 if x < -7 else 0x09 if x > -5 else None
+        if want != key:
+            if key is not None:
+                c.key_up(key)
+                c.run_frames(2)         # (seen released before the next)
+                key = None
+                continue
+            c.key_down(want)
+            key = want
+        if prop is None:
+            continue
+        kind = "curve" if prop[1] == "curve_r" else prop[1]
+        if kind in taken or not 130 <= prop[0] < 200 or abs(x + 6) > 3:
+            continue                    # (and the car in its lane)
+        hill = _signed(g.byte("HILL"))
+        hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
+        item = scene.prop_item(prop, hill, _signed(g.byte("ROAD_CURVE")),
+                               _signed(g.byte("ROAD_X")))
+        if item is None or not 0 <= item[1] <= 96 - len(item[0][0]) // 2:
+            continue
+        buf = g.byte("ROAD_BUF")
+        while True:                     # the frame that shows this picture
+            at_vsync(g)
+            if g.byte("RUP_BUF") == buf:
+                break
+            c.run_frames(1)
+        path = os.path.join(docs, "prop-%s.png" % kind)
+        g.shot(path)
+        taken.add(kind)
+        print("wrote %s (%s, stage %d)" % (path, prop, g.game_byte("STAGE") + 1))
+        if taken == want_kinds:
+            break
 
 
 def shots_stages(docs):
@@ -355,8 +408,30 @@ def road_model(g):
     view = g.game_byte("CAR_VFULL")
     off = _signed(g.game_byte("CAR_OFF"))
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
-                            traffic=traffic_cars(g)),
+                            traffic=traffic_cars(g), prop=prop_in_sight(g),
+                            only=bushes_in_reach(g)),
             hill, zcam, curve, x)
+
+
+def prop_in_sight(g):
+    """The nearest prop (src/props.asm): (how far ahead, kind, side, lateral
+    class), or None - also if it was not drawn, the picture late already."""
+    import course
+    code = g.game_byte("PRP_CODE")
+    if code == 0xFE or g.game_byte("PRP_LATE"):
+        return None                     # (none, or not drawn: late already)
+    z = g.bank(7, g.sym["PRP_Z"], 2)
+    zr = (z[0] | z[1] << 8) - g.word("ZCAM") & 0xFFFF
+    return zr, course.PROP_KINDS[code & 15], -1 if code & 0x80 else 1, code >> 4 & 7
+
+
+def bushes_in_reach(g):
+    """The bushes in reach (bush_reach): their indices in scene.BUSHES - a
+    prop in sight keeps some out (prop_room)."""
+    n = g.game_byte("BUSH_NREACH")
+    raw = g.bank(7, g.sym["BUSH_REACH"], 2 * n)
+    return {((raw[2 * i] | raw[2 * i + 1] << 8) - g.sym["BUSH_TAB"]) // g.sym["BUSH_ENTRY"]
+            for i in range(n)}
 
 
 def road_partial(g):

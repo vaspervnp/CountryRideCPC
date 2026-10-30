@@ -125,6 +125,120 @@ STAGES = [
                      C(28, -7)])),
 ]
 
+# The props beside the road (tools/mkprops.py has their sprites, src/props.asm
+# stands and draws them): a curve sign at the start of every curve of level
+# 3 or more, on its outside, its chevrons pointing the way it bends; a speed
+# limit sign before every curve of level 6 or more, on the right; and each
+# stage's trees, by turns, wherever there is room for them - on a segment
+# TREE_SEG entries long or longer (a straight, a hill, a curve's outside),
+# about TREE_EVERY apart. Never two in sight at once (PROP_GAP).
+PROP_KINDS = ["palm", "stump", "dead", "limit", "curve", "curve_r"]
+PROP_ZVIS = 800                 # depth units ahead a prop is first drawn from
+PROP_GAP = 760                  # ... and from one to the next, at least: one
+                                # in sight at a time (PROP_ZVIS - BUSH_ZNEAR)
+PROP_ROOM = dict(palm=1, stump=1, dead=1, limit=1, curve=1, curve_r=1)
+                                # bushes in reach at most while one is in
+                                # sight (src/props.asm: for the time)
+SIGN_LAT, TREE_LATS = 1, (1, 2)  # bush lateral classes (cpcgfx.BUSH_LATS)
+STAGE_TREES = [["dead"], ["palm", "dead", "stump"], ["dead"], ["palm", "stump"],
+               ["palm"]]
+TREE_EVERY = 1200               # depth units between trees, about - on a
+TREE_SEG = 8                    # segment this long or longer
+
+
+def prop_code(kind, side, lat):
+    """A prop's byte in the lists: kind, lateral class, side (bit 7: left)."""
+    return PROP_KINDS.index(kind) | lat << 4 | (0x80 if side < 0 else 0)
+
+
+def props_want(segs, trees=False, seed=1, z0=0):
+    """The props a segment list would have: [(z, priority, kind, side, lat,
+    lo, hi)], z in depth units from z0 at its first entry, a tree anywhere
+    from lo to hi ("tree": its kind is given later, props_kept)."""
+    import random
+    rnd = random.Random(seed)
+    want = []
+    e = 0
+    for n, v in segs:
+        if v and abs(v) <= G.CURVE_K and abs(v) >= 3:
+            side = -1 if v > 0 else 1
+            z = (e + 3) * ENTRY
+            want.append((z, 0, "curve_r" if v > 0 else "curve", side, SIGN_LAT, z, z))
+            if abs(v) >= 6:
+                z = (e - 28) * ENTRY
+                want.append((z, 1, "limit", 1, SIGN_LAT, z, z))
+        if trees and n >= TREE_SEG:
+            m = max(1, n * ENTRY // TREE_EVERY)
+            for k in range(m):
+                side = rnd.choice((-1, 1))
+                if v and abs(v) <= G.CURVE_K:
+                    side = -1 if v > 0 else 1   # (a curve's outside)
+                want.append(((e + n * (k + 1) // (m + 1)) * ENTRY, 2, "tree", side,
+                             rnd.choice(TREE_LATS), (e + n * k // m) * ENTRY,
+                             (e + n * (k + 1) // m - 1) * ENTRY))
+        e += n
+    return [(z0 + z, p, k, sd, lt, z0 + lo, z0 + hi) for z, p, k, sd, lt, lo, hi in want]
+
+
+def props_kept(want, trees, loop=0):
+    """Those of the props wanted kept, the curve signs first, then the limit
+    signs, then the trees - each where it is wanted or, a tree, the nearest
+    to it that it can be: none nearer another than PROP_GAP (round the loop
+    too). The trees kept are the kinds in `trees` by turns (a function of
+    the depth: a stage's). [(z, kind, side, lat)], nearest first."""
+    out = []
+
+    def free(z):
+        return (z >= 0 and (not loop or z < loop)
+                and all(abs(z - z2) >= PROP_GAP and (not loop or loop - abs(z - z2) >= PROP_GAP)
+                        for z2, _, _, _ in out))
+    for z, pri, kind, side, lat, lo, hi in sorted(want, key=lambda w: (w[1], w[0])):
+        at = sorted(range(lo, hi + 1, ENTRY), key=lambda z2: abs(z2 - z))
+        at = next((z2 for z2 in [z] + at if free(z2)), None)
+        if at is not None:
+            out.append((at, kind, side, lat))
+    out.sort()
+    turn = {}
+    for i, (z, kind, side, lat) in enumerate(out):
+        if kind == "tree":
+            kinds = trees(z)
+            n = turn[id(kinds)] = turn.get(id(kinds), -1) + 1
+            out[i] = (z, kinds[n % len(kinds)], side, lat)
+    return out
+
+
+def demo_props():
+    return props_kept(props_want(DEMO, True), lambda z: STAGE_TREES[0],
+                      len(entries(DEMO)) * ENTRY)
+
+
+def race_props():
+    want = []
+    for i, st in enumerate(STAGES):
+        want += props_want(st["segs"], bool(STAGE_TREES[i]), i + 1, i * STAGE_LEN * ENTRY)
+    return props_kept(want, lambda z: STAGE_TREES[min(z // (STAGE_LEN * ENTRY), len(STAGES) - 1)])
+
+
+def prop_list(props, loop=0):
+    """Bytes of the list as the game has it: per prop the gap from the last
+    (or the list's start) in 16 depth units, then its byte (prop_code); at
+    the end the gap to the list's end and #FF (round again: `loop`, its
+    length) or 0,#FE (no more)."""
+    out, z0 = [], 0
+    for z, kind, side, lat in props:
+        gap = z - z0
+        assert gap % 16 == 0 and 0 < gap < 256 * 16, (z, gap)
+        out += [gap // 16, prop_code(kind, side, lat)]
+        z0 = z
+    if loop:
+        gap = loop - z0
+        assert gap % 16 == 0 and 0 < gap < 256 * 16
+        out += [gap // 16, 0xFF]
+    else:
+        out += [0, 0xFE]
+    return out
+
+
 # What a stage's colours may change: the rest are the HUD's, the road's,
 # the car's.
 STAGE_PENS = ["BLUE", "SKY", "PASTEL", "HAZE", "GRASS_A", "BUSH", "GRASS_B",
@@ -170,6 +284,11 @@ def check():
 
 
 check()
+for _props, _loop in ((demo_props(), len(entries(DEMO)) * ENTRY), (race_props(), 0)):
+    assert all(b[0] - a[0] >= PROP_GAP for a, b in zip(_props, _props[1:]))
+    if _loop:
+        assert _props[0][0] + _loop - _props[-1][0] >= PROP_GAP
+    prop_list(_props, _loop)
 
 
 if __name__ == "__main__":
@@ -179,3 +298,8 @@ if __name__ == "__main__":
             st["name"], len(st["segs"]), sum(1 for h, k in es if h),
             sum(1 for h, k in es if k)))
     print("race: %d segments, %d bytes" % (len(race()), 2 * len(race()) + 2))
+    for name, props in (("demo", demo_props()), ("race", race_props())):
+        kinds = {}
+        for z, kind, side, lat in props:
+            kinds[kind] = kinds.get(kind, 0) + 1
+        print("%s props: %d (%s), %d bytes" % (name, len(props), kinds, len(prop_list(props, 8192 if name == "demo" else 0))))

@@ -33,9 +33,11 @@ crs_h       defb 0              ; ... hill
 ;; ---------------------------------------------------------------------------
 ;; course_set - HL = a segment list: the track from the next entry worked
 ;; out on (COURSE_AHEAD past the camera's) - A not 0: after the road is
-;; brought to the flat, a level and HILL_RAMP of hill an entry.
+;; brought to the flat, a level and HILL_RAMP of hill an entry. DE = its
+;; props (props.asm), from its first entry on.
 ;; ---------------------------------------------------------------------------
 course_set
+    ld (prp_pend),de
     ld (crs_ptr),hl
     ld (crs_start),hl
     ld (crs_ramp),a
@@ -135,6 +137,11 @@ ce_next                                 ; the next segment
 ce_load
     inc hl
     ld (crs_ptr),hl
+    push af
+    push bc
+    call prop_start                     ; (a new course's first: its props)
+    pop bc
+    pop af
     ld (crs_n),a
     ld hl,crs_v
     ld (hl),c

@@ -35,6 +35,7 @@ gen:
 	$(PYTHON) tools/mkselect.py
 	$(PYTHON) tools/mktraffic.py
 	$(PYTHON) tools/mktrafcode.py
+	$(PYTHON) tools/mkprops.py
 	$(PYTHON) tools/mkbush.py
 
 shots: $(DSK)

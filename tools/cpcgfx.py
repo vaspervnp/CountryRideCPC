@@ -424,7 +424,7 @@ TRACK_PERIOD = 8192
 BUSH_SIZES = [0.4, 0.6, 0.85]          # metres
 BUSH_LATS = [1.2, 1.4, 1.6, 1.85, 2.1]
 BUSH_LAT_OF = [(0, 2), (1, 3), (3, 4)]  # lateral classes each size can have
-BUSH_H = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16]
+BUSH_H = [5, 6, 7, 9, 11, 13, 16]
 BUSH_H_MIN = 4.5                        # lines: a smaller bush is not drawn
 BUSH_ASPECT = 1.2                       # pixels across per line of height
 BUSH_LINES_PER_M = 50 / ROWS            # lines per metre, per row
@@ -475,6 +475,48 @@ def bush_lat(lat, r):
     wider at an odd byte (the core's parity), and the nearest bushes would
     stand on it."""
     return int(BUSH_LATS[lat] * (2 * HALF_MAX + KERB_BOTTOM) / ROWS / 2 * r + 0.5) + 1
+
+
+# ---------------------------------------------------------------------------
+# Props beside the road (tools/mkprops.py, scene.py): palms, dead trees,
+# signs. They stand as bushes do (bush_row, bush_lat, bush_centre), but all
+# of them on one scale of PROP_SIZES sprites, PROP_RATIO apart in height:
+# a prop's sprite s is PROP_CAPS[kind] x PROP_RATIO ** (PROP_SIZES - 1 - s)
+# lines high, and every kind takes sprite s on the same rows (prop_size_of:
+# those where the tallest kind's would be nearest PROP_M metres high).
+# ---------------------------------------------------------------------------
+
+PROP_SIZES = 8
+PROP_RATIO = 0.78
+PROP_CAPS = dict(palm=44, stump=24, dead=28, limit=28, curve=22)
+PROP_REF = "palm"
+PROP_M = 1.6                            # the tallest kind's height, in bush
+                                        # metres: its cap from row 42 on, its
+                                        # top below the horizon (HORIZON_Y)
+
+
+def prop_heights(kind):
+    """Kind's sprites' heights, the smallest first."""
+    cap = PROP_CAPS[kind]
+    return [max(4, int(round(cap * PROP_RATIO ** (PROP_SIZES - 1 - s))))
+            for s in range(PROP_SIZES)]
+
+
+def prop_hw(kind, w):
+    """The byte of a prop's sprite, `w` bytes wide, that its centre (its
+    trunk's or post's foot) is on: its middle one - the left of the two
+    middle ones of the curve sign pointing right, the left one's mirrored."""
+    return w - 1 - w // 2 if kind == "curve_r" else w // 2
+
+
+def prop_size_of(r):
+    """The sprite (0 .. PROP_SIZES - 1) the props take on row r, None if they
+    are too small to draw there."""
+    h = PROP_M * BUSH_LINES_PER_M * r
+    ref = prop_heights(PROP_REF)
+    if h < 0.85 * ref[0]:
+        return None
+    return min(range(PROP_SIZES), key=lambda s: abs(ref[s] - h))
 
 
 def bush_curve8(r):

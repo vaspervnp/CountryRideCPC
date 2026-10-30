@@ -5,8 +5,9 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 ![The road on the flat](docs/screen-flat.png)
 
 A four-lane road runs over crests, dips and curves - never a curve on a
-hill - with bushes of different sizes beside it at random intervals and
-cars on it, at 25 frames a second. A demo drives a loop of it until you
+hill - with bushes of different sizes beside it at random intervals, now
+and then a palm, a dead tree or a road sign, and cars on it, at 25 frames
+a second. A demo drives a loop of it until you
 press fire; then you race the clock over five stages, each in its own
 colours (The race, below). You steer: the
 road moves under the car, and a curve carries the car out of it unless
@@ -138,6 +139,11 @@ the far mountains, the grass and the bushes:
 |---|---|---|
 | ![SUNSET](docs/screen-stage4.png) | ![NIGHT](docs/screen-stage5.png) | |
 
+Beside the road, few and far between, stand each stage's trees - dead
+trees in the countryside and the Alps; tall thin palms, short thick ones
+and dead trees in the desert; both palms at sunset; tall palms at night -
+and before every sharp curve its signs (Props, below).
+
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
 50 more seconds (EXTENDED TIME), 2 fewer at each next one, down to 36, and
 never over 99; then the next stage's number shows, and its colours are
@@ -231,7 +237,7 @@ glass's: `tools/mkselect.py`).
 ### Frames
 
 There are two screen buffers. The game draws into the one not on screen. The
-interrupt handler (IM 2) shows the new buffer at a VSYNC at least two frames
+interrupt handler (IM 1) shows the new buffer at a VSYNC at least two frames
 after the last flip, which gives a steady 25 Hz. The game logic steps at
 50 Hz. If a picture is late, it catches up by up to four steps.
 
@@ -295,7 +301,7 @@ The CRTC always reads the base 64K:
 | Page | Holds |
 |---|---|
 | 0 | buffer 1's road part, common fragments |
-| 1 | both HUDs (`#4000` with RAM C1), the bush sprites' code beside them |
+| 1 | both HUDs (`#4000` with RAM C1), the bush sprites' code and the props' sprites beside them |
 | 2 | buffer 0's road part, common fragments |
 | 3 | the sky ring (`#4000` with RAM C3) |
 
@@ -306,15 +312,20 @@ The banks hold the rest:
 | 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A; traffic sprite code | `#4000` (C4) |
 | 5 | road code (`#4000`), the next step's staging set (`#5E00`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
 | 6 | the road's row tables and the precomputed hill tables; the traffic: its code, tables and most of its sprites' code | `#4000` (C6) |
-| 7 | the game (main loop, HUD, graphics, the panorama, the track's rings at `#F000`) | `#C000` (C1/C3) |
+| 7 | the game (main loop, HUD, graphics, the panorama, the track's rings and the props' size table at `#F000`, over what runs once at the start) | `#C000` (C1/C3) |
 
 Some code and data must be reachable from every RAM configuration: the
 variables they share, the interrupt handler, the stack, the line lists and
 the part of the renderer that switches banks. These live in 704-byte
 fragments at `#x540–#x7FF` of pages 0 and 2, beside the road parts: the
-eight in page 0, and the eight in page 2 hold the bushes' tables and their
-sprites as data (and, in what is left, some of the car's and the traffic's
-code). `src/hw.asm` has the whole map.
+eight in page 0 (the first also has the props' drawing, cut to fit the
+screen: there was the IM 2 table, 263 bytes - IM 1's `JP` is at `#0038`,
+in a hidden line), and the eight in page 2 hold the bushes' tables and
+their sprites as data (and, in what is left, some of the car's and the
+traffic's code). `src/hw.asm` has the whole map. Bank 7's code that runs
+only once, as the game starts (`src/init.asm`: the car's figures, the
+parts of the screen that never change), is at `#F000`, where the track's
+rings and the props' table are worked out after it.
 
 The car's code - a compiled sprite for each of its eleven views - has the
 same places for every car, as big as the biggest car's needs
@@ -329,7 +340,9 @@ bush reaches line 173 at most, the line lists start at 188, and
 the level in place. The loader loads the picked car's own `CARn.BIN` at
 `#1900` (just past buffer 1's hidden lines in its fourth 2K block, which
 take code) - records of where they go and the bytes: its code, `car_views`
-(where each view's first line ends, and its code), `car_id`. BOOT.BIN
+(where each view's first line ends, and its code), `car_id` - and, the
+same in every one, the traffic's code and the props' sprites that have no
+room elsewhere. BOOT.BIN
 first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
@@ -338,7 +351,8 @@ Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
 on hills: 12 runs of 96 bytes, those BOOT.BIN's own fragments have left
 by then (`tools/mkbush.py` `HUD_ROW7`); the other
-512 bytes of each block hold the bush sprites and the car as code - the
+512 bytes of each block hold the bush sprites and the car as code, and most
+of the props' sprites as data - the
 seventh block's first half, at `#7600`, the keys and the player's speed
 (`src/player.asm`), and the last block's first half, at `#7E00`, the part
 of the road cache's work that runs with RAM C1.
@@ -550,7 +564,7 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
 ### Bushes
 
 `tools/mkbush.py` places the bushes along the track, with a fixed random
-seed, and makes a sprite for each of 11 heights; `tools/scene.py` has their
+seed, and makes a sprite for each of 7 heights; `tools/scene.py` has their
 art and works out where they go, and `src/bush.asm` has to match it.
 
 - **In reach.** A bush comes into reach when it is near enough for its size
@@ -591,6 +605,59 @@ The tables and the sprites as data are in the page 2 fragments, which are
 mapped whatever the bank; the code in page 1 (RAM C1, as the game runs) -
 the smallest sprite's in the fragments if page 1 has no room left; the
 track and the drawing in bank 7.
+
+### Props
+
+Now and then a prop stands beside the road, never two in sight at once:
+each stage's trees, by turns, and its signs - at the start of every curve
+of level 3 or more, on its outside, a yellow board with black chevrons
+pointing the way it bends, and before one of level 6 or more, on the
+right, a speed limit. The demo has dead trees and the signs.
+
+| Palm | Short palm | Dead tree | Speed limit | Curve |
+|---|---|---|---|---|
+| ![A palm](docs/prop-palm.png) | ![A short palm](docs/prop-stump.png) | ![A dead tree](docs/prop-dead.png) | ![A speed limit](docs/prop-limit.png) | ![A curve sign](docs/prop-curve.png) |
+
+- **Art.** The trees are 3D models rendered in Blender
+  (`tools/props3d.py`), the signs drawn as pixels; `tools/mkprops.py` brings
+  them to the pens as it does the cars, every byte whole or clear, into
+  `tools/propsart.py` (and `build/props-sheet.png`, all of them on each
+  stage's grass). All the kinds share one scale of eight sizes - the
+  tallest palm 44 lines high close by, 8 far off - each its own heights;
+  even the tallest palm's top stays below the horizon.
+- **Layout.** `tools/course.py` lays them out along each course: the signs
+  first, then the trees, about 1200 depth units apart, on any segment of 8
+  entries or more (a straight, a hill, a curve's outside), each as near
+  where it is wanted as it can be - but none nearer another than 760, so
+  that one is gone by before the next is 800 ahead. The list
+  (`src/gen/gfx.asm`) is two bytes a prop: its depth from the last in 16
+  units, and its kind, side and lateral class (a bush's). `course_set`
+  gives a course its list, which starts with the course's first entry.
+- **In sight.** The nearest that has not gone by, from 800 depth units
+  ahead (`src/props.asm`). As one comes nearest, its kind's eight sprites
+  go into the bush sprite records 8-15, and a table gives each row the
+  size the props take there, so `bush_one` stands it as it does a bush.
+- **Drawing.** From its sprite's lines, before the bushes - the few nearer
+  stand in front of it: the lines above its column as groups of the same
+  line, each line's runs of bytes copied with `LDIR` (cut to fit when a
+  side of the screen cuts it), then the column - the trunk or the post, its
+  last lines, a byte or two a line, written straight down. Its erasing is
+  two boxes: the lines above the column as wide as the sprite, and the
+  column's pair of bytes.
+- **Off the road.** Its boxes lie on no road where `bush_one` leaves it off
+  the inside of a curve - but a far one's top can lie on the far road on a
+  straight with the road well off the middle (the road's far rows hardly
+  move with `road_x`, its row does), so then it counts as on the inside,
+  and the road is put back there; `tools/mkbush.py` checks this over
+  hills, curve levels and `road_x`.
+- **Time.** A prop costs 0.9-1.8 ms to stand and draw (the tallest palm
+  close by ~3.9 ms) and some to erase; while one is in sight at most one
+  bush is in reach - one that would still be in reach then never comes -
+  and if the picture is late already (10 interrupts since the flip) it is
+  not drawn that time, as the traffic's far car.
+
+The sprites (1.4K) are in page 1 beside the bushes' code and in the hidden
+lines (CARn.BIN), the drawing in bank 7 and fragment 0.
 
 ### Traffic
 
@@ -689,6 +756,8 @@ segment goes before the total time), none from the 11th - its copy waiting
 too, for a picture that has the time; the rest waits for the buffer's next
 picture. Text and gauges sit on
 the HUD's plain background, so drawing is plain copying, never masking.
+The big digits (the speed, the countdown) are kept at half their height,
+each of their lines drawn twice.
 
 The last line holds the game's message: 13 cells of the small font's
 glyphs (the digits and the 19 letters the messages use, 24 bytes each),
@@ -714,16 +783,20 @@ at 5.25, before the road's last four lines were cut, which took off
   curve level changes);
 - road projection: ~5 ms (~5.8 ms when the hill moves);
 - bushes: ~1.7 ms (4.9 ms at worst), taking away and drawing;
+- a prop in sight: 0.9-1.8 ms to stand and draw (~4 ms the tallest palm
+  close by), a bush fewer in reach meanwhile (Props, above);
 - HUD: ~1 ms, within its share;
 - game logic: ~0.6 ms;
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.7 ms, 39.0 ms
-with the traffic (Steering in numbers, below). Over the race's five
+steering or steering from side to side: the worst takes 37.8 ms, with the
+traffic and the props (Steering in numbers, below). Over the race's five
 stages, driven by the autopilot in each of the four cars and zigzagging
-from side to side with the keys, none does either: the worst takes 38.6 ms.
+from side to side with the keys, none does either: the worst takes 38.7 ms
+- a prop is left out of 7 to 18 of each race's ~6100 pictures, which were
+late already when it came to it.
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -881,8 +954,8 @@ model then draws that one.
 `make check` then:
 
 - measures the frame rate;
-- compares 240 freshly drawn road parts, line by line, bushes and traffic
-  and all, with what `tools/scene.py` (the Python reference model) says
+- compares 240 freshly drawn road parts, line by line, props, bushes and
+  traffic and all, with what `tools/scene.py` (the Python reference model) says
   they should be, over hills and curve levels - the lines the CRTC shows:
   above them is the car's code;
 - does the same for 20 pictures of the HUD and horizon;
@@ -927,6 +1000,11 @@ src/            the game
   course.asm    the track worked out a few entries ahead, the stages'
                 colours
   bush.asm      the bushes: projected, drawn, taken away
+  props.asm     the props: the nearest along the course, stood as a bush,
+                drawn from its sprite's lines
+  propdraw.asm  ... their drawing cut to fit the screen, their boxes
+                (fragment 0)
+  init.asm      what runs once as the game starts (over the track's rings)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -954,12 +1032,16 @@ tools/
   mktraffic.py  the traffic's art as the game's pens -> tools/trafficart.py
   mktrafcode.py the traffic's sprites as code, where they go, the tables
                 -> src/gen/ (and src/gen/trafleft.py for mkbush.py)
+  props3d.py    the trees as 3D models, rendered at each of their sizes
+                (Blender) -> assets/props/
+  mkprops.py    the props' art as the game's pens, the signs drawn
+                -> tools/propsart.py
   mkbush.py     the bushes along the track, their sprites (as code and as
                 data), each car as code (CARn.BIN), what is left of the
-                traffic's code, and tables -> src/gen/
+                traffic's code, the props' sprites, and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
-assets/         fonts, the cars' and the traffic's renders
+assets/         fonts, the cars', the traffic's and the trees' renders
 disc/           BASIC loader: the car picked as the game loads
 docs/           screenshots
 ```

@@ -399,25 +399,31 @@ draw_cell_line
     ASSERT MSG_Y % 8 == 0 && SMALL_W == 3
 
 ;; ---------------------------------------------------------------------------
-;; draw_big - glyph A (0-9, 10 = N) at B = x bytes, C = y.
+;; draw_big - glyph A (0-9, 10 = N) at B = x bytes, C = y: its lines
+;; each drawn twice (blit_twice).
 ;; ---------------------------------------------------------------------------
 draw_big
-    ld l,a                      ; 72 bytes a glyph
+    ld l,a                      ; 36 bytes a glyph
     ld h,0
     add hl,hl
-    add hl,hl
-    add hl,hl                   ; *8
+    add hl,hl                   ; *4
     ld d,h
     ld e,l
     add hl,hl
     add hl,hl
-    add hl,hl                   ; *64
-    add hl,de                   ; *72
+    add hl,hl                   ; *32
+    add hl,de                   ; *36
     ld de,big_glyphs
     add hl,de
     ld d,BIG_W
     ld e,BIG_H
-    jp blit
+    xor a
+    ld (blit_odd),a
+    ld (blit_twice+1),a         ; (each line twice)
+    call blit
+    ld a,blit_down-blit_twice-2
+    ld (blit_twice+1),a
+    ret
 
 ;; ---------------------------------------------------------------------------
 ;; draw_small - small glyph A (0-9 the digits, then gen/gfx.asm's) at B = x

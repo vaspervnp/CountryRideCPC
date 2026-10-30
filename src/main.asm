@@ -107,7 +107,8 @@ game_bank_start
     jp game_start
 ;; bush.asm's per buffer: where its records end (low byte), then the records
 ;; (in one page)
-BUSH_RECS   EQU 48                      ; (BUSH_MAX x BUSH_REC: below)
+BUSH_RECS   EQU 60                      ; ((BUSH_MAX + 2) x BUSH_REC: below -
+                                        ; the bushes', a prop's two)
 bush_recs0  defb lo(bush_recs0+1)
     defs BUSH_RECS,0
 bush_recs1  defb lo(bush_recs1+1)
@@ -119,16 +120,20 @@ bush_recs1  defb lo(bush_recs1+1)
     INCLUDE "gen/bush.asm"
     INCLUDE "game.asm"
     INCLUDE "bush.asm"
-    ASSERT BUSH_RECS == BUSH_MAX*BUSH_REC
+    ASSERT BUSH_RECS == (BUSH_MAX+2)*BUSH_REC
+    INCLUDE "props.asm"
     INCLUDE "hud.asm"
     INCLUDE "horizon.asm"
     INCLUDE "screen.asm"
     INCLUDE "course.asm"
 game_bank_end
     ASSERT game_bank_end <= CURVE_RING && HILL_RING+64 <= CAR_HILL_ORG
-    ASSERT game_bank_end <= CAR_HILL_ORG     ; (the rest: the car's views on
+    ORG CURVE_RING                          ; (run once, before the rings are
+    INCLUDE "init.asm"                      ; worked out over it)
+init_end
+    ASSERT init_end <= CAR_HILL_ORG         ; (the rest: the car's views on
                                             ; hills, CARn.BIN)
-    SAVE "GAME.BIN",#C000,game_bank_end-#C000,DSK,"build/countryride.dsk"
+    SAVE "GAME.BIN",#C000,init_end-#C000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
 ;; base memory: boot and the common fragments

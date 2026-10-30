@@ -101,20 +101,14 @@ HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
 ;; ---------------------------------------------------------------------------
 game_start
     ld sp,STACK_TOP
-    call car_setup
-    call road_reset
+    call game_init              ; the car, the parts that never change in
+                                ; both buffers (init.asm: first, as the
+                                ; track's rings go over it)
+    call prop_init              ; (props.asm)
     call course_fill            ; the track's first entries (course.asm)
     call cache_init             ; the cache sets, for the road in the middle
 
-    ; draw the parts that never change into both buffers, then a first
-    ; picture into each, and only then light the palette
-    call hud_forget
-    call hud_snapshot
-    call draw_ring
-    xor a
-    call draw_screen
-    ld a,1
-    call draw_screen
+    ; a first picture into each buffer, and only then light the palette
     xor a
     call draw_picture
     ld a,1
@@ -229,26 +223,6 @@ main_flipped
     inc hl
     ld (frames_drawn),hl
     jp main_loop
-
-;; ---------------------------------------------------------------------------
-;; draw_screen - A = buffer: everything but the road, the whole HUD included
-;; (hud_update draws a picture's share at a time, so it is called until it is
-;; done).
-;; ---------------------------------------------------------------------------
-draw_screen
-    call select_buf
-    call draw_static
-    ld a,HUD_SHARE
-    ld (hud_quota),a
-    ld b,16
-draw_screen_hud
-    push bc
-    call hud_update
-    call hud_msg
-    pop bc
-    djnz draw_screen_hud
-    SET_RAM RAM_C1
-    ret
 
 ;; ---------------------------------------------------------------------------
 ;; draw_picture - A = buffer: last time's bushes taken away, the road, then
@@ -455,50 +429,6 @@ cache_steps_step
     call cache_step
     jp sky_stay                 ; (the next picture has the road moved)
 
-;; ---------------------------------------------------------------------------
-;; car_setup - the car picked (car_id: CARn.BIN) as fast, as quick and as
-;; steerable as it is: its car_stats put into the code that drives it -
-;; speed_player's top speed, grass top speed and acceleration, the demo's
-;; (it drives the same car), steer's steering and curve push factors.
-;; Destroys AF, BC, DE, HL.
-;; ---------------------------------------------------------------------------
-car_setup
-    ld a,(car_id)
-    ld l,a
-    add a,a
-    add a,a
-    add a,l                             ; CAR_STATS_LEN bytes a car
-    ld l,a
-    ld h,0
-    ld de,car_stats
-    add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)                           ; DE = the top speed
-    inc hl
-    ld (sp_max+1),de
-    ld (demo_max+1),de
-    srl d
-    rr e
-    ld (sp_grass+1),de                  ; (on the grass: half)
-    ld e,(hl)
-    inc hl
-    ld d,0
-    ld (sp_acc+1),de
-    ld (demo_acc+1),de
-    ld a,(hl)
-    inc hl
-    ld (steer_k+1),a
-    ld a,(hl)
-    ld (steer_m+1),a
-    ld a,(steer_k+1)                    ; (the full lock's: 127 x k / 64)
-    ld h,127
-    ld e,a
-    call mul8
-    call shr6
-    ld (steer_full+1),hl
-    ret
-    ASSERT CAR_STATS_LEN == 5
 
 ;; ---------------------------------------------------------------------------
 ;; steer - where the car is on the road (car_x) and where the road is to go
@@ -1197,6 +1127,7 @@ rules_start
     ld a,EXT_FIRST
     ld (cp_ext),a
     ld hl,course_hold           ; the road to the flat, and straight on
+    ld de,props_none
     ld a,1
     jp course_set
 
@@ -1271,6 +1202,7 @@ rules_go
     ld hl,(crs_z)               ; the course from the next entry worked
     ld (cp_z),hl                ; out on: the first stage starts there
     ld hl,course_race
+    ld de,props_race
     xor a
     call course_set             ; (A = 0 after)
     inc a
@@ -1439,6 +1371,7 @@ rules_over_t
     ld (coll_kind),a
     call stage_colours
     ld hl,course_demo
+    ld de,props_demo
     ld a,1
     jp course_set
 

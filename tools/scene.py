@@ -23,6 +23,7 @@ from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, SKY_Y, BLOCK_BOTTOM,
                     BUSH_H, BUSH_ASPECT, BUSH_ZNEAR, BUSH_ZFAR, BUSH_GAP,
                     BUSH_SEED, BUSH_BIG_GAP, BUSH_MAX, BUSH_IN_REACH, bush_row,
                     bush_sprite_of, bush_lat, bush_centre, bush_zvis,
+                    prop_size_of, prop_hw,
                     m0_byte, m0_decode,
                     row_half_bytes, row_depth, road_row_pixels, kerb_px, pen_rgb)
 
@@ -622,15 +623,19 @@ def effective_hill(hill):
     return min(level_hill(hill_level(hill)), HILL_MAX)
 
 
-def bush_items(hill, zcam, curve, x=0):
+def bush_items(hill, zcam, curve, x=0, only=None):
     """The bushes on screen, in the order they are drawn - nearest first,
     BUSH_MAX at most (they hardly ever overlap): (sprite, left byte, base
     line, inside of the curve). `hill` as the road engine draws it. A bush
-    going off a side of the screen is drawn until its centre goes."""
+    going off a side of the screen is drawn until its centre goes. `only`:
+    the bushes in reach (BUSHES' indices), if a prop in sight has kept some
+    out (src/props.asm, prop_room)."""
     rows = project(hill)
     top = next(r for r in rows if r)         # the furthest row in sight
     out = []
-    for z, side, size, lat in BUSHES:
+    for i, (z, side, size, lat) in enumerate(BUSHES):
+        if only is not None and i not in only:
+            continue
         zr = (z - zcam) % TRACK_PERIOD
         r = bush_row(zr)
         if not r or r < top:
@@ -655,9 +660,9 @@ def bush_items(hill, zcam, curve, x=0):
     return [t[1:] for t in out[:BUSH_MAX]]
 
 
-def draw_bushes(lines, y0, hill, zcam, curve, x=0):
+def draw_bushes(lines, y0, hill, zcam, curve, x=0, only=None):
     """Draw the bushes into `lines` (pen rows, the first being line y0)."""
-    for k, bx, y, _ in bush_items(hill, zcam, curve, x):
+    for k, bx, y, _ in bush_items(hill, zcam, curve, x, only):
         wb, spans = BUSH_SPRITES[k]
         top = y - len(spans) + 1
         for j, (a, data) in enumerate(spans):
@@ -668,6 +673,63 @@ def draw_bushes(lines, y0, hill, zcam, curve, x=0):
                 x = bx + a + i
                 if 0 <= x < SCR_W // 2:
                     lines[yy - y0][2 * x:2 * x + 2] = list(m0_decode(b))
+
+
+# ---------------------------------------------------------------------------
+# The props beside the road (src/props.asm; tools/course.py lays them out,
+# tools/mkprops.py makes their sprites): one in sight at a time, from
+# PROP_ZVIS ahead until it has gone by as a bush does. It stands as a bush
+# does, on its row, its lateral class's offset from the road's centre, and
+# is drawn while its centre is on the screen - its sprite that of the size
+# the row has (prop_size_of), cut by the screen's sides; before the bushes.
+# ---------------------------------------------------------------------------
+from propsart import PROPS_ART, LETTERS as PROP_LETTERS  # noqa: E402
+import course as _course  # noqa: E402
+
+
+def prop_sprite(kind, size):
+    """A prop's sprite: rows of pens (None clear), each pixel of the art."""
+    rows = PROPS_ART[kind][sorted(PROPS_ART[kind])[size]]
+    return [[None if c == "." else PEN[PROP_LETTERS[c]] for c in r] for r in rows]
+
+
+def prop_item(prop, hill, curve, x=0):
+    """prop = (how far ahead, kind, side, lateral class), or None: its
+    sprite, left byte and base line, if it is drawn."""
+    if prop is None:
+        return None
+    zr, kind, side, lat = prop
+    if not BUSH_ZNEAR <= zr < _course.PROP_ZVIS:
+        return None
+    rows = project(hill)
+    top = next(r for r in rows if r)
+    r = bush_row(zr)
+    if not r or r < top:
+        return None
+    q = abs(hill) // r
+    y = HORIZON_Y + r + (q if hill >= 0 else -q)
+    if y < ROAD_Y:
+        return None
+    spr = prop_sprite(kind, prop_size_of(r))
+    cx = (bush_centre(curve, r) + player_shift(curve, x, r)
+          + side * min(bush_lat(lat, r), 127))
+    if not 0 <= cx < SCR_W // 2:
+        return None
+    return spr, cx - prop_hw(kind, len(spr[0]) // 2), y
+
+
+def draw_prop(lines, y0, prop, hill, curve, x=0):
+    """Draw the prop in sight into `lines` (pen rows, from line y0)."""
+    item = prop_item(prop, hill, curve, x)
+    if item is None:
+        return
+    spr, bx, y = item
+    top = y - len(spr) + 1
+    for j, row in enumerate(spr):
+        for i, p in enumerate(row):
+            px = 2 * bx + i
+            if p is not None and 0 <= px < SCR_W and top + j >= y0:
+                lines[top + j - y0][px] = p
 
 
 # ---------------------------------------------------------------------------
@@ -972,17 +1034,19 @@ def sky_lines(heading=0):
 
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
-              car_off=0, traffic=()):
+              car_off=0, traffic=(), prop=None, only=None):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
-    traffic (traffic_items' cars), the bushes and the car (seen as car_view
+    traffic (traffic_items' cars), the prop in sight (prop_item's), the
+    bushes (those in `only`, if given) and the car (seen as car_view
     `view`, car_off pairs right of the middle). `hill` as the road engine
     draws it (effective_hill)."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
              + road_lines(hill, zcam, curve, x))
     if traffic:
         draw_traffic(lines, ROAD_AREA_Y, hill, zcam, curve, traffic, x)
+    draw_prop(lines, ROAD_AREA_Y, prop, hill, curve, x)
     if bushes:
-        draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x)
+        draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x, only)
     if car:
         draw_car(lines, ROAD_AREA_Y, view, car_off)
     return lines

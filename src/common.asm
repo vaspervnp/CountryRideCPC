@@ -13,7 +13,7 @@
 ;; ===========================================================================
 
 ;; ===========================================================================
-;; Fragment 0: variables, the IM 2 table, the interrupt handler
+;; Fragment 0: variables, the interrupt handler, prop_draw's lines
 ;; ===========================================================================
     ORG FRAG0,FRAG_ST0
 frag0_start
@@ -71,16 +71,6 @@ rp_dhi      defb 0          ; ROAD_AREA_Y (rp_force)
 frames_drawn defw 0         ; pictures completed
 frames_late  defw 0         ; pictures that took more than two VSYNCs
 frame_vbls   defb 0         ; VSYNCs the last picture took
-
-    ASSERT $ <= IM2_TABLE
-    defs IM2_TABLE-$,0
-
-;; --- IM 2 vector table -------------------------------------------------------
-;; The CPC puts no defined byte on the bus when it acknowledges an interrupt,
-;; so all 257 bytes are the same and the vector is #0707 whatever it reads.
-    defs 257,IM2_VEC
-    ASSERT $ <= IM2_VEC*#101
-    defs IM2_VEC*#101-$,0
 
 ;; ---------------------------------------------------------------------------
 ;; isr - six interrupts a frame, one of them inside VSYNC.
@@ -222,6 +212,8 @@ rup_frame_hud_ma
 sky_drops                       ; per road drop: the sky's
     SKY_DROP_TABLE
     ASSERT $-sky_drops == SKY_DROP_N
+
+    INCLUDE "propdraw.asm"
 
 frag0_end
     ASSERT frag0_end <= FRAG0+FRAG_LEN
