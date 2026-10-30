@@ -107,11 +107,14 @@ BUSH_COUNT    EQU 38
 CAR_Y         EQU 236   ; the car's top line
 CAR_HALF      EQU 11   ; its half width, bytes
 CAR_TOP       EQU 27   ; its lines from there, drawn whole when it changes
-CAR_HILL_ORG  EQU #F900 ; the views on hills from here (CARn.BIN)
+CAR_HILL_ORG  EQU #F100 ; the views on hills from here (CARn.BIN)
+SPIN_VIEW     EQU 9   ; car_view: spun left in a crash, then right
+SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
 ;; per car_view (on the level, uphill, downhill; each straight, turning
-;; left, turning right): where its first line's run ends in buffer 0, and
-;; its code - the first car's; boot.asm copies the picked one's over it
-;; (CARn.BIN, which alone has the views on hills: here the level's)
+;; left, turning right; spun left, right): where its first line's run
+;; ends in buffer 0, and its code - the first car's; boot.asm copies the
+;; picked one's over it (CARn.BIN, which alone has the views on hills and
+;; spun: here the level's, and turning)
 car_views
     defw #83F7,car_code0
     defw #83F9,car_code1
@@ -120,6 +123,8 @@ car_views
     defw #83F9,car_code1
     defw #83F7,car_code2
     defw #83F7,car_code0
+    defw #83F9,car_code1
+    defw #83F7,car_code2
     defw #83F9,car_code1
     defw #83F7,car_code2
 car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)

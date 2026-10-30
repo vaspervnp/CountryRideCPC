@@ -725,7 +725,8 @@ bush_next_row
 ;; car is drawn - road_x - car_x pairs right of the middle (car_off), the
 ;; demo's and the tools' in the middle. If this buffer last showed it
 ;; elsewhere or seen another way (car_vfull: car_view, and on a slope -
-;; the hill at least HILL_PITCH either way - uphill or downhill), the lines at its top where the
+;; the hill at least HILL_PITCH either way - uphill or downhill; spun, the
+;; same on a slope, or turning near the screen's edges), the lines at its top where the
 ;; views' runs differ (CAR_TOP) are drawn whole - else what the old one had
 ;; there and the new one has not would stay on any of them road_project
 ;; left as it was. Line ROAD_AREA_Y + y is entry LAST_Y - y.
@@ -748,6 +749,8 @@ car_lines_crest
     ld b,6
 car_lines_pitch
     ld a,(car_view)
+    cp SPIN_VIEW                ; (spun: so on a slope too)
+    jr nc,$+3
     add a,b
     ld (car_vfull),a
     ld a,(player)               ; (player 0 or #FF: the middle)
@@ -765,6 +768,17 @@ car_lines_off
     ld (car_off),a
     ld (car_offc),a
     ld c,a
+    ld a,(car_vfull)            ; spun, but further than SPIN_OFF from the
+    cp SPIN_VIEW                ; middle (its box is wider): seen turning,
+    jr c,car_lines_seen         ; which keeps off the screen's edges
+    ld a,c
+    add a,SPIN_OFF
+    cp 2*SPIN_OFF+1
+    jr c,car_lines_seen
+    ld a,(car_vfull)
+    sub SPIN_VIEW-1
+    ld (car_vfull),a
+car_lines_seen
     ld hl,drawn_off
     call buf_entry
     ld a,(hl)

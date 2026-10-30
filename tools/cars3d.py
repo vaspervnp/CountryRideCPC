@@ -13,7 +13,8 @@ and renders each car seen from behind, on the level, going uphill (its
 nose up PITCH degrees) and downhill, each straight and turning left by
 car3d.YAW degrees, to OUT_DIR/<car>_<flat|up|down>_<0|left>.png. Turning
 right is the left view mirrored. CARS (default all four: the player's too)
-picks which; PHOTO (default) renders them photorealistic.
+picks which; PHOTO (default) renders them photorealistic. SPIN renders the
+crash's view instead (spin_render).
 """
 
 import importlib.util
@@ -635,7 +636,59 @@ def side_render(names=("player", "ferrari", "lotus", "bmw")):
     return paths
 
 
+# ---------------------------------------------------------------------------
+# The crash's view: the car on the level spun SPIN_YAW degrees (nose left)
+# about its middle, so its tail swings out - the same camera, scale and
+# light as the other views, in a frame SPIN_CELLS wide (the others' frame in
+# its middle: the tail goes past their right edge), to
+# OUT_DIR/<car>_spin.png. Spun right is this mirrored.
+# ---------------------------------------------------------------------------
+SPIN_YAW = 30.0
+SPIN_PIVOT = 4.45 / 2                      # the rear face to the nose, halved
+SPIN_CELLS = 80
+
+
+def spin_render():
+    paths = []
+    os.makedirs(OUT_DIR, exist_ok=True)
+    sc = bpy.context.scene
+    for name in CARS:
+        clear()
+        if name == "player":
+            car = c3.build()
+            car.scale = (1, 1, 1)
+        else:
+            car = MODELS[name]()
+        root = bpy.data.objects.new("Squash", None)
+        bpy.context.collection.objects.link(root)
+        root.scale = (1, 1, c3.SQUASH)
+        car.parent = root
+        cam = c3.camera()
+        # the frame wider, the scale and the lines as they were
+        resx = sc.render.resolution_x
+        shift = cam.data.shift_y * resx
+        sc.render.resolution_x = SPIN_CELLS * c3.CELL_PX[0]
+        cam.data.lens *= resx / sc.render.resolution_x
+        cam.data.shift_y = shift / sc.render.resolution_x
+        if PHOTO:
+            photoreal(PAINT[name])
+            photo_setup((math.radians(45), 0, 0))
+        else:
+            c3.setup()
+        e = Euler((0, 0, math.radians(SPIN_YAW)), "XYZ")
+        p = Vector((0, SPIN_PIVOT, 0))
+        car.rotation_euler = e
+        car.location = p - e.to_matrix() @ p
+        path = os.path.join(OUT_DIR, "%s_spin.png" % name)
+        sc.render.filepath = path
+        bpy.ops.render.render(write_still=True)
+        paths.append(path)
+    return paths
+
+
 if globals().get("RUN", False):
     result = dict(paths=render())
+if globals().get("SPIN", False):
+    result = dict(paths=spin_render())
 if globals().get("SIDE", False):
     result = dict(paths=side_render())

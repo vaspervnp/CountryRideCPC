@@ -13,7 +13,7 @@
 ;;                              memory fragments it copies into place, and
 ;;                              the bush sprites' code, already in place
 ;;                              in page 1
-;;   CARn.BIN   (#2000)         car n's own code, for BOOT.BIN to put in
+;;   CARn.BIN   (#1900)         car n's own code, for BOOT.BIN to put in
 ;;                              place (the loader loads the picked car's)
 ;;   SELECT.SCR (#C000)         the screen the car is picked on
 ;;
@@ -149,7 +149,10 @@ game_bank_end
 ;; loads at CAR_BLOB for the car picked and boot.asm puts in place), and the
 ;; screen the car is picked on (SELECT.SCR, tools/mkselect.py)
 ;; ---------------------------------------------------------------------------
-CAR_BLOB    EQU #2000                   ; (the loader's MEMORY is below it)
+CAR_BLOB    EQU #1900                   ; (the loader's MEMORY is below it;
+                                        ; the hidden lines of buffer 1's block 3
+                                        ; are below it too: boot_car puts code
+                                        ; there)
 CAR_MAGIC   EQU #5243                   ; "CR"
     INCLUDE "gen/cars.asm"
     BANK

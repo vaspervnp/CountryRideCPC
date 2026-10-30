@@ -803,8 +803,14 @@ CAR_PEN = dict(R="RED", O="ORANGE", Y="YELLOW", K="BLACK", G="GREY",
 CAR_H = len(GAME_ART[CARS[0]][0])
 CAR_Y = CAR_GROUND - GAME_GROUND    # its top line (going downhill its nose
                                     # dips below CAR_GROUND)
-CAR_VIEWS = 9                   # car_view: on the level, uphill, downhill;
-                                # each straight, turning left, turning right
+CAR_VIEWS = 11                  # car_view: on the level, uphill, downhill;
+                                # each straight, turning left, turning right;
+                                # then spun in a crash, left and right (a
+                                # wider box, as much more either side)
+SPIN_VIEW = 9
+SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_off)
+                                # from the middle, else turning (car_lines):
+                                # the screen's edges
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
 # what the game makes of them (mkbush.py: car_stats): the top speed (8.8
 # depth units a VSYNC; 5 is the most the pictures keep up with), the speed
@@ -824,14 +830,25 @@ assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
 
 def set_car(car_id):
     """The car picked: CAR_ARTS (per car_view), its width CAR_W (pixels,
-    the same either side of the middle) and its left edge CAR_X."""
+    the same either side of the middle) and its left edge CAR_X - a spun
+    view's box is wider, its left edge view_x."""
     global CAR_ID, CAR_ARTS, CAR_W, CAR_X
     CAR_ID = car_id
     CAR_ARTS = GAME_ART[CARS[car_id]]
     CAR_W = len(CAR_ARTS[0][0])
     CAR_X = (SCR_W - CAR_W) // 2
-    assert CAR_W % 4 == 0 and CAR_X % 2 == 0
-    assert all(len(r) == CAR_W for a in CAR_ARTS for r in a)
+    assert CAR_W % 4 == 0 and CAR_X % 2 == 0 and len(CAR_ARTS) == CAR_VIEWS
+    for v, a in enumerate(CAR_ARTS):
+        assert all(len(r) == len(a[0]) for r in a)
+        assert len(a[0]) == CAR_W if v < SPIN_VIEW else len(a[0]) % 4 == 0
+    for v in range(SPIN_VIEW, CAR_VIEWS):        # (on the screen)
+        assert view_x(v) - 4 * SPIN_OFF >= 0
+        assert view_x(v) + len(CAR_ARTS[v][0]) + 4 * SPIN_OFF <= SCR_W
+
+
+def view_x(view):
+    """car_view's left edge, the car in the middle."""
+    return CAR_X - (len(CAR_ARTS[view][0]) - CAR_W) // 2
 
 
 set_car(0)
@@ -839,7 +856,8 @@ set_car(0)
 
 def car_runs(view=0):
     """The car's lines as a bush sprite's: (first byte from the car's left,
-    the bytes of its run) - (0, []) for a line the view leaves empty."""
+    CAR_X - a spun view's can be left of it - and the bytes of its run) -
+    (0, []) for a line the view leaves empty."""
     out = []
     for row in CAR_ARTS[view]:
         if not row.strip("."):
@@ -849,7 +867,8 @@ def car_runs(view=0):
         b = max(i for i, c in enumerate(row) if c != ".") + 1
         assert a % 4 == 0 and b % 4 == 0 and "." not in row[a:b]
         pens = [PEN[CAR_PEN[c]] for c in row[a:b]]
-        out.append((a // 2, [m0_byte(pens[i], pens[i + 1]) for i in range(0, len(pens), 2)]))
+        out.append(((view_x(view) - CAR_X + a) // 2,
+                    [m0_byte(pens[i], pens[i + 1]) for i in range(0, len(pens), 2)]))
     return out
 
 
@@ -860,7 +879,7 @@ def draw_car(lines, y0, view=0, off=0):
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":
-                lines[CAR_Y + j - y0][CAR_X + 4 * off + i] = PEN[CAR_PEN[c]]
+                lines[CAR_Y + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
 
 
 # ---------------------------------------------------------------------------

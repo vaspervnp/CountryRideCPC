@@ -11,6 +11,10 @@ to whole pairs over the asphalt's grey (tools/mkcar.py), in one box for
 all of a car's views, and adds the views turning right: the left ones
 mirrored. Nine sprites a car, in tools/carsart.py. Also draws them all into
 build/cars-sheet.png.
+
+The race also shows each car spun in a crash (assets/cars/<car>_spin.png,
+cars3d.py spin_render): dust at its rear wheels, a box of its own - wider -
+and spun right mirrored. GAME_ART has them as car_view 9 and 10.
 """
 
 import os
@@ -47,6 +51,49 @@ def outline(rows):
             r[i] = "K"
         out.append("".join(r))
     return out
+
+
+# The crash's view, rendered SPIN_CELLS wide with the others' frame in its
+# middle, is moved SPIN_SHIFT cells (its tail swings out right of the
+# others: this keeps its box nearer theirs); then dust at its rear wheels,
+# clouds of (x, y, half width, half height) in the frame's cells: white at
+# their hearts, over the car, thinning out under it.
+SPIN_CELLS = 80
+SPIN_SHIFT = -4
+DUST = [(54, 19, 3.5, 6), (58, 14, 3, 5), (49, 23, 4, 3.4), (42, 24.5, 5, 1.8)]
+
+
+def dusty(rows):
+    out = [list(r) for r in rows]
+    for y, r in enumerate(out):
+        for x in range(len(r)):
+            d = min(((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 for cx, cy, rx, ry in DUST)
+            if d < 0.35:
+                r[x] = "W"
+            elif r[x] != ".":
+                continue
+            elif d < 0.7:
+                r[x] = "GW"[(x + y) & 1]
+            elif d < 1 and (x + 2 * y) % 4 == 0:
+                r[x] = "W"
+    return ["".join(r) for r in out]
+
+
+def spin_view(name, width):
+    """The car spun left, dust and all, in its box: rows over the whole
+    frame's height, widened to pairs on the grid of the car's other views
+    (`width` pixels, around the middle). The box as narrow as it can be."""
+    path = os.path.join(SRC, "%s_spin.png" % name)
+    cells = dither.grade(dither.cell_colours(path, (SPIN_CELLS, mkcar.CELLS[1])))
+    art = outline(mkcar.lone(dither.pattern(cells, PALETTE, PAIRS, mixed_only="G")))
+    cut = (SPIN_CELLS - mkcar.CELLS[0]) // 2 - SPIN_SHIFT
+    assert not any(c != "." for r in art for c in r[:cut] + r[cut + mkcar.CELLS[0]:]), name
+    p = (mkcar.MID - width // 2) % 4
+    rows = [mkcar.pairs(r, p) for r in dusty([r[cut:cut + mkcar.CELLS[0]] for r in art])]
+    xs = [i for r in rows for i, c in enumerate(r) if c != "."]
+    half = max(mkcar.MID - min(xs), max(xs) + 1 - mkcar.MID)
+    half += (mkcar.MID - half - p) % 4
+    return [r[mkcar.MID - half:mkcar.MID + half] for r in rows]
 
 
 def car_views(name):
@@ -110,9 +157,9 @@ VIEWS = [(p, t) for p in PITCHES for t in ("straight", "left", "right")]   # car
 
 def game_art(cars, tops):
     """The views the race draws, in car_view's order (on the level, uphill,
-    downhill; each straight, turning left, turning right), every car's over
-    the same lines of the renders (the ground on the same line), the lines
-    none of them uses left out."""
+    downhill; each straight, turning left, turning right; then spun left
+    and right), every car's over the same lines of the renders (the ground
+    on the same line), the lines none of them uses left out."""
     rows = {}
     for name in CARS:
         a = cars[name]
@@ -124,9 +171,10 @@ def game_art(cars, tops):
     r0, r1 = min(r[0] for r in rows.values()), max(r[1] for r in rows.values())
     assert len({r[2] for r in rows.values()}) == 1, rows   # (the wheels on the ground)
     ground = rows[CARS[0]][2] - r0
-    out = ["", "# The race's views, car_view 0-8 (flat, up, down x straight, left, right),",
-           "# every car's over the renders' lines %d-%d: GAME_ART[car][car_view]; the" % (r0, r1),
-           "# wheels on the level stand on line GAME_GROUND of them.",
+    out = ["", "# The race's views, car_view 0-8 (flat, up, down x straight, left, right)",
+           "# and 9-10 (spun in a crash, left and right: a wider box, as wide either",
+           "# side), every car's over the renders' lines %d-%d: GAME_ART[car][car_view];" % (r0, r1),
+           "# the wheels on the level stand on line GAME_GROUND of them.",
            "GAME_GROUND = %d" % ground, "GAME_ART = {"]
     for name in CARS:
         a, w = cars[name], len(cars[name]["flat"]["straight"][0])
@@ -135,6 +183,12 @@ def game_art(cars, tops):
             art = ["." * w if not tops[name] <= r < tops[name] + len(a[p][t])
                    else a[p][t][r - tops[name]] for r in range(r0, r1 + 1)]
             out.append("        [   # %s, %s" % (p, t))
+            out += ['            "%s",' % r for r in art]
+            out.append("        ],")
+        spin = spin_view(name, w)
+        assert not any(r.strip(".") for r in spin[:r0] + spin[r1 + 1:]), name
+        for t, art in (("left", spin[r0:r1 + 1]), ("right", [r[::-1] for r in spin[r0:r1 + 1]])):
+            out.append("        [   # spun %s" % t)
             out += ['            "%s",' % r for r in art]
             out.append("        ],")
         out.append("    ],")

@@ -746,8 +746,8 @@ coll_set
 
 ;; coll_step - A = coll_t, not 0: a picture of a bump or a crash. HL = the
 ;; car's move: the shove added - or, the crash over, the way back to the
-;; road's middle in its place. Sets car_view: the car wobbles, left and
-;; right. Destroys AF, DE.
+;; road's middle in its place. Sets car_view: in a bump the car wobbles,
+;; left and right; in a crash it spins (spin_views). Destroys AF, DE.
 coll_step
     dec a
     ld (coll_t),a
@@ -757,19 +757,42 @@ coll_step
 coll_on
     ld a,(coll_kind)
     or a
-    jr z,coll_shove                     ; a bump
+    jr z,coll_bump
     ld a,e
     cp BACK_T
     jr c,coll_back
-coll_shove
+    ld a,CRASH_T+BACK_T-1               ; a crash: a view each 2 pictures
+    sub e
+    rra
+    and 7
+    ld e,a
+    ld d,0
+    push hl
+    ld hl,spin_views
+    add hl,de
+    ld a,(coll_v+1)                     ; shoved right: the other way
+    rla
+    sbc a,a
+    and 3
+    xor (hl)
+    pop hl
+    jr coll_shove
+coll_bump
     ld a,e
     rra
     and 1
     inc a
+coll_shove
     ld (car_view),a
     ld de,(coll_v)
     add hl,de
     ret
+;; the car in a crash, shoved left: its nose swung right by the blow, and
+;; seen spun right, then back and spun left, and so on - XOR 3 the other
+;; way (1 and 2, SPIN_VIEW and SPIN_VIEW+1 swapped)
+    ASSERT SPIN_VIEW == 9
+spin_views
+    defb 2,SPIN_VIEW+1,SPIN_VIEW+1,2,1,SPIN_VIEW,SPIN_VIEW,1
 coll_back
     ld a,(car_x)                        ; car_x towards 0
     ld hl,BACK_V

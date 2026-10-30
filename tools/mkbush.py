@@ -488,14 +488,14 @@ def frag_slot(fc, label, codes):
     return pieces
 
 
-# The views uphill and downhill (car_view 3-8) - CARn.BIN only - go where
-# the car's code can run (RAM_C1) and nothing else writes: bank 7 from
-# CAR_HILL_ORG on, and the road parts' lines 160-172 of buffer 0 (page 2)
-# and of buffer 1's first four 2K blocks (page 0: the rest of page 0 is
-# where the loader loads CARn.BIN). The CRTC shows the road parts from line
+# The views uphill and downhill (car_view 3-8) and spun (9-10) - CARn.BIN
+# only - go where the car's code can run (RAM_C1) and nothing else writes:
+# bank 7 from CAR_HILL_ORG on, and the road parts' lines 160-172 of buffer
+# 0 (page 2) and of buffer 1's first four 2K blocks (page 0: the rest of
+# page 0 is where the loader loads CARn.BIN). The CRTC shows the road parts from line
 # 184 (draw_static draws nothing above it), and a bush, standing on line
 # ROAD_Y or lower and BUSH_H lines high at most, reaches line 173.
-CAR_HILL_ORG = 0xF900
+CAR_HILL_ORG = 0xF100
 
 
 def hidden_runs(base, blocks):
@@ -505,10 +505,10 @@ def hidden_runs(base, blocks):
 # ... and first the HUDs' eighth character rows in page 1, which the CRTC
 # never shows (its R6: seven rows): 96 bytes of each HUD in each 2K block,
 # #x2A0 and #x5A0 - those free when boot_car copies the car's records in
-# (boot.asm): not where fragments 4-6 are still stored then (#x2A0 of
-# blocks 2 and 3), nor boot_car itself (#x5A0 of block 1).
+# (boot.asm): not where fragments 3-6 are still stored then (#x2A0 of
+# blocks 1-3), nor boot_car itself (#x5A0 of block 1).
 HUD_ROW7 = [(0x4000 + b * 0x800 + off, 96) for b in range(8) for off in (0x2A0, 0x5A0)
-            if not (off == 0x2A0 and b in (2, 3)) and not (off == 0x5A0 and b == 1)]
+            if not (off == 0x2A0 and b in (1, 2, 3)) and not (off == 0x5A0 and b == 1)]
 HILL_RUNS = (HUD_ROW7 + [(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0x8000, range(8))
              + hidden_runs(0x0000, range(4)))
 # The traffic's pieces left over from the fragments go - in every CARn.BIN,
@@ -889,13 +889,18 @@ def main():
     emit("CAR_TOP       EQU %d   ; its lines from there, drawn whole when it changes"
          % S.CAR_H)
     emit("CAR_HILL_ORG  EQU #%04X ; the views on hills from here (CARn.BIN)" % CAR_HILL_ORG)
+    emit("SPIN_VIEW     EQU %d   ; car_view: spun left in a crash, then right" % S.SPIN_VIEW)
+    emit("SPIN_OFF      EQU %d  ; ... seen so at most this far from the middle"
+         % S.SPIN_OFF)
     emit(";; per car_view (on the level, uphill, downhill; each straight, turning")
-    emit(";; left, turning right): where its first line's run ends in buffer 0, and")
-    emit(";; its code - the first car's; boot.asm copies the picked one's over it")
-    emit(";; (CARn.BIN, which alone has the views on hills: here the level's)")
+    emit(";; left, turning right; spun left, right): where its first line's run")
+    emit(";; ends in buffer 0, and its code - the first car's; boot.asm copies the")
+    emit(";; picked one's over it (CARn.BIN, which alone has the views on hills and")
+    emit(";; spun: here the level's, and turning)")
     emit("car_views")
     for v in range(S.CAR_VIEWS):
-        emit("    defw #%04X,car_code%d" % (ends[0][v % 3], v % 3))
+        lv = v % 3 if v < S.SPIN_VIEW else 1 + v - S.SPIN_VIEW     # (spun:
+        emit("    defw #%04X,car_code%d" % (ends[0][lv], lv))      # turning)
     emit("car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)")
     emit(";; per car: its top speed, its acceleration (both 8.8 depth units a")
     emit(";; VSYNC), its steering's and the curves' factors (steer: k, m)")

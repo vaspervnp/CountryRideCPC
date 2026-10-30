@@ -171,7 +171,11 @@ flat. The asphalt's grey only in a checkerboard, never alone: a grey pixel
 would look like a hole. Each car has nine views - on the level, going
 uphill and going downhill (pitched 8 degrees before the car is squashed as
 low as the game draws it), each straight, turning left and turning right
-(the left view mirrored) - in `tools/carsart.py` (`tools/mkcars.py`, which
+(the left view mirrored) - and two for a crash: spun 30 degrees about its
+middle, its tail swung out (rendered in a frame 80 pixels wide, moved 4
+pixels left to keep its box near the others'), with dust at its rear
+wheels (white at the clouds' hearts, thinning out under the car), and spun
+the other way mirrored - in `tools/carsart.py` (`tools/mkcars.py`, which
 also draws `build/cars-sheet.png`). In the race the car is seen uphill
 where the road ahead climbs - the hill 20 or more into a dip - and
 downhill where it falls away, over a crest (`car_lines`). The side views have the select screen's own sixteen pens (pink
@@ -268,26 +272,27 @@ eight in page 0, and the eight in page 2 hold the bushes' tables and their
 sprites as data (and, in what is left, some of the car's and the traffic's
 code). `src/hw.asm` has the whole map.
 
-The car's code - a compiled sprite for each of its nine views - has the
+The car's code - a compiled sprite for each of its eleven views - has the
 same places for every car, as big as the biggest car's needs
 (`tools/mkbush.py`): the three on the level in page 1 beside the bushes'
 and in what is left of the page 2 fragments (with the smallest bush's code
-when page 1 is short), the six on hills (4.5K) in what the CRTC never
-shows and nothing else writes: the HUDs' eighth character rows (the HUD
-part shows seven: `R6`), bank 7 from `#F900`, after the game, and the road
+when page 1 is short), the six on hills and the two spun (6.4K) in what
+the CRTC never shows and nothing else writes: the HUDs' eighth character
+rows (the HUD part shows seven: `R6`), bank 7 from `#F100`, after the game, and the road
 parts' lines 160-172 - buffer 0's, and buffer 1's first four 2K blocks (a
 bush reaches line 173 at most, the line lists start at 188, and
 `draw_static` fills only from 184). BOOT.BIN has the first car's views on
 the level in place. The loader loads the picked car's own `CARn.BIN` at
-`#2000` - records of where they go and the bytes: its code, `car_views`
+`#1900` (just past buffer 1's hidden lines in its fourth 2K block, which
+take code) - records of where they go and the bytes: its code, `car_views`
 (where each view's first line ends, and its code), `car_id`. BOOT.BIN
-first puts the fragments in place - but 4-6, whose places the file lies
+first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
-fragments 4-6. The race takes no more memory for four cars than for one.
+fragments 3-6. The race takes no more memory for four cars than for one.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
-on hills: 13 runs of 96 bytes, those BOOT.BIN's own fragments have left
+on hills: 12 runs of 96 bytes, those BOOT.BIN's own fragments have left
 by then (`tools/mkbush.py` `HUD_ROW7`); the other
 512 bytes of each block hold the bush sprites and the car as code - the
 seventh block's first half, at `#7600`, the keys and the player's speed
@@ -589,10 +594,16 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   `BUMP_SPEED`, just slower than the traffic, so that the car hit goes on
   ahead; meanwhile nothing else bumps it. The player steers on.
 - **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
-  it, 1.9 pairs a picture (24 a step) - across the road - wobbling and out
+  it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
   of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
   VSYNC); then it is brought back to the middle of the road, 0.63 pairs a
   picture (8 a step), and the player drives off again from a standstill.
+  The spin (`spin_views`) is a view each 2 pictures: turning, spun, spun,
+  turning one way, then the other - first its nose swung towards the side
+  that was hit, as the blow turns it. A spun view's box is wider (60 pixels, the white car's
+  64), so further than `SPIN_OFF` (16 pairs) from the middle it would run
+  off the screen: there `car_lines` shows the car turning instead. Spun,
+  the car is seen on the level whatever the slope.
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -667,6 +678,14 @@ worst in the demo and 37.6 / 38.4 / 39.2 side to side. Driving with the
 keys, all four: 28.9-29.5 ms on average, 37.9 ms at worst, 0 past the flip
 in 3000 - the HUD with a third of its share in ~6% of the pictures and
 none in ~1%, and the far car left out of 28 to 49 (Traffic, above).
+
+With the crash's spun views (2026-10-28): the same within the runs' spread
+(side to side, four `steer_x` settings: 37.5-38.4 ms at worst, the build
+before 37.7-39.2), none past the flip; keys 37.8-38.9 ms. Crashes forced at
+the top speed - a bush hit on the road, the car spinning across it with
+the traffic about - 37.1 ms at worst for the first car and 37.7 ms for
+the white one (its spun views the biggest: 961 bytes of code, 1.82 ms,
+against 1.25 ms turning), none past the flip.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -839,7 +858,8 @@ tools/
   car3d.py      the first car as a 3D model, the game's camera, curved
                 shapes (lofts, arches, fenders) for all the cars (Blender)
   cars3d.py     all four cars' models, rendered photorealistic in Blender:
-                nine views each from behind, one from the side -> assets/cars/
+                nine views each from behind, one spun (SPIN), one from the
+                side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views as the game's pens -> tools/carsart.py
@@ -861,7 +881,7 @@ docs/           screenshots
 
 ## Next
 
-- the crash's own pictures: the car flipping and spinning, smoke (it
-  wobbles in its turning views now);
+- a crash at full speed as the arcade's: the car flipping (it spins now,
+  between its turning views and two spun 30 degrees);
 - curves that come from the horizon (the whole road bends at one level now);
 - 3- and 2-lane roads (the generator already has the `LANES` parameter).
