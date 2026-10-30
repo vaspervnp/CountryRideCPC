@@ -106,6 +106,8 @@ game_start
                                 ; track's rings go over it)
     call prop_init              ; (props.asm)
     call course_fill            ; the track's first entries (course.asm)
+    xor a                       ; the music's volumes 0 (sndgame.asm)
+    call snd_mute
     call cache_init             ; the cache sets, for the road in the middle
 
     ; a first picture into each buffer, and only then light the palette

@@ -16,7 +16,8 @@
 ;;   CARn.BIN   (#1900)         car n's own code, for BOOT.BIN to put in
 ;;                              place (the loader loads the picked car's)
 ;;   SOUND.BIN  (#98C0)         the sound, for BOOT.BIN to put in place
-;;   RACE.BIN   (#A0C0)         the pause and the best times, the same
+;;   RACE.BIN   (#A0C0)         the pause, the best times, what the game
+;;                              tells the sound: the same
 ;;   SELECT.SCR (#C000)         the screen the car is picked on
 ;;
 ;; Build: make (see Makefile). README.md describes the memory plan.
@@ -190,6 +191,7 @@ RACE_BLOB   EQU #A0C0                   ; buffer 0's lines 180 on in its fifth
     ORG RACE_BLOB
     defw CAR_MAGIC
     INCLUDE "race.asm"
+    INCLUDE "sndgame.asm"
     defw #FFFF
 race_end
     ASSERT race_end <= FRAG8+4*#800        ; (fragment 12's place)

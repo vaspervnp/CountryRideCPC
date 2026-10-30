@@ -1,0 +1,271 @@
+;; ===========================================================================
+;; sndgame.asm - what the game tells the sound (sound.asm), once a picture
+;; from the main loop (RAM_C1): the race's music on or off, the engine, an
+;; effect to begin; and the pause's silence. In RACE.BIN, as the race's
+;; extras: in page 1's HUD eighth rows (hw.asm SND_M0..) and a hidden line
+;; of page 0 (SND_P10).
+;;
+;; The engine is a note on channel C: its pitch from the gear the speed is
+;; in (as the HUD's) and how far up it the revs are - up through a gear,
+;; down at the next one's start, as a gearbox has it - every other picture
+;; a little lower (a hum); on the grass a rumble with it, and in a curve
+;; that carries the car out hard (push_v) the tyres' squeal.
+;; ===========================================================================
+
+ENG_IDLE    EQU 962             ; the engine's period standing still (65 Hz)
+ENG_VOL     EQU 9
+ENG_GRASS   EQU 12              ; its noise's period on the grass
+SQUEAL_N    EQU 2               ; ... in a hard curve,
+SQUEAL_V    EQU #0050           ; ... the curve's push from this on (8.8
+                                ; pairs a picture)
+    ASSERT 6*GEAR_STEP > SPEED_MAX
+
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_M0
+
+;; snd_frame - (the main loop, once a picture) the sound as the game is: the
+;; music in the race, the engine while the player's car is out (not in the
+;; demo), an effect when something begins. Destroys AF, BC, DE, HL.
+snd_frame
+    ld a,(game_mode)                    ; the music: in the race, from its
+    cp MODE_RACE                        ; start
+    ld a,0
+    jr nz,$+3
+    inc a
+    ld hl,snd_music
+    cp (hl)
+    call nz,snd_switch
+    ld a,(game_mode)                    ; the engine (the demo: none)
+    or a
+    ld hl,ENG_IDLE
+    ld c,a                              ; (C: its volume, 0 in the demo)
+    jr z,sf_set
+    call eng_period
+    ld a,(sf_hum)
+    xor 1
+    ld (sf_hum),a
+    jr z,sf_loud
+    ld d,h                              ; every other picture 1/16 longer:
+    ld e,l                              ; a hum
+    srl d
+    rr e
+    srl d
+    rr e
+    srl d
+    rr e
+    srl d
+    rr e
+    add hl,de
+sf_loud
+    ld c,ENG_VOL
+sf_set
+    ld (eng_regs),hl
+    ld a,c
+    ld (eng_regs+4),a
+    jp sf_noise
+
+    REC_END SND_M0,SND_PIECE
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_M1
+
+sf_noise
+    ld a,(car_x)                        ; on the grass: its rumble
+    add a,OFFROAD_X-1
+    cp 2*OFFROAD_X-1
+    ld bc,(MIX_TONES-MIX_NOISE_C)*256+ENG_GRASS
+    jr nc,sf_mix
+    ld hl,(push_v)                      ; a curve carrying the car out hard:
+    ld a,h                              ; the tyres squeal
+    or a
+    jp p,sf_push
+    xor a
+    sub l
+    ld l,a
+    sbc a,a
+    sub h
+    ld h,a
+sf_push
+    ld de,-SQUEAL_V
+    add hl,de
+    ld c,SQUEAL_N
+    jr c,sf_mix
+    ld b,MIX_TONES
+sf_mix
+    ld a,b
+    ld (eng_regs+3),a
+    ld a,c
+    ld (eng_regs+2),a
+    ld b,0                              ; B: the effect, if one
+    ld a,(count_gear)                   ; the count: a beep, and GO! at its end
+    ld hl,sf_count
+    cp (hl)
+    ld (hl),a
+    jr z,sf_msg_j
+    ld b,lo(fx_beep)
+    or a
+    jr nz,sf_msg_j
+    ld b,lo(fx_go)
+sf_msg_j
+    jp sf_msg
+
+sf_count    defb 0                      ; at the last picture: the count, the
+sf_msgs     defb 0                      ; message, coll_t; the engine's hum
+sf_coll_t   defb 0
+sf_hum      defb 0
+
+    REC_END SND_M1,SND_PIECE
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_M2
+
+sf_msg
+    ld a,(msg)                          ; EXTENDED TIME, TIME UP, FINISH
+    ld hl,sf_msgs
+    cp (hl)
+    ld (hl),a
+    jr z,sf_colls
+    cp MSG_EXTENDED_TIME
+    jr nz,$+4
+    ld b,lo(fx_cp)
+    cp MSG_TIME_UP
+    jr nz,$+4
+    ld b,lo(fx_timeup)
+    cp MSG_FINISH
+    jr nz,sf_colls
+    ld b,lo(fx_finish)
+sf_colls
+    ld a,(coll_t)                       ; a bump or a crash begins
+    ld hl,sf_coll_t
+    ld c,(hl)
+    ld (hl),a
+    cp c
+    jr c,sf_fx
+    jr z,sf_fx
+    ld b,lo(fx_bump)
+    ld a,(coll_kind)
+    or a
+    jr z,sf_fx
+    ld b,lo(fx_crash)
+sf_fx
+    ld a,(game_mode)                    ; (none in the demo)
+    or a
+    ret z
+    ld a,b
+    or a
+    ret z
+    ld (fx_new),a
+    ret
+
+    REC_END SND_M2,SND_PIECE
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_M3
+
+;; snd_switch - A = 1: the music from its start; 0: none
+snd_switch
+    or a
+    jr nz,ssw_on
+    ld (snd_music),a
+    jr snd_mute
+ssw_on
+    ld hl,mus_lead
+    ld (snd_ch_a+CH_ORD),hl
+    ld hl,mus_bass
+    ld (snd_ch_b+CH_ORD),hl
+    ld (snd_ticks),a                    ; (A = 1: a row at the next update)
+    xor a
+    ld (snd_rows),a
+    inc a
+    ld (snd_music),a                    ; (last: the interrupt plays it now)
+    ret
+
+;; snd_hold - (race.asm: the pause) A = 0: all silent, the music held where
+;; it is; else on again as it was (the engine at the next snd_frame, the
+;; music's volumes at their next notes)
+snd_hold
+    ld hl,snd_music
+    or a
+    jr z,sh_off
+    ld a,(sh_music)
+    ld (hl),a
+    ret
+sh_off
+    ld a,(hl)
+    ld (sh_music),a
+    xor a
+    ld (hl),a
+    ld (eng_regs+4),a
+    ld (fx_ticks),a
+;; snd_mute - (A = 0) the music's volumes 0, written now
+snd_mute
+    ld (snd_ch_a+CH_VOL),a
+    ld (snd_ch_b+CH_VOL),a
+    ld e,a
+    ld c,8
+    di
+    call psg_w
+    inc c
+    call psg_w
+    ei
+    ret
+
+sh_music    defb 0                      ; snd_music when it stopped
+
+    REC_END SND_M3,SND_PIECE
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_P10
+
+;; eng_period - HL = the engine's period: its gear's at the gear's start
+;; (eng_gears), less how far up the gear the speed is times its slope
+eng_period
+    ld hl,(speed)
+    ld de,GEAR_STEP
+    ld bc,eng_gears-3
+ep_gear
+    inc bc
+    inc bc
+    inc bc
+    or a
+    sbc hl,de
+    jr nc,ep_gear
+    add hl,de                           ; HL = how far up the gear
+    ex de,hl
+    ld a,(bc)                           ; x its slope (eighths)
+    ld hl,0
+ep_slope
+    add hl,de
+    dec a
+    jr nz,ep_slope
+    srl h
+    rr l
+    srl h
+    rr l
+    srl h
+    rr l
+    ex de,hl
+    inc bc
+    ld a,(bc)
+    ld l,a
+    inc bc
+    ld a,(bc)
+    ld h,a
+    or a
+    sbc hl,de
+    ret
+
+;; per gear: its slope - the period's fall a speed unit, in eighths - and
+;; its period at its start: 65 Hz up to 115, then 80-125, 95-139, 110-159,
+;; 125-174 and 140-204 Hz
+eng_gears
+    defb 12
+    defw ENG_IDLE
+    defb 8
+    defw 781
+    defb 6
+    defw 658
+    defb 5
+    defw 568
+    defb 4
+    defw 500
+    defb 4
+    defw 446
+
+    REC_END SND_P10,SND_PIECE

@@ -290,10 +290,12 @@ pr_free
 ;; prop_one - (bush_draw, before the bushes) the nearest prop, if it is in
 ;; sight: stood as a bush is (bush_one, from prp_tab) and drawn (prop_draw) -
 ;; but not if the picture is late already (PROP_LATE interrupts since the
-;; flip: as the traffic's far car), prp_late then not 0. Destroys
+;; flip: as the traffic's far car - or one fewer, if it is nearer than
+;; PROP_BIG_Z: a big one, up to ~4 ms), prp_late then not 0. Destroys
 ;; everything.
 ;; ---------------------------------------------------------------------------
 PROP_LATE   EQU 10
+PROP_BIG_Z  EQU 168
 prp_late    defb 0                      ; (tools/run.py: not drawn)
 
 prop_one
@@ -310,13 +312,22 @@ prop_one
     or a
     sbc hl,de
     ret nc                              ; not in sight yet
+    add hl,de
     ld a,(irq_n)
     cp PROP_LATE
+    jr nc,po_late
+    cp PROP_LATE-1
     jr c,po_draw
-    ld (prp_late),a
+    ld a,h                              ; (big)
+    or a
+    jr nz,po_draw
+    ld a,l
+    cp PROP_BIG_Z
+    jr nc,po_draw
+po_late
+    ld (prp_late),a                     ; (A: not 0)
     ret
 po_draw
-    add hl,de
     ex de,hl
     ld hl,prop_draw
     ld (b1_way+1),hl

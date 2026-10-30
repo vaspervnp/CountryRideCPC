@@ -378,13 +378,15 @@ place after them) is where nothing else goes: what the interrupt runs and
 reads in the road parts' lines 173-178, both buffers' (twelve 96-byte
 pieces, in pages 0 and 2: whatever the RAM configuration; a bush's top is
 on line 183 at the highest, a prop's on 179, both checked by
-`tools/mkbush.py`), and what the main loop runs in three HUD eighth rows
-(`#4AA0`, `#52A0`, `#5AA0`), where fragments 2-7 were stored until then.
+`tools/mkbush.py`); what the main loop runs is in `RACE.BIN` (below).
 `boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
 pause and the best times, and the start of a race, which bank 7 had no
 room left for: `src/race.asm`) is records too, loaded at `#A0C0` and put
 in place after the sound: in buffer 1's hidden lines 164 and 172 (which
-the traffic's code leaves), 167, and 178.
+the traffic's code leaves), 167, and 178. It has the sound's main-loop
+side too (`src/sndgame.asm`), in four HUD eighth rows - the fourth,
+`#4DA0`, where `boot_car` itself was: `RACE.BIN` is its last file, and
+`boot_blob` returns from it for it - and a hidden line of page 0.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
@@ -692,7 +694,8 @@ right, a speed limit. The demo has dead trees and the signs.
 - **Time.** A prop costs 0.9-1.8 ms to stand and draw (the tallest palm
   close by ~3.9 ms) and some to erase; while one is in sight at most one
   bush is in reach - one that would still be in reach then never comes -
-  and if the picture is late already (10 interrupts since the flip) it is
+  and if the picture is late already (10 interrupts since the flip - or
+  9 for one nearer than `PROP_BIG_Z`, the big ones, up to ~4 ms) it is
   not drawn that time, as the traffic's far car.
 
 The sprites (1.4K) are in page 1 beside the bushes' code and in the hidden
@@ -820,26 +823,34 @@ plays it all (`src/sound.asm`): at line ~118 every other frame
   starts at 13 and falls an update to the level it holds (the lead 9, the
   bass 7). The tune is `tools/mksound.py`'s (`src/gen/music.asm`): note
   names, bar by bar, the bass the chord's root an octave apart on every
-  other eighth; a byte a row (hold, off, or a note from C2), octave 2's
-  twelve periods, higher octaves halved and rounded.
+  other eighth; a byte a row (hold, off, or one of the tune's 21 notes),
+  and each note's period.
 - **Channel C** (`snd_chan_c`): an effect is steps of updates, a volume
   falling an update, a tone's period or a noise's; with none, the
   engine as the main loop last had it.
-- **The PSG's registers** (`snd_out`): kept in `snd_regs`, and only those
-  that differ from what was written last (`snd_last`) are written.
+- **The PSG is written where something changes**: a channel's period at
+  a new note (what of it differs), its volume at a note and as it falls;
+  channel C's registers (`c_regs`) where they differ from what was
+  written last (`c_last`).
 
-Once a picture, after `steer`, the main loop's `snd_frame` tells it what
-the game is doing: the music on in the race (from its start), off
-otherwise; the engine's period (960 less 3/8 of the speed, every other
-picture 1/16 longer: the hum) and volume (none in the demo), its noise
-on the grass; and an effect when something begins - the count's digit
+Once a picture, after `steer`, the main loop's `snd_frame`
+(`src/sndgame.asm`) tells it what the game is doing: the music on in the
+race (from its start), off otherwise; the engine's note and volume (none
+in the demo); and an effect when something begins - the count's digit
 changing (a beep, GO!), the message (EXTENDED TIME, TIME UP, FINISH),
-`coll_t` going up (a bump, a crash).
+`coll_t` going up (a bump, a crash). The engine's pitch comes from the
+gear the speed is in, as the HUD shows it, and how far up the gear it is
+(`eng_period`): 65 to 115 Hz in the first, then 80-125, 95-139, 110-159,
+125-174 and 140-204 Hz - it drops as the gear changes up. Every other
+picture it is 1/16 lower (a hum); on the grass a noise rumbles with it,
+and where a curve carries the car out hard (`push_v` from `SQUEAL_V` on)
+the tyres squeal, a higher noise.
 
 `read_keys` reads the keyboard through the PSG's port too, its
-interrupts off meanwhile. An update takes ~0.3 ms in the demo and
-~0.54 ms on average in the race (0.9 ms in one in ten, 1.1 ms at most: a
-row's notes as a bar starts), measured in the emulator.
+interrupts off meanwhile. An update takes ~0.2 ms in the demo and
+~0.42 ms on average in the race (0.77 ms in one in ten, 1.05 ms at most:
+a row's notes as a bar starts), measured in the emulator - 0.54, 0.9
+and 1.1 ms when every register was compared every time.
 
 ### Timing
 
@@ -862,17 +873,17 @@ at 5.25, before the road's last four lines were cut, which took off
 - game logic: ~0.6 ms;
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
   turn, at the flip);
-- the sound: ~0.3 ms in the demo, ~0.54 ms in the race (Sound, above).
+- the sound: ~0.2 ms in the demo, ~0.42 ms in the race (Sound, above).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 38.2 ms, with the
+steering or steering from side to side: the worst takes 37.6 ms, with the
 traffic, the props and the sound (Steering in numbers, below). Over the
 race's five stages, driven by the autopilot in each of the four cars and
 zigzagging from side to side with the keys, with the music, none does
-either: the worst takes 39.3 ms (a hill moving, a dead tree close by drawn
-at the 9th interrupt, and the sound) - a prop is left out of 5 to 52 of
-each race's ~6100 pictures (7 to 18 before the sound), which were late
-already when it came to it.
+either: the worst takes 38.6 ms - a prop is left out of 37 to 76 of each
+race's ~6100 pictures, which were late already when it came to it (7 to
+18 before the sound; 5 to 52 with it, the worst 39.3 ms, before a near
+one needed the picture an interrupt earlier).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -918,7 +929,9 @@ the white one (its spun views the biggest: 961 bytes of code, 1.82 ms,
 against 1.25 ms turning), none past the flip.
 
 With the props and the sound (2026-10-30): 24.5 / 25.3 / 27.8 ms on
-average and 36.9 / 38.2 / 37.6 ms at worst, none past the flip.
+average and 36.9 / 38.2 / 37.6 ms at worst, none past the flip; with the
+sound written only where it changes, 24.2 / 24.4 / 27.5 ms and 37.6 /
+37.2 / 37.3 ms.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -1084,8 +1097,10 @@ src/            the game
   propdraw.asm  ... their drawing cut to fit the screen, their boxes
                 (fragment 0)
   init.asm      what runs once as the game starts (over the track's rings)
-  sound.asm     the sound: the interrupt's player (music, engine, effects),
-                what the main loop tells it (SOUND.BIN)
+  sound.asm     the sound: the interrupt's player - music, engine,
+                effects (SOUND.BIN)
+  sndgame.asm   ... what the game tells it: the engine's note, the
+                effects, the music on or off (RACE.BIN)
   race.asm      the pause, the best times, the start of a race (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
@@ -1133,6 +1148,13 @@ docs/           screenshots
 ## Next
 
 - a crash at full speed as the arcade's: the car flipping (it spins now,
-  between its turning views and two spun 30 degrees);
-- curves that come from the horizon (the whole road bends at one level now);
-- 3- and 2-lane roads (the generator already has the `LANES` parameter).
+  between its turning views and two spun 30 degrees) - a flip's views
+  would take 2-5K of code a car, where ~600 bytes are left; the car
+  thrown up, in steps of a character row (8 lines: the views' code is
+  made for its rows), would fit;
+- curves that come from the horizon (the whole road bends at one level
+  now) - a level a row, which the cache, made a level at a time, does not
+  allow;
+- 3- and 2-lane roads (the generator already has the `LANES` parameter) -
+  but a lane count's code and templates fill banks 4 and 5: one for the
+  whole game, unless the race loaded another from the disc.

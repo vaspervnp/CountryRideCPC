@@ -114,7 +114,8 @@ crtc_regs
 ;; fragments 3-6, over the car's file, IM 1's JP, and the sound (SOUND.BIN,
 ;; at SOUND_BLOB: some of it where the car's file was, some where fragments
 ;; 2-7 were stored) and the race's extras (RACE.BIN, RACE_BLOB: some where
-;; the car's file was). RAM_C0 after.
+;; the car's file was, some here - so last, not returning here). RAM_C1
+;; after.
 boot_car
     SET_RAM RAM_C1
     ld hl,CAR_BLOB
@@ -141,10 +142,8 @@ boot_car
     ld hl,SOUND_BLOB
     call boot_blob
     ld hl,RACE_BLOB
-    call boot_blob
-    SET_RAM RAM_C0
-    ret
-    ASSERT $ <= #4E00
+    jp boot_blob                        ; (its RET is boot_car's)
+    ASSERT $ <= #4E00 && crtc_regs+25 <= SND_M3
 
     ORG FRAG_ST5+FRAG_LEN               ; (the HUDs' later, and the car's
                                         ; records start at #x5A0)

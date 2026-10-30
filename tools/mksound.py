@@ -8,12 +8,11 @@ player's updates (25 a second); a pattern is a bar, 8 rows, a byte a row:
 
     0           hold (the note goes on, its volume decaying)
     1           off
-    2 + n       note n semitones above C2
+    2 + i       note i of the tune's, lowest first: its period is
+                snd_periods' i-th (the PSG's clock 1 MHz: 62500 / f)
 
 Each channel has an order list of its bars' patterns (defw), #FFFF at the
-end: round again. The periods are those of octave 2's twelve notes (the
-PSG's clock 1 MHz: period = 62500 / f); a higher octave halves them,
-rounded (sound.asm).
+end: round again.
 
 The patterns and lists go into the pieces of SOUND.BIN the code leaves
 (DATA_PIECES: hw.asm SND_P..., a line each), as records - sound.asm's.
@@ -58,15 +57,28 @@ BASS_ENV = (13, 3, 7)
 PIECE = 96
 
 
+def semitone(tok):
+    """A note's semitones above C2; None for a hold or an off."""
+    if tok in ".-":
+        return None
+    name, octave = tok[:-1], int(tok[-1])
+    n = NOTES[name] + 12 * (octave - 2)
+    assert 0 <= n < 72, tok
+    return n
+
+
+def used():
+    """The tune's notes, lowest first (semitones above C2)."""
+    return sorted({semitone(t) for text in LEAD + list(BASS.values())
+                   for t in text.split()} - {None})
+
+
 def note(tok):
     if tok == ".":
         return 0
     if tok == "-":
         return 1
-    name, octave = tok[:-1], int(tok[-1])
-    n = NOTES[name] + 12 * (octave - 2)
-    assert 0 <= n < 72, tok
-    return 2 + n
+    return 2 + used().index(semitone(tok))
 
 
 def pattern(text):
@@ -76,8 +88,8 @@ def pattern(text):
 
 
 def periods():
-    """Octave 2's periods, C2..B2 (the PSG: 1 MHz / 16 / f)."""
-    return [round(62500 / (440 * 2 ** ((n - 33) / 12))) for n in range(12)]
+    """The tune's notes' periods (the PSG: 1 MHz / 16 / f)."""
+    return [round(62500 / (440 * 2 ** ((n - 33) / 12))) for n in used()]
 
 
 def main(pieces):
@@ -94,8 +106,10 @@ def main(pieces):
         if p not in pats:
             pats.append(p)
         bass_order.append(pats.index(p))
-    blocks = [("snd_periods", "octave 2's periods, C2..B2",
-               ["    defw " + ",".join(str(v) for v in periods())], 24),
+    per = periods()
+    blocks = [("snd_periods", "the tune's notes' periods, lowest first",
+               ["    defw " + ",".join(str(v) for v in per[j:j + 12])
+                for j in range(0, len(per), 12)], 2 * len(per)),
               ("mus_lead", "the lead's bars (channel A)",
                ["    defw " + ",".join("mus_p%d" % i for i in lead_order[j:j + 8])
                 for j in range(0, len(lead_order), 8)] + ["    defw #FFFF"],

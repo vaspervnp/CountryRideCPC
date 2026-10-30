@@ -150,10 +150,11 @@ STACK_TOP   EQU #1000
 ;; a bush's top is on line 183 at the highest, a prop's on 179 (both
 ;; checked by tools/mkbush.py), the traffic's and the road's are lower.
 ;; Page 0's are where the loader loads CARn.BIN: boot.asm copies the sound
-;; in after the car's records. What the main loop runs (RAM_C1) goes in
-;; three of the HUDs' eighth character rows - never shown, and the hill
-;; views leave them out: fragments 2-7 are stored there until boot_car is
-;; done with them.
+;; in after the car's records. What the main loop runs (RAM_C1: sndgame.asm,
+;; in RACE.BIN) goes in four of the HUDs' eighth character rows - never
+;; shown, and the hill views leave them out: fragments 2-7 are stored there
+;; until boot_car is done with them, and boot_car itself in the fourth -
+;; and in P10.
 SND_PIECE   EQU 96          ; bytes: a line (P11: the race's, below)
 SND_P0      EQU BOT0_BASE+5*#800+96     ; line 173, buffer 0
 SND_P1      EQU BOT0_BASE+6*#800+96     ; 174
@@ -168,8 +169,9 @@ SND_P9      EQU SND_P3-BOT0_BASE+BOT1_BASE
 SND_P10     EQU SND_P4-BOT0_BASE+BOT1_BASE
 SND_P11     EQU SND_P5-BOT0_BASE+BOT1_BASE
 SND_M0      EQU HUD_BASE+1*#800+#2A0    ; page 1: buffer 0's HUD's eighth
-SND_M1      EQU HUD_BASE+2*#800+#2A0    ; row, blocks 1-3 (mkbush.py
-SND_M2      EQU HUD_BASE+3*#800+#2A0    ; HUD_ROW7 leaves them out)
+SND_M1      EQU HUD_BASE+2*#800+#2A0    ; row, blocks 1-3, and buffer 1's
+SND_M2      EQU HUD_BASE+3*#800+#2A0    ; in block 1 (mkbush.py HUD_ROW7
+SND_M3      EQU HUD_BASE+1*#800+#5A0    ; leaves them out)
 
 ;; --- The race's extras (race.asm, RACE.BIN) -----------------------------------
 ;; The pause and the best times, run by the main loop (RAM_C1) and put in
