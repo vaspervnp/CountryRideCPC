@@ -393,10 +393,10 @@ irq_sky
     CRTC_N 6,SKY_ROWS
     jp isr_out
 
-;; line ~118, in the HUD part's border: nothing to do
+;; line ~118, in the HUD part's border: the sound (sound.asm)
 irq_idle
     NEXT_IRQ irq_road
-    jp isr_out
+    jp snd_irq
 
 ;; line ~170, in the sky part: its size and R5 lines, where the road part
 ;; starts, the border below the mountains

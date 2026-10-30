@@ -1,9 +1,9 @@
 10 REM COUNTRY RIDE - loader
 20 REM The screen the car is picked on (SELECT.SCR, tools/mkselect.py) shows
 30 REM while the game loads: the road engine in banks 4, 5 and 6, the game in
-40 REM bank 7 - each loaded at &4000 with that bank switched in over it. The
-50 REM picked car's own code (CARn.BIN) then goes at &1900, where BOOT.BIN
-60 REM finds it and puts it in place.
+40 REM bank 7 - each loaded at &4000 with that bank switched in over it - and
+50 REM the sound. The picked car's own code (CARn.BIN) then goes at &1900,
+60 REM where BOOT.BIN finds it, and the sound, and puts them in place.
 70 MODE 0:BORDER 1:FOR i=0 TO 15:INK i,0:NEXT
 80 MEMORY &18FF
 90 LOAD"SELECT.SCR",&C000
@@ -12,6 +12,7 @@
 120 OUT &7F00,&C5:LOAD"ROADB.BIN",&4000
 130 OUT &7F00,&C6:LOAD"ROADC.BIN",&4000
 140 OUT &7F00,&C7:LOAD"GAME.BIN",&4000
+145 LOAD"SOUND.BIN",&98C0
 150 OUT &7F00,&C0:INK 14,1:INK 15,26:s=0:p=13:GOSUB 500
 160 REM 1-4 picks a car and starts; left, right, up, down move; fire starts
 170 k$=INKEY$:IF k$>="1" AND k$<="4" THEN p=2:GOSUB 500:s=VAL(k$)-1:p=13:GOSUB 500:GOTO 300

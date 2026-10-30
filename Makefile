@@ -37,6 +37,7 @@ gen:
 	$(PYTHON) tools/mktrafcode.py
 	$(PYTHON) tools/mkprops.py
 	$(PYTHON) tools/mkbush.py
+	$(PYTHON) tools/mksound.py
 
 shots: $(DSK)
 	$(PYTHON) tools/run.py shots

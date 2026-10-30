@@ -11,9 +11,11 @@
 ;; right (cursor right, P, joystick right), bit 2 = faster (cursor up, Q,
 ;; space, joystick up or fire), bit 3 = slower (cursor down, A, joystick
 ;; down). The keyboard is read through the PSG's port (register 14), the
-;; PPI's port A turned round for it. Destroys BC, DE.
+;; PPI's port A turned round for it - with interrupts off: the interrupt
+;; writes the PSG too (sound.asm). Destroys BC, DE.
 ;; ---------------------------------------------------------------------------
 read_keys
+    di
     ld bc,#F40E                 ; PSG register 14
     out (c),c
     ld bc,#F6C0                 ; (latched)
@@ -88,6 +90,7 @@ read_keys
     out (c),c
     ld bc,#F600
     out (c),c
+    ei
     ld a,d
     ret
 rk_row                          ; A = #40 + row: its keys, 1 = held

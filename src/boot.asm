@@ -111,35 +111,13 @@ crtc_regs
 ;; left free;
 ;; car_views and car_id. Without one (no magic word there) the first car
 ;; stays, seen on the level on hills too (and turning when spun). Then
-;; fragments 3-6, over the car's file, and IM 1's JP. RAM_C0 after.
+;; fragments 3-6, over the car's file, IM 1's JP, and the sound (SOUND.BIN,
+;; at SOUND_BLOB: some of it where the car's file was, some where fragments
+;; 2-7 were stored). RAM_C0 after.
 boot_car
     SET_RAM RAM_C1
     ld hl,CAR_BLOB
-    ld a,(hl)
-    cp lo(CAR_MAGIC)
-    jr nz,boot_car_done
-    inc hl
-    ld a,(hl)
-    cp hi(CAR_MAGIC)
-    jr nz,boot_car_done
-    ld (hl),0                   ; (used up)
-    inc hl
-boot_car_rec
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    inc hl
-    ld a,d
-    and e
-    inc a
-    jr z,boot_car_done          ; (a dest of #FFFF: the end - #0000 is one)
-    ld c,(hl)
-    inc hl
-    ld b,(hl)
-    inc hl
-    ldir
-    jr boot_car_rec
-boot_car_done
+    call boot_blob
     ld hl,FRAG_ST3
     ld de,FRAG3
     ld bc,FRAG_LEN
@@ -159,7 +137,40 @@ boot_car_done
     ld (IM1_JP),a                       ; line, which the car's records have
     ld hl,isr                           ; left out)
     ld (IM1_JP+1),hl
+    ld hl,SOUND_BLOB
+    call boot_blob
     SET_RAM RAM_C0
     ret
     ASSERT $ <= #4E00
+
+    ORG FRAG_ST5+FRAG_LEN               ; (the HUDs' later, and the car's
+                                        ; records start at #x5A0)
+;; boot_blob - HL = a file of records (CARn.BIN, SOUND.BIN): if it starts
+;; with the magic word, each record's bytes copied to where it says
+boot_blob
+    ld a,(hl)
+    cp lo(CAR_MAGIC)
+    ret nz
+    inc hl
+    ld a,(hl)
+    cp hi(CAR_MAGIC)
+    ret nz
+    ld (hl),0                   ; (used up)
+    inc hl
+boot_blob_rec
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,d
+    and e
+    inc a
+    ret z                       ; (a dest of #FFFF: the end - #0000 is one)
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    inc hl
+    ldir
+    jr boot_blob_rec
+    ASSERT $ <= FRAG_ST5+FRAG_LEN+#20
     ASSERT FRAG_ST5 == FRAG_ST4+FRAG_LEN

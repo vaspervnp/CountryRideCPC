@@ -493,9 +493,28 @@ def frag_slot(fc, label, codes):
 # bank 7 from CAR_HILL_ORG on, and the road parts' lines 160-172 of buffer
 # 0 (page 2) and of buffer 1's first four 2K blocks (page 0: the rest of
 # page 0 is where the loader loads CARn.BIN). The CRTC shows the road parts from line
-# 184 (draw_static draws nothing above it), and a bush, standing on line
-# ROAD_Y or lower and BUSH_H lines high at most, reaches line 173.
+# 184 (draw_static draws nothing above it), and lines 173-178 hold the
+# sound (hw.asm SND_P0..): a bush's top or a prop's is never above line 179
+# (bush_top; the props' below).
 CAR_HILL_ORG = 0xF100
+SOUND_LINES = (173, 179)        # (hw.asm SND_P0..SND_P5: lines 173-178)
+
+
+def bush_top():
+    """The highest line a bush's top is on: whatever its row's sprite, on
+    whatever hill (bush_one: on line ROAD_Y or lower)."""
+    top = 999
+    for r in range(1, G.ROWS + 1):
+        for size in range(len(G.BUSH_SIZES)):
+            i = G.bush_sprite_of(size, r)
+            if i is None:
+                continue
+            for hill in range(-128, S.HILL_MAX + 1, 2):
+                q = abs(hill) // r
+                y = G.HORIZON_Y + r + (q if hill >= 0 else -q)
+                if G.ROAD_Y <= y < S.ROAD_AREA_Y + 128:
+                    top = min(top, y - G.BUSH_H[i] + 1)
+    return top
 
 
 def hidden_runs(base, blocks):
@@ -506,7 +525,8 @@ def hidden_runs(base, blocks):
 # never shows (its R6: seven rows): 96 bytes of each HUD in each 2K block,
 # #x2A0 and #x5A0 - those free when boot_car copies the car's records in
 # (boot.asm): not where fragments 3-6 are still stored then (#x2A0 of
-# blocks 1-3), nor boot_car itself (#x5A0 of block 1).
+# blocks 1-3: the sound's, after them - hw.asm SND_M0..), nor boot_car
+# itself (#x5A0 of block 1).
 HUD_ROW7 = [(0x4000 + b * 0x800 + off, 96) for b in range(8) for off in (0x2A0, 0x5A0)
             if not (off == 0x2A0 and b in (1, 2, 3)) and not (off == 0x5A0 and b == 1)]
 # (#0038-#003A, in buffer 1's block 0, is IM 1's JP to the interrupt handler:
@@ -582,8 +602,9 @@ def runs_slots(allcars, views):
 # tools/propsart.py (tools/mkprops.py), PROP_SIZES of them, smallest first.
 PROP_REC0 = 8                   # bush_sinfo's records 8..15: the prop in sight's
                                 # sprites, smallest first (props.asm: prop_take)
-PROP_TOP = 173 - S.ROAD_AREA_Y  # lines from ROAD_AREA_Y a prop may be drawn on:
-                                # 160-172 hold code (HILL_RUNS)
+PROP_TOP = SOUND_LINES[1] - S.ROAD_AREA_Y   # lines from ROAD_AREA_Y a prop
+                                # may be drawn on: 160-172 hold code
+                                # (HILL_RUNS), 173-178 the sound
 
 
 def prop_sprite(kind, rows):
@@ -763,7 +784,7 @@ def main():
         ends.append(e)
     S.set_car(0)
     # the views on hills: CARn.BIN only (above), the first car's too
-    assert G.ROAD_Y - max(G.BUSH_H) + 1 > 172
+    assert bush_top() >= SOUND_LINES[1], bush_top()
     hill_pieces, hill_starts, hill_used, hill_left = runs_slots(allcars, range(3, S.CAR_VIEWS))
 
     def build(ks):

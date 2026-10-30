@@ -152,7 +152,7 @@ PROP_REC0     EQU 8   ; bush_sinfo's records from here on: the prop in
 PROP_SIZES    EQU 8
 PROP_KINDS    EQU 6
 PROP_ZVIS     EQU 800   ; drawn from this far ahead
-PROP_TOP      EQU 13    ; and on lines from ROAD_AREA_Y + this on (above:
+PROP_TOP      EQU 19    ; and on lines from ROAD_AREA_Y + this on (above:
                       ; code; their tops are on line 19 at the highest)
 PROP_BOX      EQU 16   ; the widest sprite, bytes
 ;; per size, the first row it is drawn on (prop_init)

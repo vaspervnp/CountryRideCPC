@@ -143,6 +143,34 @@ IM1_JP      EQU #0038       ; IM 1's JP isr: buffer 1's line 160, hidden
                             ; (tools/mkbush.py HILL_RUNS leaves it out)
 STACK_TOP   EQU #1000
 
+;; --- The sound (sound.asm, SOUND.BIN) -----------------------------------------
+;; What the interrupt runs and reads, in the road parts' lines 173-178, both
+;; buffers': pages 0 and 2, so mapped whatever the configuration. Never
+;; shown, and nothing draws there: the hill views' code ends at line 172,
+;; a bush's top is on line 183 at the highest, a prop's on 179 (both
+;; checked by tools/mkbush.py), the traffic's and the road's are lower.
+;; Page 0's are where the loader loads CARn.BIN: boot.asm copies the sound
+;; in after the car's records. What the main loop runs (RAM_C1) goes in
+;; three of the HUDs' eighth character rows - never shown, and the hill
+;; views leave them out: fragments 2-7 are stored there until boot_car is
+;; done with them.
+SND_PIECE   EQU 96          ; bytes: a line
+SND_P0      EQU BOT0_BASE+5*#800+96     ; line 173, buffer 0
+SND_P1      EQU BOT0_BASE+6*#800+96     ; 174
+SND_P2      EQU BOT0_BASE+7*#800+96     ; 175
+SND_P3      EQU BOT0_BASE+0*#800+192    ; 176
+SND_P4      EQU BOT0_BASE+1*#800+192    ; 177
+SND_P5      EQU BOT0_BASE+2*#800+192    ; 178
+SND_P6      EQU SND_P0-BOT0_BASE+BOT1_BASE  ; ... buffer 1's
+SND_P7      EQU SND_P1-BOT0_BASE+BOT1_BASE
+SND_P8      EQU SND_P2-BOT0_BASE+BOT1_BASE
+SND_P9      EQU SND_P3-BOT0_BASE+BOT1_BASE
+SND_P10     EQU SND_P4-BOT0_BASE+BOT1_BASE
+SND_P11     EQU SND_P5-BOT0_BASE+BOT1_BASE
+SND_M0      EQU HUD_BASE+1*#800+#2A0    ; page 1: buffer 0's HUD's eighth
+SND_M1      EQU HUD_BASE+2*#800+#2A0    ; row, blocks 1-3 (mkbush.py
+SND_M2      EQU HUD_BASE+3*#800+#2A0    ; HUD_ROW7 leaves them out)
+
 ;; --- Bank 7, past the game's code (RAM_C1, RAM_C3) ---------------------------
 ;; The track a few entries ahead of the camera, per entry (zcam / 32) mod 64:
 ;; its curve level and its hill (course.asm). Then from CAR_HILL_ORG the

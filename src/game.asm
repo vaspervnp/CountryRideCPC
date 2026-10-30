@@ -192,6 +192,7 @@ main_head
     ld (flip_req),a
 main_asked                      ; (tools/run.py: the picture's deadline)
     call steer
+    call snd_frame              ; (sound.asm)
     xor a
     ld (rd_s),a                 ; (cache_step: a step now)
     ld a,(irq_n)                ; the road's next steps, if they and the

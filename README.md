@@ -9,7 +9,8 @@ hill - with bushes of different sizes beside it at random intervals, now
 and then a palm, a dead tree or a road sign, and cars on it, at 25 frames
 a second. A demo drives a loop of it until you
 press fire; then you race the clock over five stages, each in its own
-colours (The race, below). You steer: the
+colours (The race, below), to music, the engine's note rising with the
+speed. You steer: the
 road moves under the car, and a curve carries the car out of it unless
 you steer against it.
 
@@ -162,6 +163,13 @@ The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
 EXTENDED TIME, TIME UP, FINISH, GAME OVER - are the HUD's last line (The
 HUD, below).
 
+The race has music - an original tune, 16 bars in C major, the lead and
+the bass - and the car its engine, from GET READY to GAME OVER: a note
+from 65 Hz standing still to ~190 Hz at the top speed, humming, with a
+rumble on the grass. The count beeps, GO! and a checkpoint ring, a bump
+and a crash have their noise, TIME UP and FINISH their own few notes. The
+demo is silent (Sound, below).
+
 ### The cars
 
 Before the race the player picks one of four sports cars, seen from the
@@ -300,9 +308,9 @@ The CRTC always reads the base 64K:
 
 | Page | Holds |
 |---|---|
-| 0 | buffer 1's road part, common fragments |
+| 0 | buffer 1's road part, common fragments; the sound in hidden lines |
 | 1 | both HUDs (`#4000` with RAM C1), the bush sprites' code and the props' sprites beside them |
-| 2 | buffer 0's road part, common fragments |
+| 2 | buffer 0's road part, common fragments; the sound in hidden lines |
 | 3 | the sky ring (`#4000` with RAM C3) |
 
 The banks hold the rest:
@@ -346,6 +354,16 @@ room elsewhere. BOOT.BIN
 first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
+
+The sound (`SOUND.BIN`, records like a car's file, loaded at `#98C0` - in
+buffer 0's fourth block, past what the car's records write - and put in
+place after them) is where nothing else goes: what the interrupt runs and
+reads in the road parts' lines 173-178, both buffers' (twelve 96-byte
+pieces, in pages 0 and 2: whatever the RAM configuration; a bush's top is
+on line 183 at the highest, a prop's on 179, both checked by
+`tools/mkbush.py`), and what the main loop runs in three HUD eighth rows
+(`#4AA0`, `#52A0`, `#5AA0`), where fragments 2-7 were stored until then.
+`boot_blob` (`src/boot.asm`) copies both files' records.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
@@ -768,6 +786,40 @@ right, 4 at most a picture (~0.25 ms each, its 3 x 8 bytes copied by
 a few pictures (`hud_msg`): ~1.5 ms in each of those, nothing in the
 others (a buffer looks again only when the message changes).
 
+### Sound
+
+The PSG (AY-3-8912, through the PPI) plays three channels: A the tune's
+lead, B its bass, C the engine or, for a while, an effect. The interrupt
+plays it all (`src/sound.asm`): at line ~118 every other frame
+(`irq_idle`), so 25 times a second, in step with the pictures:
+
+- **The music** (`snd_tick`): a row - an eighth note at 125 beats a
+  minute - every 6 updates, a pattern of 8 rows a bar, each channel's
+  bars from its order list, round again at its end. A note's volume
+  starts at 13 and falls an update to the level it holds (the lead 9, the
+  bass 7). The tune is `tools/mksound.py`'s (`src/gen/music.asm`): note
+  names, bar by bar, the bass the chord's root an octave apart on every
+  other eighth; a byte a row (hold, off, or a note from C2), octave 2's
+  twelve periods, higher octaves halved and rounded.
+- **Channel C** (`snd_chan_c`): an effect is steps of updates, a volume
+  falling an update, a tone's period or a noise's; with none, the
+  engine as the main loop last had it.
+- **The PSG's registers** (`snd_out`): kept in `snd_regs`, and only those
+  that differ from what was written last (`snd_last`) are written.
+
+Once a picture, after `steer`, the main loop's `snd_frame` tells it what
+the game is doing: the music on in the race (from its start), off
+otherwise; the engine's period (960 less 3/8 of the speed, every other
+picture 1/16 longer: the hum) and volume (none in the demo), its noise
+on the grass; and an effect when something begins - the count's digit
+changing (a beep, GO!), the message (EXTENDED TIME, TIME UP, FINISH),
+`coll_t` going up (a bump, a crash).
+
+`read_keys` reads the keyboard through the PSG's port too, its
+interrupts off meanwhile. An update takes ~0.3 ms in the demo and
+~0.54 ms on average in the race (0.9 ms in one in ten, 1.1 ms at most: a
+row's notes as a bar starts), measured in the emulator.
+
 ### Timing
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
@@ -788,15 +840,17 @@ at 5.25, before the road's last four lines were cut, which took off
 - HUD: ~1 ms, within its share;
 - game logic: ~0.6 ms;
 - interrupts: ~1.4 ms, the raster ruptures and the sky's turns (1.4 ms a
-  turn, at the flip).
+  turn, at the flip);
+- the sound: ~0.3 ms in the demo, ~0.54 ms in the race (Sound, above).
 
 In 3000 pictures none runs past its flip in the demo, with the player not
-steering or steering from side to side: the worst takes 37.8 ms, with the
-traffic and the props (Steering in numbers, below). Over the race's five
-stages, driven by the autopilot in each of the four cars and zigzagging
-from side to side with the keys, none does either: the worst takes 38.7 ms
-- a prop is left out of 7 to 18 of each race's ~6100 pictures, which were
-late already when it came to it.
+steering or steering from side to side: the worst takes 38.2 ms, with the
+traffic, the props and the sound (Steering in numbers, below). Over the
+race's five stages, driven by the autopilot in each of the four cars and
+zigzagging from side to side with the keys, with the music, none does
+either: the worst takes 38.9 ms - a prop is left out of 5 to 40 of each
+race's ~6100 pictures (7 to 18 before the sound), which were late already
+when it came to it.
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -840,6 +894,9 @@ the top speed - a bush hit on the road, the car spinning across it with
 the traffic about - 37.1 ms at worst for the first car and 37.7 ms for
 the white one (its spun views the biggest: 961 bytes of code, 1.82 ms,
 against 1.25 ms turning), none past the flip.
+
+With the props and the sound (2026-10-30): 24.5 / 25.3 / 27.8 ms on
+average and 36.9 / 38.2 / 37.6 ms at worst, none past the flip.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -1005,6 +1062,8 @@ src/            the game
   propdraw.asm  ... their drawing cut to fit the screen, their boxes
                 (fragment 0)
   init.asm      what runs once as the game starts (over the track's rings)
+  sound.asm     the sound: the interrupt's player (music, engine, effects),
+                what the main loop tells it (SOUND.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -1036,6 +1095,7 @@ tools/
                 (Blender) -> assets/props/
   mkprops.py    the props' art as the game's pens, the signs drawn
                 -> tools/propsart.py
+  mksound.py    the race's music -> src/gen/music.asm
   mkbush.py     the bushes along the track, their sprites (as code and as
                 data), each car as code (CARn.BIN), what is left of the
                 traffic's code, the props' sprites, and tables -> src/gen/
