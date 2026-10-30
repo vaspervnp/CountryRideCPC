@@ -192,6 +192,7 @@ RACE_BLOB   EQU #A0C0                   ; buffer 0's lines 180 on in its fifth
     defw CAR_MAGIC
     INCLUDE "race.asm"
     INCLUDE "sndgame.asm"
+    INCLUDE "jump.asm"
     defw #FFFF
 race_end
     ASSERT race_end <= FRAG8+4*#800        ; (fragment 12's place)

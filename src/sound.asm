@@ -12,7 +12,7 @@
 ;;          crash, time up, the finish.
 ;; The interrupt plays it all - snd_irq, from irq_idle, every other frame:
 ;; 25 times a second, as the game draws - so it is in pages 0 and 2, in
-;; pieces of a line (hw.asm SND_P0..), mapped whatever the RAM
+;; pieces of a line (hw.asm SND_P0..; P1 the jump's), mapped whatever the RAM
 ;; configuration. Once a picture the main loop tells it what the game is
 ;; doing (sndgame.asm, in RACE.BIN): the race on or not, the engine, an
 ;; effect to begin.
@@ -68,12 +68,13 @@ snd_tick
     dec (hl)
     ret nz
     ld (hl),ROW_TICKS
-    inc hl                              ; (snd_rows: the row's number + 1)
-    inc (hl)
     ld ix,snd_ch_a
     call snd_row
     ld ix,snd_ch_b
-    jp snd_row
+    call snd_row
+    ld hl,snd_rows
+    inc (hl)
+    ret
 
 ;; psg_w - C = a PSG register, E = its value: written. psg_wa: the register
 ;; in A. Destroys AF, B. (sndgame.asm's too, with interrupts off.)
@@ -97,40 +98,6 @@ psg_wa
     ret
 
     REC_END SND_P0,SND_PIECE
-;; ---------------------------------------------------------------------------
-    REC_BEGIN SND_P1
-
-;; snd_row - IX = a channel: its next row (from its next bar's pattern at
-;; the bar's first)
-snd_row
-    ld a,(snd_rows)
-    dec a
-    and 7
-    call z,snd_bar
-    ld l,(ix+CH_PAT)
-    ld h,(ix+CH_PAT+1)
-    ld a,(hl)
-    inc hl
-    ld (ix+CH_PAT),l
-    ld (ix+CH_PAT+1),h
-    or a
-    ret z                               ; held
-    dec a
-    jp z,sr_vol                         ; off (A = 0)
-    dec a                               ; the tune's note A: its period
-    add a,a
-    add a,lo(snd_periods)
-    ld l,a
-    adc a,hi(snd_periods)
-    sub l
-    ld h,a
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
-    jp sr_per
-
-    REC_END SND_P1,SND_PIECE
 ;; ---------------------------------------------------------------------------
     REC_BEGIN SND_P2
 
@@ -333,6 +300,32 @@ snd_ch_b    defw 0,0,0
             defw mus_bass
             defb 2,9
     ASSERT snd_ch_b-snd_ch_a == CH_RV+1
+
+;; snd_row - IX = a channel: its next row (from its next bar's pattern at
+;; the bar's first)
+snd_row
+    ld a,(snd_rows)
+    and 7
+    call z,snd_bar
+    ld l,(ix+CH_PAT)
+    ld h,(ix+CH_PAT+1)
+    ld a,(hl)
+    inc hl
+    ld (ix+CH_PAT),l
+    ld (ix+CH_PAT+1),h
+    or a
+    ret z                               ; held
+    dec a
+    jp z,sr_vol                         ; off (A = 0)
+    dec a                               ; a note: its period's offset
+    add a,lo(snd_periods)
+    ld l,a
+    ld h,hi(snd_periods)
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    jp sr_per
 
     REC_END SND_P5,SND_PIECE
 ;; ---------------------------------------------------------------------------

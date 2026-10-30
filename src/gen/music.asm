@@ -16,14 +16,15 @@ mus_d0_ph
 snd_periods   ; the tune's notes' periods, lowest first
     defw 956,758,716,638,568,478,379,358,319,284,159,142
     defw 127,119,106,95,89,80,71,63,60
+    ASSERT hi(snd_periods) == hi(snd_periods+41)
 mus_lead   ; the lead's bars (channel A)
     defw mus_p0,mus_p1,mus_p2,mus_p3,mus_p0,mus_p4,mus_p5,mus_p6
     defw mus_p7,mus_p8,mus_p9,mus_p10,mus_p11,mus_p12,mus_p13,mus_p14
     defw #FFFF
 mus_p0
-    defb 17,0,16,15,0,16,17,19
+    defb 32,0,30,28,0,30,32,36
 mus_p1
-    defb 20,0,19,17,0,0,1,0
+    defb 38,0,36,32,0,0,1,0
 mus_d0_end
     ASSERT mus_d0_end <= SND_P7+SND_PIECE
     ORG mus_d0_ph+mus_d0_end-SND_P7
@@ -35,19 +36,19 @@ mus_bass   ; the bass's bars (channel B)
     defw mus_p17,mus_p18,mus_p19,mus_p16,mus_p17,mus_p18,mus_p15,mus_p18
     defw #FFFF
 mus_p2
-    defb 18,0,17,16,0,15,16,18
+    defb 34,0,32,30,0,28,30,34
 mus_p3
-    defb 17,0,16,0,14,0,1,0
+    defb 32,0,30,0,26,0,1,0
 mus_p4
-    defb 20,0,22,21,20,19,17,0
+    defb 38,0,42,40,38,36,32,0
 mus_p5
-    defb 18,20,19,18,17,16,15,0
+    defb 34,38,36,34,32,30,28,0
 mus_p6
-    defb 16,0,0,0,1,0,12,14
+    defb 30,0,0,0,1,0,22,26
 mus_p7
-    defb 13,15,18,0,17,18,20,0
+    defb 24,28,34,0,32,34,38,0
 mus_p8
-    defb 19,0,18,17,16,0,1,0
+    defb 36,0,34,32,30,0,1,0
 mus_d1_end
     ASSERT mus_d1_end <= SND_P8+SND_PIECE
     ORG mus_d1_ph+mus_d1_end-SND_P8
@@ -55,27 +56,27 @@ mus_d1_end
 mus_d2_ph
     ORG SND_P9,mus_d2_ph
 mus_p9
-    defb 17,19,21,0,20,19,17,0
+    defb 32,36,40,0,38,36,32,0
 mus_p10
-    defb 13,15,17,0,16,15,14,13
+    defb 24,28,32,0,30,28,26,24
 mus_p11
-    defb 18,0,19,20,0,19,18,0
+    defb 34,0,36,38,0,36,34,0
 mus_p12
-    defb 17,0,16,0,19,0,16,0
+    defb 32,0,30,0,36,0,30,0
 mus_p13
-    defb 17,19,22,0,21,20,19,0
+    defb 32,36,42,0,40,38,36,0
 mus_p14
-    defb 16,0,0,17,16,0,14,1
+    defb 30,0,0,32,30,0,26,1
 mus_p15
-    defb 2,7,2,7,2,7,2,7
+    defb 2,12,2,12,2,12,2,12
 mus_p16
-    defb 6,11,6,11,6,11,6,11
+    defb 10,20,10,20,10,20,10,20
 mus_p17
-    defb 4,9,4,9,4,9,4,9
+    defb 6,16,6,16,6,16,6,16
 mus_p18
-    defb 5,10,5,10,5,10,5,10
+    defb 8,18,8,18,8,18,8,18
 mus_p19
-    defb 3,8,3,8,3,8,3,8
+    defb 4,14,4,14,4,14,4,14
 mus_d2_end
     ASSERT mus_d2_end <= SND_P9+SND_PIECE
     ORG mus_d2_ph+mus_d2_end-SND_P9

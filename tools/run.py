@@ -409,7 +409,7 @@ def road_model(g):
     off = _signed(g.game_byte("CAR_OFF"))
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
                             traffic=traffic_cars(g), prop=prop_in_sight(g),
-                            only=bushes_in_reach(g)),
+                            only=bushes_in_reach(g), car_up=g.byte("CAR_UP")),
             hill, zcam, curve, x)
 
 

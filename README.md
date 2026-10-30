@@ -375,8 +375,9 @@ fragments 3-6. The race takes no more memory for four cars than for one.
 The sound (`SOUND.BIN`, records like a car's file, loaded at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
 place after them) is where nothing else goes: what the interrupt runs and
-reads in the road parts' lines 173-178, both buffers' (twelve 96-byte
-pieces, in pages 0 and 2: whatever the RAM configuration; a bush's top is
+reads in the road parts' lines 173-178, both buffers' (eleven of their
+twelve 96-byte pieces - buffer 0's line 174 has the crash's jump - in
+pages 0 and 2: whatever the RAM configuration; a bush's top is
 on line 183 at the highest, a prop's on 179, both checked by
 `tools/mkbush.py`); what the main loop runs is in `RACE.BIN` (below).
 `boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
@@ -386,7 +387,9 @@ in place after the sound: in buffer 1's hidden lines 164 and 172 (which
 the traffic's code leaves), 167, and 178. It has the sound's main-loop
 side too (`src/sndgame.asm`), in four HUD eighth rows - the fourth,
 `#4DA0`, where `boot_car` itself was: `RACE.BIN` is its last file, and
-`boot_blob` returns from it for it - and a hidden line of page 0.
+`boot_blob` returns from it for it - and a hidden line of page 0; and the
+crash's jump (`src/jump.asm`), in buffer 0's line 174 and what the
+sound's main-loop pieces leave free at their ends (`REC_TAIL`).
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
@@ -783,6 +786,18 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   64), so further than `SPIN_OFF` (16 pairs) from the middle it would run
   off the screen: there `car_lines` shows the car turning instead. Spun,
   the car is seen on the level whatever the slope.
+- **A bush at speed: thrown up.** At `JUMP_SPEED` (4/5 of the top speed)
+  or faster the crash throws the car up as it spins, a character row - 8
+  lines - at a time, as its views' code is made for its rows (`car_draw`
+  starts it higher: `car_raise`): up to 6 rows, 48 lines, in 6 pictures,
+  held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`).
+  Never higher than the road's top in the picture (`car_jump`): over a
+  crest the ground behind it is not drawn again. In each buffer the car's
+  lines where it was shown last and where it is now are drawn whole - the
+  grass's middle line's own template too (`cj_mark`) - and while it is up
+  the far lines' road is drawn even where it is as it was (`jump_frame`,
+  as `traffic_pre` has it for a car up there), so nothing of it stays
+  behind (`src/jump.asm`).
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -932,6 +947,13 @@ With the props and the sound (2026-10-30): 24.5 / 25.3 / 27.8 ms on
 average and 36.9 / 38.2 / 37.6 ms at worst, none past the flip; with the
 sound written only where it changes, 24.2 / 24.4 / 27.5 ms and 37.6 /
 37.2 / 37.3 ms.
+
+With the car thrown up (2026-10-31): crashes forced at the top speed, 11
+to 14 in 6000 pictures each for three of the cars, on the level and on
+hills (its rows up cut to 4 or 5 over a crest), every picture the same as
+`scene.py` draws it; 33.7-34.3 ms on average in the air, 38.4 ms at
+worst, none past the flip. Races over the course 37.9-38.6 ms at worst,
+none past the flip.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -1102,6 +1124,7 @@ src/            the game
   sndgame.asm   ... what the game tells it: the engine's note, the
                 effects, the music on or off (RACE.BIN)
   race.asm      the pause, the best times, the start of a race (RACE.BIN)
+  jump.asm      a crash at speed: the car thrown up (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -1147,11 +1170,9 @@ docs/           screenshots
 
 ## Next
 
-- a crash at full speed as the arcade's: the car flipping (it spins now,
-  between its turning views and two spun 30 degrees) - a flip's views
-  would take 2-5K of code a car, where ~600 bytes are left; the car
-  thrown up, in steps of a character row (8 lines: the views' code is
-  made for its rows), would fit;
+- a crash at full speed as the arcade's: the car flipping (it spins and
+  is thrown up now) - a flip's views would take 2-5K of code a car, where
+  ~600 bytes are left;
 - curves that come from the horizon (the whole road bends at one level
   now) - a level a row, which the cache, made a level at a time, does not
   allow;

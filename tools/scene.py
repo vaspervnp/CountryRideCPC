@@ -975,14 +975,15 @@ def car_runs(view=0):
     return out
 
 
-def draw_car(lines, y0, view=0, off=0):
+def draw_car(lines, y0, view=0, off=0, up=0):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
     as car_view `view` says, `off` pairs right of the middle (the game's
-    car_off)."""
+    car_off), `up` character rows higher (thrown up in a crash: jump.asm's
+    car_up)."""
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":
-                lines[CAR_Y + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
+                lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
 
 
 # ---------------------------------------------------------------------------
@@ -1037,12 +1038,12 @@ def sky_lines(heading=0):
 
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
-              car_off=0, traffic=(), prop=None, only=None):
+              car_off=0, traffic=(), prop=None, only=None, car_up=0):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
     traffic (traffic_items' cars), the prop in sight (prop_item's), the
     bushes (those in `only`, if given) and the car (seen as car_view
-    `view`, car_off pairs right of the middle). `hill` as the road engine
-    draws it (effective_hill)."""
+    `view`, car_off pairs right of the middle, car_up rows up). `hill` as
+    the road engine draws it (effective_hill)."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
              + road_lines(hill, zcam, curve, x))
     if traffic:
@@ -1051,7 +1052,7 @@ def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x, only)
     if car:
-        draw_car(lines, ROAD_AREA_Y, view, car_off)
+        draw_car(lines, ROAD_AREA_Y, view, car_off, car_up)
     return lines
 
 

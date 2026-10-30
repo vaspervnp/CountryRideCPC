@@ -8,8 +8,9 @@ player's updates (25 a second); a pattern is a bar, 8 rows, a byte a row:
 
     0           hold (the note goes on, its volume decaying)
     1           off
-    2 + i       note i of the tune's, lowest first: its period is
-                snd_periods' i-th (the PSG's clock 1 MHz: 62500 / f)
+    2 + 2i      note i of the tune's, lowest first: its period is
+                snd_periods' i-th (the PSG's clock 1 MHz: 62500 / f) -
+                2i, its offset there (the table in one 256-byte page)
 
 Each channel has an order list of its bars' patterns (defw), #FFFF at the
 end: round again.
@@ -78,7 +79,7 @@ def note(tok):
         return 0
     if tok == "-":
         return 1
-    return 2 + used().index(semitone(tok))
+    return 2 + 2 * used().index(semitone(tok))
 
 
 def pattern(text):
@@ -109,7 +110,9 @@ def main(pieces):
     per = periods()
     blocks = [("snd_periods", "the tune's notes' periods, lowest first",
                ["    defw " + ",".join(str(v) for v in per[j:j + 12])
-                for j in range(0, len(per), 12)], 2 * len(per)),
+                for j in range(0, len(per), 12)]
+               + ["    ASSERT hi(snd_periods) == hi(snd_periods+%d)" % (2 * len(per) - 1)],
+               2 * len(per)),
               ("mus_lead", "the lead's bars (channel A)",
                ["    defw " + ",".join("mus_p%d" % i for i in lead_order[j:j + 8])
                 for j in range(0, len(lead_order), 8)] + ["    defw #FFFF"],

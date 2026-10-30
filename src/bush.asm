@@ -798,6 +798,8 @@ car_lines_off
     sub SPIN_VIEW-1
     ld (car_vfull),a
 car_lines_seen
+    call car_jump               ; (jump.asm: in the air, all it needs)
+    ret nz
     ld hl,drawn_off
     call buf_entry
     ld a,(hl)
@@ -857,6 +859,7 @@ car_draw
     sbc a,a
     ld b,a
     add hl,bc
+    call car_raise                      ; (jump.asm: in the air, higher)
     ld a,(tgt_buf)
     or a
     jr z,cd_buf

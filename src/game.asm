@@ -271,7 +271,7 @@ draw_picture_x
 pic_erased
     pop af
     ld (road_buf),a
-    call road_frame
+    call jump_frame             ; (jump.asm: road_frame)
 pic_road
     call bush_draw              ; this picture's on top of it
 pic_bushes
@@ -728,6 +728,7 @@ coll_start
     ld de,BUMP_T                        ; (D: the kind, a bump)
     bit 6,b
     jr z,coll_set
+    call jump_start                     ; (jump.asm: at speed, thrown up)
     ld hl,CRASH_V
     ld de,256+CRASH_T+BACK_T
 coll_set

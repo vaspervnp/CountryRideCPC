@@ -181,6 +181,9 @@ SND_M3      EQU HUD_BASE+1*#800+#5A0    ; leaves them out)
 RACE_P0     EQU BOT1_BASE+4*#800        ; lines 164 and 172: 192 bytes
 RACE_P1     EQU BOT1_BASE+7*#800        ; line 167
 RACE_P2     EQU SND_P11                 ; line 178
+JUMP_P0     EQU SND_P1                  ; line 174: the car thrown up
+                                        ; (jump.asm; and the free ends of
+                                        ; sndgame.asm's pieces)
 
 ;; a record of SOUND.BIN or RACE.BIN (boot.asm boot_blob): its code ORG'd
 ;; where it goes, `size` bytes there at most
@@ -193,6 +196,18 @@ MACRO REC_END at,size
 rec_{at}_end
     ASSERT rec_{at}_end <= {at}+{size}
     ORG rec_{at}_ph+rec_{at}_end-{at}
+MEND
+;; ... a record `name` into what another one has left: from `at` (the other's
+;; rec_..._end) up to `limit`
+MACRO REC_TAIL name,at
+    defw {at},rec_{name}_end-({at})
+rec_{name}_ph
+    ORG {at},rec_{name}_ph
+MEND
+MACRO REC_TAIL_END name,at,limit
+rec_{name}_end
+    ASSERT rec_{name}_end <= {limit}
+    ORG rec_{name}_ph+rec_{name}_end-({at})
 MEND
 
 ;; --- Bank 7, past the game's code (RAM_C1, RAM_C3) ---------------------------
