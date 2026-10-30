@@ -124,6 +124,9 @@ game_sync                       ; VSYNC, so the first picture has all of
     ld (last_vbl),a
 
 main_loop
+    ld a,(pause_req)            ; ESC pressed: the pause (race.asm)
+    or a
+    call nz,race_pause
     ld a,(vbl_count)
     ld hl,last_vbl
     ld b,(hl)
@@ -508,6 +511,9 @@ steer
     ld e,a
     ld a,c
     ld (keys_was),a
+    ld a,e
+    and KEY_PAUSE
+    ld (pause_req),a            ; (main_loop: race.asm)
     ld a,(game_mode)
     cp MODE_RACE
     jr nc,steer_go              ; the player's
@@ -1098,44 +1104,10 @@ demo_head_done
     jp rules_vbl
 
 ;; ---------------------------------------------------------------------------
-;; rules_start - (steer) fire pressed in the demo: a race begins. The demo
-;; brakes to a standstill at the start, START_X, the clock and the
-;; checkpoints set for it.
-;; ---------------------------------------------------------------------------
-rules_start
-    ld a,MODE_READY
-    ld (game_mode),a
-    ld a,MSG_GET_READY
-    ld (msg),a
-    xor a
-    ld (mode_t),a
-    ld (msg_t),a
-    ld (cp_level),a
-    ld hl,total_time
-    ld (hl),a
-    inc hl
-    ld (hl),a
-    inc hl
-    ld (hl),a
-    inc hl
-    ld (hl),a
-    inc hl
-    ld (hl),a
-    ld (stage),a
-    ld (msg_next),a
-    ld a,START_TIME
-    ld (time_left),a
-    ld a,EXT_FIRST
-    ld (cp_ext),a
-    ld hl,course_hold           ; the road to the flat, and straight on
-    ld de,props_none
-    ld a,1
-    jp course_set
-
-;; ---------------------------------------------------------------------------
-;; rules_vbl - (demo_step) a VSYNC of the race's rules.
+;; rules_vbl - (demo_step) a VSYNC of the race's rules (the start of a race,
+;; the demo's messages and the best times: race.asm).
 ;;
-;; The demo: PRESS FIRE blinks. READY: once the car stands at the start,
+;; The demo: PRESS FIRE blinks, and the best times show. READY: once the car stands at the start,
 ;; the count, 3-2-1 in the gear's place, then GO!: the race. The race: the
 ;; total time counts up, the clock down a second at a time; CP_DIST on from
 ;; the last checkpoint is the next - TIME and EXTENDED TIME, cp_ext seconds,
@@ -1151,16 +1123,7 @@ rules_vbl
     jp z,rules_race
     dec a
     jp z,rules_over
-    ld hl,blink_t               ; the demo: PRESS FIRE blinks
-    inc (hl)
-    ld a,(hl)
-    and BLINK-1
-    cp BLINK_ON
-    ld a,MSG_PRESS_FIRE
-    jr c,$+3
-    xor a
-    ld (msg),a
-    ret
+    jp rules_demo               ; (race.asm)
 
 rules_ready
     ld a,(mode_t)
@@ -1338,6 +1301,7 @@ rules_end                       ; the race over: message A, to a standstill
     ld (msg_next),a
     ret
 rules_finish
+    call times_add              ; (race.asm)
     ld a,MSG_FINISH
     jr rules_end
 

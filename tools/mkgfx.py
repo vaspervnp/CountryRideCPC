@@ -124,10 +124,20 @@ def gfx():
     emit("MSG_SPACE EQU %d" % S.MSG_GLYPHS.index(" "))
     for n, m in enumerate(S.MESSAGES):
         name = "MSG_" + (m.replace(" ", "_").strip("!_0123456789") if m else "NONE")
+        if n == S.MSG_ENTRY:
+            name = "MSG_ENTRY"
         emit("%-17s EQU %d" % (name, n))
     stage = S.MESSAGES.index("STAGE 1")
     emit("MSG_STAGE_N       EQU %d   ; (msg_texts) STAGE's digit, the game's"
          % (S.MSG_W * stage + S.msg_cells(stage).index(1)))
+    # the best time's: its place, a cell, the minute, ', the seconds, ", the
+    # hundredths (race.asm: entry_text)
+    cells = S.msg_cells(S.MSG_ENTRY)
+    at = cells.index(1)
+    assert [S.MSG_GLYPHS[g] for g in cells[at:at + 9]] == list("1 0'00\"00")
+    emit("MSG_ENTRY_AT      EQU %d   ; (msg_texts) a best time's place, then"
+         % (S.MSG_W * S.MSG_ENTRY + at))
+    emit("                          ; a cell on its m'ss\"cc")
     emit("msg_texts")
     for n in range(len(S.MESSAGES)):
         emit("    defb " + ",".join(str(v) for v in S.msg_cells(n)) + "   ; " + S.MESSAGES[n])

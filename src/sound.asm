@@ -37,19 +37,8 @@ ENG_VOL     EQU 9               ; ... less 3/8 of the speed (8.8)
 ENG_GRASS   EQU 12              ; its noise's period on the grass
     ASSERT ENG_IDLE-(SPEED_MAX+SPEED_MAX/2)/4 > 200
 
-MACRO SND_BEGIN at              ; a piece: a record, its code where it runs
-    defw {at},snd_{at}_end-{at}
-snd_{at}_ph
-    ORG {at},snd_{at}_ph
-MEND
-MACRO SND_END at
-snd_{at}_end
-    ASSERT snd_{at}_end <= {at}+SND_PIECE
-    ORG snd_{at}_ph+snd_{at}_end-{at}
-MEND
-
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P0
+    REC_BEGIN SND_P0
 
 ;; snd_irq - (irq_idle) every other frame: the music a tick on, channel C as
 ;; it should be, the PSG's registers that changed written. Keeps all but AF,
@@ -90,9 +79,9 @@ snd_tick
     ld ix,snd_ch_b
     jp snd_row
 
-    SND_END SND_P0
+    REC_END SND_P0,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P1
+    REC_BEGIN SND_P1
 
 ;; snd_row - IX = a channel: its next row (C = 0: from its next bar's
 ;; pattern). Keeps C.
@@ -151,9 +140,9 @@ sr_set
     ld (ix+CH_VOL),a
     ret
 
-    SND_END SND_P1
+    REC_END SND_P1,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P2
+    REC_BEGIN SND_P2
 
 ;; snd_bar - IX = a channel: its next bar's pattern (round again at #FFFF).
 ;; Keeps C.
@@ -206,9 +195,9 @@ fx_load
     or a
     ret
 
-    SND_END SND_P2
+    REC_END SND_P2,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P3
+    REC_BEGIN SND_P3
 
 ;; snd_chan_c - channel C (registers 4-7 and 10 of snd_regs): an effect
 ;; snd_frame asked for begins; one under way goes on, a step at a time; or
@@ -262,9 +251,9 @@ scc_engine                              ; (8 and 9: snd_out's)
     ldir
     ret
 
-    SND_END SND_P3
+    REC_END SND_P3,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P4
+    REC_BEGIN SND_P4
 
 ;; snd_out - the music's periods and volumes into snd_regs, and the PSG's
 ;; registers that differ from what was written last (snd_last) written
@@ -310,9 +299,9 @@ so_write
     out (c),a
     jr so_next
 
-    SND_END SND_P4
+    REC_END SND_P4,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P5
+    REC_BEGIN SND_P5
 
 ;; the interrupt's state
 snd_music   defb 0                      ; 1: the music plays (snd_switch)
@@ -341,9 +330,9 @@ snd_ch_b    defw 0,0,0
             defb 0,BASS_V0,BASS_DEC,BASS_SUS
             defw mus_bass
 
-    SND_END SND_P5
+    REC_END SND_P5,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_P6
+    REC_BEGIN SND_P6
 
 ;; the effects: steps of FX_STEP bytes - updates (0: the end), the volume,
 ;; its fall an update, the period (#8000 + n: noise of period n)
@@ -387,10 +376,10 @@ fx_timeup   defb 5,13,1
 fx_end
     ASSERT hi(fx_steps) == hi(fx_end-1) && lo(fx_steps) != 0
 
-    SND_END SND_P6
+    REC_END SND_P6,SND_PIECE
 ;; ---------------------------------------------------------------------------
 ;; What the main loop runs (RAM_C1): in page 1
-    SND_BEGIN SND_M0
+    REC_BEGIN SND_M0
 
 ;; snd_frame - (the main loop, once a picture) the sound as the game is: the
 ;; music in the race, the engine while the player's car is out (not in the
@@ -443,9 +432,9 @@ sf_loud
 sf_engine
     jp sf_set
 
-    SND_END SND_M0
+    REC_END SND_M0,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_M1
+    REC_BEGIN SND_M1
 
 sf_set
     ld (eng_regs),hl
@@ -491,9 +480,9 @@ sf_msgs     defb 0                      ; message, coll_t; the engine's hum
 sf_coll_t   defb 0
 sf_hum      defb 0
 
-    SND_END SND_M1
+    REC_END SND_M1,SND_PIECE
 ;; ---------------------------------------------------------------------------
-    SND_BEGIN SND_M2
+    REC_BEGIN SND_M2
 
 sf_colls
     ld a,(coll_t)                       ; a bump or a crash begins
@@ -538,6 +527,33 @@ ssw_on
     ld (snd_music),a                    ; (last: the interrupt plays it now)
     ret
 
-    SND_END SND_M2
+    REC_END SND_M2,SND_PIECE
+
+;; ---------------------------------------------------------------------------
+    REC_BEGIN SND_P10
+
+;; snd_hold - (race.asm: the pause) A = 0: all silent, the music held where
+;; it is; else on again as it was (the engine at the next snd_frame, the
+;; music's volumes at their next notes)
+snd_hold
+    ld hl,snd_music
+    or a
+    jr z,sh_off
+    ld a,(sh_music)
+    ld (hl),a
+    ret
+sh_off
+    ld a,(hl)
+    ld (sh_music),a
+    xor a
+    ld (hl),a
+    ld (eng_regs+6),a
+    ld (fx_ticks),a
+    ld (snd_ch_a+CH_VOL),a
+    ld (snd_ch_b+CH_VOL),a
+    ret
+sh_music    defb 0                      ; snd_music when it stopped
+
+    REC_END SND_P10,SND_PIECE
 
     INCLUDE "gen/music.asm"

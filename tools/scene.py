@@ -153,9 +153,12 @@ HUD = dict(
 )
 
 # The messages of the HUD's last line, MSG_W cells of small glyphs, centred:
-# what the game says (game.asm's MSG_ constants, in this order).
+# what the game says (game.asm's MSG_ constants, in this order). STAGE's
+# digit is the game's, and so is the last: one of the best times, its place
+# and the time (race.asm).
 MESSAGES = ["", "PRESS FIRE", "GET READY", "GO!", "EXTENDED TIME", "TIME UP",
-            "GAME OVER", "STAGE 1", "FINISH"]           # (STAGE's digit: the game's)
+            "GAME OVER", "STAGE 1", "FINISH", "PAUSE", "TOP TIMES", "1 0'00\"00"]
+MSG_ENTRY = len(MESSAGES) - 1
 MSG_W = max(len(m) for m in MESSAGES)
 MSG_X = (SCR_W - 6 * MSG_W) // 2 // 2 * 2
 # the glyphs: the digits, then a space and the letters the messages use

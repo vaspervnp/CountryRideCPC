@@ -10,10 +10,11 @@
 ;; read_keys - A: bit 0 = left held (cursor left, O, joystick left), bit 1 =
 ;; right (cursor right, P, joystick right), bit 2 = faster (cursor up, Q,
 ;; space, joystick up or fire), bit 3 = slower (cursor down, A, joystick
-;; down). The keyboard is read through the PSG's port (register 14), the
+;; down), bit 4 = the pause (ESC: KEY_PAUSE). The keyboard is read through the PSG's port (register 14), the
 ;; PPI's port A turned round for it - with interrupts off: the interrupt
 ;; writes the PSG too (sound.asm). Destroys BC, DE.
 ;; ---------------------------------------------------------------------------
+KEY_PAUSE   EQU 16
 read_keys
     di
     ld bc,#F40E                 ; PSG register 14
@@ -60,7 +61,7 @@ read_keys
     rla
     jr nc,$+4
     set 2,d
-    ld a,#48                    ; row 8: Q (bit 3), A (bit 5)
+    ld a,#48                    ; row 8: Q (bit 3), A (bit 5), ESC (bit 2)
     call rk_row
     ld e,a
     and 8
@@ -70,6 +71,10 @@ read_keys
     and #20
     jr z,$+4
     set 3,d
+    ld a,e
+    and 4
+    jr z,$+4
+    set 4,d
     ld a,#49                    ; row 9: joystick up, down, left, right
     call rk_row                 ; (bits 0-3), fire 2 and 1 (4, 5)
     ld e,a

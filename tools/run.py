@@ -197,7 +197,7 @@ def cmd_shots():
     c.run_frames(150)
     c.insert_disc(DSK)
     c.type_text('RUN"COUNTRY\n')
-    c.run_frames(1000)                          # (all loaded by then)
+    c.run_frames(1400)                          # (all loaded by then)
     for _ in range(2):
         c.tap_key("p", 10, 20)
     c.run_frames(13)                            # (the frame's ink: yellow)

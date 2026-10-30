@@ -537,9 +537,10 @@ HILL_RUNS = (HUD_ROW7 + [(CAR_HILL_ORG, 0x10000 - CAR_HILL_ORG)] + hidden_runs(0
 # The traffic's pieces left over from the fragments go - in every CARn.BIN,
 # after the car's records - in what the views on hills leave of HILL_RUNS in
 # pages 0 and 2 (mapped whatever the configuration), then in buffer 1's
-# blocks 4-6: the loader loads CARn.BIN over them, but boot.asm has read
+# blocks 5-6: the loader loads CARn.BIN over them, but boot.asm has read
 # those bytes of it by the time it copies these (cars_asm: TRAF_BLOB_MIN).
-TRAF_HIDDEN = hidden_runs(0x0000, range(4, 7))
+TRAF_HIDDEN = hidden_runs(0x0000, range(5, 7))     # (block 4's: the race's,
+                                                    # hw.asm RACE_P0)
 TRAF_BLOB_MIN = max(a + ln for a, ln in TRAF_HIDDEN)
 
 

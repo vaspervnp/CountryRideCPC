@@ -134,7 +134,7 @@ def main(pieces):
           % (len(pats), used, sum(r[1] for r in room)))
 
 
-DATA_PIECES = ["SND_P%d" % i for i in range(7, 12)]   # (sound.asm has P0-P6)
+DATA_PIECES = ["SND_P%d" % i for i in range(7, 10)]   # (sound.asm has P0-P6, P10)
 
 if __name__ == "__main__":
     main(DATA_PIECES)

@@ -113,7 +113,8 @@ crtc_regs
 ;; stays, seen on the level on hills too (and turning when spun). Then
 ;; fragments 3-6, over the car's file, IM 1's JP, and the sound (SOUND.BIN,
 ;; at SOUND_BLOB: some of it where the car's file was, some where fragments
-;; 2-7 were stored). RAM_C0 after.
+;; 2-7 were stored) and the race's extras (RACE.BIN, RACE_BLOB: some where
+;; the car's file was). RAM_C0 after.
 boot_car
     SET_RAM RAM_C1
     ld hl,CAR_BLOB
@@ -138,6 +139,8 @@ boot_car
     ld hl,isr                           ; left out)
     ld (IM1_JP+1),hl
     ld hl,SOUND_BLOB
+    call boot_blob
+    ld hl,RACE_BLOB
     call boot_blob
     SET_RAM RAM_C0
     ret

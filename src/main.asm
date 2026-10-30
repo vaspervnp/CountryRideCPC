@@ -16,6 +16,7 @@
 ;;   CARn.BIN   (#1900)         car n's own code, for BOOT.BIN to put in
 ;;                              place (the loader loads the picked car's)
 ;;   SOUND.BIN  (#98C0)         the sound, for BOOT.BIN to put in place
+;;   RACE.BIN   (#A0C0)         the pause and the best times, the same
 ;;   SELECT.SCR (#C000)         the screen the car is picked on
 ;;
 ;; Build: make (see Makefile). README.md describes the memory plan.
@@ -180,6 +181,20 @@ sound_end
     ASSERT sound_end <= FRAG8+3*#800       ; (fragment 11's place)
     SAVE "SOUND.BIN",SOUND_BLOB,sound_end-SOUND_BLOB,DSK,"build/countryride.dsk"
 
+;; ---------------------------------------------------------------------------
+;; the race's extras (RACE.BIN: the same)
+;; ---------------------------------------------------------------------------
+RACE_BLOB   EQU #A0C0                   ; buffer 0's lines 180 on in its fifth
+                                        ; 2K block: the same
+    BANK
+    ORG RACE_BLOB
+    defw CAR_MAGIC
+    INCLUDE "race.asm"
+    defw #FFFF
+race_end
+    ASSERT race_end <= FRAG8+4*#800        ; (fragment 12's place)
+    SAVE "RACE.BIN",RACE_BLOB,race_end-RACE_BLOB,DSK,"build/countryride.dsk"
+
     BANK
     ORG #C000
     INCBIN "gen/select.scr"
@@ -190,3 +205,4 @@ sound_end
     PRINT "bank 6 (ROADC.BIN): ",{hex}roadc_end-#4000," bytes"
     PRINT "bank 7 (GAME.BIN):  ",{hex}game_bank_end-#C000," bytes"
     PRINT "SOUND.BIN:          ",{hex}sound_end-SOUND_BLOB," bytes"
+    PRINT "RACE.BIN:           ",{hex}race_end-RACE_BLOB," bytes"

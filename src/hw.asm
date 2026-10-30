@@ -154,7 +154,7 @@ STACK_TOP   EQU #1000
 ;; three of the HUDs' eighth character rows - never shown, and the hill
 ;; views leave them out: fragments 2-7 are stored there until boot_car is
 ;; done with them.
-SND_PIECE   EQU 96          ; bytes: a line
+SND_PIECE   EQU 96          ; bytes: a line (P11: the race's, below)
 SND_P0      EQU BOT0_BASE+5*#800+96     ; line 173, buffer 0
 SND_P1      EQU BOT0_BASE+6*#800+96     ; 174
 SND_P2      EQU BOT0_BASE+7*#800+96     ; 175
@@ -170,6 +170,28 @@ SND_P11     EQU SND_P5-BOT0_BASE+BOT1_BASE
 SND_M0      EQU HUD_BASE+1*#800+#2A0    ; page 1: buffer 0's HUD's eighth
 SND_M1      EQU HUD_BASE+2*#800+#2A0    ; row, blocks 1-3 (mkbush.py
 SND_M2      EQU HUD_BASE+3*#800+#2A0    ; HUD_ROW7 leaves them out)
+
+;; --- The race's extras (race.asm, RACE.BIN) -----------------------------------
+;; The pause and the best times, run by the main loop (RAM_C1) and put in
+;; place as the sound is: in hidden lines of buffer 1 nothing else has -
+;; 164 and 172 (one after the other: mkbush.py TRAF_HIDDEN leaves them out),
+;; 167, and 178, the sound's twelfth piece.
+RACE_P0     EQU BOT1_BASE+4*#800        ; lines 164 and 172: 192 bytes
+RACE_P1     EQU BOT1_BASE+7*#800        ; line 167
+RACE_P2     EQU SND_P11                 ; line 178
+
+;; a record of SOUND.BIN or RACE.BIN (boot.asm boot_blob): its code ORG'd
+;; where it goes, `size` bytes there at most
+MACRO REC_BEGIN at
+    defw {at},rec_{at}_end-{at}
+rec_{at}_ph
+    ORG {at},rec_{at}_ph
+MEND
+MACRO REC_END at,size
+rec_{at}_end
+    ASSERT rec_{at}_end <= {at}+{size}
+    ORG rec_{at}_ph+rec_{at}_end-{at}
+MEND
 
 ;; --- Bank 7, past the game's code (RAM_C1, RAM_C3) ---------------------------
 ;; The track a few entries ahead of the camera, per entry (zcam / 32) mod 64:

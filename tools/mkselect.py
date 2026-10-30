@@ -9,6 +9,10 @@ loader draws the picked one's frame over in a pen of its own (LIT,
 flashing), and shows a "loading" line or the keys' line, each in a pen of
 its own too, by their inks alone.
 
+It is the title screen too: COUNTRY RIDE above the cars, twice as wide
+and high as the small font, yellow to orange to red down its lines; and
+the credits at the bottom.
+
 The side views are photorealistic renders of the cars' models
 (tools/cars3d.py, SIDE=True: assets/cars/side_<car>.png) brought to this
 screen's own pens as the race's views are to the game's (tools/dither.py:
@@ -38,9 +42,11 @@ SIDE_CELLS = (88, 40)
 # The cars, in the game's order (car_id 0-3), and their names
 CARS = [("player", "ROSSO GT"), ("ferrari", "BERLINETTA"), ("lotus", "WEDGE TURBO"),
         ("bmw", "TOURING")]
-TITLE = "CHOOSE YOUR CAR"
+TITLE = "COUNTRY RIDE"
+TITLE_PENS = "YYYYOOOOORRRRR"             # its 14 lines' pens, top down
 LOADING = "LOADING"
 KEYS = "1-4 OR ARROWS, THEN FIRE"
+CREDITS = "REVIVE8BIT - 2026 - VASPER"
 
 # This screen's own pens: letter, firmware colour. The cars' and the
 # screen's colours (pink: the red paint's highlights; pastel cyan: the
@@ -102,6 +108,21 @@ def text(s, pen, scale_y=1, shadow=True):
     return out
 
 
+def title(s):
+    """The title: the small font twice as wide and high, its lines' pens
+    TITLE_PENS, with a black shadow a pixel right and two lines down."""
+    small = text(s, 0, 1, shadow=False)
+    h = 2 * 7
+    rows = [[None] * (2 * len(small[0]) + 1) for _ in range(h + 2)]
+    for dy, dx, pens in ((2, 1, "K" * h), (0, 0, TITLE_PENS)):
+        for j in range(h):
+            for i, p in enumerate(small[j // 2][:-1]):
+                if p is not None:
+                    for k in range(2):
+                        rows[j + dy][2 * i + k + dx] = PEN[pens[j]]
+    return rows
+
+
 def stamp(scr, x, y, art):
     for j, r in enumerate(art):
         for i, p in enumerate(r):
@@ -115,7 +136,7 @@ def centred(scr, y, art, x0=0, w=W):
 
 PANEL_W, PANEL_H = 78, 76
 PANEL_X = [1, 81]
-PANEL_Y = [20, 99]
+PANEL_Y = [19, 98]                            # (the loader's frames: line 500)
 
 
 # what the cars are like (scene.py CAR_LEVELS: the game drives them so),
@@ -154,7 +175,7 @@ def frame_px(i):
 
 def screen():
     scr = [[BG] * W for _ in range(H)]
-    centred(scr, 2, text(TITLE, PEN["Y"], 2))
+    centred(scr, 2, title(TITLE))
     for i, (name, label) in enumerate(CARS):
         x0, y0 = PANEL_X[i % 2], PANEL_Y[i // 2]
         for y in range(y0, y0 + PANEL_H):
@@ -169,9 +190,10 @@ def screen():
         for j, (stat, level) in enumerate(zip(STATS, CAR_LEVELS[i])):
             stamp(scr, x0 + STAT_X, y0 + 48 + 8 * j, stat_row(stat, level))
     # the two lines the loader shows one at a time: no shadows (they would
-    # stay when the line is hidden)
-    centred(scr, 179, text(LOADING, PEN["LOADING"], shadow=False))
-    centred(scr, 190, text(KEYS, PEN["KEYS"], shadow=False))
+    # stay when the line is hidden); the credits
+    centred(scr, 176, text(LOADING, PEN["LOADING"], shadow=False))
+    centred(scr, 184, text(KEYS, PEN["KEYS"], shadow=False))
+    centred(scr, 192, text(CREDITS, PEN["S"]))
     return scr
 
 

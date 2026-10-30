@@ -49,7 +49,7 @@ joystick: left and right.
 Faster: cursor up, Q, space, joystick up or fire; slower: cursor down, A,
 joystick down. With neither held the car slows down a little; with a
 wheel on the grass (the road 20 pairs or more to one side) it goes no
-faster than half its top speed.
+faster than half its top speed. ESC pauses the race, and goes on with it.
 
 The game needs the 6128's second 64K: it uses banks 4 to 7. So far it has
 been tested in emulators: the harness below, and Retro Virtual Machine. The
@@ -160,8 +160,19 @@ in the ROSSO GT, 30 in the BERLINETTA and 10 in the TOURING, and runs out
 of time in the last stage in the WEDGE TURBO.
 
 The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
-EXTENDED TIME, TIME UP, FINISH, GAME OVER - are the HUD's last line (The
-HUD, below).
+EXTENDED TIME, TIME UP, FINISH, GAME OVER, PAUSE - are the HUD's last line
+(The HUD, below).
+
+ESC holds the race - or the count before it, or the braking after it -
+where it is: the picture stays, the sound stops, PAUSE shows; ESC again
+and it goes on.
+
+The five best times to the finish are kept as long as the machine is on:
+in the demo the message line shows PRESS FIRE (5 seconds), then TOP TIMES
+and each of the five - its place and its TOTAL TIME, 3'30"00 to 4'10"00
+before any race has beaten them - 1.3 seconds each. A race that finishes
+faster than one of them takes its place, the slower ones moving down; the
+demo then starts with them, and its own blinks (`src/race.asm`).
 
 The race has music - an original tune, 16 bars in C major, the lead and
 the bass - and the car its engine, from GET READY to GAME OVER: a note
@@ -173,7 +184,13 @@ demo is silent (Sound, below).
 ### The cars
 
 Before the race the player picks one of four sports cars, seen from the
-side on the screen the loader shows while the game loads: a red one with a
+side on the screen the loader shows while the game loads - the title
+screen too, COUNTRY RIDE above the cars and the credits below them
+(`tools/mkselect.py`):
+
+![The title and the cars](docs/screen-select.png)
+
+They are a red one with a
 rear wing (ROSSO GT), a wide red one with a grille of black slats right
 across its tail (BERLINETTA, after a Ferrari Testarossa), a low yellow
 wedge with a louvred engine cover (WEDGE TURBO, after a Lotus Esprit) and a
@@ -363,7 +380,11 @@ pieces, in pages 0 and 2: whatever the RAM configuration; a bush's top is
 on line 183 at the highest, a prop's on 179, both checked by
 `tools/mkbush.py`), and what the main loop runs in three HUD eighth rows
 (`#4AA0`, `#52A0`, `#5AA0`), where fragments 2-7 were stored until then.
-`boot_blob` (`src/boot.asm`) copies both files' records.
+`boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
+pause and the best times, and the start of a race, which bank 7 had no
+room left for: `src/race.asm`) is records too, loaded at `#A0C0` and put
+in place after the sound: in buffer 1's hidden lines 164 and 172 (which
+the traffic's code leaves), 167, and 178.
 
 Page 1 has the HUDs in the first `#600` bytes of each 2K block - but the
 eighth character row of each, never shown, holds code of the car's views
@@ -848,9 +869,10 @@ steering or steering from side to side: the worst takes 38.2 ms, with the
 traffic, the props and the sound (Steering in numbers, below). Over the
 race's five stages, driven by the autopilot in each of the four cars and
 zigzagging from side to side with the keys, with the music, none does
-either: the worst takes 38.9 ms - a prop is left out of 5 to 40 of each
-race's ~6100 pictures (7 to 18 before the sound), which were late already
-when it came to it.
+either: the worst takes 39.3 ms (a hill moving, a dead tree close by drawn
+at the 9th interrupt, and the sound) - a prop is left out of 5 to 52 of
+each race's ~6100 pictures (7 to 18 before the sound), which were late
+already when it came to it.
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
@@ -1064,6 +1086,7 @@ src/            the game
   init.asm      what runs once as the game starts (over the track's rings)
   sound.asm     the sound: the interrupt's player (music, engine, effects),
                 what the main loop tells it (SOUND.BIN)
+  race.asm      the pause, the best times, the start of a race (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -1085,7 +1108,8 @@ tools/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views as the game's pens -> tools/carsart.py
-  mkselect.py   the screen the car is picked on -> src/gen/select.scr
+  mkselect.py   the title and the screen the car is picked on
+                -> src/gen/select.scr
   traffic3d.py  the traffic's tops and tails at eight sizes (Blender)
                 -> assets/traffic/
   mktraffic.py  the traffic's art as the game's pens -> tools/trafficart.py

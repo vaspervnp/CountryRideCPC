@@ -93,6 +93,12 @@ small_digits
 ; !
     defb #C0,#68,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0
     defb #80,#C0,#C0,#68,#C0,#C0,#80,#C0
+; "
+    defb #94,#94,#C0,#94,#14,#40,#C0,#40,#40,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+; '
+    defb #C0,#68,#C0,#C0,#28,#C0,#C0,#80,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
 ; A
     defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#3C,#3C,#40,#28,#14,#40,#28
     defb #94,#40,#28,#94,#40,#80,#C0,#40
@@ -162,17 +168,25 @@ MSG_TIME_UP       EQU 5
 MSG_GAME_OVER     EQU 6
 MSG_STAGE         EQU 7
 MSG_FINISH        EQU 8
+MSG_PAUSE         EQU 9
+MSG_TOP_TIMES     EQU 10
+MSG_ENTRY         EQU 11
 MSG_STAGE_N       EQU 100   ; (msg_texts) STAGE's digit, the game's
+MSG_ENTRY_AT      EQU 145   ; (msg_texts) a best time's place, then
+                          ; a cell on its m'ss"cc
 msg_texts
     defb 10,10,10,10,10,10,10,10,10,10,10,10,10   ; 
-    defb 10,22,23,14,24,24,10,15,18,23,14,10,10   ; PRESS FIRE
-    defb 10,10,16,14,25,10,23,14,12,13,29,10,10   ; GET READY
-    defb 10,10,10,10,10,16,21,11,10,10,10,10,10   ; GO!
-    defb 14,28,25,14,20,13,14,13,10,25,18,19,14   ; EXTENDED TIME
-    defb 10,10,10,25,18,19,14,10,26,22,10,10,10   ; TIME UP
-    defb 10,10,16,12,19,14,10,21,27,14,23,10,10   ; GAME OVER
-    defb 10,10,10,24,25,12,16,14,10,1,10,10,10   ; STAGE 1
-    defb 10,10,10,15,18,20,18,24,17,10,10,10,10   ; FINISH
+    defb 10,24,25,16,26,26,10,17,20,25,16,10,10   ; PRESS FIRE
+    defb 10,10,18,16,27,10,25,16,14,15,31,10,10   ; GET READY
+    defb 10,10,10,10,10,18,23,11,10,10,10,10,10   ; GO!
+    defb 16,30,27,16,22,15,16,15,10,27,20,21,16   ; EXTENDED TIME
+    defb 10,10,10,27,20,21,16,10,28,24,10,10,10   ; TIME UP
+    defb 10,10,18,14,21,16,10,23,29,16,25,10,10   ; GAME OVER
+    defb 10,10,10,26,27,14,18,16,10,1,10,10,10   ; STAGE 1
+    defb 10,10,10,17,20,22,20,26,19,10,10,10,10   ; FINISH
+    defb 10,10,10,10,24,14,28,26,16,10,10,10,10   ; PAUSE
+    defb 10,10,27,23,24,10,27,20,21,16,26,10,10   ; TOP TIMES
+    defb 10,10,1,10,0,13,0,0,12,0,0,10,10   ; 1 0'00"00
 
 ;; labels: defb width in bytes, then 8 lines of bytes
 lbl_time
