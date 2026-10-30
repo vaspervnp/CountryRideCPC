@@ -103,19 +103,34 @@ def gfx():
         defb_rows(emit, encode_rows(S.big_glyph(n)))
     emit("")
 
-    emit(";; small digits, 3 bytes x 8 lines")
+    emit(";; small glyphs, 3 bytes x 8 lines: the digits 0-9, then the space")
+    emit(";; and the letters of the messages (scene.py MSG_GLYPHS)")
     emit("SMALL_W EQU 3")
     emit("SMALL_H EQU 8")
     emit("small_digits")
-    for d in range(10):
-        emit("; %d" % d)
-        defb_rows(emit, encode_rows(S.small_digit(d)))
+    for ch in S.MSG_GLYPHS:
+        emit("; %s" % ch)
+        defb_rows(emit, encode_rows(S.small_glyph(ch)))
+    emit("")
+
+    # the messages: MSG_W glyph numbers each, centred
+    emit(";; the HUD's messages (scene.py MESSAGES), MSG_W glyphs each")
+    emit("MSG_W EQU %d" % S.MSG_W)
+    emit("MSG_X EQU %d" % (S.MSG_X // 2))
+    emit("MSG_Y EQU %d" % S.HUD["message"][1])
+    emit("MSG_SPACE EQU %d" % S.MSG_GLYPHS.index(" "))
+    for n, m in enumerate(S.MESSAGES):
+        name = "MSG_" + (m.replace(" ", "_").strip("!") if m else "NONE")
+        emit("%-17s EQU %d" % (name, n))
+    emit("msg_texts")
+    for n in range(len(S.MESSAGES)):
+        emit("    defb " + ",".join(str(v) for v in S.msg_cells(n)) + "   ; " + S.MESSAGES[n])
     emit("")
 
     # labels: width in bytes, 8 lines
     emit(";; labels: defb width in bytes, then 8 lines of bytes")
     labels = [("lbl_time", "TIME", S.LABEL_PEN), ("lbl_speed", "SPEED", S.LABEL_PEN),
-              ("lbl_total", "TOTAL TIME", S.LABEL_PEN), ("lbl_fuel", "FUEL", S.LABEL_PEN),
+              ("lbl_total", "TOTAL TIME", S.LABEL_PEN), ("lbl_cp", "CHECKPOINT", S.LABEL_PEN),
               ("lbl_apos", "'", S.VALUE_PEN), ("lbl_quote", '"', S.VALUE_PEN)]
     widths = {}
     for name, text, pen in labels:
@@ -135,7 +150,7 @@ def gfx():
         TIME_LBL=H["time_label"], TIME_VAL=H["time_value"],
         SPEED_LBL=(speed_x, H["speed_label"][1]), SPEED_GAUGE=H["speed_gauge"],
         GEAR=H["gear"], TOTAL_LBL=H["total_label"], TOTAL_VAL=H["total_value"],
-        FUEL_LBL=H["fuel_label"], FUEL_GAUGE=H["fuel_gauge"])
+        CP_LBL=H["cp_label"], CP_GAUGE=H["cp_gauge"])
     emit(";; HUD layout: x in bytes, y in lines")
     for k, (x, y) in pos.items():
         assert x % 2 == 0, k
@@ -163,7 +178,7 @@ def gfx():
 
     # gauges: per segment the pair of bytes (3 lit pixels + 1 background)
     emit(";; gauge segments: two bytes per segment, by segment index")
-    for name, rev in (("fuel_seg", False), ("speed_seg", True)):
+    for name, rev in (("cp_seg", False), ("speed_seg", True)):
         emit(name)
         for s in range(S.GAUGE_SEGS):
             zone = s * 4 // S.GAUGE_SEGS

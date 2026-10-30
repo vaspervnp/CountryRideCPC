@@ -191,8 +191,8 @@ draw_static
     ld ix,lbl_total
     ld bc,TOTAL_LBL_X*256+TOTAL_LBL_Y
     call draw_label
-    ld ix,lbl_fuel
-    ld bc,FUEL_LBL_X*256+FUEL_LBL_Y
+    ld ix,lbl_cp
+    ld bc,CP_LBL_X*256+CP_LBL_Y
     call draw_label
     ld ix,lbl_apos
     ld bc,(TOTAL_VAL_X+TOTAL_APOS_X)*256+TOTAL_VAL_Y

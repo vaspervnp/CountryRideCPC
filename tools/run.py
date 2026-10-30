@@ -408,7 +408,9 @@ def cmd_check():
                     gear="N" if gear == 0 else str(gear),
                     total_centis=tt[0] * 6000 + (tt[1] * 10 + tt[2]) * 100
                     + tt[3] * 10 + tt[4],
-                    fuel=g.game_byte("SHOWN_FUEL", buf))
+                    progress=g.game_byte("SHOWN_CP", buf),
+                    msg=[g.game_byte("SHOWN_MSG", scene.MSG_W * buf + i)
+                         for i in range(scene.MSG_W)])
         lag = abs(vals["speed_level"] - g.game_byte("SPEED_LEVEL"))
         worst_lag = max(worst_lag, lag)
         want = scene.hud(**vals)

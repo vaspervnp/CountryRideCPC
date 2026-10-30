@@ -4,7 +4,8 @@
 ;; The HUD shows a copy of the game's values that hud_snapshot takes every
 ;; HUD_EVERY pictures, so it changes 6.25 times a second while the road moves
 ;; at 25: both buffers catch up with one copy before the next is taken, and
-;; the two pictures in between have nothing to draw.
+;; the two pictures in between have nothing to draw. Its last line is the
+;; game's message (hud_msg), MSG_W small glyphs, a few at a time.
 ;;
 ;; Each buffer remembers what it shows, and hud_update redraws only what
 ;; differs from the copy - into the buffer being drawn, which then becomes
@@ -13,11 +14,12 @@
 ;; ===========================================================================
 
 ;; --- the values the game sets ------------------------------------------------
-time_left   defb 60             ; seconds, two big digits
-gear        defb 0              ; 0 = N, 1..6
+time_left   defb START_TIME     ; seconds, two big digits
+gear        defb 0              ; 0 = N, 1..6 (the start's count: 3..1)
 speed_level defb 0              ; gauge segments lit, 0..GAUGE_SEGS
-fuel_level  defb GAUGE_SEGS
+cp_level    defb 0              ; ... on the way to the next checkpoint
 total_time  defb 0,0,0,0,0      ; m, s tens, s units, cs tens, cs units
+msg         defb MSG_NONE       ; the message (gen/gfx.asm MSG_...)
 HUD_VALS_LEN EQU $-time_left
 
 ;; --- the copy the HUD shows, in the same order --------------------------------
@@ -26,12 +28,22 @@ hud_vals
 hv_time     defb 0
 hv_gear     defb 0
 hv_speed    defb 0
-hv_fuel     defb 0
+hv_cp       defb 0
 hv_total    defb 0,0,0,0,0
+hv_msg      defb 0
     ASSERT $-hud_vals == HUD_VALS_LEN
 
-;; hud_snapshot - take the copy; neither buffer shows it yet
+;; hud_snapshot - take the copy; neither buffer shows it yet (nor its
+;; message, if that is new)
 hud_snapshot
+    ld a,(msg)
+    ld hl,hv_msg
+    cp (hl)
+    jr z,hud_snapshot_vals
+    xor a
+    ld (msg_done),a
+    ld (msg_done+1),a
+hud_snapshot_vals
     ld hl,time_left
     ld de,hud_vals
     ld bc,HUD_VALS_LEN
@@ -46,21 +58,26 @@ shown_time  defb #FF,#FF        ; units
 shown_time_hi defb #FF,#FF      ; tens
 shown_gear  defb #FF,#FF
 shown_speed defb #FF,#FF        ; segments lit
-shown_fuel  defb #FF,#FF
+shown_cp    defb #FF,#FF
 shown_total defb #FF,#FF,#FF,#FF,#FF
             defb #FF,#FF,#FF,#FF,#FF
+shown_msg   defs 2*MSG_W,#FF    ; the message line's glyphs, a buffer's
+                                ; after the other's
 hud_done    defb 0,0            ; non-zero: the buffer shows the copy
+msg_done    defb 0,0            ; ... its message
 
 ;; hud_forget - make the next update of both buffers redraw everything
 hud_forget
     ld hl,shown_time
     ld de,shown_time+1
     ld (hl),#FF
-    ld bc,shown_total+9-shown_time
+    ld bc,shown_msg+2*MSG_W-1-shown_time
     ldir
     xor a
     ld (hud_done),a
     ld (hud_done+1),a
+    ld (msg_done),a
+    ld (msg_done+1),a
     ret
 
 ;; HL = per-buffer pair -> HL = this buffer's entry
@@ -178,7 +195,7 @@ hud_speed
     call buf_entry
     ld a,(hv_speed)
     cp (hl)
-    jr z,hud_fuel
+    jr z,hud_cp
     ld a,(hud_budget)
     or a
     ret z
@@ -188,20 +205,20 @@ hud_speed
     ld c,SPEED_GAUGE_Y
     jp gauge_update
 
-    ; --- fuel gauge: red to green ---
-hud_fuel
-    ld hl,shown_fuel
+    ; --- checkpoint gauge: red to green ---
+hud_cp
+    ld hl,shown_cp
     call buf_entry
-    ld a,(hv_fuel)
+    ld a,(hv_cp)
     cp (hl)
     jr z,hud_up_to_date
     ld a,(hud_budget)
     or a
     ret z
-    ld a,(hv_fuel)
-    ld de,fuel_seg
-    ld b,FUEL_GAUGE_X
-    ld c,FUEL_GAUGE_Y
+    ld a,(hv_cp)
+    ld de,cp_seg
+    ld b,CP_GAUGE_X
+    ld c,CP_GAUGE_Y
     jp gauge_update
 
 hud_up_to_date
@@ -210,7 +227,8 @@ hud_up_to_date
     ld (hl),1
     ret
 
-;; a segment of the speed gauge, or else the fuel gauge, if one is behind
+;; a segment of the speed gauge, or else the checkpoint gauge, if one is
+;; behind
 hud_gauge_one
     ld hl,shown_speed
     call buf_entry
@@ -219,13 +237,13 @@ hud_gauge_one
     ld de,speed_seg
     ld bc,SPEED_GAUGE_X*256+SPEED_GAUGE_Y
     jr nz,hud_gauge_one_draw
-    ld hl,shown_fuel
+    ld hl,shown_cp
     call buf_entry
-    ld a,(hv_fuel)
+    ld a,(hv_cp)
     cp (hl)
     ret z
-    ld de,fuel_seg
-    ld bc,FUEL_GAUGE_X*256+FUEL_GAUGE_Y
+    ld de,cp_seg
+    ld bc,CP_GAUGE_X*256+CP_GAUGE_Y
 hud_gauge_one_draw
     call gauge_update
     ld hl,hud_budget
@@ -280,6 +298,107 @@ hud_total_next
     ret                         ; (carry clear: cp/sub left none)
 
 ;; ---------------------------------------------------------------------------
+;; hud_msg - the selected buffer's message line towards the copy's message
+;; (hv_msg): the cells that differ from what the buffer shows, left to
+;; right, MSG_CELLS of them at most (~0.2 ms each) - a message comes and
+;; goes as a wipe over a few pictures.
+;; ---------------------------------------------------------------------------
+MSG_CELLS   EQU 4
+hm_scr      defw 0              ; the first cell's first line on the screen
+
+hud_msg
+    ld hl,msg_done
+    call buf_entry
+    ld a,(hl)
+    or a
+    ret nz                      ; nothing new since it was brought up to date
+    ld a,(hv_msg)               ; DE = the message's glyphs (MSG_W a message)
+    ld l,a
+    add a,a
+    add a,l
+    add a,a
+    add a,a
+    add a,l
+    ASSERT MSG_W == 13
+    ld l,a
+    ld h,0
+    ld de,msg_texts
+    add hl,de
+    push hl
+    ld hl,MSG_Y
+    call line_addr
+    ld de,MSG_X
+    add hl,de
+    ld (hm_scr),hl
+    pop de
+    ld ix,shown_msg             ; IX = what this buffer shows
+    ld a,(tgt_buf)
+    or a
+    jr z,hud_msg_buf
+    ld ix,shown_msg+MSG_W
+hud_msg_buf
+    ld bc,MSG_W*256+MSG_CELLS
+hud_msg_loop
+    ld a,(de)
+    cp (ix+0)
+    jr z,hud_msg_next
+    dec c
+    ret m                       ; this picture's share is drawn
+    ld (ix+0),a
+    push bc
+    push de
+    ld a,MSG_W                  ; DE = the cell's: hm_scr + 3 x the cell
+    sub b
+    ld e,a
+    add a,a
+    add a,e
+    ld hl,(hm_scr)
+    add a,l
+    ld e,a
+    ld d,h                      ; (no carry: see draw_cell)
+    ld a,(ix+0)
+    call draw_cell
+    pop de
+    pop bc
+hud_msg_next
+    inc de
+    inc ix
+    djnz hud_msg_loop
+    ld hl,msg_done
+    call buf_entry
+    ld (hl),1
+    ret
+
+;; draw_cell - (hud_msg) small glyph A at DE, a character row's first line:
+;; its lines #800 apart, in one row. Destroys AF, BC, DE, HL.
+draw_cell
+    ld l,a                      ; 24 bytes a glyph
+    ld h,0
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld b,h
+    ld c,l
+    add hl,hl
+    add hl,bc
+    ld bc,small_digits
+    add hl,bc
+    ld bc,SMALL_H*256+#FF       ; (C: LDI's count, never down to 0)
+draw_cell_line
+    ldi
+    ldi
+    ldi
+    ld a,d                      ; the next line
+    add a,8
+    ld d,a
+    dec e                       ; (no carry: the cells end at MSG_X + 39
+    dec e                       ; in a row starting at #x40)
+    dec e
+    djnz draw_cell_line
+    ret
+    ASSERT MSG_Y % 8 == 0 && SMALL_W == 3
+
+;; ---------------------------------------------------------------------------
 ;; draw_big - glyph A (0-9, 10 = N) at B = x bytes, C = y.
 ;; ---------------------------------------------------------------------------
 draw_big
@@ -301,7 +420,8 @@ draw_big
     jp blit
 
 ;; ---------------------------------------------------------------------------
-;; draw_small - digit A at B = x bytes, C = y.
+;; draw_small - small glyph A (0-9 the digits, then gen/gfx.asm's) at B = x
+;; bytes, C = y.
 ;; ---------------------------------------------------------------------------
 draw_small
     ld l,a                      ; 24 bytes a digit

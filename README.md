@@ -4,13 +4,12 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 ![The road on the flat](docs/screen-flat.png)
 
-This is the first milestone: the screen layout, the road engine, the
-player's car and the traffic. A demo drive runs a four-lane road over a
-looping run of crests, dips and curves - never a curve on a hill - with
-bushes of different sizes beside it at random intervals and cars on it, at
-25 frames a second, and fills the HUD with plausible numbers. Press left or right and you steer: the car stays in
-the middle of the screen and the road moves under it, and a curve carries
-the car out of it unless you steer against it.
+A four-lane road loops over a run of crests, dips and curves - never a
+curve on a hill - with bushes of different sizes beside it at random
+intervals and cars on it, at 25 frames a second. A demo drives it until
+you press fire; then you race the clock (The race, below). You steer: the
+road moves under the car, and a curve carries the car out of it unless
+you steer against it.
 
 | Crest ahead | In a dip | The sharpest curve |
 |---|---|---|
@@ -41,13 +40,13 @@ Insert `build/countryride.dsk` in a CPC 6128, or any emulator of one, and type:
 RUN"COUNTRY
 ```
 
-Pick a car (below), then steer with the cursor keys, O and P, or a
+Pick a car (below). The demo drives until you press fire (or space,
+cursor up, Q, joystick up). Then steer with the cursor keys, O and P, or a
 joystick: left and right.
 Faster: cursor up, Q, space, joystick up or fire; slower: cursor down, A,
-joystick down. Until you first press one of them, the demo drives - and it
-keeps its own speed until you first press faster or slower. With neither
-held the car slows down a little; with a wheel on the grass (the road 20
-pairs or more to one side) it goes no faster than half its top speed.
+joystick down. With neither held the car slows down a little; with a
+wheel on the grass (the road 20 pairs or more to one side) it goes no
+faster than half its top speed.
 
 The game needs the 6128's second 64K: it uses banks 4 to 7. So far it has
 been tested in emulators: the harness below, and Retro Virtual Machine. The
@@ -72,7 +71,7 @@ On the flat it is:
 
 | Lines | Share | What |
 |---|---|---|
-| 0–63 | ~1/4 | HUD on navy: TIME, SPEED gauge with the gear (N–6), TOTAL TIME, FUEL gauge |
+| 0–63 | ~1/4 | HUD on navy: TIME, SPEED gauge with the gear (N–6), TOTAL TIME, CHECKPOINT gauge; a line of messages |
 | 64–135 | ~1/4 | navy, the HUD's colour |
 | 136–179 | ~1/6 | dithered sky fading into the navy, snowy mountains up to 28 lines high |
 | 180–187 | | a band of ground |
@@ -113,6 +112,26 @@ who catches up with them and drives by - or bumps into them. Each
 has a closed or an open top - a coupé's cabin, or a windscreen with a driver
 behind it - on a sports car's, a saloon's or a GT's tail, and a colour for
 its top and one for its tail, out of sixteen: hundreds of different cars.
+
+### The race
+
+Fire pressed while the demo drives, GET READY: the car brakes to a
+standstill in the third lane from the left, the count goes 3, 2, 1 in the
+gear's place, and GO! - the player drives, from a standstill. TIME starts at
+70 seconds and counts down; TOTAL TIME counts up. Every 12288 depth units
+(a lap and a half of the track: 37 seconds at the top speed of 6.6 a VSYNC)
+is a checkpoint, and the CHECKPOINT gauge fills on the way to it: there
+TIME gets 50 more seconds (EXTENDED TIME), 2 fewer at each next one, down
+to 36, and never over 99. At 0, TIME UP: the car brakes to a standstill,
+still steered, GAME OVER, and the demo drives on from there; TOTAL TIME
+keeps what the race lasted until the next one. (`rules_vbl` in
+`src/game.asm`; the numbers are its `START_TIME`, `CP_DIST`, `EXT_FIRST`,
+`EXT_DROP`, `EXT_MIN`.)
+
+The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, EXTENDED
+TIME, TIME UP, GAME OVER - are the HUD's last line (The HUD, below).
+
+### The cars
 
 Before the race the player picks one of four sports cars, seen from the
 side on the screen the loader shows while the game loads: a red one with a
@@ -620,6 +639,15 @@ too, for a picture that has the time; the rest waits for the buffer's next
 picture. Text and gauges sit on
 the HUD's plain background, so drawing is plain copying, never masking.
 
+The last line holds the game's message: 13 cells of the small font's
+glyphs (the digits and the 19 letters the messages use, 24 bytes each),
+each buffer redrawing the cells that differ from what it shows, left to
+right, 4 at most a picture (~0.25 ms each, its 3 x 8 bytes copied by
+`draw_cell`: the line is a character row's first) and only before the
+9th interrupt since the flip - so a message comes and goes as a wipe over
+a few pictures (`hud_msg`): ~1.5 ms in each of those, nothing in the
+others (a buffer looks again only when the message changes).
+
 ### Timing
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
@@ -842,7 +870,7 @@ src/            the game
   cache4.asm    ... its part in bank 4 (band A)
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
-  game.asm      main loop, demo drive, steering
+  game.asm      main loop, the race's rules, demo drive, steering
   bush.asm      the bushes: projected, drawn, taken away
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps

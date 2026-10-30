@@ -52,7 +52,7 @@ SMALL = load_font("font_small.txt")
 BIG = load_font("font_big.txt")
 
 SMALL_NAMES = {" ": "SPACE", '"': "QUOTE", "'": "APOS", "-": "DASH", ",": "COMMA",
-               ":": "COLON"}
+               ":": "COLON", "!": "EXCL"}
 
 HUD_BG = PEN["NAVY"]
 SHADOW = PEN["BLACK"]
@@ -114,6 +114,19 @@ def small_digit(d, pen=VALUE_PEN):
     return cell
 
 
+def small_glyph(ch, pen=VALUE_PEN):
+    """A character of a message in the same cell as a digit: a glyph
+    narrower than 5 pixels is centred in the first 5 (the 6th is the
+    shadow's, or the gap)."""
+    if ch.isdigit():
+        return small_digit(int(ch), pen)
+    rows = SMALL[SMALL_NAMES.get(ch, ch)]
+    g = shadowed(rows, pen)
+    cell = blank(6, 8)
+    stamp(cell, (5 - len(rows[0])) // 2, 0, g)
+    return cell
+
+
 def big_glyph(name, pen=VALUE_PEN):
     """A big glyph in a fixed 4-byte (8 pixel) cell, 18 lines."""
     g = shadowed(BIG[name], pen, scale_y=2)   # 7 wide, 18 tall
@@ -132,14 +145,32 @@ GAUGE_ZONES = [PEN["RED"], PEN["ORANGE"], PEN["YELLOW"], PEN["GRASS_A"]]
 
 HUD = dict(
     time_label=(8, 6), time_value=(8, 17),          # two big digits
-    speed_label=(None, 6), speed_gauge=(80, 18), gear=(92, 31),
+    speed_label=(None, 6), speed_gauge=(80, 18), gear=(92, 29),
     total_label=(130, 6), total_value=(130, 17),    # m'ss"cc small digits
-    fuel_label=(130, 31), fuel_gauge=(128, 42),
+    cp_label=(130, 29), cp_gauge=(128, 40),         # to the next checkpoint
+    message=(None, 48),                             # MSG_W small glyphs
 )
+
+# The messages of the HUD's last line, MSG_W cells of small glyphs, centred:
+# what the game says (game.asm's MSG_ constants, in this order).
+MESSAGES = ["", "PRESS FIRE", "GET READY", "GO!", "EXTENDED TIME", "TIME UP",
+            "GAME OVER"]
+MSG_W = max(len(m) for m in MESSAGES)
+MSG_X = (SCR_W - 6 * MSG_W) // 2 // 2 * 2
+# the glyphs: the digits, then a space and the letters the messages use
+MSG_GLYPHS = "0123456789 " + "".join(sorted(set("".join(MESSAGES)) - set(" 0123456789")))
+
+
+def msg_cells(n):
+    """Message n as its MSG_W glyph numbers."""
+    m = MESSAGES[n]
+    left = (MSG_W - len(m)) // 2
+    text = " " * left + m + " " * (MSG_W - len(m) - left)
+    return [MSG_GLYPHS.index(ch) for ch in text]
 
 
 def gauge(level, reverse):
-    """A segmented gauge, `level` segments lit of GAUGE_SEGS. Fuel runs red,
+    """A segmented gauge, `level` segments lit of GAUGE_SEGS. Checkpoint runs red,
     orange, yellow, green from the left; speed the other way round."""
     out = blank(GAUGE_SEGS * 4, GAUGE_H)
     for s in range(GAUGE_SEGS):
@@ -170,7 +201,10 @@ def total_time_cells(centis):
     return out
 
 
-def hud(time_left=60, speed_level=10, gear="4", total_centis=8345, fuel=13):
+def hud(time_left=60, speed_level=10, gear="4", total_centis=8345, progress=5,
+        msg=None):
+    """The HUD's pens. msg: its message line's glyph numbers (as each cell
+    shows: None or 255 a cell never drawn, the plain background)."""
     out = blank(SCR_W, HUD_H)
     lab = small_text("TIME")
     stamp(out, *HUD["time_label"], lab)
@@ -188,8 +222,12 @@ def hud(time_left=60, speed_level=10, gear="4", total_centis=8345, fuel=13):
     for dx, cell in total_time_cells(total_centis):
         stamp(out, x + dx, y, cell)
 
-    stamp(out, *HUD["fuel_label"], small_text("FUEL"))
-    stamp(out, *HUD["fuel_gauge"], gauge(fuel, reverse=False))
+    stamp(out, *HUD["cp_label"], small_text("CHECKPOINT"))
+    stamp(out, *HUD["cp_gauge"], gauge(progress, reverse=False))
+
+    for i, g in enumerate(msg or []):
+        if g is not None and g != 255:
+            stamp(out, MSG_X + 6 * i, HUD["message"][1], small_glyph(MSG_GLYPHS[g]))
     return out
 
 

@@ -753,11 +753,9 @@ car_lines_pitch
     jr nc,$+3
     add a,b
     ld (car_vfull),a
-    ld a,(player)               ; (player 0 or #FF: the middle)
-    inc a
-    cp 2
-    ld a,0
-    jr c,car_lines_off
+    ld a,(car_free)             ; (the demo's, the tools': the middle)
+    or a
+    jr z,car_lines_off
     ld a,(car_x)
     ld b,a
     ld a,(road_x)

@@ -5,21 +5,54 @@
 ;; the buffer that is not on screen, then the interrupt handler shows it at
 ;; the next VSYNC that is at least two frames after the last one.
 ;;
-;; This milestone drives a plain four-lane road over a looping run of
-;; crests, dips and curves, and fills the HUD with plausible numbers; the
-;; player's car stays in the middle, and the player steers it (the road
-;; moves under it) - the demo does until then.
+;; A plain four-lane road loops over a run of crests, dips and curves. The
+;; demo drives it until fire is pressed; then the car stops, the count goes
+;; 3-2-1 and the player races the clock: TIME counts down, each checkpoint
+;; (CP_DIST on) gives more, and at 0 the car stops and the demo drives
+;; again (rules_vbl).
 ;; ===========================================================================
 
 back_buf    defb 1              ; the buffer being drawn
 last_vbl    defb 0              ; vbl_count when the last picture started
 hud_tick    defb 1              ; pictures until the HUD takes a new copy
 
-;; --- the demo car's state -------------------------------------------------------
+;; --- the race --------------------------------------------------------------
+MODE_DEMO   EQU 0               ; the demo drives; fire starts a race
+MODE_READY  EQU 1               ; to a standstill at the start, the count
+MODE_RACE   EQU 2               ; the player races the clock
+MODE_OVER   EQU 3               ; time up: to a standstill, GAME OVER
+START_TIME  EQU 70              ; seconds on the clock at the start
+START_X     EQU -6              ; road_x at the start: the car in the third
+                                ; lane from the left (lanes 12.5 pairs wide)
+CP_DIST     EQU 12288           ; depth units from a checkpoint to the next
+                                ; (a lap and a half: 37 s at 6.6 a VSYNC)
+EXT_FIRST   EQU 50              ; seconds the first checkpoint gives,
+EXT_DROP    EQU 2               ; ... each next one this many fewer,
+EXT_MIN     EQU 36              ; ... down to these
+TIME_MAX    EQU 99
+COUNT_T     EQU 150             ; VSYNCs of the count, 3-2-1
+GO_T        EQU 50              ; ... GO! shown
+EXT_T       EQU 125             ; ... EXTENDED TIME shown
+OVER_T      EQU 150             ; ... GAME OVER shown, standing still
+BLINK       EQU 64              ; PRESS FIRE: shown BLINK_ON of every BLINK
+BLINK_ON    EQU 44
+
+game_mode   defb MODE_DEMO
+mode_t      defb 0              ; VSYNCs left of the count or of GAME OVER
+                                ; (0: not begun)
+msg_t       defb 0              ; ... of GO! or EXTENDED TIME (0: none)
+blink_t     defb 0
+count_gear  defb 0              ; the count's digit, in the gear's place
+cp_z        defw 0              ; zcam at the last checkpoint, or the start
+cp_ext      defb EXT_FIRST      ; seconds the next checkpoint gives
+keys_was    defb 0              ; read_keys at the last picture (fire's press)
+car_free    defb 0              ; 1: the player steers, the car on the screen
+                                ; where car_x says (car_lines); 0: the middle
+
+;; --- the car's state ----------------------------------------------------------
 speed       defw 0              ; depth units per VSYNC, 8.8
-speed_phase defw 0              ; where in the accelerate/cruise/brake cycle
+speed_phase defw 0              ; where in the demo's accelerate/brake cycle
 time_vbls   defb 50             ; VSYNCs left in the current second
-fuel_vbls   defw 0
 drawn_curve defb 0,0            ; curve level each buffer was drawn with
 drawn_x     defb 0,0            ; ... and road_x
 curve_wait  defb 0              ; pictures before the curve level may move
@@ -42,8 +75,9 @@ coll_t      defb 0              ; pictures left of a bump or a crash
 coll_kind   defb 0              ; 0 a bump (or none), 1 a crash, 2 after
                                 ; it: back to the road's middle
 coll_v      defw 0              ; the shove, pairs a picture, 8.8, signed
-player      defb 0              ; not 0: the player has steered (#FF: the
-                                ; tools do, setting steer_x)
+player      defb 0              ; not 0: the tools drive - #FF setting
+                                ; steer_x, else as the player, the demo's
+                                ; speed till faster or slower (no rules)
 demo_t      defw 0              ; pictures, for the demo's steering
 pic_bent    defb 0              ; 1: this picture's curve level is new to
                                 ; its buffer
@@ -207,6 +241,7 @@ draw_screen
 draw_screen_hud
     push bc
     call hud_update
+    call hud_msg
     pop bc
     djnz draw_screen_hud
     SET_RAM RAM_C1
@@ -225,9 +260,11 @@ draw_screen_hud
 ;; The HUD has the time that is left: its whole share up to the 10th
 ;; interrupt since the flip (~2 ms at most: done 35.3 ms after the flip),
 ;; the smaller one at the 10th (~0.8 ms: 37.5 ms), none from the 11th - and
-;; then its copy waits too, for a picture that has the time.
+;; then its copy waits too, for a picture that has the time. The message
+;; line's cells (~0.8 ms at most) only before the 9th: done by 32.8 ms.
 ;; ---------------------------------------------------------------------------
 HUD_FULL_BY EQU 10              ; the interrupt from which the HUD has less
+MSG_BY      EQU 9               ; ... and no message cells
 draw_picture
     push af
     call select_buf
@@ -276,7 +313,11 @@ draw_picture_q
     call demo_gauges
     call hud_snapshot
 draw_picture_hud
-    jp hud_update
+    call hud_update
+    ld a,(irq_n)
+    cp MSG_BY
+    ret nc
+    jp hud_msg
 
 ;; ---------------------------------------------------------------------------
 ;; cache_steps - after a picture: the road's next steps (cache.asm), whose
@@ -479,9 +520,10 @@ car_setup
 ;; road_x - car_x pairs right of the middle (car_lines), CAR_LEAD at most.
 ;; The car is seen turning while left or right is held (not both).
 ;;
-;; Until the player first steers, the demo does: a new place every
-;; DEMO_HOLD pictures, the car seen turning while the road moves to it, the
-;; car in the middle (car_x = road_x).
+;; Outside the race the demo steers: a new place every DEMO_HOLD pictures
+;; - before the race START_X - the car seen turning while the road moves to
+;; it, the car in the middle (car_x = road_x). In the demo, fire (faster)
+;; pressed starts a race (rules_start).
 ;; ---------------------------------------------------------------------------
 DEMO_HOLD   EQU 128
 HILL_AHEAD  EQU 3               ; track entries (32 depth units) the sky's
@@ -525,9 +567,27 @@ steer
     inc a
     jp z,steer_look             ; (#FF: tools/ steer by steer_x)
     dec a
+    jr nz,steer_tools           ; (tools/ drive as the player)
+    ld a,(keys_was)             ; E = keys pressed since the last picture
+    cpl
+    and c
+    ld e,a
+    ld a,c
+    ld (keys_was),a
+    ld a,(game_mode)
+    cp MODE_RACE
+    jr nc,steer_go              ; the player's
+    or a
+    jp nz,steer_demo            ; (READY: to the start)
+    bit 2,e
+    call nz,rules_start
+    jp steer_demo
+steer_tools
     or c
-    jp z,steer_demo
     ld (player),a
+steer_go
+    ld a,1
+    ld (car_free),a
     ld a,(coll_t)               ; a bump or a crash begins - not in one
     or a
     jr nz,steer_coll
@@ -827,6 +887,10 @@ clamp_ab_neg
     ret
 
 steer_demo
+    ld a,(game_mode)            ; (READY: to the start)
+    or a
+    ld a,START_X
+    jr nz,steer_demo_x
     ld hl,(demo_t)
     inc hl
     ld (demo_t),hl
@@ -838,10 +902,13 @@ steer_demo
     ld de,demo_steer
     add hl,de
     ld a,(hl)
+steer_demo_x
     ld (steer_x),a
     ld a,(road_x)               ; (the car in the middle, for when the
     ld (car_x),a                ; player takes over)
 steer_look                      ; the car turns the way the road is to go
+    xor a
+    ld (car_free),a
     ld a,(road_x)
     ld b,a
     ld a,(steer_x)
@@ -881,8 +948,10 @@ set_palette_loop
     ret
 
 ;; ---------------------------------------------------------------------------
-;; demo_gauges - the speed gauge and the gear, from the speed: only the HUD
-;; shows them, so they are worked out when it takes its copy.
+;; demo_gauges - the speed gauge and the gear, from the speed (the count's
+;; digit in the gear's place), and in the race the checkpoint gauge, from
+;; how far on the car is: only the HUD shows them, so they are worked out
+;; when it takes its copy.
 ;; ---------------------------------------------------------------------------
 demo_gauges
     ld hl,(speed)
@@ -920,17 +989,56 @@ demo_gear_done
     ld a,6
 demo_gear_ok
     ld (gear),a
+    ld a,(count_gear)
+    or a
+    jr z,$+5
+    ld (gear),a
+    ld a,(game_mode)
+    cp MODE_RACE
+    ret nz
+    ld hl,(zcam)                ; segments: 1 + how far on, in eighths
+    ld de,(cp_z)
+    or a
+    sbc hl,de
+    ld de,CP_DIST/GAUGE_SEGS
+    ld b,0
+demo_cp
+    inc b
+    or a
+    sbc hl,de
+    jr nc,demo_cp
+    ld a,b
+    cp GAUGE_SEGS+1
+    jr c,$+4
+    ld a,GAUGE_SEGS
+    ld (cp_level),a
     ret
 
 
 ;; ---------------------------------------------------------------------------
-;; demo_step - one VSYNC of the demo drive.
+;; demo_step - one VSYNC of the drive: the speed - the demo's, the player's
+;; in the race (player.asm), braking to a standstill before it and after it
+;; - the camera, the sky's turn, the race's rules.
 ;; ---------------------------------------------------------------------------
 demo_step
-    ld a,(player)               ; once the player has pressed faster or
-    inc a                       ; slower, their speed (player.asm); else -
-    jr z,demo_cycle             ; and for the tools (#FF) - the demo's
+    ld a,(player)               ; the tools' (#FF, or as the player: once
+    inc a                       ; faster or slower is pressed, the keys')
+    jr z,demo_cycle
     dec a
+    jr nz,demo_tools
+    ld a,(game_mode)
+    cp MODE_RACE
+    jp z,speed_player
+    jr c,demo_mode
+    ld hl,(speed)               ; time up: braking (player.asm)
+    ld de,-SPEED_BRK
+    jp sp_less
+demo_mode
+    or a
+    jr z,demo_cycle
+    ld de,(speed)               ; to the start: braking
+    jr demo_brake
+demo_tools
     and #0C
     jp nz,speed_player
 demo_cycle
@@ -1048,68 +1156,241 @@ demo_head_set
     ld (heading),a
 demo_head_done
 
-    ; TIME counts down a second at a time, from 60, round and round
-    ld hl,time_vbls
+    jp rules_vbl
+
+;; ---------------------------------------------------------------------------
+;; rules_start - (steer) fire pressed in the demo: a race begins. The demo
+;; brakes to a standstill at the start, START_X, the clock and the
+;; checkpoints set for it.
+;; ---------------------------------------------------------------------------
+rules_start
+    ld a,MODE_READY
+    ld (game_mode),a
+    ld a,MSG_GET_READY
+    ld (msg),a
+    xor a
+    ld (mode_t),a
+    ld (msg_t),a
+    ld (cp_level),a
+    ld hl,total_time
+    ld (hl),a
+    inc hl
+    ld (hl),a
+    inc hl
+    ld (hl),a
+    inc hl
+    ld (hl),a
+    inc hl
+    ld (hl),a
+    ld a,START_TIME
+    ld (time_left),a
+    ld a,EXT_FIRST
+    ld (cp_ext),a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; rules_vbl - (demo_step) a VSYNC of the race's rules.
+;;
+;; The demo: PRESS FIRE blinks. READY: once the car stands at the start,
+;; the count, 3-2-1 in the gear's place, then GO!: the race. The race: the
+;; total time counts up, the clock down a second at a time; CP_DIST on from
+;; the last checkpoint is the next - TIME and EXTENDED TIME, cp_ext seconds,
+;; EXT_DROP fewer each time down to EXT_MIN; TIME at 0 is time up: the car
+;; brakes to a standstill (demo_step), the road under it, GAME OVER, then
+;; the demo again.
+;; ---------------------------------------------------------------------------
+rules_vbl
+    ld a,(game_mode)
+    dec a
+    jr z,rules_ready
+    dec a
+    jr z,rules_race
+    dec a
+    jp z,rules_over
+    ld hl,blink_t               ; the demo: PRESS FIRE blinks
+    inc (hl)
+    ld a,(hl)
+    and BLINK-1
+    cp BLINK_ON
+    ld a,MSG_PRESS_FIRE
+    jr c,$+3
+    xor a
+    ld (msg),a
+    ret
+
+rules_ready
+    ld a,(mode_t)
+    or a
+    jr nz,rules_count
+    ld hl,(speed)               ; standing at the start yet?
+    ld a,h
+    or l
+    ret nz
+    ld a,(road_x)
+    cp START_X
+    ret nz
+    ld a,COUNT_T
+rules_count
+    dec a
+    ld (mode_t),a
+    jr z,rules_go
+    ld b,3                      ; the count: 3, 2, 1, a second each
+    cp 2*COUNT_T/3
+    jr nc,rules_count_set
+    dec b
+    cp COUNT_T/3
+    jr nc,rules_count_set
+    dec b
+rules_count_set
+    ld a,b
+    ld (count_gear),a
+    ret
+rules_go
+    ld (count_gear),a
+    ld (car_xf),a               ; the player's, from the middle of the road
+    ld (coll_t),a               ; where the demo left it
+    ld (coll_kind),a
+    ld h,a
+    ld l,a
+    ld (steer_s),hl
+    ld (push_v),hl
+    ld a,(road_x)
+    ld (car_x),a
+    ld hl,(zcam)
+    ld (cp_z),hl
+    ld a,50
+    ld (time_vbls),a
+    ld a,MODE_RACE
+    ld (game_mode),a
+    ld a,MSG_GO
+    ld b,GO_T
+rules_msg                       ; message A for B VSYNCs
+    ld (msg),a
+    ld a,b
+    ld (msg_t),a
+    ret
+
+rules_race
+    ld hl,msg_t                 ; GO! or EXTENDED TIME shown long enough
+    ld a,(hl)
+    or a
+    jr z,rules_total
     dec (hl)
-    jr nz,demo_time_done
-    ld (hl),50
-    ld hl,time_left
-    dec (hl)
-    jr nz,demo_time_done
-    ld (hl),60
-demo_time_done
+    jr nz,rules_total
+    xor a
+    ld (msg),a                  ; (MSG_NONE)
 
     ; TOTAL TIME counts up two hundredths a VSYNC: m'ss"cc
+rules_total
     ld hl,total_time+4
     ld a,(hl)
     add a,2
     cp 10
-    jr c,demo_tt_set
+    jr c,rules_tt_set
     sub 10
     ld (hl),a
     dec hl                      ; cs tens
     inc (hl)
     ld a,(hl)
     cp 10
-    jr c,demo_tt_done
+    jr c,rules_tt_done
     ld (hl),0
     dec hl                      ; s units
     inc (hl)
     ld a,(hl)
     cp 10
-    jr c,demo_tt_done
+    jr c,rules_tt_done
     ld (hl),0
     dec hl                      ; s tens
     inc (hl)
     ld a,(hl)
     cp 6
-    jr c,demo_tt_done
+    jr c,rules_tt_done
     ld (hl),0
     dec hl                      ; minutes
     inc (hl)
     ld a,(hl)
     cp 10
-    jr c,demo_tt_done
+    jr c,rules_tt_done
     ld (hl),0
-    jr demo_tt_done
-demo_tt_set
+    jr rules_tt_done
+rules_tt_set
     ld (hl),a
-demo_tt_done
+rules_tt_done
 
-    ; FUEL drops a segment every eight seconds and is refilled when empty
-    ld hl,(fuel_vbls)
-    inc hl
-    ld (fuel_vbls),hl
-    ld bc,400
+    ; a checkpoint: CP_DIST on from the last
+    ld hl,(zcam)
+    ld de,(cp_z)
     or a
-    sbc hl,bc
-    ret c
-    ld hl,0
-    ld (fuel_vbls),hl
-    ld hl,fuel_level
+    sbc hl,de
+    ld de,CP_DIST
+    or a
+    sbc hl,de
+    jr c,rules_clock
+    ld hl,(cp_z)
+    add hl,de
+    ld (cp_z),hl
+    ld a,(cp_ext)
+    ld b,a
+    ld a,(time_left)
+    add a,b
+    cp TIME_MAX+1
+    jr c,$+4
+    ld a,TIME_MAX
+    ld (time_left),a
+    ld a,b
+    sub EXT_DROP
+    cp EXT_MIN
+    jr nc,$+4
+    ld a,EXT_MIN
+    ld (cp_ext),a
+    ld a,MSG_EXTENDED_TIME
+    ld b,EXT_T
+    call rules_msg
+
+    ; TIME counts down a second at a time: at 0, time up
+rules_clock
+    ld hl,time_vbls
     dec (hl)
-    ret p
-    ld (hl),GAUGE_SEGS
+    ret nz
+    ld (hl),50
+    ld hl,time_left
+    dec (hl)
+    ret nz
+    ld a,MODE_OVER
+    ld (game_mode),a
+    xor a
+    ld (mode_t),a
+    ld (msg_t),a
+    ld a,MSG_TIME_UP
+    ld (msg),a
+    ret
+
+rules_over
+    ld a,(mode_t)
+    or a
+    jr nz,rules_over_t
+    ld hl,(speed)               ; standing still, the road under the car
+    ld a,h                      ; (road_x stops a pair short of an odd
+    or l                        ; car_x)?
+    ret nz
+    ld a,(car_x)
+    ld hl,road_x
+    sub (hl)
+    inc a
+    cp 3
+    ret nc
+    ld a,MSG_GAME_OVER
+    ld (msg),a
+    ld a,OVER_T
+rules_over_t
+    dec a
+    ld (mode_t),a
+    ret nz
+    ld (game_mode),a            ; (MODE_DEMO) the demo drives on from here
+    ld (blink_t),a
+    ld (coll_t),a
+    ld (coll_kind),a
     ret
 
 zfrac       defb 0
