@@ -45,8 +45,7 @@ blink_t     defb 0
 count_gear  defb 0              ; the count's digit, in the gear's place
 cp_z        defw 0              ; where the stage starts: the last checkpoint
 stage       defb 0              ; the stage (0 ..; STAGES: the race finished)
-stage_id    defb 0              ; ... which of tools/course.py's STAGES (from
-                                ; its fork on: the next one's, stage_fork)
+                                ; (stage_id: race.asm)
 msg_next    defb 0              ; the message after this one (msg_t)
 cp_ext      defb EXT_FIRST      ; seconds the next checkpoint gives
 keys_was    defb 0              ; read_keys at the last picture (fire's press)
@@ -125,9 +124,9 @@ game_sync                       ; VSYNC, so the first picture has all of
     ld (last_vbl),a
 
 main_loop
-    ld a,(pause_req)            ; ESC pressed: the pause (race.asm)
-    or a
-    call nz,race_pause
+    ld a,(pause_req)            ; M or ESC pressed: the music on or off,
+    or a                        ; or the pause (player.asm)
+    call nz,race_keys
     ld a,(vbl_count)
     ld hl,last_vbl
     ld b,(hl)
@@ -513,8 +512,8 @@ steer
     ld a,c
     ld (keys_was),a
     ld a,e
-    and KEY_PAUSE
-    ld (pause_req),a            ; (main_loop: race.asm)
+    and KEY_PAUSE+KEY_MUSIC
+    ld (pause_req),a            ; (main_loop: player.asm race_keys)
     ld a,(game_mode)
     cp MODE_RACE
     jr nc,steer_go              ; the player's
@@ -1334,11 +1333,10 @@ rules_over
     inc a
     cp 3
     ret nc
-    ld a,(stage)                ; (finished: FINISH stays)
-    cp STAGES
+    ld a,(stage)                ; (finished: FINISH stays - or FASTEST
+    cp STAGES                   ; TIME!, race.asm)
     ld a,MSG_GAME_OVER
-    jr nz,$+4
-    ld a,MSG_FINISH
+    call z,finish_msg
     ld (msg),a
     ld a,OVER_T
 rules_over_t

@@ -98,11 +98,11 @@ bush_starts_end
 BUSH_RMAX     EQU 4   ; in reach at most (3 over a lap)
 bush_nreach
     defb 2
+bush_head
+    defw bush_starts+0*4
 bush_reach
     defw bush_tab+0*BUSH_ENTRY,bush_tab+1*BUSH_ENTRY,0,0
     ASSERT hi(bush_reach) == hi($-1)
-bush_head
-    defw bush_starts+0*4
 BUSH_COUNT    EQU 38
 CAR_Y         EQU 236   ; the car's top line
 CAR_HALF      EQU 11   ; its half width, bytes

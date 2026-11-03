@@ -24,14 +24,17 @@ SQUEAL_V    EQU #0050           ; ... the curve's push from this on (8.8
     REC_BEGIN SND_M0
 
 ;; snd_frame - (the main loop, once a picture) the sound as the game is: the
-;; music in the race, the engine while the player's car is out (not in the
-;; demo), an effect when something begins. Destroys AF, BC, DE, HL.
+;; music in the race - unless M has turned it off -, the engine while the
+;; player's car is out (not in the demo), an effect when something begins.
+;; Destroys AF, BC, DE, HL.
 snd_frame
     ld a,(game_mode)                    ; the music: in the race, from its
     cp MODE_RACE                        ; start
     ld a,0
     jr nz,$+3
     inc a
+    ld hl,mus_want
+    and (hl)
     ld hl,snd_music
     cp (hl)
     call nz,snd_switch
@@ -63,6 +66,9 @@ sf_set
     ld a,c
     ld (eng_regs+4),a
     jp sf_noise
+
+mus_want    defb 1                      ; 0: no music (M: player.asm
+                                        ; race_keys)
 
     REC_END SND_M0,SND_PIECE
 ;; ---------------------------------------------------------------------------

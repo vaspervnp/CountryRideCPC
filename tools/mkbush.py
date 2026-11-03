@@ -1048,12 +1048,12 @@ def main():
     emit("BUSH_RMAX     EQU %d   ; in reach at most (%d over a lap)" % (BUSH_RMAX, most))
     emit("bush_nreach")
     emit("    defb %d" % len(act0))
+    emit("bush_head")                   # (before bush_reach: room for it in
+    emit("    defw bush_starts+%d*4" % head0)  # its page, as bank 7 is now)
     emit("bush_reach")
     words = ["bush_tab+%d*BUSH_ENTRY" % i for i in act0] + ["0"] * (BUSH_RMAX - len(act0))
     emit("    defw " + ",".join(words))
     emit("    ASSERT hi(bush_reach) == hi($-1)")
-    emit("bush_head")
-    emit("    defw bush_starts+%d*4" % head0)
     emit("BUSH_COUNT    EQU %d" % len(S.BUSHES))
     # the lines of the car: a buffer that last showed another view, or the
     # car elsewhere, has them drawn whole (car_lines) - all of them, for

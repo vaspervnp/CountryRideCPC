@@ -278,10 +278,12 @@ sf_props
 ;; ---------------------------------------------------------------------------
 ;; stage_colours - A = a stage: the pens it colours (stage_pen_ids) set to
 ;; its colours (stage_hw), and the border below the mountains to its
-;; ground's (irq_road). Interrupts off for each pen: irq_road selects the
-;; border to colour it. Destroys AF, BC, DE, HL.
+;; ground's (irq_road); the traffic its (stage_id: traffic.asm tr_pauses).
+;; Interrupts off for each pen: irq_road selects the border to colour it.
+;; Destroys AF, BC, DE, HL.
 ;; ---------------------------------------------------------------------------
 stage_colours
+    ld (stage_id),a
     ld l,a
     ld h,0
     add hl,hl

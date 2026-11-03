@@ -50,6 +50,8 @@ Faster: cursor up, Q, space, joystick up or fire; slower: cursor down, A,
 joystick down. With neither held the car slows down a little; with a
 wheel on the grass (the road 20 pairs or more to one side) it goes no
 faster than half its top speed. ESC pauses the race, and goes on with it.
+M turns the race's music off, or on again (in the demo too, for the races
+to come), with a beep.
 
 The game needs the 6128's second 64K: it uses banks 4 to 7. So far it has
 been tested in emulators: the harness below, and Retro Virtual Machine. The
@@ -155,23 +157,34 @@ riviera; dead trees and stumps in the mesa and the autumn; both palms at
 sunset; tall palms at night - and before every sharp curve its signs
 (Props, below).
 
+The further on, the more traffic: in each next stage a car comes sooner
+after the last one, and sooner on a fork's right than on its left. Two at
+most are on the road at a time - about 1 on average in the first stage,
+then 1.3, 1.6, 1.8-1.9 and 2 in the last (for the ROSSO GT, driven by the
+autopilot; a slower car has more about it: 1.2 to 2 for the TOURING),
+~18 cars coming a minute in the first and ~35 in the last (Traffic,
+below).
+
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
 50 more seconds (EXTENDED TIME), 2 fewer at each next one, down to 36, and
 never over 99; then the next stage's number shows, and its colours are
 there at once. Past the fifth, FINISH: the car brakes to a standstill on
-the straight that follows, and TOTAL TIME is the race's. At 0, TIME UP:
+the straight that follows, and TOTAL TIME is the race's - FASTEST TIME!
+once it stands, if no race has been faster (the best times, below). At
+0, TIME UP:
 the car brakes to a standstill, still steered, GAME OVER. Either way the
 demo then drives on from there, its loop and its colours back after the
 road has flattened out. (`rules_vbl` in `src/game.asm`; the numbers are
 its `START_TIME`, `EXT_FIRST`, `EXT_DROP`, `EXT_MIN`; the stages are
 `tools/course.py`.) The autopilot used for testing - keeping to a lane,
-out of the traffic's way, often bumping it - finishes with 41 seconds left
-in the ROSSO GT, 30 in the BERLINETTA and 10 in the TOURING, and runs out
-of time in the last stage in the WEDGE TURBO.
+out of the traffic's way, often bumping it - finishes, taking the left at
+every fork or the right, with 44 or 42 seconds left in the ROSSO GT, 43
+or 47 in the BERLINETTA, 11 or 12 in the TOURING and 6 in the WEDGE
+TURBO, or runs out of time in the last stage in it.
 
 The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
-a fork's two stages, EXTENDED TIME, TIME UP, FINISH, GAME OVER, PAUSE - are
-the HUD's last line (The HUD, below).
+a fork's two stages, EXTENDED TIME, TIME UP, FINISH, FASTEST TIME!, GAME
+OVER, PAUSE - are the HUD's last line (The HUD, below).
 
 ESC holds the race - or the count before it, or the braking after it -
 where it is: the picture stays, the sound stops, PAUSE shows; ESC again
@@ -188,8 +201,9 @@ The race has music - an original tune, 16 bars in C major, the lead and
 the bass - and the car its engine, from GET READY to GAME OVER: a note
 from 65 Hz standing still to ~190 Hz at the top speed, humming, with a
 rumble on the grass. The count beeps, GO! and a checkpoint ring, a bump
-and a crash have their noise, TIME UP and FINISH their own few notes. The
-demo is silent (Sound, below).
+and a crash have their noise, TIME UP and FINISH their own few notes. M
+turns the music off - the engine and the effects go on - or back on, from
+the tune's start. The demo is silent, but for M's beep (Sound, below).
 
 ### The cars
 
@@ -392,12 +406,14 @@ on line 183 at the highest, a prop's on 179, both checked by
 `tools/mkbush.py`); what the main loop runs is in `RACE.BIN` (below).
 `SOUND.BIN` has the HUD's words too, as masks with the code that draws
 them (`src/labels.asm`), put in buffer 1's road lines 194-258, which
-nothing draws until the first picture.
+nothing draws until the first picture (and, after them, TOTAL TIME's `'`
+and `"` from `RACE.BIN`).
 `boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
 pause and the best times, and the start of a race, which bank 7 had no
 room left for: `src/race.asm`) is records too, loaded at `#A0C0` and put
 in place after the sound: in buffer 1's hidden lines 164 and 172 (which
-the traffic's code leaves), 167, and 178. It has the sound's main-loop
+the traffic's code leaves), 167, and 178 - `stage_id` among them, where
+the traffic's code (RAM C6) reads it too. It has the sound's main-loop
 side too (`src/sndgame.asm`), in four HUD eighth rows - the fourth,
 `#4DA0`, where `boot_car` itself was: `RACE.BIN` is its last file, and
 `boot_blob` returns from it for it - and a hidden line of page 0; and the
@@ -739,9 +755,12 @@ still in two colours. `tools/scene.py` says where a car goes and what it
 looks like, and `src/traffic.asm` has to match it.
 
 - **Coming and going.** A car comes 512 depth units ahead, at the horizon,
-  in a lane, with a top, a tail and colours at random, no sooner than half
-  a second to two after the last one and at least 160 units behind it; it
-  goes when it has gone by or got away.
+  in a lane, with a top, a tail and colours at random, no sooner than its
+  stage's pause after the last one - 64 pictures (2.6 s) in the
+  countryside, fewer further on and on a fork's right, 4 in the storm
+  (`tools/course.py` `traffic`, `tr_pauses` in bank 6, by `stage_id`) -
+  and up to 31 more at random, and at least 160 units behind it; it goes
+  when it has gone by or got away.
 - **Projection.** As a bush's: its row from its depth, its size from its
   row, its line from *h / r*, and it is drawn only whole - on the screen,
   on the road (below its top) and over near lines. Its place is its lane's,
@@ -842,8 +861,9 @@ masks: the pen where a mask is set, the shadow a pixel right and a line
 down, the ground elsewhere (`src/labels.asm`: 156 bytes of masks for 604
 of pixels, in `SOUND.BIN`, put where the first picture's road goes).
 
-The last line holds the game's message: 13 cells of the small font's
-glyphs (the digits and the 19 letters the messages use, 24 bytes each),
+The last line holds the game's message: 15 cells of the small font's
+glyphs (the digits, the 18 letters and the marks the messages use, 24
+bytes each),
 each buffer redrawing the cells that differ from what it shows, left to
 right, 4 at most a picture (~0.25 ms each, its 3 x 8 bytes copied by
 `draw_cell`: the line is a character row's first) and only before the
@@ -876,12 +896,13 @@ plays it all (`src/sound.asm`): at line ~118 every other frame
 
 Once a picture, after `steer`, the main loop's `snd_frame`
 (`src/sndgame.asm`) tells it what the game is doing: the music on in the
-race (from its start), off otherwise; the engine's note and volume (none
-in the demo); and an effect when something begins - the count's digit
-changing (a beep, GO!), the message (EXTENDED TIME, TIME UP, FINISH),
-`coll_t` going up (a bump, a crash). The engine's pitch comes from the
-gear the speed is in, as the HUD shows it, and how far up the gear it is
-(`eng_period`): 65 to 115 Hz in the first, then 80-125, 95-139, 110-159,
+race (from its start) unless M has turned it off (`mus_want`, which
+`race_keys` in `src/player.asm` flips, with a beep), off otherwise; the
+engine's note and volume (none in the demo); and an effect when something
+begins - the count's digit changing (a beep, GO!), the message (EXTENDED
+TIME, TIME UP, FINISH), `coll_t` going up (a bump, a crash). The engine's
+pitch comes from the gear the speed is in, as the HUD shows it, and how
+far up the gear it is (`eng_period`): 65 to 115 Hz in the first, then 80-125, 95-139, 110-159,
 125-174 and 140-204 Hz - it drops as the gear changes up. Every other
 picture it is 1/16 lower (a hum); on the grass a noise rumbles with it,
 and where a curve carries the car out hard (`push_v` from `SQUEAL_V` on)
@@ -988,6 +1009,14 @@ flip, the track's rings
 and the props as `tools/course.py` has them for the route taken; crashes
 at the top speed 34.5 ms on average in the air, 38.0 ms at worst; the
 demo, the player not steering and side to side 37.6 / 37.7 / 37.5 ms.
+
+With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
+four routes in the four cars, the clock kept and not, 37.6-38.7 ms at
+worst, none past the flip (the build before, the same races: 37.7-39.7
+ms, none past it); crashes at the top speed 38.1 ms at worst; the road,
+the HUD and the screen in the three R5 models as `scene.py` has them, for
+all four cars; the track's rings and the props as `tools/course.py` has
+them.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
@@ -1145,8 +1174,10 @@ src/            the game
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
   game.asm      main loop, the race's rules, demo drive, steering
+  player.asm    the keys (M and ESC: race_keys), the player's speed
+                (page 1)
   course.asm    the track worked out a few entries ahead, the stages'
-                colours
+                colours and traffic
   bush.asm      the bushes: projected, drawn, taken away
   props.asm     the props: the nearest along the course, stood as a bush,
                 drawn from its sprite's lines
@@ -1158,7 +1189,8 @@ src/            the game
   labels.asm    the HUD's words, drawn once from masks (SOUND.BIN)
   sndgame.asm   ... what the game tells it: the engine's note, the
                 effects, the music on or off (RACE.BIN)
-  race.asm      the pause, the best times, the start of a race (RACE.BIN)
+  race.asm      the pause, the best times, FASTEST TIME!, the start of a
+                race (RACE.BIN)
   jump.asm      a crash at speed: the car thrown up (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
@@ -1169,7 +1201,8 @@ src/            the game
 tools/
   cpcgfx.py     palette, mode 0 encoding, road geometry
   scene.py      the reference model of the whole screen
-  mkgfx.py      HUD, sky and mountain graphics, the track's lists -> src/gen/
+  mkgfx.py      HUD, sky and mountain graphics, the track's lists, the
+                stages' traffic -> src/gen/
   course.py     the demo's loop and the race's stages, and the model of
                 how the game works them out
   mkroad.py     the generated road code, templates and tables -> src/gen/

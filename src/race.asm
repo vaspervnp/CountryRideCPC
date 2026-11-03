@@ -147,11 +147,23 @@ ta_set
     ldir
     ret
 
+
+;; finish_msg - (rules_over) the car standing past the finish: A = FINISH, or
+;; FASTEST TIME! if the race's time is now the best (times_new 1)
+finish_msg
+    ld a,(times_new)
+    dec a
+    ld a,MSG_FINISH
+    ret nz
+    inc a
+    ret
+    ASSERT MSG_FASTEST_TIME == MSG_FINISH+1
+
     REC_END RACE_P0,192
 ;; ---------------------------------------------------------------------------
     REC_BEGIN RACE_P1
 
-;; race_pause - (main_loop) ESC pressed, not in the demo: the game held, the
+;; race_pause - (race_keys) ESC pressed, not in the demo: the game held, the
 ;; sound silent and PAUSE shown, till it is pressed again; then on from
 ;; where it was (pause_req: steer's again in this picture)
 race_pause
@@ -245,6 +257,19 @@ times_tab   defb 3,3,0,0,0, 3,4,0,0,0, 3,5,0,0,0, 4,0,0,0,0, 4,1,0,0,0
     ASSERT $-times_tab == TIMES*5
 times_new   defb 0              ; the last race's place among them (0: none)
 demo_slot   defb 0              ; the demo's message line's slot
-pause_req   defb 0              ; KEY_PAUSE: ESC pressed (steer)
+pause_req   defb 0              ; KEY_PAUSE, KEY_MUSIC: ESC or M pressed
+                                ; (steer)
+stage_id    defb 0              ; which of tools/course.py's STAGES the stage
+                                ; is (from its fork on: the next one's,
+                                ; stage_fork; 0 in the demo, stage_colours)
+                                ; - here, for the traffic too (RAM_C6)
 
     REC_END RACE_P2,96
+;; ---------------------------------------------------------------------------
+;; TOTAL TIME's ' and " - draw_static's (init.asm), once: past the HUD's words
+;; and what lbl_draw works them out in (labels.asm), where nothing draws till
+;; the first picture
+LBL_MARKS   EQU lbl_out+8*LBL_OUT_W
+    REC_TAIL marks,LBL_MARKS
+    INCLUDE "gen/marks.asm"
+    REC_TAIL_END marks,LBL_MARKS,LBL_AT+LBL_ROOM

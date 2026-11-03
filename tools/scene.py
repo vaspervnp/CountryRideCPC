@@ -155,11 +155,13 @@ HUD = dict(
 # The messages of the HUD's last line, MSG_W cells of small glyphs, centred:
 # what the game says (game.asm's MSG_ constants, in this order). STAGE's
 # digit is the game's, and so is the last: one of the best times, its place
-# and the time (race.asm).
+# and the time (race.asm). FASTEST TIME! follows FINISH (race.asm
+# finish_msg: one more than it).
 import course as _course  # noqa: E402
 
 MESSAGES = ["", "PRESS FIRE", "GET READY", "GO!", "EXTENDED TIME", "TIME UP",
-            "GAME OVER", "STAGE 1", "FINISH", "PAUSE", "TOP TIMES", "1 0'00\"00"]
+            "GAME OVER", "STAGE 1", "FINISH", "FASTEST TIME!", "PAUSE", "TOP TIMES",
+            "1 0'00\"00"]
 MSG_ENTRY = len(MESSAGES) - 1
 MSG_FORK = len(MESSAGES)            # a stage's fork's: its stages left and right
 MESSAGES += [_course.fork_text(level, _course.FORK_W) for level in range(_course.LEVELS - 1)]

@@ -95,6 +95,7 @@ roadc_start
     INCLUDE "gen/roadrows.asm"
     INCLUDE "road6.asm"
     INCLUDE "traffic.asm"
+    INCLUDE "gen/stages6.asm"
     INCLUDE "gen/traffic.asm"
     INCLUDE "gen/trafcode_6.asm"
 roadc_end
@@ -204,6 +205,9 @@ race_end
     INCBIN "gen/select.scr"
     SAVE "SELECT.SCR",#C000,#4000,DSK,"build/countryride.dsk"
 
+    ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
+    ASSERT stage_id < #4000 || stage_id >= #8000 && stage_id < #C000
+                                            ; (... mapped in RAM_C6 too)
     PRINT "bank 4 (ROADA.BIN): ",{hex}roada_end-#4000," bytes"
     PRINT "bank 5 (ROADB.BIN): ",{hex}roadb_end-#4000," bytes"
     PRINT "bank 6 (ROADC.BIN): ",{hex}roadc_end-#4000," bytes"

@@ -49,6 +49,8 @@ TR_ZAWAY    EQU 640                     ; further: got away
 TR_GAP      EQU 160                     ; the last car at least this far
                                         ; ahead of where a new one comes
 TR_PAUSE    EQU 24                      ; pictures at least between two
+                                        ; at the start (then the stage's:
+                                        ; tr_pauses, gen/stages6.asm)
 TR_LATE     EQU 10                      ; interrupts since the flip: from
                                         ; the one before, the nearer car
                                         ; alone, from this one only at a
@@ -246,9 +248,15 @@ tp_same
     call tp_paint
     ld a,b
     call tp_paint
-    call tr_rnd
-    and 31
-    add a,TR_PAUSE
+    call tr_rnd                         ; the next no sooner than the stage's
+    and 31                              ; pause (tr_pauses), and up to 31
+    ld b,a                              ; pictures more
+    ld a,(stage_id)                     ; (race.asm: mapped in RAM_C6)
+    add a,lo(tr_pauses)
+    ld l,a
+    ld h,hi(tr_pauses)
+    ld a,b
+    add a,(hl)
     ld (tr_wait),a
     ret
     ASSERT TR_ON == 0 && TR_ZR == 1 && TR_LANE == 3 && TR_PB == 8

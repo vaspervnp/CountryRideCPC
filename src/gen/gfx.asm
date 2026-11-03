@@ -168,12 +168,13 @@ MSG_TIME_UP       EQU 5
 MSG_GAME_OVER     EQU 6
 MSG_STAGE         EQU 7
 MSG_FINISH        EQU 8
-MSG_PAUSE         EQU 9
-MSG_TOP_TIMES     EQU 10
-MSG_ENTRY         EQU 11
-MSG_FORK          EQU 12   ; + a stage's level: its fork's
+MSG_FASTEST_TIME  EQU 9
+MSG_PAUSE         EQU 10
+MSG_TOP_TIMES     EQU 11
+MSG_ENTRY         EQU 12
+MSG_FORK          EQU 13   ; + a stage's level: its fork's
 MSG_STAGE_N       EQU 115   ; (msg_texts) STAGE's digit, the game's
-MSG_ENTRY_AT      EQU 168   ; (msg_texts) a best time's place, then
+MSG_ENTRY_AT      EQU 183   ; (msg_texts) a best time's place, then
                           ; a cell on its m'ss"cc
 msg_texts
     defb 10,10,10,10,10,10,10,10,10,10,10,10,10,10,10   ; 
@@ -185,6 +186,7 @@ msg_texts
     defb 10,10,10,18,14,21,16,10,23,29,16,25,10,10,10   ; GAME OVER
     defb 10,10,10,10,26,27,14,18,16,10,1,10,10,10,10   ; STAGE 1
     defb 10,10,10,10,17,20,22,20,26,19,10,10,10,10,10   ; FINISH
+    defb 10,17,14,26,27,16,26,27,10,27,20,21,16,11,10   ; FASTEST TIME!
     defb 10,10,10,10,10,24,14,28,26,16,10,10,10,10,10   ; PAUSE
     defb 10,10,10,27,23,24,10,27,20,21,16,26,10,10,10   ; TOP TIMES
     defb 10,10,10,1,10,0,13,0,0,12,0,0,10,10,10   ; 1 0'00"00
@@ -192,14 +194,6 @@ msg_texts
     defb 26,28,21,21,20,27,10,10,10,10,10,21,16,26,14   ; SUMMIT     MESA
     defb 26,28,22,26,16,27,10,10,10,14,28,27,28,21,22   ; SUNSET   AUTUMN
     defb 22,20,18,19,27,10,10,10,10,10,26,27,23,25,21   ; NIGHT     STORM
-
-;; labels: defb width in bytes, then 8 lines of bytes
-lbl_apos
-    defb 1
-    defb #68,#28,#80,#C0,#C0,#C0,#C0,#C0
-lbl_quote
-    defb 2
-    defb #68,#68,#28,#28,#80,#80,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
 
 ;; HUD layout: x in bytes, y in lines
 TIME_LBL_X EQU 4
