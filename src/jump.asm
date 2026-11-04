@@ -174,6 +174,7 @@ jump_rows   defb 1,3,4,5,5,6,6,6,6,5,5,4,3,1,0,0,1,1,0,#FF
 jump_t      defb 0                      ; the jump's picture + 1 (0: none)
 car_up      defb 0                      ; the car's rows up this picture
 drawn_up    defb 0,0                    ; ... as each buffer last showed it
-    ASSERT CAR_Y-ROAD_Y <= 6*8
+    ASSERT CAR_Y-ROAD_Y >= 6*8          ; (on the level, the highest under the
+                                        ; road's top)
 
     REC_TAIL_END jump_p10,rec_SND_P10_end,SND_P10+SND_PIECE

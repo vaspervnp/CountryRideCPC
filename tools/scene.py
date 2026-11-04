@@ -924,13 +924,14 @@ SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_of
 # depth units a VSYNC; 5 is the most the pictures keep up with), the speed
 # gained a VSYNC, and the steering's and the curves' factors (game.asm
 # steer): k, the full lock moving the car 127 x k / 64 / 256 pairs a
-# picture (1 or 1 1/3), and m, a curve of level L at speed s (8.8)
-# carrying it out L x s / 16 x m / 65536 pairs a picture (the first car
-# 0.72 on a level 7 curve at full speed; more grip, less)
+# picture (1/2 or 2/3), and m, a curve of level L at speed s (8.8)
+# carrying it out L (1 + L / 14) x s / 16 x m / 65536 pairs a picture
+# (the first car 1.08 on a level 7 curve at full speed, more than its full
+# lock: slower there; more grip, less)
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
 ACCEL = {3: 4, 4: 5, 5: 6}
-GRIP = {2: (129, 77), 3: (129, 64), 4: (172, 55), 5: (172, 48)}
+GRIP = {2: (65, 77), 3: (65, 64), 4: (86, 55), 5: (86, 48)}
 assert all(k < 256 and m < 256 for k, m in GRIP.values())
 assert all(v < 0x1000 for v in TOP_SPEED.values())    # (speed / 16: a byte)
 assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])

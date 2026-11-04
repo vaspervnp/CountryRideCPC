@@ -17,12 +17,16 @@ bush_d6   ; sprite 6: 16 lines
     defb #01,#08,#00,#41,#00,#41,#00,#00,#00,#41
 car_code2
     ld de,#0000
-    ld bc,#0F0F
-    ld ix,#A8FC
-    ld iy,#3F3F
     ld sp,hl
     ei
-    ld hl,#FCA8
+    ld bc,#FC20
+    di
+    push bc
+    ld hl,#74E8
+    push hl
+    ld bc,#E8E8
+    push bc
+    push bc
     jp #8F40
 bush_rz1   ; the row a bush zr ahead stands on, zr < 512: zr / 2
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
@@ -120,49 +124,47 @@ bush_rz2   ; ... zr >= 512: (zr - 512) / 8
     defb #09,#09,#09,#09,#09,#09,#09,#09,#08,#08,#08,#08,#08,#08,#08,#08
     defb #08,#08,#08,#08,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07
     defb #07,#07,#07,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld hl,#002A
-    push hl
-    push iy
-    ld hl,#15A8
-    push hl
-    ld hl,#0810
+    ld c,#40
+    push bc
+    ld hl,#080A
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC2A
+    ld hl,#A85E
     di
     push hl
-    ld hl,#CFCF
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#4F
-    push hl
-    ld l,#A8
-    push hl
-    ld hl,#0810
+    ld bc,#85C0
+    push bc
+    push de
+    push de
+    ld b,#00
+    push bc
+    ld bc,#1FA8
+    push bc
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC2A
+    ld hl,#FC54
     di
     push hl
+    ld l,#1F
+    push hl
+    ld hl,#0F00
+    push hl
+    push de
+    push de
+    push de
     push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0FA8
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FCA8
+    di
+    push hl
     jp #959A
+    defs 1,0
 bush_rtop   ; per hill level: the furthest row in sight
     defb #0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0A,#0A,#0A,#0A,#0A,#0A
     defb #0A,#0A,#0A,#0A,#09,#09,#09,#09,#09,#09,#09,#09,#09,#08,#08,#08
@@ -181,66 +183,67 @@ bush_d4   ; sprite 4: 11 lines
     defb #C3,#41,#82,#C3,#41,#C3,#00,#08,#C3,#41,#82,#00,#82,#C3,#41,#C3
     defb #00,#08,#C3,#82,#41,#41,#00,#82,#41,#C3,#00,#06,#C3,#00,#00,#00
     defb #00,#00,#00,#06,#82,#41,#00,#82,#41,#00
+    ld hl,#900F
     push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC2A
-    di
+    ld hl,#0F15
     push hl
-    push iy
     push de
     push de
     push de
-    push de
-    push de
-    ld hl,#00A8
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#54CF
-    di
-    push hl
-    ld hl,#FC40
-    push hl
-    ld hl,#E8E8
-    push hl
-    push hl
-    ld hl,#600F
-    push hl
-    ld hl,#CFFC
-    push hl
-    ld h,#00
+    ld l,#05
     push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#20CF
+    ld hl,#54A8
     di
     push hl
-    ld hl,#9054
+    ld hl,#B81F
     push hl
-    ld hl,#D4D4
+    ld hl,#0F3F
+    push hl
+    ld h,#3F
     push hl
     push hl
-    ld l,#7E
     push hl
-    ld hl,#0F8F
+    ld hl,#1F1F
     push hl
-    ld hl,#2AA8
+    ld hl,#05FC
     push hl
-    ld hl,#0812
+    ld hl,#0810
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC0A
+    ld hl,#8ACF
     di
     push hl
-    ld hl,#8F9A
+    ld hl,#6F0F
+    push hl
+    ld h,#0F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#2FA8
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC54
+    di
+    push hl
+    ld hl,#1ACF
+    push hl
+    ld hl,#2F1F
+    push hl
+    ld hl,#1F3F
+    push hl
+    ld h,#3F
+    push hl
     jp #9755
 bush_spr0   ; size class 0, per row: its sprite's record (#FF none)
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
@@ -274,28 +277,32 @@ bush_spr2   ; size class 2, per row: its sprite's record (#FF none)
     defb #60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60
     defb #60,#60,#60,#60,#60
     push hl
-    ld hl,#0FAD
     push hl
-    ld hl,#E840
     push hl
-    ld hl,#A8E8
     push hl
-    ld h,#E8
-    push hl
-    ld l,#6A
-    push hl
-    ld hl,#3F1F
-    push hl
-    ld hl,#00E8
-    push hl
-    ld hl,#2A05
-    push hl
+    push bc
     ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC0A
+    ld hl,#FC54
+    di
+    push hl
+    ld bc,#7E1F
+    push bc
+    ld bc,#0F4F
+    push bc
+    ld c,#2F
+    push bc
+    ld hl,#1515
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#3F0F
+    push hl
     jp #97D5
+    defs 2,0
 bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#03,#04,#05,#06,#07,#08,#08,#09,#0A,#0B,#0C,#0D,#0D
     defb #0E,#0F,#10,#11,#12,#12,#13,#14,#15,#16,#17,#17,#18,#19,#1A,#1B
@@ -303,153 +310,149 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     defb #29,#2A,#2A,#2B,#2C,#2D,#2E,#2F,#2F,#30,#31,#32,#33,#34,#34,#35
     defb #36,#37,#38,#39,#39,#3A,#3B,#3C,#3D,#3D,#3E,#3F,#40,#41,#42,#42
     defb #43,#44,#45,#46,#47
-    di
-    push hl
-    ld hl,#9F4F
-    push hl
-    ld hl,#3F2F
-    push hl
-    ld h,#0F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    ld h,#2F
-    push hl
-    ld l,#15
-    push hl
-    ld hl,#C874
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#540F
-    di
-    push hl
-    ld h,#A8
-    push hl
-    ld h,#1F
-    push hl
-    jp #9D40
-    ASSERT $ <= #9800
-    ORG #9D40,FRAG_ST11
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0F05
+    ld hl,#0F45
     push hl
     ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5405
+    ld hl,#FC54
     di
     push hl
-    ld l,#0F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push ix
-    ld hl,#0816
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#54BD
-    di
-    push hl
-    ld hl,#2A0F
+    ld hl,#000A
     push hl
     ld hl,#0F3F
     push hl
-    push iy
-    push iy
-    ld hl,#1500
+    ld h,#3F
     push hl
     push de
     push de
-    ld hl,#00BD
+    push de
+    push de
+    ld h,#2A
     push hl
-    ld hl,#2A3F
+    ld hl,#3F15
     push hl
-    push ix
-    ld hl,#0816
+    ld hl,#0814
+    jp #9D40
+    ASSERT $ <= #9800
+    ORG #9D40,FRAG_ST11
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5405
+    ld hl,#FC54
     di
     push hl
-    ld hl,#7E0F
+    ld hl,#545E
     push hl
-    ld h,#2F
+    ld hl,#8F4F
     push hl
-    ld hl,#6D45
-    push hl
+    push bc
     ld hl,#1515
     push hl
     push hl
     push hl
     push hl
-    ld hl,#3F9F
+    ld hl,#3F0F
     push hl
-    ld hl,#9E2F
+    ld hl,#0F45
     push hl
-    push ix
-    ld hl,#0816
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#543F
+    ld hl,#FC54
     di
     push hl
-    ld hl,#2A0F
+    ld hl,#BD2A
     push hl
     ld hl,#2F3F
     push hl
-    ld hl,#BD15
+    ld h,#3F
     push hl
     push de
     push de
+    ld bc,#A8A8
+    push bc
     push de
     push de
-    ld hl,#00BD
     push hl
-    ld hl,#2A3F
-    push hl
-    push ix
+    ld c,#FC
+    push bc
     ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5400
+    ld hl,#FC54
     di
     push hl
-    ld hl,#3A3F
+    ld hl,#BD3F
     push hl
-    ld hl,#2F0F
+    ld hl,#2F2F
     push hl
-    ld hl,#6D45
+    ld l,#0F
     push hl
-    ld hl,#1515
+    ld hl,#0F05
+    push hl
+    ld hl,#3C3C
     push hl
     push hl
+    ld hl,#140F
+    push hl
+    ld h,#0F
     push hl
     push hl
-    ld hl,#3F9F
+    push bc
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC54
+    di
     push hl
-    ld hl,#9E2F
+    ld hl,#203F
     push hl
-    push ix
+    ld hl,#0F0F
+    push hl
+    push hl
+    ld bc,#0F15
+    push bc
+    ld bc,#383C
+    push bc
+    ld b,#3C
+    push bc
+    ld bc,#BC1F
+    push bc
+    push hl
+    push hl
+    ld bc,#A8FC
+    push bc
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC54
+    di
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#0F0F
+    push hl
+    push hl
+    ld bc,#0F2F
+    push bc
+    ld bc,#3F3F
+    push bc
+    push bc
+    ld c,#2F
+    push bc
+    ld bc,#2F0F
+    push bc
+    push hl
+    ld bc,#A8FC
+    push bc
     jp #9E55
+    defs 1,0
 bush_latL0   ; lateral class 0, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FD,#FC,#FB,#FA,#F9,#F8,#F8,#F7,#F6,#F5,#F4,#F3,#F3
     defb #F2,#F1,#F0,#EF,#EE,#EE,#ED,#EC,#EB,#EA,#E9,#E9,#E8,#E7,#E6,#E5
@@ -457,30 +460,30 @@ bush_latL0   ; lateral class 0, left, per row: bytes from the road's centre (sig
     defb #D7,#D6,#D6,#D5,#D4,#D3,#D2,#D1,#D1,#D0,#CF,#CE,#CD,#CC,#CC,#CB
     defb #CA,#C9,#C8,#C7,#C7,#C6,#C5,#C4,#C3,#C3,#C2,#C1,#C0,#BF,#BE,#BE
     defb #BD,#BC,#BB,#BA,#B9
-    ld hl,#0816
+    ld hl,#C874
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5400
+    ld hl,#542A
     di
     push hl
-    ld hl,#7E1F
-    push hl
-    ld hl,#2F3F
-    push hl
-    ld hl,#BD15
-    push hl
+    ld bc,#1F0F
+    push bc
+    ld b,#0F
+    push bc
+    ld bc,#2A00
+    push bc
     push de
     push de
-    ld hl,#A8A8
+    ld bc,#003F
+    push bc
+    ld hl,#3F0F
     push hl
-    push de
-    ld hl,#003F
+    ld hl,#1F15
     push hl
-    push iy
-    push ix
+    ld hl,#0812
+    add hl,sp
     jp #9ED5
-    defs 2,0
 bush_latR1   ; lateral class 1, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#04,#05,#06,#07,#08,#09,#0A,#0B,#0C,#0D,#0E,#0F,#0F
     defb #10,#11,#12,#13,#14,#15,#16,#17,#18,#19,#1A,#1B,#1C,#1D,#1E,#1F
@@ -488,31 +491,38 @@ bush_latR1   ; lateral class 1, right, per row: bytes from the road's centre (si
     defb #2F,#30,#31,#32,#33,#34,#35,#36,#37,#38,#39,#3A,#3B,#3C,#3D,#3E
     defb #3F,#40,#41,#42,#43,#44,#45,#46,#47,#48,#49,#49,#4A,#4B,#4C,#4D
     defb #4E,#4F,#50,#51,#52
-    ld hl,#0816
+    ld sp,hl
+    ei
+    ld hl,#5400
+    di
+    push hl
+    push de
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld c,#A8
+    push bc
+    ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC00
+    ld hl,#5400
     di
     push hl
-    ld hl,#7E3F
-    push hl
-    ld hl,#2F2F
-    push hl
-    ld l,#0F
-    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
     push bc
-    ld hl,#3D3C
-    push hl
-    ld h,#3C
-    push hl
-    ld hl,#3E0F
-    push hl
-    push bc
-    ld hl,#0F2F
-    push hl
+    ld hl,#0812
+    add hl,sp
     jp #9F55
-    defs 1,0
 bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#FA,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F1
     defb #F0,#EF,#EE,#ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E5,#E4,#E3,#E2,#E1
@@ -520,31 +530,23 @@ bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (sig
     defb #D1,#D0,#CF,#CE,#CD,#CC,#CB,#CA,#C9,#C8,#C7,#C6,#C5,#C4,#C3,#C2
     defb #C1,#C0,#BF,#BE,#BD,#BC,#BB,#BA,#B9,#B8,#B7,#B7,#B6,#B5,#B4,#B3
     defb #B2,#B1,#B0,#AF,#AE
-    push ix
-    ld hl,#C874
-    add hl,sp
     ld sp,hl
     ei
-    ld hl,#2A2A
+    ld hl,#FC00
     di
     push hl
-    push iy
-    push iy
-    push iy
-    ld hl,#283C
-    push hl
-    ld h,#3C
-    push hl
-    ld hl,#1400
-    push hl
     push de
     push de
-    push ix
-    ld hl,#0814
-    add hl,sp
-    ld sp,hl
-    ei
-    jp #9FD5
+    push de
+    push de
+    push de
+    ld c,#54
+    push bc
+    push bc
+    ld bc,#54FC
+    push bc
+    jp bush_spr_done
+    defs 20,0
 bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#04,#05,#07,#08,#09,#0A,#0B,#0C,#0D,#0E,#0F,#10,#12
     defb #13,#14,#15,#16,#17,#18,#19,#1A,#1C,#1D,#1E,#1F,#20,#21,#22,#23
@@ -552,61 +554,9 @@ bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (si
     defb #36,#37,#38,#39,#3A,#3C,#3D,#3E,#3F,#40,#41,#42,#43,#44,#45,#47
     defb #48,#49,#4A,#4B,#4C,#4D,#4E,#4F,#51,#52,#53,#54,#55,#56,#57,#58
     defb #59,#5A,#5C,#5D,#5E
-    nop
-    di
-    push de
-    push de
-    push de
-    ld hl,#5400
-    push hl
-    ld hl,#0054
-    push hl
-    push de
-    push de
-    ld hl,#5400
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    ld hl,#A800
-    push hl
-    push de
-    push de
-    push de
-    push hl
-    push de
-    jp #A540
     ASSERT $ <= #A000
     ORG #A540,FRAG_ST12
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#5454
-    di
-    push hl
-    ld l,#FC
-    push hl
-    ld l,#00
-    push hl
-    ld l,#54
-    push hl
-    push de
-    push de
-    ld h,#00
-    push hl
-    ld h,#54
-    push hl
-    push ix
-    jp bush_spr_done
-    defs 9,0
+    defs 18,0
 tr_s0_closed
     ld ix,#C0C0
     ld sp,hl
@@ -697,15 +647,6 @@ tr_s0_closed
     ld sp,hl
     push iy
     push iy
-    jp tr_s0_closed_c1
-bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (signed, at most 127)
-    defb #FF,#FE,#FD,#FC,#FB,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F0,#EE
-    defb #ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E4,#E3,#E2,#E1,#E0,#DF,#DE,#DD
-    defb #DC,#DB,#D9,#D8,#D7,#D6,#D5,#D4,#D3,#D2,#D1,#CF,#CE,#CD,#CC,#CB
-    defb #CA,#C9,#C8,#C7,#C6,#C4,#C3,#C2,#C1,#C0,#BF,#BE,#BD,#BC,#BB,#B9
-    defb #B8,#B7,#B6,#B5,#B4,#B3,#B2,#B1,#AF,#AE,#AD,#AC,#AB,#AA,#A9,#A8
-    defb #A7,#A6,#A4,#A3,#A2
-tr_s0_closed_c1
     push ix
     push ix
     ld bc,#C0E8
@@ -717,6 +658,16 @@ tr_s0_open
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
+    jp tr_s0_closed_c1
+    defs 1,0
+bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (signed, at most 127)
+    defb #FF,#FE,#FD,#FC,#FB,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F0,#EE
+    defb #ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E4,#E3,#E2,#E1,#E0,#DF,#DE,#DD
+    defb #DC,#DB,#D9,#D8,#D7,#D6,#D5,#D4,#D3,#D2,#D1,#CF,#CE,#CD,#CC,#CB
+    defb #CA,#C9,#C8,#C7,#C6,#C4,#C3,#C2,#C1,#C0,#BF,#BE,#BD,#BC,#BB,#B9
+    defb #B8,#B7,#B6,#B5,#B4,#B3,#B2,#B1,#AF,#AE,#AD,#AC,#AB,#AA,#A9,#A8
+    defb #A7,#A6,#A4,#A3,#A2
+tr_s0_closed_c1
     ld bc,#FCDE
     push bc
     ld bc,#33ED
@@ -725,16 +676,6 @@ tr_s0_open
     call tr_st0
     ld bc,#FC76
     push bc
-    jp tr_s0_closed_c2
-    defs 1,0
-bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (signed, at most 127)
-    defb #01,#02,#04,#05,#06,#07,#09,#0A,#0B,#0C,#0E,#0F,#10,#12,#13,#14
-    defb #15,#17,#18,#19,#1B,#1C,#1D,#1E,#20,#21,#22,#23,#25,#26,#27,#29
-    defb #2A,#2B,#2C,#2E,#2F,#30,#32,#33,#34,#35,#37,#38,#39,#3A,#3C,#3D
-    defb #3E,#40,#41,#42,#43,#45,#46,#47,#49,#4A,#4B,#4C,#4E,#4F,#50,#51
-    defb #53,#54,#55,#57,#58,#59,#5A,#5C,#5D,#5E,#60,#61,#62,#63,#65,#66
-    defb #67,#68,#6A,#6B,#6C
-tr_s0_closed_c2
     ld bc,#33ED
     push bc
     ld sp,hl
@@ -747,6 +688,15 @@ tr_s0_closed_c2
     call tr_st0
     ld bc,#FCCF
     push bc
+    jp tr_s0_closed_c2
+bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (signed, at most 127)
+    defb #01,#02,#04,#05,#06,#07,#09,#0A,#0B,#0C,#0E,#0F,#10,#12,#13,#14
+    defb #15,#17,#18,#19,#1B,#1C,#1D,#1E,#20,#21,#22,#23,#25,#26,#27,#29
+    defb #2A,#2B,#2C,#2E,#2F,#30,#32,#33,#34,#35,#37,#38,#39,#3A,#3C,#3D
+    defb #3E,#40,#41,#42,#43,#45,#46,#47,#49,#4A,#4B,#4C,#4E,#4F,#50,#51
+    defb #53,#54,#55,#57,#58,#59,#5A,#5C,#5D,#5E,#60,#61,#62,#63,#65,#66
+    defb #67,#68,#6A,#6B,#6C
+tr_s0_closed_c2
     ld b,#67
     push bc
     ld sp,hl
@@ -754,16 +704,6 @@ tr_s0_closed_c2
     call tr_stx
     ld bc,#FCDE
     push bc
-    jp tr_s0_closed_c3
-    defs 2,0
-bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (signed, at most 127)
-    defb #FF,#FE,#FC,#FB,#FA,#F9,#F7,#F6,#F5,#F4,#F2,#F1,#F0,#EE,#ED,#EC
-    defb #EB,#E9,#E8,#E7,#E5,#E4,#E3,#E2,#E0,#DF,#DE,#DD,#DB,#DA,#D9,#D7
-    defb #D6,#D5,#D4,#D2,#D1,#D0,#CE,#CD,#CC,#CB,#C9,#C8,#C7,#C6,#C4,#C3
-    defb #C2,#C0,#BF,#BE,#BD,#BB,#BA,#B9,#B7,#B6,#B5,#B4,#B2,#B1,#B0,#AF
-    defb #AD,#AC,#AB,#A9,#A8,#A7,#A6,#A4,#A3,#A2,#A0,#9F,#9E,#9D,#9B,#9A
-    defb #99,#98,#96,#95,#94
-tr_s0_closed_c3
     ld bc,#CFCF
     push bc
     ld sp,hl
@@ -777,6 +717,15 @@ tr_s0_closed_c3
     push bc
     ld bc,#6FE8
     push bc
+    jp tr_s0_closed_c3
+bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (signed, at most 127)
+    defb #FF,#FE,#FC,#FB,#FA,#F9,#F7,#F6,#F5,#F4,#F2,#F1,#F0,#EE,#ED,#EC
+    defb #EB,#E9,#E8,#E7,#E5,#E4,#E3,#E2,#E0,#DF,#DE,#DD,#DB,#DA,#D9,#D7
+    defb #D6,#D5,#D4,#D2,#D1,#D0,#CE,#CD,#CC,#CB,#C9,#C8,#C7,#C6,#C4,#C3
+    defb #C2,#C0,#BF,#BE,#BD,#BB,#BA,#B9,#B7,#B6,#B5,#B4,#B2,#B1,#B0,#AF
+    defb #AD,#AC,#AB,#A9,#A8,#A7,#A6,#A4,#A3,#A2,#A0,#9F,#9E,#9D,#9B,#9A
+    defb #99,#98,#96,#95,#94
+tr_s0_closed_c3
     ld sp,hl
     call tr_st0
     ld bc,#D4D4
@@ -784,16 +733,6 @@ tr_s0_closed_c3
     push bc
     push ix
     push ix
-    jp tr_s0_closed_c4
-    defs 1,0
-bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (signed, at most 127)
-    defb #01,#02,#04,#05,#07,#08,#0A,#0B,#0D,#0E,#10,#11,#12,#14,#15,#17
-    defb #18,#1A,#1B,#1D,#1E,#1F,#21,#22,#24,#25,#27,#28,#2A,#2B,#2D,#2E
-    defb #2F,#31,#32,#34,#35,#37,#38,#3A,#3B,#3C,#3E,#3F,#41,#42,#44,#45
-    defb #47,#48,#4A,#4B,#4C,#4E,#4F,#51,#52,#54,#55,#57,#58,#59,#5B,#5C
-    defb #5E,#5F,#61,#62,#64,#65,#67,#68,#69,#6B,#6C,#6E,#6F,#71,#72,#74
-    defb #75,#76,#78,#79,#7B
-tr_s0_closed_c4
     ld b,#C0
     push bc
     ld bc,#D4C0
@@ -809,6 +748,16 @@ tr_s0_closed_c4
     push bc
     push bc
     ld sp,hl
+    jp tr_s0_closed_c4
+    defs 2,0
+bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (signed, at most 127)
+    defb #01,#02,#04,#05,#07,#08,#0A,#0B,#0D,#0E,#10,#11,#12,#14,#15,#17
+    defb #18,#1A,#1B,#1D,#1E,#1F,#21,#22,#24,#25,#27,#28,#2A,#2B,#2D,#2E
+    defb #2F,#31,#32,#34,#35,#37,#38,#3A,#3B,#3C,#3E,#3F,#41,#42,#44,#45
+    defb #47,#48,#4A,#4B,#4C,#4E,#4F,#51,#52,#54,#55,#57,#58,#59,#5B,#5C
+    defb #5E,#5F,#61,#62,#64,#65,#67,#68,#69,#6B,#6C,#6E,#6F,#71,#72,#74
+    defb #75,#76,#78,#79,#7B
+tr_s0_closed_c4
     call tr_st1
     ld bc,#C0D4
     push bc
@@ -817,10 +766,6 @@ tr_s0_closed_c4
     push ix
     push ix
     push bc
-    jp tr_s0_closed_c5
-    ASSERT $ <= #A800
-    ORG #AD40,FRAG_ST13
-tr_s0_closed_c5
     push bc
     ld sp,hl
     ld b,iyl
@@ -837,6 +782,8 @@ tr_s0_closed_c5
     ld c,iyl
     push bc
     jp tr_done
+    ASSERT $ <= #A800
+    ORG #AD40,FRAG_ST13
 tr_s1_closed
     ld ix,#C0C0
     ld sp,hl
@@ -929,16 +876,6 @@ tr_s1_open
     add hl,bc
     bit 6,h
     call nz,tr_next_row
-    jp tr_s1_closed_c6
-    defs 2,0
-bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (signed, at most 127)
-    defb #FF,#FE,#FC,#FB,#F9,#F8,#F6,#F5,#F3,#F2,#F0,#EF,#EE,#EC,#EB,#E9
-    defb #E8,#E6,#E5,#E3,#E2,#E1,#DF,#DE,#DC,#DB,#D9,#D8,#D6,#D5,#D3,#D2
-    defb #D1,#CF,#CE,#CC,#CB,#C9,#C8,#C6,#C5,#C4,#C2,#C1,#BF,#BE,#BC,#BB
-    defb #B9,#B8,#B6,#B5,#B4,#B2,#B1,#AF,#AE,#AC,#AB,#A9,#A8,#A7,#A5,#A4
-    defb #A2,#A1,#9F,#9E,#9C,#9B,#99,#98,#97,#95,#94,#92,#91,#8F,#8E,#8C
-    defb #8B,#8A,#88,#87,#85
-tr_s1_closed_c6
     ld bc,#679B
     push bc
     ld sp,hl
@@ -952,6 +889,15 @@ tr_s1_closed_c6
     call tr_st1
     ld bc,#FCE8
     push bc
+    jp tr_s1_closed_c6
+bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (signed, at most 127)
+    defb #FF,#FE,#FC,#FB,#F9,#F8,#F6,#F5,#F3,#F2,#F0,#EF,#EE,#EC,#EB,#E9
+    defb #E8,#E6,#E5,#E3,#E2,#E1,#DF,#DE,#DC,#DB,#D9,#D8,#D6,#D5,#D3,#D2
+    defb #D1,#CF,#CE,#CC,#CB,#C9,#C8,#C6,#C5,#C4,#C2,#C1,#BF,#BE,#BC,#BB
+    defb #B9,#B8,#B6,#B5,#B4,#B2,#B1,#AF,#AE,#AC,#AB,#A9,#A8,#A7,#A5,#A4
+    defb #A2,#A1,#9F,#9E,#9C,#9B,#99,#98,#97,#95,#94,#92,#91,#8F,#8E,#8C
+    defb #8B,#8A,#88,#87,#85
+tr_s1_closed_c6
     ld b,#E8
     push bc
     push bc
@@ -960,15 +906,6 @@ tr_s1_closed_c6
     ld sp,hl
     call tr_st0
     push ix
-    jp tr_s1_closed_c7
-bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of it (cache.asm: rd_gp)
-    defb #CD,#CD,#CE,#CE,#CF,#D0,#D1,#D1,#D2,#D2,#D3,#D4,#D4,#D5,#D5,#D6
-    defb #D7,#D7,#D8,#D8,#D9,#DA,#DA,#DB,#DB,#DC,#DC,#DD,#DE,#DE,#DF,#DF
-    defb #E0,#E1,#E1,#E2,#E2,#E3,#E4,#E4,#E5,#E5,#E6,#E7,#E7,#E8,#E8,#E9
-    defb #EA,#EA,#EB,#EB,#EC,#ED,#ED,#EE,#EE,#EF,#F0,#F0,#F1,#F1,#F2,#F3
-    defb #F3,#F4,#F4,#F5,#F5,#F6,#F7,#F7,#F8,#F8,#F9,#FA,#FA,#FB,#FB,#FC
-    defb #FD,#FD,#FE,#FE,#FF
-tr_s1_closed_c7
     ld bc,#D4C0
     push bc
     push ix
@@ -982,6 +919,16 @@ tr_s1_closed_c7
     push bc
     ld c,#C0
     push bc
+    jp tr_s1_closed_c7
+    defs 1,0
+bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of it (cache.asm: rd_gp)
+    defb #CD,#CD,#CE,#CE,#CF,#D0,#D1,#D1,#D2,#D2,#D3,#D4,#D4,#D5,#D5,#D6
+    defb #D7,#D7,#D8,#D8,#D9,#DA,#DA,#DB,#DB,#DC,#DC,#DD,#DE,#DE,#DF,#DF
+    defb #E0,#E1,#E1,#E2,#E2,#E3,#E4,#E4,#E5,#E5,#E6,#E7,#E7,#E8,#E8,#E9
+    defb #EA,#EA,#EB,#EB,#EC,#ED,#ED,#EE,#EE,#EF,#F0,#F0,#F1,#F1,#F2,#F3
+    defb #F3,#F4,#F4,#F5,#F5,#F6,#F7,#F7,#F8,#F8,#F9,#FA,#FA,#FB,#FB,#FC
+    defb #FD,#FD,#FE,#FE,#FF
+tr_s1_closed_c7
     push ix
     ld bc,#C0E8
     push bc
@@ -989,16 +936,6 @@ tr_s1_closed_c7
     push bc
     ld sp,hl
     call tr_st0
-    jp tr_s1_closed_c8
-    defs 1,0
-bush_cx0   ; curve level 0, per row: the road's centre
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
-tr_s1_closed_c8
     ld bc,#D4C0
     push bc
     ld c,#D4
@@ -1015,6 +952,15 @@ tr_s1_closed_c8
     ld b,e
     ld c,#E8
     push bc
+    jp tr_s1_closed_c8
+bush_cx0   ; curve level 0, per row: the road's centre
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s1_closed_c8
     ld b,#E8
     push bc
     push bc
@@ -1026,16 +972,6 @@ tr_s1_closed_c8
 tr_s1_tops_tail
     ld sp,hl
     push iy
-    jp tr_s1_closed_c9
-    defs 1,0
-bush_cx1   ; curve level 1, per row: the road's centre
-    defb #39,#39,#38,#38,#38,#38,#38,#37,#37,#37,#37,#37,#36,#36,#36,#36
-    defb #36,#36,#35,#35,#35,#35,#35,#35,#34,#34,#34,#34,#34,#34,#33,#33
-    defb #33,#33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#32,#32,#32,#31,#31
-    defb #31,#31,#31,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
-tr_s1_closed_c9
     push iy
     push iy
     push iy
@@ -1049,6 +985,15 @@ tr_s4_closed
     call tr_st1
     ld c,iyl
     ld b,#FC
+    jp tr_s4_closed_c9
+bush_cx1   ; curve level 1, per row: the road's centre
+    defb #39,#39,#38,#38,#38,#38,#38,#37,#37,#37,#37,#37,#36,#36,#36,#36
+    defb #36,#36,#35,#35,#35,#35,#35,#35,#34,#34,#34,#34,#34,#34,#33,#33
+    defb #33,#33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#32,#32,#32,#31,#31
+    defb #31,#31,#31,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s4_closed_c9
     push bc
     ld b,iyl
     ld c,#E8
@@ -1056,10 +1001,6 @@ tr_s4_closed
     ld sp,hl
     call tr_st0
     ld bc,#FCD4
-    jp tr_s4_closed_c10
-    ASSERT $ <= #B000
-    ORG #B540,FRAG_ST14
-tr_s4_closed_c10
     push bc
     push ix
     ld bc,#D4B8
@@ -1075,6 +1016,10 @@ tr_s4_closed_c10
     push ix
     push de
     ld sp,hl
+    jp tr_s4_closed_c10
+    ASSERT $ <= #B000
+    ORG #B540,FRAG_ST14
+tr_s4_closed_c10
     call tr_st0
     push iy
     ld b,iyl
@@ -1160,16 +1105,6 @@ tr_s4_cars_tail
     call tr_st0
     ld bc,#D4CF
     push bc
-    jp tr_s4_closed_c11
-    defs 2,0
-bush_cx2   ; curve level 2, per row: the road's centre
-    defb #42,#42,#41,#41,#41,#40,#40,#3F,#3F,#3F,#3E,#3E,#3D,#3D,#3D,#3C
-    defb #3C,#3C,#3B,#3B,#3A,#3A,#3A,#3A,#39,#39,#39,#38,#38,#38,#37,#37
-    defb #37,#37,#36,#36,#36,#35,#35,#35,#35,#35,#34,#34,#34,#34,#33,#33
-    defb #33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#31,#31,#31,#31,#31,#31
-    defb #31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
-tr_s4_closed_c11
     ld bc,#CF1E
     push bc
     ld bc,#3C3C
@@ -1184,6 +1119,16 @@ tr_s4_closed_c11
     ld b,#FC
     push bc
     push iy
+    jp tr_s4_closed_c11
+    defs 1,0
+bush_cx2   ; curve level 2, per row: the road's centre
+    defb #42,#42,#41,#41,#41,#40,#40,#3F,#3F,#3F,#3E,#3E,#3D,#3D,#3D,#3C
+    defb #3C,#3C,#3B,#3B,#3A,#3A,#3A,#3A,#39,#39,#39,#38,#38,#38,#37,#37
+    defb #37,#37,#36,#36,#36,#35,#35,#35,#35,#35,#34,#34,#34,#34,#33,#33
+    defb #33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#31,#31,#31,#31,#31,#31
+    defb #31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s4_closed_c11
     push iy
     push iy
     ld b,iyl
@@ -1191,15 +1136,6 @@ tr_s4_closed_c11
     push bc
     ld sp,hl
     call tr_stm1
-    jp tr_s4_closed_c12
-bush_cx3   ; curve level 3, per row: the road's centre
-    defb #4C,#4B,#4A,#4A,#49,#48,#48,#47,#46,#46,#45,#45,#44,#44,#43,#43
-    defb #42,#42,#41,#40,#40,#3F,#3F,#3F,#3E,#3D,#3D,#3C,#3C,#3C,#3B,#3B
-    defb #3A,#3A,#3A,#39,#39,#38,#38,#38,#37,#37,#37,#36,#36,#36,#35,#35
-    defb #35,#34,#34,#34,#34,#33,#33,#33,#33,#33,#32,#32,#32,#32,#31,#31
-    defb #31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
-tr_s4_closed_c12
     ld bc,#D4C0
     push bc
     push ix
@@ -1214,20 +1150,21 @@ tr_s4_closed_c12
     push ix
     push ix
     ld sp,hl
+    jp tr_s4_closed_c12
+bush_cx3   ; curve level 3, per row: the road's centre
+    defb #4C,#4B,#4A,#4A,#49,#48,#48,#47,#46,#46,#45,#45,#44,#44,#43,#43
+    defb #42,#42,#41,#40,#40,#3F,#3F,#3F,#3E,#3D,#3D,#3C,#3C,#3C,#3B,#3B
+    defb #3A,#3A,#3A,#39,#39,#38,#38,#38,#37,#37,#37,#36,#36,#36,#35,#35
+    defb #35,#34,#34,#34,#34,#33,#33,#33,#33,#33,#32,#32,#32,#32,#31,#31
+    defb #31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s4_closed_c12
     ld bc,#D4D4
     push bc
     push bc
     ld bc,#FCFC
     push bc
     jp tr_done
-    defs 4,0
-bush_cx4   ; curve level 4, per row: the road's centre
-    defb #55,#54,#53,#53,#52,#51,#50,#4F,#4E,#4E,#4D,#4C,#4B,#4B,#4A,#49
-    defb #48,#48,#47,#46,#45,#45,#44,#44,#43,#42,#42,#41,#40,#40,#3F,#3F
-    defb #3E,#3E,#3D,#3C,#3C,#3B,#3B,#3B,#3A,#3A,#39,#39,#38,#38,#37,#37
-    defb #37,#36,#36,#36,#35,#35,#35,#34,#34,#34,#33,#33,#33,#33,#32,#32
-    defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
 tr_s2_closed
     ld ix,#C0C0
     ld sp,hl
@@ -1243,6 +1180,15 @@ tr_s2_closed
     ld b,#74
     push bc
     ld bc,#E8C0
+    jp tr_s2_closed_c13
+bush_cx4   ; curve level 4, per row: the road's centre
+    defb #55,#54,#53,#53,#52,#51,#50,#4F,#4E,#4E,#4D,#4C,#4B,#4B,#4A,#49
+    defb #48,#48,#47,#46,#45,#45,#44,#44,#43,#42,#42,#41,#40,#40,#3F,#3F
+    defb #3E,#3E,#3D,#3C,#3C,#3B,#3B,#3B,#3A,#3A,#39,#39,#38,#38,#37,#37
+    defb #37,#36,#36,#36,#35,#35,#35,#34,#34,#34,#33,#33,#33,#33,#32,#32
+    defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s2_closed_c13
     push bc
     ld bc,#C0E8
     push bc
@@ -1250,16 +1196,6 @@ tr_s2_closed
     ld c,#FC
     push bc
     ld sp,hl
-    jp tr_s2_closed_c14
-    defs 1,0
-bush_cx5   ; curve level 5, per row: the road's centre
-    defb #5E,#5D,#5C,#5B,#5A,#59,#58,#57,#56,#55,#54,#53,#52,#51,#50,#4F
-    defb #4E,#4E,#4C,#4C,#4A,#4A,#49,#49,#47,#47,#46,#45,#44,#44,#43,#42
-    defb #42,#41,#40,#3F,#3F,#3E,#3D,#3D,#3D,#3C,#3B,#3B,#3A,#3A,#39,#39
-    defb #38,#38,#37,#37,#36,#36,#36,#35,#35,#35,#34,#34,#33,#33,#33,#33
-    defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
-    defb #30,#30,#30,#30,#30
-tr_s2_closed_c14
     call tr_st0
     push de
     push ix
@@ -1276,6 +1212,15 @@ tr_s2_closed_c14
     ld c,e
     ld b,#D4
     push bc
+    jp tr_s2_closed_c14
+bush_cx5   ; curve level 5, per row: the road's centre
+    defb #5E,#5D,#5C,#5B,#5A,#59,#58,#57,#56,#55,#54,#53,#52,#51,#50,#4F
+    defb #4E,#4E,#4C,#4C,#4A,#4A,#49,#49,#47,#47,#46,#45,#44,#44,#43,#42
+    defb #42,#41,#40,#3F,#3F,#3E,#3D,#3D,#3D,#3C,#3B,#3B,#3A,#3A,#39,#39
+    defb #38,#38,#37,#37,#36,#36,#36,#35,#35,#35,#34,#34,#33,#33,#33,#33
+    defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
+    defb #30,#30,#30,#30,#30
+tr_s2_closed_c14
     ld b,e
     ld c,#C0
     push bc
@@ -1284,10 +1229,6 @@ tr_s2_closed_c14
     ld b,#C0
     push bc
     ld b,e
-    jp tr_s2_closed_c15
-    ASSERT $ <= #B800
-    ORG #BD40,FRAG_ST15
-tr_s2_closed_c15
     ld c,#FC
     push bc
     ld sp,hl
@@ -1302,6 +1243,8 @@ tr_s2_closed_c15
     push bc
     push iy
     jp tr_s2_tops_tail
+    ASSERT $ <= #B800
+    ORG #BD40,FRAG_ST15
 tr_s2_open
     ld ix,#C0C0
     ld sp,hl
@@ -1384,7 +1327,7 @@ tr_s2_tops_tail
     ld c,#FC
     push bc
     jp tr_done
-    defs 20,0
+    defs 46,0
 bush_cx6   ; curve level 6, per row: the road's centre
     defb #68,#66,#65,#64,#63,#61,#60,#5F,#5D,#5D,#5B,#5A,#59,#58,#57,#56
     defb #54,#54,#52,#51,#50,#4F,#4E,#4E,#4C,#4B,#4B,#49,#48,#48,#47,#46

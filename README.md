@@ -177,10 +177,10 @@ demo then drives on from there, its loop and its colours back after the
 road has flattened out. (`rules_vbl` in `src/game.asm`; the numbers are
 its `START_TIME`, `EXT_FIRST`, `EXT_DROP`, `EXT_MIN`; the stages are
 `tools/course.py`.) The autopilot used for testing - keeping to a lane,
-out of the traffic's way, often bumping it - finishes, taking the left at
-every fork or the right, with 44 or 42 seconds left in the ROSSO GT, 43
-or 47 in the BERLINETTA, 11 or 12 in the TOURING and 6 in the WEDGE
-TURBO, or runs out of time in the last stage in it.
+out of the traffic's way, often bumping it, never slowing down for a
+curve - finishes, taking the left at every fork, with 34 seconds left in
+the ROSSO GT, 24 in the BERLINETTA, 15 in the WEDGE TURBO and 10 in the
+TOURING.
 
 The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
 a fork's two stages, EXTENDED TIME, TIME UP, FINISH, FASTEST TIME!, GAME
@@ -197,8 +197,10 @@ before any race has beaten them - 1.3 seconds each. A race that finishes
 faster than one of them takes its place, the slower ones moving down; the
 demo then starts with them, and its own blinks (`src/race.asm`).
 
-The race has music - an original tune, 16 bars in C major, the lead and
-the bass - and the car its engine, from GET READY to GAME OVER: a note
+The race has music - an original action tune, 16 bars in A minor at 150
+beats a minute: a riff over a pedal note, then a chorus climbing the
+chords' notes, the bass driving in eighths with an octave on the
+backbeat - and the car its engine, from GET READY to GAME OVER: a note
 from 65 Hz standing still to ~190 Hz at the top speed, humming, with a
 rumble on the grass. The count beeps, GO! and a checkpoint ring, a bump
 and a crash have their noise, TIME UP and FINISH their own few notes. M
@@ -214,12 +216,12 @@ screen too, COUNTRY RIDE above the cars and the credits below them
 
 ![The title and the cars](docs/screen-select.png)
 
-They are a red one with a
-rear wing (ROSSO GT), a wide red one with a grille of black slats right
-across its tail (BERLINETTA, after a Ferrari Testarossa), a low yellow
-wedge with a louvred engine cover (WEDGE TURBO, after a Lotus Esprit) and a
-white saloon with a wing on its boot and stripes in light blue, dark blue
-and red (TOURING, after a BMW M3 of the eighties). 1-4 picks one and
+They are two wide red ones with a grille of black slats right across
+their tails, after a Ferrari Testarossa - the BERLINETTA as it left the
+factory, the ROSSO GT made new, with a lip on its tail and bigger rims - a
+low yellow wedge with a louvred engine cover (WEDGE TURBO, after a Lotus
+Esprit S2/S3) and a white estate with a spoiler over its rear window
+(TOURING, after a BMW M3 Touring of 2022). 1-4 picks one and
 starts; the arrow keys, O and P or the joystick move the flashing frame,
 and fire, space or return start.
 
@@ -237,15 +239,17 @@ drives the car):
 Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - a pair a
-picture at the full lock, 1 1/3 with grip 4 or 5 - and how little a curve
-carries it out of it: on a level 7 curve at its top speed 0.86, 0.72, 0.53
-or 0.50 pairs a picture with grip 2, 3, 4 or 5 (Steering, below).
+to 5.6 seconds. Grip is how fast the car is steered across - half a pair
+a picture at the full lock, 2/3 with grip 4 or 5 - and how little a curve
+carries it out of it: on a level 7 curve at its top speed 1.29, 1.08,
+0.80 or 0.75 pairs a picture with grip 2, 3, 4 or 5 - more than the full
+lock holds: the cars with grip 2 or 3 have to slow down for curves sharper
+than level 3, those with grip 4 or 5 for level 7 (Steering, below).
 
 ![Picking a car](docs/screen-select.png)
 
 In the race the car is seen from behind, low down, 40 or 44 pixels wide
-and up to 27 lines high, a little above the bottom of the screen. Steering,
+and up to 26 lines high, a little above the bottom of the screen. Steering,
 it is seen turning, OutRun's way: turning left, it turns about its rear
 axle, its nose going left, the left flank and the hubs of its tyres in
 view.
@@ -259,7 +263,23 @@ roundness follow smooth curves from the tail to the nose (`tools/car3d.py`
 `Shape`, `loft`) - a rear face with rounded shoulders, hips over the rear
 wheels and a waist at the doors, a bubble of a cabin with a painted roof,
 sails, a nose rounded in plan and in profile - with the wheel arches cut
-into them and fenders swelling over the wheels. They are brought
+into them and fenders swelling over the wheels. Each is built to the
+car it is after (since 2026-11-05): its length, its axles and tyres where
+they are, its width along it, its profile and its rear's parts where the
+drawings and photographs have them - laid over them in Blender's
+orthographic views to check - the rear's parts then moved to the frame's
+whole lines:
+
+| Car | After | Drawn from |
+|---|---|---|
+| ROSSO GT, BERLINETTA | Ferrari Testarossa (4.49 m, axles 2.55 m apart) | a four-view drawing (getoutlines.com, CC BY 4.0), its height made the real 1.13 m |
+| WEDGE TURBO | Lotus Esprit S2/S3 (4.19 m, 2.42 m) | a front, rear and side drawing (the-blueprints.com) and a top view of an Esprit Turbo HC (getoutlines.com, CC BY 4.0) |
+| TOURING | BMW M3 Touring G81 (4.79 m, 2.86 m, 1.44 m high) | BMW's figures, its side in BMW's picture, its rear in photographs (Wikimedia Commons, CC BY-SA 4.0) - all of it 0.93 times, as tall as the frame takes |
+
+The drawings and photographs themselves are not in the repository. The
+ROSSO GT's picture is an image made by an AI (it was found as "Ferrari
+Drago Rosso"), of no real car: from behind, where the race sees it, it is
+a Testarossa. They are brought
 to mode 0 by `tools/dither.py`: each mode 0 pixel takes the mean colour of
 the 128 render pixels under it, over the asphalt's grey, made more
 saturated and its darks darker, and then the nearest pen - or, where two
@@ -277,9 +297,27 @@ wheels (white at the clouds' hearts, thinning out under the car), and spun
 the other way mirrored - in `tools/carsart.py` (`tools/mkcars.py`, which
 also draws `build/cars-sheet.png`). In the race the car is seen uphill
 where the road ahead climbs - the hill 20 or more into a dip - and
-downhill where it falls away, over a crest (`car_lines`). The side views have the select screen's own sixteen pens (pink
-for the red paint's highlights, pastel cyan for the white car's and the
-glass's: `tools/mkselect.py`).
+downhill where it falls away, over a crest (`car_lines`).
+
+On the select screen the cars are not their models' renders but pictures
+of the cars they are modelled on (since 2026-11-04; `tools/mkselect.py`
+`PHOTOS`, the pictures in `assets/cars/photo_*`, as downloaded):
+
+| Car | Picture | Its rights |
+|---|---|---|
+| ROSSO GT | a red coupé made by an AI ("Ferrari Drago Rosso", posted on Facebook), a Google Images thumbnail the author gave | unknown |
+| BERLINETTA | a Ferrari Testarossa drawn by charner1963 (Openclipart; Wikimedia Commons, `File:Ferrari_Testarossa.svg`) | CC0, public domain |
+| WEDGE TURBO | a Lotus Esprit drawn by cactus cowboy (Openclipart; Wikimedia Commons, `File:Lotus_esprite.svg`) | CC0, public domain |
+| TOURING | a BMW M3 Touring from BMW's configurator, the link the author gave | BMW's |
+
+Each is cut out of its ground if it has one (the photo: its red paint's
+columns, the lights at its nose, the wheels' discs), its lettering and
+badges painted out, its glass made dark, its paint the race's car's (the
+Lotus yellow, the BMW white), mirrored to face right, laid on the renders'
+frame at its car's length, and dithered as the renders are, with the
+select screen's own sixteen pens (pink for the red paint's highlights,
+pastel cyan for the white car's and the glass's). Since 2026-11-05 the
+race's models are built after the same cars (above).
 
 ## How it works
 
@@ -531,14 +569,17 @@ its curves and how they come and go, in proportion to its road's width.
 Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
-the full lock the car moves a pair (4 pixels) a picture - 1 1/3 with grip
-4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of its
-193), less as much as it is slower, not at all standing still. A curve
-carries it out of it, in proportion to the curve level and the speed: on
-a level 7 curve at full speed 72% of the full lock (Out Run's common sharp
-curves, radius 60-66: 71-75%; its gentlest 31%, a level 3 curve here);
-the push comes and goes, 0.11 pairs a picture each picture at most (Out
-Run: 5 a step). The two moves add up in `car_x` and its fraction `car_xf`
+the full lock the car moves half a pair (2 pixels) a picture - 2/3 with
+grip 4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of
+its 193), less as much as it is slower, not at all standing still. (Till
+2026-11-04 twice that: as Out Run's, by the road's width, a third less.)
+A curve carries it out of it, in proportion to the speed and more than to
+the curve level - level *L* by *L* (1 + *L*/14) (`push_levels`), the
+sharpest half as much again: on a level 7 curve at full speed 214% of
+the full lock for the first car (till 2026-11-04 72%, as Out Run's
+common sharp curves, radius 60-66: 71-75%), so it has to slow down for
+it; the push comes and goes, 0.11 pairs a picture each picture at most
+(Out Run: 5 a step). The two moves add up in `car_x` and its fraction `car_xf`
 (`steer` in `src/game.asm`). The car moves across the screen at once, and
 the road - the camera - follows
 it as fast as its steps go: the car is drawn `road_x` - `car_x` pairs right
@@ -878,14 +919,14 @@ lead, B its bass, C the engine or, for a while, an effect. The interrupt
 plays it all (`src/sound.asm`): at line ~118 every other frame
 (`irq_idle`), so 25 times a second, in step with the pictures:
 
-- **The music** (`snd_tick`): a row - an eighth note at 125 beats a
-  minute - every 6 updates, a pattern of 8 rows a bar, each channel's
+- **The music** (`snd_tick`): a row - an eighth note at 150 beats a
+  minute - every 5 updates, a pattern of 8 rows a bar, each channel's
   bars from its order list, round again at its end. A note's volume
-  starts at 13 and falls an update to the level it holds (the lead 9, the
-  bass 7). The tune is `tools/mksound.py`'s (`src/gen/music.asm`): note
-  names, bar by bar, the bass the chord's root an octave apart on every
-  other eighth; a byte a row (hold, off, or one of the tune's 21 notes),
-  and each note's period.
+  starts at 14 (the bass 13) and falls 2 (3) an update to the level it
+  holds (the lead 9, the bass 5). The tune is `tools/mksound.py`'s
+  (`src/gen/music.asm`): note names, bar by bar, the bass the chord's root
+  in eighths, an octave up on the second and fourth beats; a byte a row
+  (hold, off, or one of the tune's 25 notes), and each note's period.
 - **Channel C** (`snd_chan_c`): an effect is steps of updates, a volume
   falling an update, a tone's period or a noise's; with none, the
   engine as the main loop last had it.
@@ -1018,10 +1059,26 @@ the HUD and the screen in the three R5 models as `scene.py` has them, for
 all four cars; the track's rings and the props as `tools/course.py` has
 them.
 
+With the wheel half as quick, the sharp curves' stronger push and the
+new music (2026-11-04): races in the four cars, the clock kept and not,
+37.8-38.5 ms at worst, none past the flip; crashes at the top speed 38.8
+ms at worst; the rest as before.
+
+With the cars' models built after the real cars (2026-11-05): races along
+two routes (the left at every fork, the right) in the four cars, 37.9-39.0
+ms at worst, none past the flip and none over 39.5 ms; crashes at the top
+speed, the car thrown up to six rows, 38.0 / 38.7 ms at worst (the
+first car, the fourth), every picture as `scene.py` draws it; the road,
+the HUD and the screen in the three R5 models as `scene.py` has them, for
+all four cars. The worst view now takes 1.76 ms to draw, against 1.82.
+
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
-`car_x` -18 to 18 and back, 20 times): 56-64 pictures (2.2-2.6 s) a
-crossing with grip 2 or 3, 46-48 (1.9 s) with grip 4 or 5 - from 33 to
+`car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
+and the sharp curves push harder (2026-11-04): 121 pictures (4.8 s) on
+average a crossing with grip 3, 114 with grip 5 - from 54 to 593 as the
+curves carry the car with it or against it. Before: 56-64 pictures
+(2.2-2.6 s) a crossing with grip 2 or 3, 46-48 (1.9 s) with grip 4 or 5 - from 33 to
 104, as the curves carry the car with it or against it - the car on the
 screen 9 to 10 pairs from the middle on average; 79-82 and 54-61 with the
 traffic bumping it on the way. (Before it was driven as Out Run's,
@@ -1206,15 +1263,16 @@ tools/
   course.py     the demo's loop and the race's stages, and the model of
                 how the game works them out
   mkroad.py     the generated road code, templates and tables -> src/gen/
-  car3d.py      the first car as a 3D model, the game's camera, curved
-                shapes (lofts, arches, fenders) for all the cars (Blender)
+  car3d.py      the game's camera, curved shapes (lofts, arches,
+                fenders) for all the cars' models (Blender)
   cars3d.py     all four cars' models, rendered photorealistic in Blender:
                 nine views each from behind, one spun (SPIN), one from the
                 side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views as the game's pens -> tools/carsart.py
-  mkselect.py   the title and the screen the car is picked on
+  mkselect.py   the title and the screen the car is picked on, the cars
+                from their pictures
                 -> src/gen/select.scr
   traffic3d.py  the traffic's tops and tails at eight sizes (Blender)
                 -> assets/traffic/
@@ -1231,7 +1289,8 @@ tools/
                 traffic's code, the props' sprites, and tables -> src/gen/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
-assets/         fonts, the cars', the traffic's and the trees' renders
+assets/         fonts, the cars', the traffic's and the trees' renders; the
+                select screen's pictures of the cars (assets/cars/photo_*)
 disc/           BASIC loader: the car picked as the game loads
 docs/           screenshots
 ```

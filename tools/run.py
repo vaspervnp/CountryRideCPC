@@ -311,7 +311,7 @@ def shots_stages(docs):
             g.game_poke("TIME_LEFT", 99)
             stage = g.game_byte("STAGE")
             if stage != start:
-                start, since, sid = stage, i, g.game_byte("STAGE_ID")
+                start, since, sid = stage, i, g.byte("STAGE_ID")
             x = _signed(g.game_byte("CAR_X"))
             cp_z = g.game_byte("CP_Z") | g.game_byte("CP_Z", 1) << 8
             togo = (cp_z + course.STAGE_LEN * course.ENTRY - g.word("ZCAM")) & 0xFFFF

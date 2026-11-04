@@ -13,11 +13,12 @@ It is the title screen too: COUNTRY RIDE above the cars, twice as wide
 and high as the small font, yellow to orange to red down its lines; and
 the credits at the bottom.
 
-The side views are photorealistic renders of the cars' models
-(tools/cars3d.py, SIDE=True: assets/cars/side_<car>.png) brought to this
-screen's own pens as the race's views are to the game's (tools/dither.py:
-each cell's mean colour over the panel's grey, graded, a checkerboard where
-two neighbouring pens mix nearer), lone cells dropped, outlined in black.
+The side views are pictures of the cars the models are after (PHOTOS,
+below; a car without one would show its model's render, tools/cars3d.py
+SIDE=True: assets/cars/side_<car>.png), brought to this screen's own pens
+as the race's views are to the game's (tools/dither.py: each cell's mean
+colour over the panel's grey, graded, a checkerboard where two
+neighbouring pens mix nearer), lone cells dropped, outlined in black.
 Writes src/gen/select.scr (the screen's 16K, SELECT.SCR) and
 build/select.png (how it looks, the first car picked), and puts its pens
 in the loader's DATA line.
@@ -38,6 +39,53 @@ from scene import CAR_LEVELS, SMALL, SMALL_NAMES  # noqa: E402
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 W, H = 160, 200
 SIDE_CELLS = (88, 40)
+SIDE_PX = 15.0                  # (as tools/cars3d.py: mode 0 pixels a metre
+SIDE_SQUASH = 0.8               # along the car, its heights times this)
+SIDE_ORIGIN = (142, 305)        # where the renders have the rear and the
+                                # ground (render pixels)
+
+# Side views not their models' renders - made for the race's small views,
+# they looked wrong from the side - but pictures of the cars they are
+# modelled on, in assets/cars as downloaded:
+#   ferrari  photo_ferrari.png: Wikimedia Commons, File:Ferrari_Testarossa.svg
+#            (charner1963, from Openclipart), CC0 - public domain - at 1280
+#            x 990: a drawing facing right on a clear ground
+#   player   photo_player.jpg: a photo the user gave (605 x 330, a Google
+#            Images thumbnail; its source and licence unknown), facing left
+#            on a car park: cut out (`cut`: the red paint's columns, top to
+#            bottom - and the lights', brighter than the asphalt, in their
+#            boxes - their narrow gaps closed, and the wheels' discs), mirrored
+#   lotus    photo_lotus.png: Wikimedia Commons, File:Lotus_esprite.svg
+#            (cactus cowboy, from Openclipart), CC0, at 1280 x 348: a
+#            drawing in black and white, facing right; its glass (filled
+#            from `glass_seeds`) made dark, the rest of its white and greys
+#            the yellow paint, but for its rims (discs: x, y, r)
+#   bmw      photo_bmw.webp: a picture the user gave (BMW's configurator,
+#            548 x 232; BMW's), a blue estate facing left: the blue made
+#            the race's car's white, mirrored - its length less than the
+#            car's, or it would not fit its panel
+# Each its car's length (metres), its lettering and badges painted out
+# (boxes in its pixels: a colour, or the yellow in it greyed), its
+# see-through glass - or what is not its paint in `glass_box`, a photo's
+# windows showing the sky - made the renders' dark glass, its colours brighter by
+# `gain` (a flat red as the renders' lit flanks: the pen, not a
+# checkerboard), laid on the renders' frame as cars3d.py lays a model.
+PHOTOS = {"ferrari": dict(file="photo_ferrari.png", length=4.485, gain=1.17,
+                          glass=(20, 25, 40),
+                          paint=[((359, 610, 428, 637), (218, 2, 0)),  # the
+                                 ((429, 610, 433, 637), "yellow")],    # badge
+                          grey=[(235, 619, 260, 645), (943, 619, 968, 645)]),  # caps
+          "player": dict(file="photo_player.jpg", length=4.35, flip=True, gain=1.35,
+                         cut=dict(close=15, wheels=[(159.5, 210.5, 41), (472, 211, 41)],
+                                  lights=[(75, 155, 116, 182)]),         # the nose's
+                         paint=[((397, 200, 416, 208), (150, 20, 5))],      # badge
+                         glass_box=(250, 104, 410, 152), glass=(20, 25, 40)),
+          "lotus": dict(file="photo_lotus.png", length=4.33, glass=(20, 25, 40),
+                        glass_seeds=[(460, 60), (600, 60), (750, 70)],
+                        recolour=("grey", (255, 235, 40)), rims=[(250, 241, 62), (972, 242, 62)]),
+          "bmw": dict(file="photo_bmw.webp", length=4.45, flip=True,
+                      recolour=("blue", (255, 255, 255)), glass=(20, 25, 40),
+                      glass_box=(190, 52, 475, 100))}
 
 # The cars, in the game's order (car_id 0-3), and their names
 CARS = [("player", "ROSSO GT"), ("ferrari", "BERLINETTA"), ("lotus", "WEDGE TURBO"),
@@ -64,12 +112,142 @@ FRAME = PEN["B"]                              # (the picked one's: LIT)
 HIDDEN = 1                                    # a hidden line's ink: the navy
 
 
+def yellow(p):
+    return p[3] and p[0] > 180 and p[1] > 140 and p[2] < 110
+
+
+def red(p):
+    return p[0] > 110 and p[0] > 1.7 * p[1] and p[0] > 1.7 * p[2]
+
+
+def blue(p):
+    return p[2] > p[0] + 40 and p[2] > p[1] + 20
+
+
+def cut_out(im, close, wheels, lights=()):
+    """A red car on a photo's ground: clear but for each column's red - or
+    a light's, in its box (x0, y0, x1, y1) brighter than the asphalt - top
+    to bottom, those edges' gaps narrower than `close` closed (the glass
+    between the roof and the bonnet), and the wheels' discs (x, y, r)."""
+    from PIL import ImageDraw
+    w, h = im.size
+    px = im.load()
+
+    def car(x, y):
+        return red(px[x, y]) or any(x0 <= x <= x1 and y0 <= y <= y1 and min(px[x, y][:3]) > 195
+                                    for x0, y0, x1, y1 in lights)
+    top, bot = [h] * w, [-1] * w
+    for x in range(w):
+        ys = [y for y in range(h) if car(x, y)]
+        if len(ys) > 3:
+            top[x], bot[x] = ys[0], ys[-1]
+    k = close // 2
+
+    def run(v, f, g):                   # f then g over 2k + 1 columns
+        a = [f(v[max(0, x - k):x + k + 1]) for x in range(w)]
+        return [g(a[max(0, x - k):x + k + 1]) for x in range(w)]
+    top = [min(t, c) if c < h else t for t, c in zip(top, run(top, min, max))]
+    bot = [max(b, c) if c >= 0 else b for b, c in zip(bot, run(bot, max, min))]
+    mask = Image.new("L", (w, h), 0)
+    mp = mask.load()
+    for x in range(w):
+        for y in range(top[x], bot[x] + 1):
+            mp[x, y] = 255
+    d = ImageDraw.Draw(mask)
+    for cx, cy, r in wheels:
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=255)
+    im.putalpha(mask)
+    return im
+
+
+def glass_mask(im, seeds):
+    """The pixels of a drawing's glass: its white regions holding `seeds`."""
+    from PIL import ImageDraw
+    g = im.convert("L")
+    for s in seeds:
+        ImageDraw.floodfill(g, s, 1, thresh=60)
+    return {(x, y) for y in range(g.size[1]) for x in range(g.size[0]) if g.getpixel((x, y)) == 1}
+
+
+def recolour(p, how, paint):
+    """A pixel of the paint's colour (`how`: "grey", a drawing's white and
+    greys; "blue", a blue car's) made `paint`, as bright as it was."""
+    r, g, b, a = p
+    if how == "grey":
+        v = (r + g + b) / 3
+        if v < 60 or max(r, g, b) - min(r, g, b) > 30:
+            return p
+        k = v / 255
+    else:
+        if not blue(p):
+            return p
+        k = min(1.0, max(r, g, b) / 255 * 1.3)
+    return tuple(round(c * k) for c in paint) + (a,)
+
+
+def photo_side(name):
+    """PHOTOS' side view of car `name`, on the renders' frame (RGBA)."""
+    ph = PHOTOS[name]
+    im = Image.open(os.path.join(ROOT, "assets", "cars", ph["file"])).convert("RGBA")
+    if "cut" in ph:
+        im = cut_out(im, **ph["cut"])
+    px = im.load()
+    glass = glass_mask(im, ph["glass_seeds"]) if "glass_seeds" in ph else set()
+    if "glass_box" in ph:
+        paint = blue if ph.get("recolour", ("",))[0] == "blue" else red
+        x0, y0, x1, y1 = ph["glass_box"]
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if px[x, y][3] and not paint(px[x, y]):
+                    glass.add((x, y))
+    for x, y in glass:
+        px[x, y] = ph["glass"] + (255,)
+    if "recolour" in ph:
+        rims = ph.get("rims", [])
+        for y in range(im.size[1]):
+            for x in range(im.size[0]):
+                if (x, y) not in glass and px[x, y][3] and not any((x - cx) ** 2 + (y - cy) ** 2 <= r * r
+                                             for cx, cy, r in rims):
+                    px[x, y] = recolour(px[x, y], *ph["recolour"])
+    for (x0, y0, x1, y1), colour in ph.get("paint", []):
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if colour != "yellow":
+                    px[x, y] = colour + (255,)
+                elif yellow(px[x, y]):
+                    px[x, y] = (218, 2, 0, 255)
+    for x0, y0, x1, y1 in ph.get("grey", []):
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if yellow(px[x, y]):
+                    px[x, y] = (170, 170, 170, 255)
+    gain = ph.get("gain", 1.0)
+    for y in range(im.size[1]):
+        for x in range(im.size[0]):
+            r, g, b, a = px[x, y]
+            if not a:
+                continue
+            if "glass" in ph and (a < 255 and b > r + 100 or (r, g, b) == ph["glass"]):
+                px[x, y] = ph["glass"] + (255,)
+            elif gain != 1.0:
+                px[x, y] = tuple(min(255, round(v * gain)) for v in (r, g, b)) + (a,)
+    im = im.crop(im.split()[3].getbbox())
+    if ph.get("flip"):
+        im = im.transpose(Image.FLIP_LEFT_RIGHT)
+    sx = SIDE_PX * dither.CELL_PX[0] * ph["length"] / im.size[0]
+    sy = sx * SIDE_SQUASH
+    im = im.resize((round(im.size[0] * sx), round(im.size[1] * sy)), Image.LANCZOS)
+    out = Image.new("RGBA", (SIDE_CELLS[0] * dither.CELL_PX[0], SIDE_CELLS[1] * dither.CELL_PX[1]))
+    out.alpha_composite(im, (SIDE_ORIGIN[0], SIDE_ORIGIN[1] - im.size[1]))
+    return out
+
+
 def side_art(name):
     """The car seen from the side: rows of pens or None, cut to the car,
     outlined in black on its outside."""
-    cells = dither.grade(dither.cell_colours(
-        os.path.join(ROOT, "assets", "cars", "side_%s.png" % name), SIDE_CELLS,
-        under=RGB["G"]))
+    src = (photo_side(name) if name in PHOTOS
+           else os.path.join(ROOT, "assets", "cars", "side_%s.png" % name))
+    cells = dither.grade(dither.cell_colours(src, SIDE_CELLS, under=RGB["G"]))
     rows = mkcar.lone(dither.pattern(cells, RGB, PAIRS, mixed_only="G"))
     used = [y for y, r in enumerate(rows) if r.strip(".")]
     xs = [x for r in rows for x, c in enumerate(r) if c != "."]

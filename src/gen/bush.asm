@@ -104,9 +104,9 @@ bush_reach
     defw bush_tab+0*BUSH_ENTRY,bush_tab+1*BUSH_ENTRY,0,0
     ASSERT hi(bush_reach) == hi($-1)
 BUSH_COUNT    EQU 38
-CAR_Y         EQU 236   ; the car's top line
+CAR_Y         EQU 237   ; the car's top line
 CAR_HALF      EQU 11   ; its half width, bytes
-CAR_TOP       EQU 27   ; its lines from there, drawn whole when it changes
+CAR_TOP       EQU 26   ; its lines from there, drawn whole when it changes
 CAR_HILL_ORG  EQU #F100 ; the views on hills from here (CARn.BIN)
 SPIN_VIEW     EQU 9   ; car_view: spun left in a crash, then right
 SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
@@ -116,30 +116,30 @@ SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
 ;; picked one's over it (CARn.BIN, which alone has the views on hills and
 ;; spun: here the level's, and turning)
 car_views
-    defw #83F7,car_code0
-    defw #83F9,car_code1
-    defw #83F7,car_code2
-    defw #83F7,car_code0
-    defw #83F9,car_code1
-    defw #83F7,car_code2
-    defw #83F7,car_code0
-    defw #83F9,car_code1
-    defw #83F7,car_code2
-    defw #83F9,car_code1
-    defw #83F7,car_code2
+    defw #93F5,car_code0
+    defw #93F3,car_code1
+    defw #93F7,car_code2
+    defw #93F5,car_code0
+    defw #93F3,car_code1
+    defw #93F7,car_code2
+    defw #93F5,car_code0
+    defw #93F3,car_code1
+    defw #93F7,car_code2
+    defw #93F3,car_code1
+    defw #93F7,car_code2
 car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
 ;; per car: its top speed, its acceleration (both 8.8 depth units a
 ;; VSYNC), its steering's and the curves' factors (steer: k, m)
 ;; (scene.py CAR_LEVELS; car_setup)
 car_stats
     defw #0690   ; player: speed 5, acceleration 4, grip 3
-    defb 5,129,64
+    defb 5,65,64
     defw #0690   ; ferrari: speed 5, acceleration 5, grip 2
-    defb 6,129,77
+    defb 6,65,77
     defw #0620   ; lotus: speed 4, acceleration 3, grip 5
-    defb 4,172,48
+    defb 4,86,48
     defw #05B0   ; bmw: speed 3, acceleration 5, grip 4
-    defb 6,172,55
+    defb 6,86,55
 CAR_STATS_LEN EQU 5   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table

@@ -1,24 +1,22 @@
-"""The player's car as a 3D model, and what the other cars' models share
-(tools/cars3d.py, which renders them all: tools/mkcars.py, mkselect.py).
+"""What the cars' 3D models share (tools/cars3d.py builds them and renders
+them all: tools/mkcars.py): the game's pens and camera, the frame's grid,
+curved shapes and the parts made of them.
 
-Run inside Blender 4.2 or later through cars3d.py. build() empties the
-scene and builds the car; camera() and setup() are the game's camera and a
-flat light for it, seen from behind.
+Run inside Blender 4.2 or later through cars3d.py. camera() and setup() are
+the game's camera and a flat light for it, seen from behind.
 
-The model is a low, wide sports car with a wing and fat tyres, pointing
-along +Y, its rear face at y = 0, its body curved: lofted through rounded
-sections from the tail to the nose (Shape, loft), the wheel arches cut into
-it, fenders over the wheels, a bubble of a cabin, sails. Its materials are
-the game's pens (the body shaded in three steps by a light from above and
-behind, the rest flat); cars3d.py gives them real ones.
+A model points along +Y, its rear face at y = 0, its body curved: lofted
+through rounded sections from the tail to the nose (Shape, loft), the wheel
+arches cut into it, fenders over the wheels if it has them, a cabin, sails.
+Its materials are the game's pens (the body shaded in steps by a light from
+above and behind, the rest flat); cars3d.py gives them real ones.
 
 The camera is the game's: level - the horizon is mid-screen - so verticals
 stay vertical, a lens shift bringing the car into the frame - and a little
-above the car. A cell of the
-frame is a mode 0 pixel, twice as wide as a line is high; the frame's
-middle column is the screen's. The car turns about its rear axle: its nose
-goes into the turn, its rear stays about where it is. The tyres stand out
-past the body, with hubs that show when it turns.
+above the car. A cell of the frame is a mode 0 pixel, twice as wide as a
+line is high; the frame's middle column is the screen's. A car turns about
+its rear axle: its nose goes into the turn, its rear stays about where it
+is.
 """
 
 import bisect
@@ -35,19 +33,12 @@ PAL = dict(BLACK=(0, 0, 0), NAVY=(0, 0, 128), WHITE=(255, 255, 255),
 YAW = globals().get("YAW", 10.0)          # degrees, turning left
 ELEV = globals().get("ELEV", 3.0)         # degrees: the camera above the rear's foot
 DIST = globals().get("DIST", 12.0)         # metres behind the rear face
-PIVOT = globals().get("PIVOT", 0.95)       # the yaw turns about (0, PIVOT): the
-                                           # rear axle
-WING = globals().get("WING", 13)           # the wing's bottom line, over the window
-TYRE_OUT = globals().get("TYRE_OUT", 1.04)  # the rear tyres' outer faces (the body
-TYRE_W = globals().get("TYRE_W", 0.34)      # is 2 m wide) and width, metres
-HUBS = globals().get("HUBS", True)          # grey hubs on the tyres' outer faces
-STRAKES = globals().get("STRAKES", True)    # black strakes along the flanks
 SQUASH = 0.46                              # heights x this: the game's car is low
 CELLS = (64, 40)                           # the frame, in cells
 CELL_PX = (16, 8)                          # render pixels a cell (square pixels)
 CAR_CELLS = 36                             # cells over the car's 2 m at yaw 0
-REAR_AXLE = 0.95
-FRONT_AXLE = 3.65
+REAR_AXLE = 0.95                           # metres from the rear face: a model's
+FRONT_AXLE = 3.65                          # own (cars3d.axles)
 
 
 def lin(c):
@@ -187,9 +178,10 @@ def panel(name, mat, x0, x1, z0, z1, parent, depth=0, clip=None):
     return ob
 
 
-def wheel(name, tyre, tread, x, y, r, w, parent, hub=None):
+def wheel(name, tyre, tread, x, y, r, w, parent, hub=None, hub_r=0.55):
     """A tyre, its tread one colour and its sides another - with a hub on
-    its outer side (away from x = 0) if `hub` is a material."""
+    its outer side (away from x = 0) if `hub` is a material, hub_r of its
+    radius."""
     bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=r, depth=w,
                                         location=(x, y, r), rotation=(0, math.pi / 2, 0))
     ob = bpy.context.object
@@ -201,7 +193,7 @@ def wheel(name, tyre, tread, x, y, r, w, parent, hub=None):
     ob.parent = parent
     if hub is not None:
         side = 1 if x > 0 else -1
-        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.55 * r, depth=0.01,
+        bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=hub_r * r, depth=0.01,
                                             location=(x + side * (w / 2 + 0.006), y, r),
                                             rotation=(0, math.pi / 2, 0))
         h = bpy.context.object
@@ -497,117 +489,6 @@ def fenders(name, mat, under, axles, parent, p=3.0):
         ys = stations(y0, y1, 0.03, [ay - R, ay + R])
         for sx in (-1, 1):
             loft(name, [mat, under], sh, ys, parent, cut=cut, well=1, side=sx)
-
-
-def build():
-    for ob in list(bpy.data.objects):
-        bpy.data.objects.remove(ob)
-    for m in list(bpy.data.materials):
-        bpy.data.materials.remove(m)
-
-    body = toon("BODY", [(0.0, "CAR_DARK"), (0.35, "RED"), (0.97, "ORANGE")])
-    k, d, w = flat("BLACK"), flat("CAR_DARK"), flat("WHITE")
-    r, o, y = flat("RED"), flat("ORANGE"), flat("YELLOW")
-    n, gl = flat("NAVY"), glass()
-
-    car = bpy.data.objects.new("Car", None)
-    bpy.context.collection.objects.link(car)
-
-    # the body: one loft from the rear face (y = 0) to the nose, rounded in
-    # plan at the tail and the nose; its top the deck - a line over the rear
-    # face - the cabin's sill, the bonnet curving down to the nose; wide
-    # hips, a waist at the doors; the wheel arches cut into it, fenders
-    # swelling over them
-    body_sh = Shape(
-        [(0, 0.9), (0.06, 0.955), (0.18, 0.985), (0.4, 1.0), (1.5, 1.0), (2.4, 0.965),
-         (3.4, 0.975), (4.0, 0.94), (4.25, 0.84), (4.4, 0.66), (4.45, 0.5)],
-        Z0,
-        [(0, zl(9.3)), (0.1, zl(9.85)), (0.25, zl(10)), (1.7, zl(10)), (3.1, zl(9)),
-         (3.9, zl(7.2)), (4.3, zl(5.6)), (4.45, zl(3.6))],
-        [(0, 5.5), (0.6, 5.0), (3.5, 4.5), (4.45, 2.6)])
-    cut, edges = arches([(REAR_AXLE, REAR_R), (FRONT_AXLE, FRONT_R)])
-    loft("body", [body, k], body_sh, stations(0.0, 4.45, 0.04, edges), car,
-         cut=cut, notch=0.62, well=1)
-    tail = body_sh.outline(0.0, 0.02)
-    rx, fx = TYRE_OUT - TYRE_W / 2, TYRE_OUT - 0.04 - TYRE_W * 0.4
-    fenders("fender", body, k, [
-        (REAR_AXLE, REAR_R, rx, TYRE_W / 2, (zl(9.3), zl(9.9), zl(9.3)), (0.3, 0.3)),
-        (FRONT_AXLE, FRONT_R, fx, TYRE_W * 0.4 + 0.02, (zl(8.6), zl(8.6), zl(4.2)),
-         (0.3, 0.12))], car)
-
-    def mirrored(name, mat, c0, c1, n0, n1, depth=0):
-        """A panel over columns c0..c1 and its mirror image, on the rear face."""
-        panel(name, mat, col(c0), col(c1), zl(n0), zl(n1), car, depth, tail)
-        panel(name, mat, -col(c1), -col(c0), zl(n0), zl(n1), car, depth, tail)
-
-    # the cabin: glass all round under a body-coloured roof, a rounded
-    # bubble; the sails either side of the rear window, from the roof down
-    # to the tail
-    def sill_line(y):
-        return body_sh.top(y) - 0.03
-    cabin = Shape([(1.62, 0.48), (2.3, 0.6), (3.2, 0.68)], sill_line,
-                  [(1.62, zl(10.2)), (2.1, zl(12.7)), (2.45, zl(13.15)), (2.8, zl(12.9)),
-                   (3.2, zl(9.0))], 2.6)
-    loft("cabin", [gl, body], cabin, stations(1.62, 3.2, 0.03), car,
-         slot=lambda y, x, z, u: 1 if 2.12 < y < 2.82 and abs(u - 0.5) < 0.2 else 0)
-    sail = Shape([(0.25, 0.15), (2.15, 0.08)], sill_line,
-                 [(0.25, zl(10.5)), (1.3, zl(11.3)), (2.15, zl(12.7))], 4.0,
-                 [(0.25, 0.8), (2.15, 0.5)])
-    for sx in (-1, 1):
-        loft("buttress", [body], sail, stations(0.25, 2.15, 0.05), car, side=sx)
-    # the wing on two pylons, four lines over the roof: black, red, an
-    # orange stripe, black
-    box("wing", body, col(4), -col(4), 0.0, 0.42, zl(WING), zl(WING + 4), car)
-    panel("wing_k", k, col(4), -col(4), zl(WING), zl(WING + 4), car)
-    panel("wing_r", r, col(5), -col(5), zl(WING + 1), zl(WING + 2), car, 1)
-    panel("wing_o", o, col(5), -col(5), zl(WING + 2), zl(WING + 3), car, 1)
-    for sx in (-1, 1):
-        box("pylon", k, sx * col(9) - 0.03, sx * col(9) + 0.03, 0.1, 0.3, zl(9.5), zl(WING), car)
-    # the rear face, from the top: black slats over two rows of lights (red,
-    # red, amber, a yellow lamp, amber; the middle dark), the plate in a
-    # black frame on a dark line - cut to the face's rounded outline
-    panel("grille", k, col(2), -col(2), zl(2), zl(7), car, 0, tail)
-    for row in (3, 5):
-        panel("middle", d, col(9), -col(9), zl(row), zl(row + 1), car, 1, tail)
-        for name, mat, c0, c1 in (("light", r, 3, 5), ("amber", o, 5, 6), ("lamp", y, 6, 7),
-                                  ("amber", o, 7, 8)):
-            mirrored(name, mat, c0, c1, row, row + 1, 1)
-    panel("band", d, col(2), -col(2), zl(0), zl(1), car, 0, tail)
-    panel("frame", k, col(13), -col(13), zl(0), zl(2), car, 1)
-    panel("plate", w, col(14), -col(14), zl(0), zl(2), car, 2)
-    # under the body: the diffuser between the tyres, two exhausts
-    panel("diffuser", k, col(6), -col(6), LZ, Z0, car)
-    box("under", k, col(6), -col(6), 0.0, 4.1, LZ, Z0, car)
-    for sx in (-1, 1):
-        bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=CX, depth=0.12,
-                                            location=(sx * (col(9) + CX), -0.05, 2 * LZ),
-                                            rotation=(math.pi / 2, 0, 0))
-        ex = bpy.context.object
-        ex.name = "exhaust"
-        ex.data.materials.append(w)
-        ex.parent = car
-    # fat tyres behind, out to the body's edges or past them; narrower ones
-    # in front; hubs that show when the car is seen turning
-    hub = flat("GREY") if HUBS else None
-    for sx in (-1, 1):
-        wheel("tyre_r", k, n, sx * (TYRE_OUT - TYRE_W / 2), REAR_AXLE, 0.34, TYRE_W, car, hub)
-        wheel("tyre_f", k, n, sx * (TYRE_OUT - 0.04 - TYRE_W * 0.4), FRONT_AXLE, 0.31,
-              TYRE_W * 0.8, car, hub)
-    # along each flank: a black sill between the arches and behind the
-    # rear one, strakes in front of the rear wheel
-    r_end = REAR_AXLE + REAR_R + ARCH_GAP
-    f_start = FRONT_AXLE - FRONT_R - ARCH_GAP
-    for sx in (-1, 1):
-        for y0, y1 in ((0.1, REAR_AXLE - REAR_R - ARCH_GAP), (r_end, f_start)):
-            strip("sill", k, body_sh, stations(y0 + 0.01, y1 - 0.01, 0.05), Z0 + NOTCH_MIN,
-                  zl(1), car, side=sx)
-        if STRAKES:
-            for row in (3, 5, 7):
-                strip("strake", k, body_sh, stations(r_end + 0.08, 3.0, 0.05), zl(row),
-                      zl(row + 1), car, side=sx)
-
-    car.scale = (1, 1, SQUASH)
-    return car
 
 
 def camera():

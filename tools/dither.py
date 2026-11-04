@@ -33,8 +33,9 @@ LIN = [_lin(float(i)) for i in range(256)]
 
 
 def cell_colours(path, frame, cell_px=CELL_PX, under=ASPHALT):
-    """Rows of (r, g, b) over `under`, or None for a clear cell."""
-    im = Image.open(path).convert("RGBA")
+    """Rows of (r, g, b) over `under`, or None for a clear cell; `path` a
+    render's file, or an image."""
+    im = (path if isinstance(path, Image.Image) else Image.open(path)).convert("RGBA")
     width = frame[0] * cell_px[0]
     assert im.size == (width, frame[1] * cell_px[1]), (path, im.size)
     data = list(im.getdata())

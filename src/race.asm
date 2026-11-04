@@ -266,6 +266,15 @@ stage_id    defb 0              ; which of tools/course.py's STAGES the stage
 
     REC_END RACE_P2,96
 ;; ---------------------------------------------------------------------------
+;; steer's push out of a curve of level 1-7 (game.asm): 2 L (1 + L / 14),
+;; rounded - a sharper curve's more than its level, up to half at the
+;; sharpest
+    REC_TAIL push_lv,rec_SND_P6_end
+push_levels defb 2,5,7,10,14,17,21
+    ASSERT hi(push_levels) == hi(push_levels+CURVE_K-1)
+    REC_TAIL_END push_lv,rec_SND_P6_end,SND_P6+SND_PIECE
+
+;; ---------------------------------------------------------------------------
 ;; TOTAL TIME's ' and " - draw_static's (init.asm), once: past the HUD's words
 ;; and what lbl_draw works them out in (labels.asm), where nothing draws till
 ;; the first picture

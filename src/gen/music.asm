@@ -2,29 +2,28 @@
 ;; The race's music (see mksound.py), in SOUND.BIN's pieces after the
 ;; code: records as sound.asm's.
 
-ROW_TICKS   EQU 6   ; the player's updates a row (an eighth note)
-LEAD_V0     EQU 13
-LEAD_DEC    EQU 1
+ROW_TICKS   EQU 5   ; the player's updates a row (an eighth note)
+LEAD_V0     EQU 14
+LEAD_DEC    EQU 2
 LEAD_SUS    EQU 9
 BASS_V0     EQU 13
 BASS_DEC    EQU 3
-BASS_SUS    EQU 7
+BASS_SUS    EQU 5
 
     defw SND_P7,mus_d0_end-SND_P7
 mus_d0_ph
     ORG SND_P7,mus_d0_ph
 snd_periods   ; the tune's notes' periods, lowest first
-    defw 956,758,716,638,568,478,379,358,319,284,159,142
-    defw 127,119,106,95,89,80,71,63,60
-    ASSERT hi(snd_periods) == hi(snd_periods+41)
+    defw 956,758,716,638,568,478,379,358,319,284,159,150
+    defw 142,127,119,106,95,89,80,75,71,63,60,53
+    defw 47
+    ASSERT hi(snd_periods) == hi(snd_periods+49)
 mus_lead   ; the lead's bars (channel A)
-    defw mus_p0,mus_p1,mus_p2,mus_p3,mus_p0,mus_p4,mus_p5,mus_p6
-    defw mus_p7,mus_p8,mus_p9,mus_p10,mus_p11,mus_p12,mus_p13,mus_p14
+    defw mus_p0,mus_p1,mus_p2,mus_p3,mus_p0,mus_p1,mus_p2,mus_p4
+    defw mus_p5,mus_p6,mus_p7,mus_p8,mus_p9,mus_p10,mus_p11,mus_p12
     defw #FFFF
 mus_p0
-    defb 32,0,30,28,0,30,32,36
-mus_p1
-    defb 38,0,36,32,0,0,1,0
+    defb 26,26,34,26,32,26,30,26
 mus_d0_end
     ASSERT mus_d0_end <= SND_P7+SND_PIECE
     ORG mus_d0_ph+mus_d0_end-SND_P7
@@ -32,51 +31,49 @@ mus_d0_end
 mus_d1_ph
     ORG SND_P8,mus_d1_ph
 mus_bass   ; the bass's bars (channel B)
-    defw mus_p15,mus_p16,mus_p17,mus_p18,mus_p15,mus_p16,mus_p17,mus_p18
-    defw mus_p17,mus_p18,mus_p19,mus_p16,mus_p17,mus_p18,mus_p15,mus_p18
+    defw mus_p13,mus_p14,mus_p15,mus_p16,mus_p13,mus_p14,mus_p15,mus_p16
+    defw mus_p14,mus_p15,mus_p17,mus_p16,mus_p14,mus_p15,mus_p13,mus_p16
     defw #FFFF
+mus_p1
+    defb 26,26,36,26,34,26,30,26
 mus_p2
-    defb 34,0,32,30,0,28,30,34
+    defb 22,22,32,22,30,22,28,22
 mus_p3
-    defb 32,0,30,0,26,0,1,0
+    defb 24,28,34,40,44,40,34,28
 mus_p4
-    defb 38,0,42,40,38,36,32,0
+    defb 34,0,40,0,44,0,50,1
 mus_p5
-    defb 34,38,36,34,32,30,28,0
+    defb 46,0,0,42,0,0,36,0
 mus_p6
-    defb 30,0,0,0,1,0,22,26
+    defb 48,0,0,44,0,0,38,0
 mus_p7
-    defb 24,28,34,0,32,34,38,0
-mus_p8
-    defb 36,0,34,32,30,0,1,0
+    defb 50,0,0,46,0,0,38,0
 mus_d1_end
     ASSERT mus_d1_end <= SND_P8+SND_PIECE
     ORG mus_d1_ph+mus_d1_end-SND_P8
     defw SND_P9,mus_d2_end-SND_P9
 mus_d2_ph
     ORG SND_P9,mus_d2_ph
+mus_p8
+    defb 44,0,0,40,0,0,34,0
 mus_p9
-    defb 32,36,40,0,38,36,32,0
+    defb 42,46,36,42,46,0,42,0
 mus_p10
-    defb 24,28,32,0,30,28,26,24
+    defb 44,48,38,44,48,0,44,0
 mus_p11
-    defb 34,0,36,38,0,36,34,0
+    defb 46,44,42,38,42,0,34,0
 mus_p12
-    defb 32,0,30,0,36,0,30,0
+    defb 40,0,44,0,50,0,1,0
 mus_p13
-    defb 32,36,42,0,40,38,36,0
+    defb 10,10,20,10,10,10,20,10
 mus_p14
-    defb 30,0,0,32,30,0,26,1
+    defb 6,6,16,6,6,6,16,6
 mus_p15
-    defb 2,12,2,12,2,12,2,12
+    defb 8,8,18,8,8,8,18,8
 mus_p16
-    defb 10,20,10,20,10,20,10,20
+    defb 4,4,14,4,4,4,14,4
 mus_p17
-    defb 6,16,6,16,6,16,6,16
-mus_p18
-    defb 8,18,8,18,8,18,8,18
-mus_p19
-    defb 4,14,4,14,4,14,4,14
+    defb 2,2,12,2,2,2,12,2
 mus_d2_end
     ASSERT mus_d2_end <= SND_P9+SND_PIECE
     ORG mus_d2_ph+mus_d2_end-SND_P9

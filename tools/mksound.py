@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """The race's music, as src/sound.asm plays it: src/gen/music.asm.
 
-An original tune, 16 bars in C major (I-vi-IV-V, then a bridge), at 125
-beats a minute: the lead on the PSG's channel A, the bass on B - channel C
-is the engine's and the effects'. A row is an eighth note, ROW_TICKS of the
-player's updates (25 a second); a pattern is a bar, 8 rows, a byte a row:
+An original tune, 16 bars in A minor at 150 beats a minute, for action:
+a riff over a pedal note (i-VI-VII-V, twice), then a chorus in a 3-3-2
+rhythm climbing the chords' notes (VI-VII-III-V, VI-VII-i-V); the bass
+drives in eighths, an octave up on the second and fourth beats (where a
+snare would be). The lead is on the PSG's channel A, the bass on B -
+channel C is the engine's and the effects'. A row is an eighth note,
+ROW_TICKS of the player's updates (25 a second); a pattern is a bar, 8
+rows, a byte a row:
 
     0           hold (the note goes on, its volume decaying)
     1           off
@@ -23,37 +27,38 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-ROW_TICKS = 6
+ROW_TICKS = 5
 NOTES = {"C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5,
          "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10, "Bb": 10,
          "B": 11}
 
 LEAD = [
-    "E5 .  D5 C5 .  D5 E5 G5",      # C
-    "A5 .  G5 E5 .  .  -  . ",      # Am
-    "F5 .  E5 D5 .  C5 D5 F5",      # F
-    "E5 .  D5 .  B4 .  -  . ",      # G
-    "E5 .  D5 C5 .  D5 E5 G5",      # C
-    "A5 .  C6 B5 A5 G5 E5 . ",      # Am
-    "F5 A5 G5 F5 E5 D5 C5 . ",      # F
-    "D5 .  .  .  -  .  G4 B4",      # G
-    "A4 C5 F5 .  E5 F5 A5 . ",      # F
-    "G5 .  F5 E5 D5 .  -  . ",      # G
-    "E5 G5 B5 .  A5 G5 E5 . ",      # Em
-    "A4 C5 E5 .  D5 C5 B4 A4",      # Am
-    "F5 .  G5 A5 .  G5 F5 . ",      # F
-    "E5 .  D5 .  G5 .  D5 . ",      # G
-    "E5 G5 C6 .  B5 A5 G5 . ",      # C
-    "D5 .  .  E5 D5 .  B4 - ",      # G
+    "A4  A4  E5  A4  D5  A4  C5  A4 ",     # Am   the riff, over A4
+    "A4  A4  F5  A4  E5  A4  C5  A4 ",     # F
+    "G4  G4  D5  G4  C5  G4  B4  G4 ",     # G    ... over G4
+    "G#4 B4  E5  G#5 B5  G#5 E5  B4 ",     # E    up and down its notes
+    "A4  A4  E5  A4  D5  A4  C5  A4 ",     # Am
+    "A4  A4  F5  A4  E5  A4  C5  A4 ",     # F
+    "G4  G4  D5  G4  C5  G4  B4  G4 ",     # G
+    "E5  .   G#5 .   B5  .   E6  -  ",     # E    up into the chorus
+    "C6  .   .   A5  .   .   F5  .  ",     # F    the chorus: 3-3-2
+    "D6  .   .   B5  .   .   G5  .  ",     # G
+    "E6  .   .   C6  .   .   G5  .  ",     # C
+    "B5  .   .   G#5 .   .   E5  .  ",     # E
+    "A5  C6  F5  A5  C6  .   A5  .  ",     # F
+    "B5  D6  G5  B5  D6  .   B5  .  ",     # G
+    "C6  B5  A5  G5  A5  .   E5  .  ",     # Am
+    "G#5 .   B5  .   E6  .   -   .  ",     # E    and back to the riff
 ]
-CHORDS = ["C", "A", "F", "G", "C", "A", "F", "G",
-          "F", "G", "E", "A", "F", "G", "C", "G"]
-# the bass: the chord's root, an octave apart on every other eighth
-BASS = {c: " ".join("%s%d" % (c, 2 + (i & 1)) for i in range(8)) for c in set(CHORDS)}
+CHORDS = ["A", "F", "G", "E", "A", "F", "G", "E",
+          "F", "G", "C", "E", "F", "G", "A", "E"]
+# the bass: the chord's root in eighths, an octave up on beats 2 and 4
+BASS = {c: " ".join("%s%d" % (c, 3 if i in (2, 6) else 2) for i in range(8))
+        for c in set(CHORDS)}
 
 # instruments: volume at a note, its fall an update, the volume it stays at
-LEAD_ENV = (13, 1, 9)
-BASS_ENV = (13, 3, 7)
+LEAD_ENV = (14, 2, 9)
+BASS_ENV = (13, 3, 5)
 
 PIECE = 96
 

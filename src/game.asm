@@ -478,7 +478,7 @@ STEER_RAMP  EQU 28              ; the most the wheel's turn and the push
                                 ; (8.8 pairs a picture) move a picture: Out
                                 ; Run's 64 and 5 a step, ~10.9 steps a second
 STEER_SPEED EQU #0400           ; slower, the wheel moves the car less
-CAR_STEER_K EQU 129             ; (the first car's; car_setup: each its own)
+CAR_STEER_K EQU 65              ; (the first car's; car_setup: each its own)
 CAR_PUSH_M  EQU 64
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
                                 ; its base line on the car's lower half...
@@ -598,8 +598,9 @@ steer_sign
 steer_moved
     push hl
 
-    ; HL = the push asked: |level| x (speed / 16 x m) / 256, outwards - m
-    ; the car's
+    ; HL = the push asked: |level| (1 + |level| / 14) x (speed / 16 x m) /
+    ; 256, outwards - m the car's; a sharper curve's more, by up to half at
+    ; the sharpest (push_levels: twice that factor)
     ld hl,(speed)
     add hl,hl
     add hl,hl
@@ -608,7 +609,9 @@ steer_moved
 steer_m
     ld e,CAR_PUSH_M             ; (car_setup: the car's)
     call mul8
-    ex de,hl
+    srl h
+    rr l
+    ex de,hl                    ; DE = speed / 16 x m / 2
     ld hl,0
     ld a,(road_curve)
     or a
@@ -616,12 +619,18 @@ steer_m
     ld c,a
     jp p,$+5
     neg
-    ld b,a
+    add a,lo(push_levels-1)     ; (race.asm)
+    ld l,a
+    ld h,hi(push_levels)
+    ld b,(hl)
+    ld hl,0
+    xor a
 steer_pmul
-    add hl,de
+    add hl,de                   ; (A: the bits over 16)
+    adc a,0
     djnz steer_pmul
     ld l,h
-    ld h,0
+    ld h,a
     bit 7,c
     call nz,neg_hl
 steer_pushed
