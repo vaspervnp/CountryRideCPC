@@ -901,7 +901,9 @@ def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0):
 from carsart import GAME_ART, GAME_GROUND  # noqa: E402
 
 CARS = ["player", "ferrari", "lotus", "bmw"]    # car_id 0-3
-CAR_GROUND = SCR_H - 13         # the line its wheels stand on, on the level
+CAR_GROUND = SCR_H - 17         # the line its wheels stand on, on the level
+                                # (4 lines higher since 2026-11-05: a monitor's
+                                # bottom edge hid its rear wheels)
 ROAD_SHOWN_Y = ROAD_Y & ~7      # the road part's first line the CRTC shows:
                                 # the lines above hold the car's code
                                 # (tools/mkbush.py HILL_RUNS)

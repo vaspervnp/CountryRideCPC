@@ -33,14 +33,14 @@ LIN = [_lin(float(i)) for i in range(256)]
 
 
 def cell_colours(path, frame, cell_px=CELL_PX, under=ASPHALT):
-    """Rows of (r, g, b) over `under`, or None for a clear cell; `path` a
-    render's file, or an image."""
+    """Rows of (r, g, b) over `under` - or, if None, of what covers the cell
+    alone - or None for a clear cell; `path` a render's file, or an image."""
     im = (path if isinstance(path, Image.Image) else Image.open(path)).convert("RGBA")
     width = frame[0] * cell_px[0]
     assert im.size == (width, frame[1] * cell_px[1]), (path, im.size)
     data = list(im.getdata())
     n = cell_px[0] * cell_px[1]
-    ul = [_lin(float(c)) for c in under]
+    ul = [_lin(float(c)) for c in under or (0, 0, 0)]
     sums = [[[0.0] * 4 for _ in range(frame[0])] for _ in range(frame[1])]
     for i, (pr, pg, pb, pa) in enumerate(data):
         if not pa:
@@ -60,6 +60,9 @@ def cell_colours(path, frame, cell_px=CELL_PX, under=ASPHALT):
             cover = a / n
             if cover < 0.5:
                 row.append(None)
+                continue
+            if under is None:
+                row.append(tuple(_srgb(c / a) for c in (r, g, b)))
                 continue
             # the pixels are premultiplied here: what is left shows the grey
             row.append(tuple(_srgb(c / n + u * (1 - cover)) for c, u in zip((r, g, b), ul)))

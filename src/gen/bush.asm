@@ -104,7 +104,7 @@ bush_reach
     defw bush_tab+0*BUSH_ENTRY,bush_tab+1*BUSH_ENTRY,0,0
     ASSERT hi(bush_reach) == hi($-1)
 BUSH_COUNT    EQU 38
-CAR_Y         EQU 237   ; the car's top line
+CAR_Y         EQU 233   ; the car's top line
 CAR_HALF      EQU 11   ; its half width, bytes
 CAR_TOP       EQU 26   ; its lines from there, drawn whole when it changes
 CAR_HILL_ORG  EQU #F100 ; the views on hills from here (CARn.BIN)
@@ -116,17 +116,17 @@ SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
 ;; picked one's over it (CARn.BIN, which alone has the views on hills and
 ;; spun: here the level's, and turning)
 car_views
-    defw #93F5,car_code0
-    defw #93F3,car_code1
-    defw #93F7,car_code2
-    defw #93F5,car_code0
-    defw #93F3,car_code1
-    defw #93F7,car_code2
-    defw #93F5,car_code0
-    defw #93F3,car_code1
-    defw #93F7,car_code2
-    defw #93F3,car_code1
-    defw #93F7,car_code2
+    defw #B395,car_code0
+    defw #B393,car_code1
+    defw #B397,car_code2
+    defw #B395,car_code0
+    defw #B393,car_code1
+    defw #B397,car_code2
+    defw #B395,car_code0
+    defw #B393,car_code1
+    defw #B397,car_code2
+    defw #B393,car_code1
+    defw #B397,car_code2
 car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
 ;; per car: its top speed, its acceleration (both 8.8 depth units a
 ;; VSYNC), its steering's and the curves' factors (steer: k, m)

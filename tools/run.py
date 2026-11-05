@@ -240,8 +240,9 @@ def cmd_shots():
 def shots_props(docs):
     """A screenshot of each kind of prop (src/props.asm) near, beside the
     road: the race driven as in shots_stages; a picture with the prop
-    130-200 depth units ahead, its sprite all on the screen, the car in its
-    lane, taken as it is shown."""
+    130-200 depth units ahead, its sprite all on the screen, taken as it is
+    shown (the car kept in a lane left of the middle, but wherever it is:
+    the curves carry it out, and the stumps come where it is off it)."""
     import scene
     g = Game()
     c, S = g.c, g.sym
@@ -267,8 +268,8 @@ def shots_props(docs):
         if prop is None:
             continue
         kind = "curve" if prop[1] == "curve_r" else prop[1]
-        if kind in taken or not 130 <= prop[0] < 200 or abs(x + 6) > 3:
-            continue                    # (and the car in its lane)
+        if kind in taken or not 130 <= prop[0] < 200:
+            continue
         hill = _signed(g.byte("HILL"))
         hill = min(scene.level_hill(scene.hill_level(hill)), g.sym["HILL_MAX"])
         item = scene.prop_item(prop, hill, _signed(g.byte("ROAD_CURVE")),

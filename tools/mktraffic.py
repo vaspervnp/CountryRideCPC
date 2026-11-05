@@ -49,7 +49,10 @@ CELLS, CELL_PX = mkcar.CELLS, mkcar.CELL_PX
 # the pens for what is not paint: the cars' own, but black
 LETTERS = {c: p for c, p in mkcars.LETTERS.items() if c != "K"}
 PALETTE = {c: pen_rgb(PEN[p]) for c, p in LETTERS.items()}
-PAIRS = [p for p in mkcars.PAIRS if "K" not in p]
+# the pairs that may mix: neighbours on the reds', the blues' and the greys'
+# ramps
+PAIRS = ["DR", "RO", "OY", "YW", "RW", "NB", "BS", "SH", "HW", "SP", "PW", "GW", "GP",
+         "NG"]
 PAINT = "K"
 
 

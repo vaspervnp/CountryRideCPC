@@ -283,24 +283,29 @@ The drawings and photographs themselves are not in the repository. The
 ROSSO GT's picture is an image made by an AI (it was found as "Ferrari
 Drago Rosso"), of no real car: from behind, where the race sees it, it is
 a Testarossa. They are brought
-to mode 0 by `tools/dither.py`: each mode 0 pixel takes the mean colour of
-the 128 render pixels under it, over the asphalt's grey, made more
-saturated and its darks darker, and then the nearest pen - or, where two
-neighbouring pens of a ramp (dark red, red, orange, yellow, white; black,
-navy, blue, sky, pastel, white; the greys) mixed in a checkerboard come
-clearly nearer, that checkerboard: CPC dithering, flat where the paint is
-flat. The asphalt's grey only in a checkerboard, never alone: a grey pixel
-would look like a hole. Each car has nine views - on the level, going
+to mode 0 in flat colours, with no dithering and no outline (since
+2026-11-05; `tools/mkcars.py` `flat_pens`, `tools/dither.py`): each mode 0
+pixel takes the mean colour of the render pixels of the car under it -
+half of them at least, else it is clear - made more saturated and its
+darks darker, and then the nearest of its car's pens: its paint's ramp
+(dark red, red, orange, yellow, white), black, navy for the glass, and for
+the white car pastel for its shade - never the asphalt's grey, which would
+look like a hole, and no blues on the red and the yellow cars. On those
+the paint greyed or blued by the sky's reflections, and the colours of
+about its hue, are made its hue again, as bright (`repaint`): else the
+reflections edged the cars in blue and lit red went orange. Each car has nine views - on the level, going
 uphill and going downhill (pitched 8 degrees before the car is squashed as
 low as the game draws it), each straight, turning left and turning right
 (the left view mirrored) - and two for a crash: spun 30 degrees about its
 middle, its tail swung out (rendered in a frame 80 pixels wide, moved 4
 pixels left to keep its box near the others'), with dust at its rear
-wheels (white at the clouds' hearts, thinning out under the car), and spun
+wheels (white at the clouds' hearts, specks of it further out), and spun
 the other way mirrored - in `tools/carsart.py` (`tools/mkcars.py`, which
 also draws `build/cars-sheet.png`). In the race the car is seen uphill
 where the road ahead climbs - the hill 20 or more into a dip - and
-downhill where it falls away, over a crest (`car_lines`).
+downhill where it falls away, over a crest (`car_lines`). On the level its
+wheels stand on line 255 (`scene.CAR_GROUND`), 4 lines higher since
+2026-11-05: a monitor's bottom edge hid its rear wheels.
 
 On the select screen the cars are not their models' renders but pictures
 of the cars they are modelled on (since 2026-11-04; `tools/mkselect.py`
@@ -875,7 +880,8 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
 - **A bush at speed: thrown up.** At `JUMP_SPEED` (4/5 of the top speed)
   or faster the crash throws the car up as it spins, a character row - 8
   lines - at a time, as its views' code is made for its rows (`car_draw`
-  starts it higher: `car_raise`): up to 6 rows, 48 lines, in 6 pictures,
+  starts it higher: `car_raise`): up to 5 rows, 40 lines (6, 48, until
+  the car stood 4 lines higher, 2026-11-05), in 6 pictures,
   held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
   its shadow on the road under it, three black lines, smaller the higher
   it is, and a thud as it comes down (`car_shadow`). Never higher than the
@@ -969,8 +975,8 @@ and 1.1 ms when every register was compared every time.
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
 crests, dips and curves, from the flip that starts a picture to the next
-flip being asked for, a picture takes about 26.2 ms of its 40 ms; 26.5 ms
-with the player not steering, the curves carrying the car out, and 28.5 ms
+flip being asked for, a picture takes about 26.2 ms of its 40 ms; 26.7 ms
+with the player not steering, the curves carrying the car out, and 28.6 ms
 steering from side to side (at the top speed of 6.6 depth units a VSYNC;
 with the stripes twice as long, until 2026-11-05, 23.4, 24.8 and 27.0 ms -
 now more lines' grass changes; with the horizon higher, 27.1 and 26.7 ms,
@@ -995,7 +1001,7 @@ steering or steering from side to side: the worst takes 37.6 ms, with the
 traffic, the props and the sound (Steering in numbers, below). Over the
 race's five stages, driven by the autopilot in each of the four cars and
 zigzagging from side to side with the keys, with the music, none does
-either: the worst takes 38.6 ms - a prop is left out of 37 to 76 of each
+either: the worst takes 39.3 ms - a prop is left out of 37 to 76 of each
 race's ~6100 pictures, which were late already when it came to it (7 to
 18 before the sound; 5 to 52 with it, the worst 39.3 ms, before a near
 one needed the picture an interrupt earlier).
@@ -1282,7 +1288,7 @@ tools/
                 side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
-  mkcars.py     the cars' views as the game's pens -> tools/carsart.py
+  mkcars.py     the cars' views in the game's pens, flat -> tools/carsart.py
   mkselect.py   the title and the screen the car is picked on, the cars
                 from their pictures
                 -> src/gen/select.scr
