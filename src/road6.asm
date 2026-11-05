@@ -19,28 +19,9 @@ rp_mode_set
     ld a,(road_x)                       ; D, E = the least and greatest
     ld d,a                              ; road_x now (all of the road is
     ld e,a                              ; there)
-    ld a,(rp_cache)
-    or a
-    jr z,rp_mode_xk
-    ld a,(rd_n2)                        ; B, C: the least and greatest curve
-                                        ; level a group can be at
-    or a
-    jr z,rp_mode_xk
-    ld a,(rd_kdir)
-rp_mode_xk                              ; (A: 0 if none behind)
-    ld h,a
-    ld a,(road_curve)
-    ld b,a
-    ld c,a
-    ld a,h
-    or a
-    jr z,rp_mode_k
-    jp m,rp_mode_kl
-    dec b
-    jr rp_mode_k
-rp_mode_kl
-    inc c
-rp_mode_k
+    ld a,(road_curve)                   ; B, C: the least and greatest curve
+    ld b,a                              ; level a group can be at (all of
+    ld c,a                              ; them at it: cache_kstep)
     ld hl,(rp_vars)                     ; this buffer's then, now's kept
     ld a,rp_xmin-rp_level
     add a,l

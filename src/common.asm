@@ -527,17 +527,8 @@ rp_seg_set
 ;; shows another row needs - 3 + |curve level| / 2 pairs, one more with
 ;; road_x 17 or more either way (tools: the edges of the rows a line can
 ;; show then and now, the hill RP_HILL_STEP levels or less apart) - and
-;; RP_HILL_M at least. The far lines get it too (rp_far_hfl) - unless the
-;; cache is still catching up with the curve level, which can move them
-;; further.
+;; RP_HILL_M at least. The far lines get it too (rp_far_hfl).
 rp_far_m
-    ld a,(rp_cache)
-    or a
-    jr z,rp_far_m_k
-    ld a,(rd_n2)
-    or a
-    jr nz,rp_far_m_h
-rp_far_m_k
     ld a,2
     ld (rp_far_hfl+1),a
     ld a,(road_curve)
@@ -554,7 +545,6 @@ rp_far_m_k
     sbc a,-1
     cp RP_HILL_M
     jr nc,rp_far_m_bc
-rp_far_m_h
     ld a,RP_HILL_M
 rp_far_m_bc
     ld b,a

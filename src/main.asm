@@ -51,8 +51,9 @@ FRAG_ST14   EQU #7800
 FRAG_ST15   EQU #7800+FRAG_LEN
 
 ;; ---------------------------------------------------------------------------
-;; bank 4: band A - the templates in #4000-#5FFF, the cores from #6000
-;; (road_draw tells a band A template from a band B one by bit 13)
+;; bank 4: band A - the ground's template at #4000 (free after it), the
+;; cache set at #5E00, the cores from #6000 (road_draw tells a band A
+;; template from a band B one by bit 13)
 ;; ---------------------------------------------------------------------------
     BANK
     ORG TMPL_A
@@ -69,7 +70,8 @@ roada_end
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
-;; bank 5: band B - the cores in #4000-#5FFF, the templates from #6000
+;; bank 5: band B - the cores in #4000-#5FFF, the cache's per group arrays
+;; from #6000 (free after them), the cache set at #7E00
 ;; ---------------------------------------------------------------------------
     BANK
     ORG CORES_B
@@ -81,7 +83,7 @@ roadb_start
     ORG TMPL_B
     INCLUDE "gen/roadtmplb.asm"
 roadb_end
-    ASSERT roadb_end <= #8000
+    ASSERT roadb_end <= CACHE_B
     SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
@@ -206,6 +208,7 @@ race_end
     SAVE "SELECT.SCR",#C000,#4000,DSK,"build/countryride.dsk"
 
     ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
+    ASSERT TR_TOPS == 1 && TR_BOTTOMS == 2              ; (traffic.asm: tp_new)
     ASSERT stage_id < #4000 || stage_id >= #8000 && stage_id < #C000
                                             ; (... mapped in RAM_C6 too)
     PRINT "bank 4 (ROADA.BIN): ",{hex}roada_end-#4000," bytes"

@@ -10,72 +10,52 @@ TR_ZNEARSIZE EQU 120   ; nearer than this, a car is at a near size
 ;; per size: its width (bytes), its lines, its top's lines, its first
 ;; piece's record (tr_pieces)
 tr_sinfo
-    defb 18,24,10,0   ; size 0: 36 x 24 pixels
-    defb 16,21,10,25   ; size 1: 32 x 21 pixels
-    defb 14,18,9,50   ; size 2: 28 x 18 pixels
-    defb 12,15,8,75   ; size 3: 24 x 15 pixels
-    defb 10,13,6,85   ; size 4: 20 x 13 pixels
-    defb 8,10,5,95   ; size 5: 16 x 10 pixels
-    defb 6,7,3,105   ; size 6: 12 x 7 pixels
-    defb 4,5,2,115   ; size 7: 8 x 5 pixels
+    defb 18,22,8,0   ; size 0: 36 x 22 pixels
+    defb 16,19,8,15   ; size 1: 32 x 19 pixels
+    defb 14,16,7,30   ; size 2: 28 x 16 pixels
+    defb 12,13,6,45   ; size 3: 24 x 13 pixels
+    defb 10,12,5,50   ; size 4: 20 x 12 pixels
+    defb 8,9,4,55   ; size 5: 16 x 9 pixels
+    defb 6,7,3,60   ; size 6: 12 x 7 pixels
+    defb 4,5,2,65   ; size 7: 8 x 5 pixels
 TR_SINFO_LEN EQU 4
 
 ;; per piece: its code, its RAM configuration (0: any), the lines before
 ;; its first (from its top), where its first line's run ends (bytes from
-;; the car's left): a near size's closed and open tops then its sport,
-;; saloon and GT bottoms; a further size's closed and open whole cars
+;; the car's left): a near size's tops (mktraffic.py TOPS) then its
+;; bottoms (BOTTOMS); a further size's whole cars, one a top
 tr_pieces
     defw tr_s0_closed
-    defb RAM_C6,2,13   ; 150 bytes, 408 us
-    defw tr_s0_open
-    defb RAM_C6,0,8   ; 159 bytes, 433 us
+    defb RAM_C6,0,13   ; 150 bytes, 408 us
     defw tr_s0_sport
     defb RAM_C6,0,18   ; 342 bytes, 936 us
     defw tr_s0_saloon
-    defb RAM_C6,0,18   ; 334 bytes, 928 us
-    defw tr_s0_gt
-    defb RAM_C6,0,18   ; 308 bytes, 902 us
+    defb RAM_C6,0,18   ; 331 bytes, 925 us
     defw tr_s1_closed
-    defb 0,2,11   ; 133 bytes, 373 us
-    defw tr_s1_open
-    defb 0,0,6   ; 168 bytes, 377 us
+    defb RAM_C6,0,11   ; 130 bytes, 370 us
     defw tr_s1_sport
     defb RAM_C6,0,16   ; 252 bytes, 681 us
     defw tr_s1_saloon
-    defb RAM_C6,0,16   ; 249 bytes, 678 us
-    defw tr_s1_gt
-    defb RAM_C6,0,16   ; 215 bytes, 644 us
+    defb RAM_C6,0,16   ; 246 bytes, 675 us
     defw tr_s2_closed
-    defb 0,2,10   ; 101 bytes, 297 us
-    defw tr_s2_open
-    defb 0,0,6   ; 136 bytes, 335 us
+    defb RAM_C6,0,10   ; 98 bytes, 294 us
     defw tr_s2_sport
     defb RAM_C6,0,13   ; 197 bytes, 514 us
     defw tr_s2_saloon
-    defb RAM_C6,0,13   ; 182 bytes, 499 us
-    defw tr_s2_gt
-    defb RAM_C6,0,13   ; 167 bytes, 484 us
+    defb RAM_C6,0,13   ; 179 bytes, 496 us
     defw tr_s3_closed
-    defb RAM_C6,2,9   ; 212 bytes, 607 us
-    defw tr_s3_open
-    defb RAM_C6,0,5   ; 245 bytes, 612 us
+    defb RAM_C6,0,9   ; 209 bytes, 604 us
     defw tr_s4_closed
-    defb 0,1,7   ; 184 bytes, 511 us
-    defw tr_s4_open
-    defb 0,0,5   ; 211 bytes, 510 us
+    defb RAM_C6,0,7   ; 176 bytes, 503 us
     defw tr_s5_closed
-    defb 0,1,6   ; 128 bytes, 359 us
-    defw tr_s5_open
-    defb 0,0,4   ; 145 bytes, 365 us
+    defb RAM_C6,0,6   ; 120 bytes, 351 us
     defw tr_s6_closed
-    defb RAM_C4,0,5   ; 96 bytes, 257 us
-    defw tr_s6_open
-    defb RAM_C4,0,3   ; 91 bytes, 235 us
+    defb RAM_C6,0,5   ; 93 bytes, 254 us
     defw tr_s7_closed
-    defb 0,0,3   ; 65 bytes, 151 us
-    defw tr_s7_open
-    defb 0,0,3   ; 60 bytes, 146 us
+    defb RAM_C6,0,3   ; 62 bytes, 148 us
 TR_PIECE_LEN EQU 5
+TR_TOPS     EQU 1   ; a near size's tops, then its bottoms
+TR_BOTTOMS  EQU 2
 
 tr_rsize    ; per row: the size a car on it is drawn at - its record in
             ; tr_sinfo (#FF: none)
@@ -155,13 +135,12 @@ tr_colours
     defb #3C,#3C   ; WHITE
     defb #0F,#0F   ; RED
 
-;; region 6: 1589 of 1590 bytes
-;; region rh1: 73 of 75 bytes
-;; region rh2: 174 of 175 bytes
-;; region rh3: 175 of 175 bytes
-;; region rh4: 174 of 175 bytes
-;; region rh5: 175 of 175 bytes
-;; region rh6: 95 of 96 bytes
-;; region f4: 97 of 111 bytes
-;; region 4: 124 of 170 bytes
-;; in the fragments: 1061 bytes
+;; region 6: 2391 of 5430 bytes
+;; region rh1: 0 of 75 bytes
+;; region rh2: 0 of 175 bytes
+;; region rh3: 0 of 175 bytes
+;; region rh4: 0 of 175 bytes
+;; region rh5: 0 of 175 bytes
+;; region rh6: 0 of 96 bytes
+;; region f4: 0 of 111 bytes
+;; region 4: 0 of 170 bytes

@@ -8,10 +8,8 @@ tools/mktraffic.py LETTERS, '.' none, K the car's paint.
 """
 
 TRAFFIC_ART = [
-    dict(split=10, whole=False, tops={
+    dict(split=8, whole=False, tops={
         "closed": [
-            "....................................",
-            "....................................",
             "..........KKNNNNNNNNNNNNKK..........",
             "........KKKKNNNNNNNNNNNNKKKK........",
             "......KKKKKKNNNNNNNNNNNNKKKKKK......",
@@ -20,18 +18,6 @@ TRAFFIC_ART = [
             "......KKKKKKNNNNNNNNNNNNKKKKKK......",
             "......KKKKKKNNNNNNNNNNNNKKKKKK......",
             "....KKKKKKKKNNNNNNNNNNNNKKKKKKKK....",
-        ],
-        "open": [
-            "........GOYYOGGG....................",
-            "........GOYYOGGG....................",
-            "........OOYYOGGG....................",
-            "........OOYYOOGG....................",
-            "........OOOOOOGG....................",
-            "......GNDOOOODNNNNNNNNNNNNNNNG......",
-            "......NNNNNNNNNNNNNNNNNNNNNNNN......",
-            "......NNNNNNNNNNNNNNNNNNNNNNNN......",
-            "......NNNNNNNNNNNNNNNNNNNNNNNN......",
-            "....KKNNNNNNNNNNNNNNNNNNNNNNNNKK....",
         ],
     }, bottoms={
         "sport": [
@@ -66,27 +52,9 @@ TRAFFIC_ART = [
             "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
             "....GNNNNNNNNNNNNNNNNNNNNNNNNNNG....",
         ],
-        "gt": [
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKRRRRRRRRRRRDDDDDDDDDDRRRRRRRRRRRKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKNNNWWWWWWWWWWNNNKKKKKKKKKK",
-            "KKKKKKKKKKNNNWWWWWWWWWWNNNKKKKKKKKKK",
-            "KKKKKKKKKKNNNWWWWWWWWWWNNNKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "NNNNNNKKKKKKKKKKKKKKKKKKKKKKKKNNNNNN",
-            "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
-            "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
-            "....GNNNNNNNNNNNNNNNNNNNNNNNNNNG....",
-        ],
     }),
-    dict(split=10, whole=False, tops={
+    dict(split=8, whole=False, tops={
         "closed": [
-            "................................",
-            "................................",
             "..........NNNNNNNNNNNN..........",
             "........KKNNNNNNNNNNNNKK........",
             "......KKKKNNNNNNNNNNNNKKKK......",
@@ -94,18 +62,6 @@ TRAFFIC_ART = [
             "......KKKKKKNNNNNNNNKKKKKK......",
             "......KKKKKKNNNNNNNNKKKKKK......",
             "....KKKKKKKKNNNNNNNNKKKKKKKK....",
-            "..KKKKKKKKKKKKKKKKKKKKKKKKKKKK..",
-        ],
-        "open": [
-            "........GYYG....................",
-            "........OYYO....................",
-            "........OYYO....................",
-            "........OYYO....................",
-            "........OOOODNNNNNNNNNNG........",
-            "......NNDDDDNNNNNNNNNNNNNN......",
-            "......NNNNNNNNNNNNNNNNNNNN......",
-            "....GNNNNNNNNNNNNNNNNNNNNNNG....",
-            "....KKNNNNNNNNNNNNNNNNNNNNKK....",
             "..KKKKKKKKKKKKKKKKKKKKKKKKKKKK..",
         ],
     }, bottoms={
@@ -135,41 +91,15 @@ TRAFFIC_ART = [
             "GNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNG",
             "....GNNNNNNNNNNNNNNNNNNNNNNG....",
         ],
-        "gt": [
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKRRRRRRRRDDDDDDDDRRRRRRRRKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKNNNNWWWWWWWWNNNNKKKKKKKK",
-            "KKKKKKKKNNNNWWWWWWWWNNNNKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "GNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNG",
-            "GNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNG",
-            "....GNNNNNNNNNNNNNNNNNNNNNNG....",
-        ],
     }),
-    dict(split=9, whole=False, tops={
+    dict(split=7, whole=False, tops={
         "closed": [
-            "............................",
-            "............................",
             "........KKNNNNNNNNKK........",
             "......KKKKNNNNNNNNKKKK......",
             "......KKKKNNNNNNNNKKKK......",
             "......KKKKNNNNNNNNKKKK......",
             "....KKKKKKNNNNNNNNKKKKKK....",
             "....KKKKKKNNNNNNNNKKKKKK....",
-            "..KKKKKKKKKKKKKKKKKKKKKKKK..",
-        ],
-        "open": [
-            "........OGGG................",
-            "........YYGG................",
-            "......GOYYOGGG..............",
-            "......GOYOOGGG..............",
-            "......GOOOONNNNNNNNNNG......",
-            "......NNNNDNNNNNNNNNNN......",
-            "....GNNNNNNNNNNNNNNNNNNG....",
-            "....KKNNNNNNNNNNNNNNNNKK....",
             "..KKKKKKKKKKKKKKKKKKKKKKKK..",
         ],
     }, bottoms={
@@ -195,37 +125,14 @@ TRAFFIC_ART = [
             "GNNNNNNNNNNNNNNNNNNNNNNNNNNG",
             "..NNNNNNNNNNNNNNNNNNNNNNNN..",
         ],
-        "gt": [
-            "..KKKKKKKKKKKKKKKKKKKKKKKK..",
-            "..KKKKKKKKKKKKKKKKKKKKKKKK..",
-            "KKKKRRRRRRRDDDDDDRRRRRRRKKKK",
-            "KKKKKKKKNNNWWWWWWNNNKKKKKKKK",
-            "KKKKKKKKNNNWWWWWWNNNKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "GNNNNNNNNNNNNNNNNNNNNNNNNNNG",
-            "..NNNNNNNNNNNNNNNNNNNNNNNN..",
-        ],
     }),
-    dict(split=8, whole=True, tops={
+    dict(split=6, whole=True, tops={
         "closed": [
-            "........................",
-            "........................",
             "......KKNNNNNNNNKK......",
             "......KKNNNNNNNNKK......",
             "....KKKKNNNNNNNNKKKK....",
             "....KKKKNNNNNNNNKKKK....",
             "..KKKKKKNNNNNNNNKKKKKK..",
-            "..KKKKKKKKKKKKKKKKKKKK..",
-        ],
-        "open": [
-            "......GYGG..............",
-            "......OYYG..............",
-            "......OYOG..............",
-            "......OOOD..............",
-            "....GNDDDNNNNNNNNNNG....",
-            "....NNNNNNNNNNNNNNNN....",
-            "..KKNNNNNNNNNNNNNNNNKK..",
             "..KKKKKKKKKKKKKKKKKKKK..",
         ],
     }, bottoms={
@@ -239,22 +146,13 @@ TRAFFIC_ART = [
             "..NNNNNNNNNNNNNNNNNNNN..",
         ],
     }),
-    dict(split=6, whole=True, tops={
+    dict(split=5, whole=True, tops={
         "closed": [
-            "....................",
             "......KKKKKKKK......",
             "....KKNNNNNNNNKK....",
             "....KKKKNNNNKKKK....",
             "....KKKKNNNNKKKK....",
             "..KKKKKKNNNNKKKKKK..",
-        ],
-        "open": [
-            "......YGGG..........",
-            "....GOYO............",
-            "....GOOO............",
-            "....NDODNNNNNNNN....",
-            "..KKNNNNNNNNNNNNKK..",
-            "..KKNNKKKKKKKKNNKK..",
         ],
     }, bottoms={
         "saloon": [
@@ -267,19 +165,11 @@ TRAFFIC_ART = [
             "....GNGNNNNGNNNG....",
         ],
     }),
-    dict(split=5, whole=True, tops={
+    dict(split=4, whole=True, tops={
         "closed": [
-            "................",
             "....KKNNNNKK....",
             "..KKKKNNNNKKKK..",
             "..KKKKNNNNKKKK..",
-            "..KKKKKKKKKKKK..",
-        ],
-        "open": [
-            "....OYGG........",
-            "....OOGG........",
-            "..GNDONNNNNNNG..",
-            "..NNNNNNNNNNNN..",
             "..KKKKKKKKKKKK..",
         ],
     }, bottoms={
@@ -297,11 +187,6 @@ TRAFFIC_ART = [
             "..KKNNNNKK..",
             "KKKKNNNNKKKK",
         ],
-        "open": [
-            "..GOOG......",
-            "..NDDNNNNN..",
-            "KKKKNNNNKKKK",
-        ],
     }, bottoms={
         "saloon": [
             "KKKKKKKKKKKK",
@@ -314,10 +199,6 @@ TRAFFIC_ART = [
         "closed": [
             "..NNNN..",
             "KKNNNNKK",
-        ],
-        "open": [
-            "..OGGG..",
-            "GNNNNNNG",
         ],
     }, bottoms={
         "saloon": [

@@ -62,7 +62,9 @@ TR_ZFAR = 640                   # src/traffic.asm TR_ZAWAY: no car further
 # 7 keeps its room for the game. What does not fit (src/gen/trafleft.py)
 # mkbush.py lays the same way in the fragments' free runs, then - in every
 # CARn.BIN - in the road parts' hidden lines.
-REGIONS = [("6", "RAM_C6", "#8000", 1590),     # bank 6, after the traffic's code
+REGIONS = [("6", "RAM_C6", "#8000", 5430),     # bank 6, after the traffic's code
+                                                # (all of it, since the hill
+                                                # tables are shared: mkroad.py)
            ("f4", "RAM_C6", "FRAG4+FRAG_LEN", 111),     # fragment 4's end
            ("4", "RAM_C4", "STAGE_A", 170)]     # bank 4, after cache4.asm
 
@@ -414,13 +416,15 @@ def main():
     emit("")
     emit(";; per piece: its code, its RAM configuration (0: any), the lines before")
     emit(";; its first (from its top), where its first line's run ends (bytes from")
-    emit(";; the car's left): a near size's closed and open tops then its sport,")
-    emit(";; saloon and GT bottoms; a further size's closed and open whole cars")
+    emit(";; the car's left): a near size's tops (mktraffic.py TOPS) then its")
+    emit(";; bottoms (BOTTOMS); a further size's whole cars, one a top")
     emit("tr_pieces")
     for p in ps:
         emit("    defw %s" % p[0])
         emit("    defb %s,%d,%d   ; %d bytes, %d us" % (cfg_of[p[0]], p[3], p[4], p[5], p[6]))
     emit("TR_PIECE_LEN EQU 5")
+    emit("TR_TOPS     EQU %d   ; a near size's tops, then its bottoms" % len(T.TOPS))
+    emit("TR_BOTTOMS  EQU %d" % len(T.BOTTOMS))
     assert len(ps) * 5 < 256
     emit("")
     emit("tr_rsize    ; per row: the size a car on it is drawn at - its record in")

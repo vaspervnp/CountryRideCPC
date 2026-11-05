@@ -1,13 +1,13 @@
 ;; ===========================================================================
-;; cache.asm - the road off the middle of the screen: common fragments 6 and
+;; cache.asm - the road's templates, wherever it is: common fragments 6 and
 ;; 5, and the parts in banks 4 (cache4.asm) and 5 (cache5.asm).
 ;;
 ;; The car stays in the middle of the screen and the road moves under it,
 ;; in perspective: road_x pairs right of the middle on the bottom row, less
-;; further up (cpcgfx.road_shift). The template sets in banks 4 and 5 are
-;; made for the road in the middle; off it, road_project takes its templates
-;; from one set more in each bank - the cache, at CACHE_LEVEL - made for the
-;; curve level cache_k and road_x.
+;; further up (cpcgfx.road_shift). road_project takes its templates from a
+;; set in each bank - the cache, at CACHE_LEVEL - made for the curve level
+;; cache_k and road_x. (Till 2026-11-05 each curve level had its own sets
+;; too, made for the road in the middle and drawn there: 15K.)
 ;;
 ;; Where each group of rows goes is worked out in bank 5 (cache5.asm) from
 ;; a sum it keeps for its curve level and road_x, rounded once, as
@@ -22,17 +22,14 @@
 ;;   before the flips (cache_pre: pre5, pre4, into staging sets laid out
 ;;   as the cache's) and only copied into place then (cm5, cm4), or, with
 ;;   none worked out ahead, there and then (st5, st4).
-;; - cache_k a level off the middle (cache_kstep): every group moves to it
-;;   between two pictures, as for a step - worked out ahead into the
-;;   staging sets (cache_pre: prk5, pre4; the level the track has next,
-;;   cache_want) and copied into place (cmk5, cm4); road_curve waits for
-;;   that. A picture never shows the road at two levels.
-;; - cache_k a level in the middle (cache_curve): the levels' own sets are
-;;   drawn there, and every group is to be put at the new level (rd_gk bit
-;;   1) a batch at a time (cache_job: job5, job4) in whatever time is left
-;;   before each flip; the road leaves the middle only once that is done.
-;;   Off the middle any of them can move a byte, if not most; only those
-;;   that do have their templates made (and are noted as moved:
+;; - cache_k a level (cache_kstep): every group moves to it between two
+;;   pictures, as for a step - worked out ahead into the staging sets
+;;   (cache_pre: prk5, pre4; the level the track has next, cache_want) and
+;;   copied into place (cmk5, cm4); road_curve waits for that. A picture
+;;   never shows the road at two levels.
+;; - the cache made whole (cache_init): every group put at cache_k (rd_gk
+;;   bit 1) a batch at a time (cache_job: job5, job4). Only those whose
+;;   byte moves have their templates made (and are noted as moved:
 ;;   cache_mark).
 ;; ===========================================================================
 
@@ -41,7 +38,7 @@ frag6_start
 
 road_x      defb 0          ; the road's pairs right of the middle, signed
                             ; and even (cache_step: 2 or 4 pairs a step)
-cache_k     defb 0          ; curve level the cache is made for (cache_curve)
+cache_k     defb 0          ; curve level the cache is made for
 rd_s        defb 0          ; road_x's step (cache_step)
 rd_kdir     defb 0          ; cache_k's last step: 1 or -1
 rd_n2       defb 0          ; groups still to be put at cache_k
@@ -183,18 +180,11 @@ rp_mode_chg
     add a,l
     ld l,a
     ld c,(hl)                           ; C = 1 + the last group since
-    ld (hl),255                         ; (a curve level's own set: any)
+    ld (hl),0                           ; (drawn as the cache is now)
     inc l
     inc l
     ld b,(hl)                           ; B = the first
-    ld (hl),0
-    ld a,(rp_cache)
-    or a
-    jr z,rp_mode_chg_x
-    ld (hl),255                         ; drawn as the cache is now
-    dec l
-    dec l
-    ld (hl),0
+    ld (hl),255
     ld a,c
     or a
     jr nz,rp_mode_chg_r
@@ -237,17 +227,6 @@ rp_mode_chg_n
     jr rp_mode_chg_0
 
 
-;; ---------------------------------------------------------------------------
-;; cache_curve - road_curve has moved a level (A = 1 or -1): cache_k
-;; follows, and every group is to be put at it (cache_all: off the middle
-;; any of them can move). Destroys AF, B, HL.
-;; ---------------------------------------------------------------------------
-cache_curve
-    ld (rd_kdir),a
-    ld a,(road_curve)
-    ld (cache_k),a
-    jp cache_all                ; (rd_gfree)
-
 pre_k       defb 0          ; the work ahead is a curve level: cache_k + 1
                             ; or - 1 (pre_s 0); 0 a step
 pre_g1      defb 0          ; (a level's: the last group whose a it moves)
@@ -265,14 +244,10 @@ rd_ltop                             ; (st5, job5, pre5: tl_a)
 ;; their own places have no room for.
 rd_gfree
 ;; cache_want - (cache_pre) A = the curve level the cache is to work out
-;; ahead off the middle, cache_k + 1 or - 1: towards the game's (curve), or
+;; ahead, cache_k + 1 or - 1: towards the game's (curve), or
 ;; with that reached, the track's as far on as the camera goes in 8 VSYNCs
-;; (about the time it takes); 0 none - or the road in the middle (the
-;; levels' own sets are drawn there: cache_curve). Destroys F, DE, HL.
+;; (about the time it takes); 0 none. Destroys F, DE, HL.
 cache_want
-    ld a,(road_x)
-    or a
-    ret z
     ld a,(curve)
     ld hl,road_curve
     sub (hl)
@@ -338,7 +313,7 @@ uk5_loop
     jr c,uk5_loop
     ret
 
-;; cache_all - every group to be put at cache_k (cache_curve, cache_init)
+;; cache_all - every group to be put at cache_k (cache_init)
 cache_all
     ld hl,rd_gk
     ld b,NGROUPS
@@ -371,7 +346,7 @@ frag6_end
 
 ;; ---------------------------------------------------------------------------
 ;; cache_job - the cache's next piece of work: a batch of groups put at
-;; cache_k (job5, job4; the road in the middle) - none after a step (the
+;; cache_k (job5, job4; cache_init) - none after a step (the
 ;; next pictures draw the road moved, with a margin: a new level's on top
 ;; is too much) - or with none to put, a piece of the next step or curve
 ;; level worked out ahead (cache_pre: it changes nothing drawn). A job
@@ -527,7 +502,7 @@ cr_no
 
 ;; ---------------------------------------------------------------------------
 ;; cache_pre - (cache_job, with no groups to put at cache_k) the curve level
-;; the road is to take next off the middle (cache_want), or else the step
+;; the road is to take next (cache_want), or else the step
 ;; road_x is to take next towards steer_x (cp_pend: up to four pairs),
 ;; worked out ahead a piece at a time (each up to ~3 ms, as a batch of
 ;; jobs): the staging sets made the cache's first if they are not (rs5,
@@ -601,7 +576,7 @@ cp_both
     jp cache_both
 
 ;; ---------------------------------------------------------------------------
-;; cache_kstep - (cache_steps, the road off the middle) C = the game's curve
+;; cache_kstep - (cache_steps) C = the game's curve
 ;; level less road_curve, HL = road_curve: it moves a level that way if
 ;; the cache has that level worked out ahead (cache_pre: prk5, pre4) -
 ;; copied into place, ~5 ms (cmk5, cm4) - and else waits; no step either

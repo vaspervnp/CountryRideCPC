@@ -2,55 +2,5 @@
 ;; Traffic sprite pieces, region rh6 (RAM_C6).
 
 trafcode_rh6
-tr_s0_closed_c6
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld sp,hl
-    push iy
-    push iy
-    push ix
-    push ix
-    push ix
-    push iy
-    push iy
-    jp tr_done
-tr_s0_open
-    ld ix,#C0C0
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCDE
-    push bc
-    ld bc,#33ED
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCDE
-    push bc
-    ld bc,#33ED
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCDE
-    push bc
-    ld bc,#33CF
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCCF
-    push bc
-    ld b,#33
-    push bc
-    ld sp,hl
-    ld bc,#0807
-    call tr_stx
-    ld bc,#FCCF
-    push bc
-    jp tr_s0_closed_c7
 trafcode_rh6_end
     ASSERT trafcode_rh6_end <= line_ends+256

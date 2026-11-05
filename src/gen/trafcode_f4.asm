@@ -2,56 +2,5 @@
 ;; Traffic sprite pieces, region f4 (RAM_C6).
 
 trafcode_f4
-tr_s0_closed_c7
-    ld b,#CF
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    push ix
-    push ix
-    ld bc,#9FCF
-    push bc
-    ld bc,#6FE8
-    push bc
-    ld sp,hl
-    call tr_st0
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    call tr_st0
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    call tr_st1
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    jp tr_done
 trafcode_f4_end
     ASSERT trafcode_f4_end <= FRAG4+FRAG_LEN

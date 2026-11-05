@@ -38,8 +38,6 @@ rp_zlo10
     rrca                                ; band B is #2000 higher
     inc h
     add a,(hl)                          ; template, high byte
-rp_lvl11
-    add a,0                             ; + the curve level (self-modified)
     inc e
     ex de,hl
     cp (hl)                             ; the template of then?
@@ -126,8 +124,6 @@ rp_zlo11
     rrca
     inc h
     add a,(hl)                          ; template, high byte
-rp_lvl12
-    add a,0                             ; + the curve level (self-modified)
     inc e
     ex de,hl
     cp (hl)                             ; the band of then?

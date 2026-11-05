@@ -13,9 +13,9 @@
 ;; knows its depth and its width, and so its template: the stripe band is
 ;; bit 6 of (depth + zcam).
 ;;
-;; Curves: the templates come in a set per curve level, each with every row
-;; already moved sideways as far as that level bends it (tools/mkroad.py), so
-;; a curve only picks the set - TMPL_SET bytes on per level.
+;; Curves: the templates are the cache set's (cache.asm), made for the curve
+;; level and road_x - every row already moved sideways as far as they move
+;; it - so a curve costs road_project nothing either.
 ;;
 ;; Hills: a crest ahead of strength h moves row r down by h/r lines - the
 ;; same h/r a parabolic crest gives in perspective - so the near road hardly
@@ -104,8 +104,9 @@ rp_near_ok
 
     ld a,(zcam)
     call rp_zsets                       ; (common.asm, fragment 4)
-    call rp_sets                        ; the template set; A = the curve
-                                        ; level's
+    ld a,(road_curve)                   ; A = the curve level, 2 a level (the
+    add a,CURVE_K                       ; templates are always the cache's,
+    add a,a                             ; rr_thi)
 
     ; this buffer's last picture: its curve set (did it move?) and zcam
     ld hl,(rp_vars)
@@ -147,7 +148,7 @@ rp_near_go                              ; (A lines: rp_near_skip's rest)
 ;; stripe on it is not what it was: (depth + zcam) AND 127 less than zcam's
 ;; move since then (rp_dzset: twice it, compared with twice that; 255 when
 ;; every line is drawn whole).
-MACRO RP_LINE zl,dz,lv
+MACRO RP_LINE zl,dz
     ld a,(bc)                           ; the row this line shows
     inc bc
     ld l,a
@@ -172,8 +173,6 @@ MACRO RP_LINE zl,dz,lv
     rrca                                ; band B is #2000 higher
     inc h
     add a,(hl)                          ; template, high byte
-{lv}
-    add a,0                             ; + the curve level (self-modified)
     ld (de),a
     inc de                              ; next entry's template slot
     inc e
@@ -192,9 +191,9 @@ MEND
     exx
     jr rp_second
 rp_pair
-    RP_LINE rp_zlo,rp_dz,rp_lvl
+    RP_LINE rp_zlo,rp_dz
 rp_second
-    RP_LINE rp_zlo2,rp_dz2,rp_lvl2
+    RP_LINE rp_zlo2,rp_dz2
     exx
     dec b
     exx
@@ -211,7 +210,7 @@ rp_second
 
 ;; A = (depth + zcam) AND mask (0: band 0), L = the row: write the line's
 ;; template - fl = 1: only the road - and step DE to the next entry's
-MACRO RP_FAR_TMPL lv,fl
+MACRO RP_FAR_TMPL fl
     or a
     ld h,hi(rr_tlo)
     jr z,$+4
@@ -234,8 +233,6 @@ rp_far_hfl
     inc h
     inc h                               ; rr_thi / rr_thi2
     ld a,(hl)                           ; template, high byte
-{lv}
-    add a,0                             ; + the curve level (self-modified)
     ld (de),a
     inc de
     inc e
@@ -294,7 +291,7 @@ rp_fdash
     jp rp_done
 rp_far_new                              ; the same row: only the road
     ld a,ixh
-    RP_FAR_TMPL rp_lvl3,1
+    RP_FAR_TMPL 1
     ld (rp_tail),de                     ; the list goes at least this far
     exx
     dec b
@@ -368,21 +365,21 @@ rp_zlo6                                 ; nearer and the road straight (offset
     or a
     ld a,ixl
     jr z,rp_far_ground                  ; the ground: always whole
-    RP_FAR_TMPL rp_lvl6,3
+    RP_FAR_TMPL 3
     jr rp_far_hill_next
 rp_far_ground
-    RP_FAR_TMPL rp_lvl10,0
+    RP_FAR_TMPL 0
     jr rp_far_hill_next
 rp_far_hill_dash2
 rp_zlo9
     add a,0                             ; + zcam (self-modified)
     inc h
     and (hl)
-    RP_FAR_TMPL rp_lvl9,1
+    RP_FAR_TMPL 1
     jr rp_far_hill_next
 rp_far_hill_dash                        ; the same row: only the road
     ld a,ixh
-    RP_FAR_TMPL rp_lvl5,1
+    RP_FAR_TMPL 1
 rp_far_hill_next
     ld (rp_tail),de
     exx
@@ -403,7 +400,7 @@ rp_zlo4
     add a,0                             ; + zcam (self-modified)
     inc h
     and (hl)
-    RP_FAR_TMPL rp_lvl4,2
+    RP_FAR_TMPL 2
     exx
     dec b
     exx
@@ -476,7 +473,6 @@ rp_kmin     defb 0,0                    ; ... the least curve level
 rp_kmax     defb 0,0                    ; ... the greatest
 rp_kdir     defb 0,0                    ; ... the cache's last level step
 rp_vars     defw 0                      ; this buffer's rp_level entry
-rp_cache    defb 0                      ; 1: the templates are the cache's
 rp_moved    defb 0                      ; 0: the same curve as then
 rp_old_level defb 0                     ; hill level then (#FF: none)
 rp_cmp      defb 0                      ; 1: lines checked against the old rows
@@ -615,8 +611,6 @@ rp_zlo7
     rrca
     inc h
     add a,(hl)                          ; template, high byte
-rp_lvl13
-    add a,0                             ; + the curve level (self-modified)
     inc e
     ex de,hl
 rp_cmp_sk
@@ -658,8 +652,6 @@ rp_put_cmp
     rrca
     inc h
     add a,(hl)                          ; template, high byte
-rp_lvl7
-    add a,0                             ; + the curve level (self-modified)
     ld (de),a
     inc de
     inc e
@@ -790,42 +782,6 @@ RP_MARGIN_MAX EQU 12                    ; more and whole lines are drawn
 RP_HILL_M   EQU 3                       ; a line's row moved: the least margin
 RP_HILL_STEP EQU 10                     ; hill levels (h/2) it may have moved
                                         ; (rp_far_m's margins allow for it)
-
-;; ---------------------------------------------------------------------------
-;; rp_sets - the template set road_project takes the templates from: the
-;; curve level's, or with the road off the middle, the cache (cache.asm;
-;; rp_cache). Returns A = the curve level's (pages on from the first).
-;; ---------------------------------------------------------------------------
-rp_sets
-    ld a,(road_x)
-    or a
-    ld a,1
-    ld (rp_cache),a
-    ld a,CACHE_LEVEL*TMPL_SET/256
-    jr nz,rp_sets_set
-    xor a
-    ld (rp_cache),a
-    ld a,(road_curve)
-    add a,CURVE_K
-    ASSERT TMPL_SET == 512
-    add a,a
-rp_sets_set
-    ld (rp_lvl+1),a
-    ld (rp_lvl2+1),a
-    ld (rp_lvl3+1),a
-    ld (rp_lvl4+1),a
-    ld (rp_lvl5+1),a
-    ld (rp_lvl6+1),a
-    ld (rp_lvl7+1),a
-    ld (rp_lvl9+1),a
-    ld (rp_lvl10+1),a
-    ld (rp_lvl11+1),a
-    ld (rp_lvl12+1),a
-    ld (rp_lvl13+1),a
-    ld a,(road_curve)
-    add a,CURVE_K
-    add a,a
-    ret
 
 rd_margin
     ld hl,line_road_a

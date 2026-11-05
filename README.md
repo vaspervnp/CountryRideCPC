@@ -118,9 +118,8 @@ nearer, from 5 to 16 lines, and leave by the sides of the screen.
 Up to two cars of traffic drive ahead in the lanes, slower than the player,
 who catches up with them and drives by - or bumps into them. Now and then
 one moves over into the lane next to it. Each
-has a closed or an open top - a coupé's cabin, or a windscreen with a driver
-behind it - on a sports car's, a saloon's or a GT's tail, and a colour for
-its top and one for its tail, out of fourteen: hundreds of different cars.
+is a coupé with a sports car's or a saloon's tail, and a colour for its top
+and one for its tail, out of fourteen: hundreds of different cars.
 
 ### The race
 
@@ -408,8 +407,8 @@ The banks hold the rest:
 
 | Bank | Contents | Seen at |
 |---|---|---|
-| 4 | road templates (`#4000–#5FFF`), code (`#6000`) and the next step's staging set (`#7E00`) for stripe band A; traffic sprite code | `#4000` (C4) |
-| 5 | road code (`#4000`), the next step's staging set (`#5E00`) and templates (`#6000–#7FFF`) for stripe band B | `#4000` (C5) |
+| 4 | for stripe band A: the ground's template (`#4000`; free after it, 7.5K), the cache's templates (`#5E00`), road code (`#6000`) and the next step's staging set (`#7E00`) | `#4000` (C4) |
+| 5 | for stripe band B: road code (`#4000`), the next step's staging set (`#5E00`), the cache's per group arrays (`#6000`, a page each; free after them, 3.75K, and 205 bytes under each) and its templates (`#7E00`) | `#4000` (C5) |
 | 6 | the road's row tables and the precomputed hill tables; the traffic: its code, tables and most of its sprites' code | `#4000` (C6) |
 | 7 | the game (main loop, HUD, graphics, the panorama, the track's rings and the props' size table at `#F000`, over what runs once at the start) | `#C000` (C1/C3) |
 
@@ -524,7 +523,11 @@ Each frame:
 
 Hills move row *r* down (on a crest) or up (in a dip) by *h / r* lines, with
 occlusion behind a crest. The line-to-row mapping is precomputed for 128 hill
-levels, so a hill costs nothing extra per frame.
+levels, so a hill costs nothing extra per frame - 80 tables of 80 bytes:
+levels that are the same share one (the strongest crests are all the
+road top's limit, `HILL_MAX`), and the dips deeper than the course's
+deepest share that one's (`tools/mkroad.py`; 3.8K less since 2026-11-05,
+where the traffic's sprite code now fits whole).
 
 ### The track
 
@@ -560,12 +563,14 @@ a row only changes its template: the grass on each side, where the code is
 entered or cut short, and, for an odd number of bytes, the code for the
 other pixel parity.
 
-So `tools/mkroad.py` makes the templates for every level, a 512-byte set per
-level (15 levels, 7.5K a band). They sit in the banks next to the code they
-point at, band A's in bank 4 and band B's at the same offsets in bank 5;
-`road_draw` tells which bank a template is in from bit 13 of its address and
-switches before reading it. `road_project` only adds the level's set to each
-pointer, so a curve costs nothing per line.
+So the road is drawn from one set of templates in each band, 512 bytes,
+made for the curve level and the road's place (the cache, below): band
+A's in bank 4 and band B's at the same offsets in bank 5, next to the code
+they point at; `road_draw` tells which bank a template is in from bit 13 of
+its address and switches before reading it. A curve costs nothing per
+line. (Till 2026-11-05 `tools/mkroad.py` also made a set for each of the
+15 levels, with the road in the middle, drawn there: 15K of banks 4 and 5,
+now free.)
 
 Far away, a row moves a lot from row to row, so the 7 furthest rows have a
 template each; nearer, the rows of one width share one.
@@ -604,8 +609,7 @@ of the middle of the screen, 16 at most (`CAR_LEAD`; the road at most 16
 pairs behind). The road moves under it in perspective: `road_x` is how many
 pairs (4 pixels) right of the middle the road is on the bottom row, and a row of half-width *h* bytes moves `road_x`
 × 10*h*/256 bytes - the far road hardly moves, and the road turns about the
-horizon. In the middle the curve levels' own template sets are drawn; off
-it, `road_project` takes its templates from one more set in each bank, the
+horizon. `road_project` takes its templates from a set in each bank, the
 cache, made for the curve level and `road_x` (`src/cache.asm`).
 
 - **Smooth edges.** Each group of rows keeps one sum - its curve level's
@@ -639,8 +643,7 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   copies the staging sets into the cache sets: ~5 ms, so it can go after
   any picture done by the 10th interrupt. The staging sets are then the
   cache's, so the next one starts at once; after a step made there and
-  then, or a new curve level in the middle, they are made the cache's
-  again first (two pieces).
+  then they are made the cache's again first (two pieces).
 - **Only when it fits.** A step made there and then - when none is worked
   out ahead, and two pairs at most - is made after a picture only if it is
   sure to be done before
@@ -656,7 +659,7 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   hill moved, nor while a hill was under the camera or two track entries
   ahead, and on each hill the road did not follow the steering for up to
   4 seconds.
-- **A new curve level off the middle** is worked out ahead the same way,
+- **A new curve level** is worked out ahead the same way,
   into the staging sets (`cache_want`, `prk5`): the level the track has
   next - a level towards the game's, or with that reached, the track's as
   far on as the car goes in 8 VSYNCs, about the time it takes - 3 groups a
@@ -676,11 +679,12 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   steering for seconds. The next picture of each buffer draws
   all of the road moved, ~10 ms more than the last one, so the level only
   goes after a picture done by the 7th interrupt since its flip (~27 ms) -
-  one later for each further level the road is behind the track. In the
-  middle the curve levels' own
-  sets are drawn, so the level moves there and then, and the cache
-  follows a few groups at a time; the road leaves the middle only once it
-  has. A level waits on a hill or just before one (the track has no curve
+  one later for each further level the road is behind the track. (Till
+  2026-11-05, with the road in the middle, each level's own template
+  sets were drawn and the level moved there and then; in the demo the
+  road is there a seventh of the time, and lags the track by 0.49 levels
+  there now instead of 0.28 - 1.47 elsewhere.) A level waits on a hill or
+  just before one (the track has no curve
   on a hill: only a late level waits) - a picture whose hill moves
   compares every line's row with the old one's, and both together are too
   much. Meanwhile a step the player wants is worked out in its place.
@@ -803,8 +807,10 @@ Up to two cars drive ahead at 3 depth units a VSYNC; the player catches up
 with them and passes. Their art is rendered in Blender
 (`tools/traffic3d.py`): a common body, two tops (closed: a coupé's cabin;
 open: a windscreen, headrests and a driver) and three tails (a sports car's
-round lamps, a saloon's wide clusters, a GT's light bar), at eight sizes;
-`tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`) in
+round lamps, a saloon's wide clusters, a GT's light bar), at eight sizes -
+of which the game has half since 2026-11-05, for room: the closed top, the
+sports car's and the saloon's tails (`TOPS`, `BOTTOMS`; 2.4K of code
+instead of 3.7K); `tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`) in
 flat colours, with no dithering (since 2026-11-05, as the player's car:
 each cell's own mean colour, the nearest of red, orange, yellow, white,
 dark red and navy; a cell mostly paint in a byte that is not takes its
@@ -813,12 +819,12 @@ takes the car's colour is black in the art, so any top goes with any tail
 and each has a colour of its own out of 16 (`TRAFFIC_COLOURS`: a pen each
 - 14 pens, red and white twice; the engine could still give two in a
 checkerboard). The three nearest sizes come in two pieces, top and tail;
-the five further ones in one, a closed or open top on the saloon's tail,
-still in two colours. `tools/scene.py` says where a car goes and what it
+the five further ones in one, the top on the saloon's tail, still in two
+colours. `tools/scene.py` says where a car goes and what it
 looks like, and `src/traffic.asm` has to match it.
 
 - **Coming and going.** A car comes 512 depth units ahead, at the horizon,
-  in a lane, with a top, a tail and colours at random, no sooner than its
+  in a lane, with a tail and colours at random, no sooner than its
   stage's pause after the last one - 64 pictures (2.6 s) in the
   countryside, fewer further on and on a fork's right, 4 in the storm
   (`tools/course.py` `traffic`, `tr_pauses` in bank 6, by `stage_id`) -
@@ -858,12 +864,13 @@ looks like, and `src/traffic.asm` has to match it.
   car is drawn that time; from 10, 6.7 ms, only a car at a near size: the
   nearer one, if it is at one, and neither if not (`tr_dropped`). A far car
   blinks; a near one never.
-- **Memory.** The pieces (3.6K) go where there is room in a RAM configuration
+- **Memory.** The pieces (2.4K) go where there is room in a RAM configuration
   they can run in: bank 6 after the traffic's code and in the row tables'
   pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
   fragment 4, the fragments' free runs and, in every `CARn.BIN`, the road
   parts' hidden lines - buffer 1's blocks 4-6 too, which boot has read by
-  the time it copies these there. `src/trafglue.asm` (fragment 3) switches
+  the time it copies these there - all in bank 6 since 2026-11-05 (3.1K
+  of it left, and the row tables' holes). `src/trafglue.asm` (fragment 3) switches
   to a piece's bank and back. Banks 4 and 5 look free past their code in
   the binary but are not: they hold the cache's sets and the staging sets.
 
@@ -1028,7 +1035,8 @@ one needed the picture an interrupt earlier).
 (Before the curve levels were worked out ahead, 1, 0 and 0 did: a picture
 while the cache caught up with a new level.) A sideways step (~5 ms copied
 into place, or up to ~14 ms made there and then), a batch of the cache's
-work in the middle (3 groups, up to ~3 ms) or a piece of the next step or
+work as it is made whole at the start (3 groups, up to ~3 ms) or a piece
+of the next step or
 curve level worked out ahead (up to ~3.4 ms and ~5.4 ms: they stop when
 the flip is 3.3 ms away) never runs past the flip.
 
@@ -1150,7 +1158,7 @@ place, or made there and then when there is none):
 | a piece of the next step worked out ahead | 2.4 ms | 3.4 ms |
 | a piece of the next curve level worked out ahead | 3.3 ms | 5.4 ms |
 | the staging sets made the cache's again, a bank | 2.6 ms | 2.9 ms |
-| a batch of a new curve level in the middle (3 groups) | 2.1 ms | 3.0 ms |
+| a batch of the cache made whole at the start (3 groups) | 2.1 ms | 3.0 ms |
 
 Working the levels out ahead has its price in steering: until a level the
 track has next is ready and copied into place no step goes, and on a
@@ -1265,8 +1273,8 @@ src/            the game
   road.asm      road_init, road_project
   road6.asm     road_project's part in bank 6: how lines are drawn
   road15.asm    road_project's part in fragment 15, the curve level's jobs
-  cache.asm     the road off the middle: the cache set, steps (also
-                worked out ahead), jobs
+  cache.asm     the road's templates: the cache set, steps and curve
+                levels (worked out ahead), jobs
   cache4.asm    ... its part in bank 4 (band A)
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
@@ -1344,5 +1352,6 @@ docs/           screenshots
   now) - a level a row, which the cache, made a level at a time, does not
   allow;
 - 3- and 2-lane roads (the generator already has the `LANES` parameter) -
-  but a lane count's code and templates fill banks 4 and 5: one for the
-  whole game, unless the race loaded another from the disc.
+  a lane count's code takes ~7.1K of bank 4 and ~6.4K of bank 5; since
+  2026-11-05 (no template sets per curve level) ~7.5K and ~6.9K are free
+  there, bank 5's partly in 205-byte pieces.

@@ -2,9 +2,12 @@
 """The traffic's sprites, from renders of their 3D models (tools/traffic3d.py,
 in Blender: assets/traffic/s<size>_<top>_<bottom>_<pass>.png).
 
-A traffic car is two pieces - a top (closed or open) on a bottom (sport,
-saloon or GT) - and any top goes on any bottom: their models share the body
-above the rear face, and the line between the pieces is the same for all.
+A traffic car is two pieces - a top on a bottom - and any top goes on any
+bottom: their models share the body above the rear face, and the line
+between the pieces is the same for all. traffic3d.py renders two tops
+(closed, open) and three bottoms (sport, saloon, GT); since 2026-11-05 the
+game has half of them, for room: the closed top, the sport and the saloon
+bottoms (TOPS, BOTTOMS).
 Each piece's paint is black (K): the game gives each car its colours, one
 for its top and one for its bottom - a pen each - so a few sprites make
 dozens of cars. Black is used for nothing else (the
@@ -44,8 +47,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 SRC = os.path.join(ROOT, "assets", "traffic")
 SIZES = 8                                   # tools/traffic3d.py SCALES
 NEAR = 3                                    # the nearest, in two pieces
-TOPS = ["closed", "open"]
-BOTTOMS = ["sport", "saloon", "gt"]
+TOPS = ["closed"]                           # (and "open": traffic3d.py)
+BOTTOMS = ["sport", "saloon"]               # (and "gt")
 FAR_BOTTOM = "saloon"                       # the further ones' only bottom
 CELLS, CELL_PX = mkcar.CELLS, mkcar.CELL_PX
 

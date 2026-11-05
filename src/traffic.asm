@@ -6,9 +6,9 @@
 ;; gen/rowhole*.asm) - and the tables; scene.py says where they go and what
 ;; they look like, and this has to match it.
 ;;
-;; A car comes TR_ZSPAWN ahead (out of sight), in a lane, closed or open, a
-;; sports car's, a saloon's or a GT's tail, its top and its bottom each one
-;; of 16 colours - at random - no sooner than TR_GAP behind the last one,
+;; A car comes TR_ZSPAWN ahead (out of sight), in a lane, closed, a sports
+;; car's or a saloon's tail, its top and its bottom each one of 16 colours
+;; - at random - no sooner than TR_GAP behind the last one,
 ;; so that only one is near at a time. It goes when it has gone by
 ;; (TR_ZNEAR) or got away (TR_ZAWAY). 3 in 8 change lanes, once, to one
 ;; next to theirs: from 256 + TR_WHEN ahead on, TR_STEP of the way a
@@ -38,9 +38,10 @@ TR_REC      EQU 13                      ; a car:
 TR_ON       EQU 0                       ;   0: none
 TR_ZR       EQU 1                       ;   how far ahead (2)
 TR_LANE     EQU 3                       ;   0-3, left to right
-TR_TOP      EQU 4                       ;   its top's piece: closed 0, open
-                                        ;   TR_PIECE_LEN (from its size's first)
-TR_BOT      EQU 5                       ;   its bottom's (2 + 0-2) x TR_PIECE_LEN
+TR_TOP      EQU 4                       ;   its top's piece: 0 (from its
+                                        ;   size's first; the closed alone)
+TR_BOT      EQU 5                       ;   its bottom's (TR_TOPS + 0-1) x
+                                        ;   TR_PIECE_LEN
 TR_PT       EQU 6                       ;   its top's paint: the even lines'
                                         ;   byte, the odd lines' (tr_colours)
 TR_PB       EQU 8                       ;   its bottom's
@@ -222,26 +223,14 @@ tp_new
     and 3
     ld (hl),a                           ; lane: bits 0-1
     inc hl
-    ld a,b
-    and 4
-    jr z,$+4
-    ld a,TR_PIECE_LEN
-    ld (hl),a                           ; closed or open: bit 2
+    ld (hl),0                           ; the top: closed (the only one)
     inc hl
     ld a,b
-    rrca
-    rrca
-    rrca
-    and 3
-    cp 3
-    jr c,$+3
-    xor a
-    ld e,a
-    add a,a
-    add a,a
-    add a,e
-    add a,2*TR_PIECE_LEN
-    ld (hl),a                           ; the tail: bits 3-4 (3: the first)
+    and 8
+    jr z,$+4
+    ld a,TR_PIECE_LEN
+    add a,TR_TOPS*TR_PIECE_LEN
+    ld (hl),a                           ; the tail: sport or saloon (bit 3)
     inc hl
     ld a,c                              ; the colours: the top's, and the
     bit 4,c                             ; bottom's the same or another
@@ -840,7 +829,7 @@ to_note
     ld c,(ix+TR_PT+1)
     ld iyh,c
     ld iyl,c                            ; DE, IY = its top's paint
-    cp TR_NEAR*5*TR_PIECE_LEN
+    cp TR_NEAR*(TR_TOPS+TR_BOTTOMS)*TR_PIECE_LEN
     jr c,to_near_size
     add a,(ix+TR_TOP)                   ; a further size: one piece
     ld c,a

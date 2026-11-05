@@ -6,9 +6,8 @@
 CACHE_B     EQU TMPL_B+CACHE_LEVEL*TMPL_SET
     ASSERT (CACHE_B & #1FF) == 0 && (rd_t5 & #FF) == 0
 
-;; Per group g, at RA_<name> + g (tools/mkroad.py: in the room after each
-;; band B template set's near slots, L = #CD + g its lane) - cpcgfx.
-;; road_shift's sums, in 1/256 bytes:
+;; Per group g, at RA_<name> + g (tools/mkroad.py: a page each, L = #CD +
+;; g its lane) - cpcgfx.road_shift's sums, in 1/256 bytes:
 ;;
 ;;   P2L, P2H   2 P, P = PERSP_P half: road_x's move of two pairs (P4L,
 ;;              P4H: of four)
@@ -24,10 +23,10 @@ CACHE_B     EQU TMPL_B+CACHE_LEVEL*TMPL_SET
 ;; (A' is A + 64 so that its low byte's sign tells if t, up to 64 either
 ;; way, can move a: only when it is 0..127.)
     ASSERT lo(RA_P2L) == #CD && #CD+NGROUPS == 256 && PERSP_P == 10
-    ASSERT RA_P2H == RA_P2L+#200 && RA_P4H == RA_P4L+#200
-    ASSERT RA_AH == RA_AL+#200 && RA_AO == RA_AH+#200
-    ASSERT RA_WH == RA_WL+#200 && RA_FL == RA_WH+#200
-    ASSERT RA_C1H == RA_C1L+#200 && (W_NONE & #FF) == 0
+    ASSERT RA_P2H == RA_P2L+#100 && RA_P4H == RA_P4L+#100
+    ASSERT RA_AH == RA_AL+#100 && RA_AO == RA_AH+#100
+    ASSERT RA_WH == RA_WL+#100 && RA_FL == RA_WH+#100
+    ASSERT RA_C1H == RA_C1L+#100 && (W_NONE & #FF) == 0
     ASSERT (rd_tent0 & #FF) == 0 && (rd_tent1 & #FF) == 0
 
 ;; ---------------------------------------------------------------------------
@@ -60,7 +59,6 @@ st5_ph
     ld h,hi(RA_P2L)                     ; (self-modified: RA_P4L)
     ld c,(hl)
     inc h
-    inc h
     ld b,(hl)                           ; BC = 2 P (4 P)
     ld h,hi(RA_AL)
     ld a,(hl)
@@ -69,12 +67,10 @@ st5_op1
     ld (hl),a
     jp p,st5_bias                       ; 0..127: the bias may move a
     inc h
-    inc h
     ld a,(hl)
 st5_op2
     adc a,b                             ; (self-modified: SBC A,B, OR A)
     ld (hl),a                           ; a: A''s high byte
-    inc h
     inc h
 st5_cmp
     cp (hl)                             ; (RA_AO)
@@ -153,7 +149,6 @@ st5_tb
 st5_bias
     ld e,a
     inc h
-    inc h
     ld a,(hl)
 st5_op3
     adc a,b                             ; (self-modified: SBC A,B, OR A)
@@ -165,7 +160,6 @@ gb_xl
     add a,0                             ; (self-modified: 5 road_x)
     ld c,a
     inc h
-    inc h
     ld a,(hl)
 gb_xh
     adc a,0                             ; (self-modified) A:C = w
@@ -173,7 +167,6 @@ gb_xh
     adc a,0
     jr nz,st5_nob                       ; not -128..127: none
     rr c
-    inc h
     inc h
     ld b,(hl)                           ; BC: t - 64 (RA_FL: rd_tent0, 1)
     ld a,(bc)
@@ -348,13 +341,11 @@ j5_lv
     ld h,hi(RA_C1L)
     ld e,(hl)
     inc h
-    inc h
     ld d,(hl)
     ld h,hi(RA_AL)
     ld a,(hl)                           ; a level down: - c1
     sub e
     ld (hl),a
-    inc h
     inc h
     ld a,(hl)
     sbc a,d
@@ -365,13 +356,11 @@ j5_up
     ld h,hi(RA_C1L)
     ld e,(hl)
     inc h
-    inc h
     ld d,(hl)
     ld h,hi(RA_AL)
     ld a,(hl)                           ; a level up: + c1
     add a,e
     ld (hl),a
-    inc h
     inc h
     ld a,(hl)
     adc a,d
@@ -420,7 +409,6 @@ j5_wb
     ld h,hi(RA_WL)
     ld (hl),e
     inc h
-    inc h
     ld (hl),d
     ret
 
@@ -439,7 +427,6 @@ j5_s0
     ld b,a                              ; B = k
     ld h,hi(RA_C1L)
     ld e,(hl)
-    inc h
     inc h
     ld d,(hl)                           ; DE = c1
     or a
@@ -462,14 +449,12 @@ j5_s0m1
     ld h,hi(RA_WL)
     ld c,(hl)
     inc h
-    inc h
     ld a,(hl)                           ; A:C = w, W
     rl c
     adc a,0
     ld de,-64
     jr nz,j5_s0t                        ; not -128..127: t = 0
     rr c
-    inc h
     inc h
     ld b,(hl)
     ld a,(bc)
@@ -659,14 +644,12 @@ u5_ph
     ld h,0                              ; (self-modified: RA_P2L, RA_P4L)
     ld c,(hl)
     inc h
-    inc h
     ld b,(hl)
     ld h,hi(RA_AL)
     ld a,(hl)
 u5_op1
     add a,c                             ; (self-modified: SUB C)
     ld (hl),a
-    inc h
     inc h
     ld a,(hl)
 u5_op2

@@ -177,7 +177,7 @@ keys_now    defb 0              ; read_keys at the last picture (steer)
 ;; under way). Else NZ, A = the step to work out instead (cp_pend), if it is
 ;; a step's turn - none has gone since a curve level last did (step_turn)
 ;; and no level is under way - and the player wants one. Else Z, A as it
-;; was. Off the middle on a winding road a level is nearly always wanted:
+;; was. On a winding road a level is nearly always wanted:
 ;; the road would not follow the steering for seconds. (Only with the road
 ;; no more than a level behind the track: steering fell from 0.149 pairs a
 ;; picture to 0.121 and the lag hardly changed, 1.43 levels for 1.53.)

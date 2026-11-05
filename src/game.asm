@@ -319,16 +319,15 @@ draw_picture_hud
 ;; The curve level moves a level towards the game's - not within two
 ;; pictures of the last move, so that a buffer's road moves a level at most
 ;; between two of its pictures - holding back the sky's turn at this flip
-;; (sky_stay: the next picture would pay for both). With the road in the
-;; middle that is
-;; all (the curve levels' own sets are drawn, and the cache follows them
-;; when it can); off it, only once the cache has the level worked out
-;; ahead, and then all of the road moves to it at once (cache_kstep).
+;; (sky_stay: the next picture would pay for both) - only once the cache
+;; has the level worked out ahead, and then all of the road moves to it at
+;; once (cache_kstep). (Till 2026-11-05 the road in the middle was drawn
+;; from each curve level's own template sets, and moved a level there and
+;; then.)
 ;;
 ;; Then road_x moves towards steer_x - two or four pairs (STEP_MAX), so it
 ;; is always even: with steer_x a pair from it, it waits - the whole cache
-;; with it (cache_step), out of the middle only once the cache has caught
-;; up with the curve level, into it only once it has caught up too. A step
+;; with it (cache_step). A step
 ;; the cache has worked out ahead (cache_ready) is only copied into place,
 ;; ~5 ms, and goes whenever this runs; else one of two pairs is made there
 ;; and then, and only if it is sure to be done before the flip
@@ -351,23 +350,7 @@ cache_steps
     sub (hl)
     jr z,cache_steps_x
     ld c,a
-    ld a,(road_x)
-    or a
-    jp nz,cache_kstep           ; off the middle: worked out ahead (cache.asm)
-    ld a,c
-    or a
-    ld a,1
-    jp p,cache_steps_kd
-    ld a,-1
-cache_steps_kd
-    push af
-    add a,(hl)
-    ld (hl),a
-    ld a,2
-    ld (curve_wait),a
-    pop af
-    call cache_curve
-    call sky_stay               ; (the next picture has the road bent)
+    jp cache_kstep              ; (cache.asm)
 cache_steps_x
     ld a,(back_buf)             ; no more than STEP_MAX pairs from where the
     xor 1                       ; next picture's buffer last had it (the
@@ -384,13 +367,6 @@ cache_steps_x
     sub (hl)
     ret z
     ld c,a
-    ld a,(hl)
-    or a
-    jr nz,cache_steps_go
-    ld a,(rd_n2)                ; leaving the middle
-    or a
-    ret nz
-cache_steps_go
     call cache_ready            ; (one worked out ahead: its own gate)
     jr nz,cache_steps_gate
     ld b,2                      ; else two pairs at most, made there and
@@ -419,14 +395,6 @@ cache_steps_gate
     inc a
     cp b
     ret nc
-    ld a,c
-    ld hl,road_x
-    add a,(hl)
-    jr nz,cache_steps_step
-    ld a,(rd_n2)                ; into the middle only once the cache has
-    or a                        ; caught up (the level's own set is the
-    ret nz                      ; same then)
-cache_steps_step
     xor a
     ld (step_turn),a            ; (cp_turn)
     ld a,c

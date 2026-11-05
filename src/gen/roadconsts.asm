@@ -12,40 +12,38 @@ GRASS_X     EQU #F0
 GRASS_ROW   EQU 19
 GRASS_SHIFT EQU 7
 
-;; the template sets (see tools/mkroad.py): a set per curve level,
-;; level k at TMPL_A + (k + CURVE_K) * TMPL_SET; band B's TMPL_B - TMPL_A
-;; above band A's, in bank 5
+;; the templates (see tools/mkroad.py): the cache set at TMPL_A +
+;; CACHE_LEVEL * TMPL_SET; band B's TMPL_B - TMPL_A above band A's, in
+;; bank 5
 CURVE_K     EQU 7
 TMPL_SET    EQU 512
 TMPL_A      EQU #4000
 TMPL_B      EQU #6000
 CORES_A     EQU #6000
 CORES_B     EQU #4000
-;; a line with no road (the first level's copy; every level has one)
-tmpl_ground EQU TMPL_A+0
 
 ;; the cache sets (common.asm): the road off the middle of the screen
-CACHE_LEVEL EQU 15   ; the set after the last level's
+CACHE_LEVEL EQU 15   ; (where a sixteenth curve level's set would be)
 NGROUPS     EQU 51   ; template groups, slot 1 + g of a set
 NFAR        EQU 9   ; the first NFAR have far rows: a slot NGROUPS on
 NFARONLY    EQU 9   ; ... the first NFARONLY nothing else
 ;; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g
 W_NONE      EQU #1C00   ; a row with no bias: W this far off
-RA_P2L      EQU #61CD
-RA_P2H      EQU #63CD
-RA_P4L      EQU #65CD
-RA_P4H      EQU #67CD
-RA_AL       EQU #69CD
-RA_AH       EQU #6BCD
-RA_AO       EQU #6DCD
-RA_WL       EQU #6FCD
-RA_WH       EQU #71CD
-RA_FL       EQU #73CD
-RA_C1L      EQU #75CD
-RA_C1H      EQU #77CD
-RA_DA       EQU #79CD
-RA_KK       EQU #7BCD
-RA_H        EQU #7DCD
+RA_P2L      EQU #60CD
+RA_P2H      EQU #61CD
+RA_P4L      EQU #62CD
+RA_P4H      EQU #63CD
+RA_AL       EQU #64CD
+RA_AH       EQU #65CD
+RA_AO       EQU #66CD
+RA_WL       EQU #67CD
+RA_WH       EQU #68CD
+RA_FL       EQU #69CD
+RA_C1L      EQU #6ACD
+RA_C1H      EQU #6BCD
+RA_DA       EQU #6CCD
+RA_KK       EQU #6DCD
+RA_H        EQU #6ECD
 G_OFF       EQU 112   ; added to a pair position in the cache maths
 ROAD_X_MAX  EQU 32   ; road_x goes this far either way
 PERSP_P     EQU 10   ; a pair of it moves half-width h h * PERSP_P / 256 bytes

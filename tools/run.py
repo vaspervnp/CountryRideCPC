@@ -394,7 +394,7 @@ def traffic_cars(g):
     for i in range(0, n * rec, rec):
         r = raw[i:i + rec]
         if r[0]:
-            out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - 2,
+            out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - g.sym["TR_TOPS"],
                         colour[r[6], r[7]], colour[r[8], r[9]], r[11], r[10]))
     dropped = g.bank(6, g.sym["TR_DROPPED"], 1)[0]
     if dropped == 2:
@@ -446,11 +446,12 @@ def bushes_in_reach(g):
 
 
 def road_partial(g):
-    """At PICTURE_DONE: whether the picture was drawn with the cache (the
-    road off the middle) while it was still catching up with the curve
-    level - some groups of rows a level behind, as road_project allows for,
-    but not as the model draws it. (road_x moves the whole cache at once.)"""
-    return g.byte("RP_CACHE") and g.byte("RD_N2")
+    """At PICTURE_DONE: whether the picture was drawn with the cache still
+    catching up with the curve level - some groups of rows a level behind,
+    not as the model draws it. Never since 2026-11-05: a level, as road_x,
+    moves the whole cache at once (cache_kstep); only cache_init puts the
+    groups at it a batch at a time, before the first picture."""
+    return g.byte("RD_N2")
 
 
 # Where line 0 of the picture is in the emulator's framebuffer (1024 x 312,

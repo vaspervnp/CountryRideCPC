@@ -549,103 +549,7 @@ bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (si
     defb #59,#5A,#5C,#5D,#5E
     ASSERT $ <= #A000
     ORG #A540,FRAG_ST12
-    defs 17,0
-tr_s1_closed
-    ld ix,#C0C0
-    ld sp,hl
-    call tr_st1
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    call tr_st1
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    push de
-    push ix
-    push ix
-    push ix
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    ld sp,hl
-    call tr_st0
-    push de
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld sp,hl
-    call tr_st1
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    ld sp,hl
-    call tr_st1
-    push de
-    push de
-    push ix
-    push ix
-    push de
-    push de
-    jp tr_s1_tops_tail
-tr_s1_open
-    ld ix,#C0C0
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#76B9
-    push bc
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#679B
-    push bc
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#679B
-    push bc
-    ld sp,hl
-    ld bc,#0806
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    jp tr_s1_closed_c1
-    defs 1,0
+    defs 192,0
 bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F0,#EE
     defb #ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E4,#E3,#E2,#E1,#E0,#DF,#DE,#DD
@@ -653,28 +557,7 @@ bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (sig
     defb #CA,#C9,#C8,#C7,#C6,#C4,#C3,#C2,#C1,#C0,#BF,#BE,#BD,#BC,#BB,#B9
     defb #B8,#B7,#B6,#B5,#B4,#B3,#B2,#B1,#AF,#AE,#AD,#AC,#AB,#AA,#A9,#A8
     defb #A7,#A6,#A4,#A3,#A2
-tr_s1_closed_c1
-    ld bc,#679B
-    push bc
-    ld sp,hl
-    call tr_st1
-    ld bc,#D4C0
-    push bc
-    push ix
-    ld bc,#C06A
-    push bc
-    ld bc,#CFCF
-    push bc
-    ld sp,hl
-    call tr_st0
-    push ix
-    push ix
-    push ix
-    ld bc,#C03F
-    push bc
-    ld bc,#3FC0
-    push bc
-    jp tr_s1_closed_c2
+    defs 43,0
 bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#04,#05,#06,#07,#09,#0A,#0B,#0C,#0E,#0F,#10,#12,#13,#14
     defb #15,#17,#18,#19,#1B,#1C,#1D,#1E,#20,#21,#22,#23,#25,#26,#27,#29
@@ -682,29 +565,7 @@ bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (si
     defb #3E,#40,#41,#42,#43,#45,#46,#47,#49,#4A,#4B,#4C,#4E,#4F,#50,#51
     defb #53,#54,#55,#57,#58,#59,#5A,#5C,#5D,#5E,#60,#61,#62,#63,#65,#66
     defb #67,#68,#6A,#6B,#6C
-tr_s1_closed_c2
-    ld sp,hl
-    call tr_st1
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    push ix
-    push ix
-    push ix
-    ld bc,#C0E8
-    push bc
-    ld sp,hl
-    call tr_st1
-    ld b,e
-    jp tr_s1_closed_c3
-    defs 1,0
+    defs 43,0
 bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FC,#FB,#FA,#F9,#F7,#F6,#F5,#F4,#F2,#F1,#F0,#EE,#ED,#EC
     defb #EB,#E9,#E8,#E7,#E5,#E4,#E3,#E2,#E0,#DF,#DE,#DD,#DB,#DA,#D9,#D7
@@ -712,31 +573,7 @@ bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (sig
     defb #C2,#C0,#BF,#BE,#BD,#BB,#BA,#B9,#B7,#B6,#B5,#B4,#B2,#B1,#B0,#AF
     defb #AD,#AC,#AB,#A9,#A8,#A7,#A6,#A4,#A3,#A2,#A0,#9F,#9E,#9D,#9B,#9A
     defb #99,#98,#96,#95,#94
-tr_s1_closed_c3
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    push ix
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-tr_s1_tops_tail
-    ld sp,hl
-    push iy
-    push iy
-    push iy
-    push iy
-    push iy
-    push iy
-    push iy
-    jp tr_done
-tr_s4_closed
-    ld ix,#C0C0
-    ld sp,hl
-    jp tr_s4_closed_c4
-    defs 2,0
+    defs 43,0
 bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#04,#05,#07,#08,#0A,#0B,#0D,#0E,#10,#11,#12,#14,#15,#17
     defb #18,#1A,#1B,#1D,#1E,#1F,#21,#22,#24,#25,#27,#28,#2A,#2B,#2D,#2E
@@ -744,139 +581,9 @@ bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (si
     defb #47,#48,#4A,#4B,#4C,#4E,#4F,#51,#52,#54,#55,#57,#58,#59,#5B,#5C
     defb #5E,#5F,#61,#62,#64,#65,#67,#68,#69,#6B,#6C,#6E,#6F,#71,#72,#74
     defb #75,#76,#78,#79,#7B
-tr_s4_closed_c4
-    call tr_st1
-    push iy
-    push iy
-    ld sp,hl
-    call tr_st0
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    push iy
-    push ix
-    push iy
-    ld sp,hl
-    call tr_st1
-    push de
-    push ix
-    push de
-    ld sp,hl
-    jp tr_s4_closed_c5
     ASSERT $ <= #A800
     ORG #AD40,FRAG_ST13
-tr_s4_closed_c5
-    call tr_st0
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    jp tr_s4_cars_tail
-tr_s4_open
-    ld ix,#C0C0
-    ld sp,hl
-    ld bc,#07FF
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FC76
-    push bc
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#67ED
-    push bc
-    ld sp,hl
-    ld bc,#0804
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#CFED
-    push bc
-    ld sp,hl
-    call tr_st1
-    push ix
-    push ix
-    ld bc,#9F95
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push iy
-    push iy
-    ld c,iyl
-    ld b,#C0
-    push bc
-tr_s4_cars_tail
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    push de
-    push de
-    push de
-    push de
-    ld sp,hl
-    call tr_st1
-    ld b,iyl
-    ld c,#0F
-    push bc
-    ld c,iyl
-    ld b,#0F
-    push bc
-    ld b,iyl
-    ld c,#0F
-    push bc
-    ld c,iyl
-    ld b,#0F
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld b,e
-    ld c,#CF
-    push bc
-    ld bc,#CF3C
-    push bc
-    ld b,#3C
-    push bc
-    ld c,#CF
-    push bc
-    ld c,e
-    ld b,#CF
-    push bc
-    ld sp,hl
-    call tr_st0
-    push iy
-    push iy
-    push iy
-    push iy
-    push iy
-    ld sp,hl
-    jp tr_s4_closed_c6
+    defs 192,0
 bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FC,#FB,#F9,#F8,#F6,#F5,#F3,#F2,#F0,#EF,#EE,#EC,#EB,#E9
     defb #E8,#E6,#E5,#E3,#E2,#E1,#DF,#DE,#DC,#DB,#D9,#D8,#D6,#D5,#D3,#D2
@@ -884,31 +591,7 @@ bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (sig
     defb #B9,#B8,#B6,#B5,#B4,#B2,#B1,#AF,#AE,#AC,#AB,#A9,#A8,#A7,#A5,#A4
     defb #A2,#A1,#9F,#9E,#9C,#9B,#99,#98,#97,#95,#94,#92,#91,#8F,#8E,#8C
     defb #8B,#8A,#88,#87,#85
-tr_s4_closed_c6
-    call tr_stm1
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_stm1
-    push ix
-    push ix
-    push ix
-    push ix
-    ld sp,hl
-    ld bc,#D4C0
-    push bc
-    push bc
-    ld bc,#E8E8
-    push bc
-    jp tr_done
-    defs 1,0
+    defs 43,0
 bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of it (cache.asm: rd_gp)
     defb #CD,#CD,#CE,#CE,#CF,#D0,#D1,#D1,#D2,#D2,#D3,#D4,#D4,#D5,#D5,#D6
     defb #D7,#D7,#D8,#D8,#D9,#DA,#DA,#DB,#DB,#DC,#DC,#DD,#DE,#DE,#DF,#DF
@@ -916,30 +599,7 @@ bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of i
     defb #EA,#EA,#EB,#EB,#EC,#ED,#ED,#EE,#EE,#EF,#F0,#F0,#F1,#F1,#F2,#F3
     defb #F3,#F4,#F4,#F5,#F5,#F6,#F7,#F7,#F8,#F8,#F9,#FA,#FA,#FB,#FB,#FC
     defb #FD,#FD,#FE,#FE,#FF
-tr_s2_closed
-    ld ix,#C0C0
-    ld sp,hl
-    call tr_st1
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    push iy
-    push ix
-    push ix
-    push iy
-    ld sp,hl
-    call tr_st0
-    push de
-    push ix
-    push ix
-    push de
-    jp tr_s2_closed_c8
+    defs 43,0
 bush_cx0   ; curve level 0, per row: the road's centre
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
@@ -947,32 +607,7 @@ bush_cx0   ; curve level 0, per row: the road's centre
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s2_closed_c8
-    ld sp,hl
-    call tr_st1
-    push iy
-    push ix
-    push ix
-    push iy
-    ld sp,hl
-    call tr_st0
-    push de
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld sp,hl
-    call tr_st1
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    jp tr_s2_closed_c9
-    defs 1,0
+    defs 43,0
 bush_cx1   ; curve level 1, per row: the road's centre
     defb #39,#39,#38,#38,#38,#38,#38,#37,#37,#37,#37,#37,#36,#36,#36,#36
     defb #36,#36,#35,#35,#35,#35,#35,#35,#34,#34,#34,#34,#34,#34,#33,#33
@@ -980,133 +615,9 @@ bush_cx1   ; curve level 1, per row: the road's centre
     defb #31,#31,#31,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s2_closed_c9
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    jp tr_s2_tops_tail
-tr_s2_open
-    ld ix,#C0C0
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    jp tr_s2_closed_c10
     ASSERT $ <= #B000
     ORG #B540,FRAG_ST14
-tr_s2_closed_c10
-    ld bc,#FC33
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCDE
-    push bc
-    ld bc,#33ED
-    push bc
-    ld sp,hl
-    call tr_st4
-    ld bc,#FCDE
-    push bc
-    ld bc,#67ED
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    ld bc,#C0CA
-    push bc
-    ld bc,#CFED
-    push bc
-    ld sp,hl
-    call tr_st1
-    push ix
-    push ix
-    ld bc,#C06A
-    push bc
-    push ix
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    push ix
-    push ix
-    ld bc,#C0E8
-    push bc
-    ld sp,hl
-    call tr_st1
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    push ix
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-tr_s2_tops_tail
-    ld sp,hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    jp tr_done
-tr_s5_closed
-    ld ix,#C0C0
-    ld sp,hl
-    call tr_st1
-    ld b,iyl
-    ld c,#C0
-    push bc
-    ld c,iyl
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    push de
-    push ix
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    push ix
-    push iy
-    jp tr_s5_cars_tail
-tr_s5_open
-    ld ix,#C0C0
-    ld sp,hl
-    ld bc,#0800
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FC9B
-    push bc
-    ld sp,hl
-    ld bc,#0803
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCCF
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    jp tr_s5_closed_c11
+    defs 192,0
 bush_cx2   ; curve level 2, per row: the road's centre
     defb #42,#42,#41,#41,#41,#40,#40,#3F,#3F,#3F,#3E,#3E,#3D,#3D,#3D,#3C
     defb #3C,#3C,#3B,#3B,#3A,#3A,#3A,#3A,#39,#39,#39,#38,#38,#38,#37,#37
@@ -1114,29 +625,7 @@ bush_cx2   ; curve level 2, per row: the road's centre
     defb #33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#31,#31,#31,#31,#31,#31
     defb #31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s5_closed_c11
-    ld bc,#6FE8
-    push bc
-    ld sp,hl
-    call tr_st0
-    push ix
-    push ix
-    push ix
-tr_s5_cars_tail
-    ld sp,hl
-    call tr_st1
-    push de
-    push de
-    push de
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    push iy
-    push iy
-    push iy
-    jp tr_s5_closed_c12
-    defs 1,0
+    defs 43,0
 bush_cx3   ; curve level 3, per row: the road's centre
     defb #4C,#4B,#4A,#4A,#49,#48,#48,#47,#46,#46,#45,#45,#44,#44,#43,#43
     defb #42,#42,#41,#40,#40,#3F,#3F,#3F,#3E,#3D,#3D,#3C,#3C,#3C,#3B,#3B
@@ -1144,30 +633,7 @@ bush_cx3   ; curve level 3, per row: the road's centre
     defb #35,#34,#34,#34,#34,#33,#33,#33,#33,#33,#32,#32,#32,#32,#31,#31
     defb #31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s5_closed_c12
-    push iy
-    ld sp,hl
-    call tr_st0
-    ld b,e
-    ld c,#CF
-    push bc
-    ld bc,#CF3C
-    push bc
-    ld bc,#3CCF
-    push bc
-    ld c,e
-    ld b,#CF
-    push bc
-    ld sp,hl
-    call tr_st0
-    push iy
-    push iy
-    push iy
-    push iy
-    ld sp,hl
-    call tr_stm1
-    jp tr_s5_closed_c13
-    defs 2,0
+    defs 43,0
 bush_cx4   ; curve level 4, per row: the road's centre
     defb #55,#54,#53,#53,#52,#51,#50,#4F,#4E,#4E,#4D,#4C,#4B,#4B,#4A,#49
     defb #48,#48,#47,#46,#45,#45,#44,#44,#43,#42,#42,#41,#40,#40,#3F,#3F
@@ -1175,29 +641,7 @@ bush_cx4   ; curve level 4, per row: the road's centre
     defb #37,#36,#36,#36,#35,#35,#35,#34,#34,#34,#33,#33,#33,#33,#32,#32
     defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s5_closed_c13
-    ld bc,#D4C0
-    push bc
-    push ix
-    push ix
-    ld bc,#C0E8
-    push bc
-    ld sp,hl
-    ld bc,#D4C0
-    push bc
-    push ix
-    ld bc,#C0E8
-    push bc
-    jp tr_done
-tr_s7_closed
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#C0C0
-    push bc
-    jp tr_s7_closed_c14
+    defs 43,0
 bush_cx5   ; curve level 5, per row: the road's centre
     defb #5E,#5D,#5C,#5B,#5A,#59,#58,#57,#56,#55,#54,#53,#52,#51,#50,#4F
     defb #4E,#4E,#4C,#4C,#4A,#4A,#49,#49,#47,#47,#46,#45,#44,#44,#43,#42
@@ -1205,52 +649,9 @@ bush_cx5   ; curve level 5, per row: the road's centre
     defb #38,#38,#37,#37,#36,#36,#36,#35,#35,#35,#34,#34,#33,#33,#33,#33
     defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-tr_s7_closed_c14
-    ld sp,hl
-    call tr_st0
-    ld b,iyl
-    ld c,#C0
-    push bc
-    ld c,iyl
-    ld b,#C0
-    push bc
-    jp tr_s7_cars_tail
-tr_s7_open
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    jp tr_s7_closed_c15
     ASSERT $ <= #B800
     ORG #BD40,FRAG_ST15
-tr_s7_closed_c15
-    ld bc,#C0E8
-    push bc
-tr_s7_cars_tail
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    push de
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    push iy
-    ld sp,hl
-    ld bc,#D4C0
-    push bc
-    ld bc,#C0E8
-    push bc
-    jp tr_done
-    defs 154,0
+    defs 192,0
 bush_cx6   ; curve level 6, per row: the road's centre
     defb #68,#66,#65,#64,#63,#61,#60,#5F,#5D,#5D,#5B,#5A,#59,#58,#57,#56
     defb #54,#54,#52,#51,#50,#4F,#4E,#4E,#4C,#4B,#4B,#49,#48,#48,#47,#46
