@@ -3,21 +3,7 @@
 
 trafcode_rh1
 tr_s2_sport_c1
-    ld c,iyl
-    ld b,#FC
-    push bc
-    ld bc,#3FC0
-    push bc
-    ld b,#E8
-    push bc
-    push ix
-    ld c,#E8
-    push bc
-    ld bc,#C03F
-    push bc
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
     jp tr_s2_bottoms_tail
 tr_s2_saloon
     ld ix,#C0C0
@@ -43,7 +29,21 @@ tr_s2_saloon
     push bc
     ld sp,hl
     call tr_st0
-    ld c,iyl
+    push iy
+    ld bc,#0F0F
+    push bc
+    ld c,#3C
+    push bc
+    ld b,#3C
+    push bc
+    ld c,#0F
+    push bc
+    ld b,#0F
+    push bc
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
     jp tr_s2_sport_c2
 trafcode_rh1_end
     ASSERT trafcode_rh1_end <= rr_tlo+256

@@ -395,7 +395,7 @@ def traffic_cars(g):
         r = raw[i:i + rec]
         if r[0]:
             out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - 2,
-                        colour[r[6], r[7]], colour[r[8], r[9]]))
+                        colour[r[6], r[7]], colour[r[8], r[9]], r[11], r[10]))
     dropped = g.bank(6, g.sym["TR_DROPPED"], 1)[0]
     if dropped == 2:
         # the picture was late already and no car at a near size: neither

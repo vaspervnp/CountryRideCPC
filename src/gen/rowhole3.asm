@@ -3,75 +3,28 @@
 
 trafcode_rh3
 tr_s2_sport_c3
-    ld c,#3F
-    push bc
-    ld b,#3F
-    push bc
-    ld bc,#1F0F
-    push bc
-    ld b,#0F
-    push bc
-    ld b,iyl
-    ld c,#E8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
-    push de
-    ld bc,#C068
-    push bc
-    ld bc,#3C3C
-    push bc
-    ld bc,#94C0
-    push bc
-    push de
-    ld b,e
-    ld c,#FC
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
-    push iy
-    ld bc,#C068
-    push bc
-    ld bc,#3C3C
-    push bc
     ld bc,#94C0
     push bc
     push iy
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
     push de
     push de
     push de
     push de
     push de
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
     push iy
     push iy
     push iy
     push iy
     push iy
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
+    push iy
 tr_s2_bottoms_tail
     ld sp,hl
     call tr_stm1
@@ -82,7 +35,7 @@ tr_s2_bottoms_tail
     push ix
     push ix
     push ix
-    ld bc,#C0FC
+    ld bc,#C0E8
     push bc
     ld sp,hl
     push ix
@@ -96,12 +49,57 @@ tr_s3_closed
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld bc,#FCE8
+    ld b,e
+    ld c,#C0
     push bc
-    ld b,#E8
-    push bc
+    push ix
+    ld c,e
+    ld b,#C0
     push bc
     ld sp,hl
+    call tr_st1
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st1
+    push iy
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    push de
+    jp tr_s3_cars_tail
+tr_s3_open
+    ld ix,#C0C0
+    ld sp,hl
+    ld bc,#0800
+    add hl,bc
+    bit 6,h
+    call nz,tr_next_row
+    ld bc,#FCB9
+    push bc
+    ld sp,hl
+    ld bc,#0800
     jp tr_s3_closed_c4
 trafcode_rh3_end
     ASSERT trafcode_rh3_end <= rr_mask+256

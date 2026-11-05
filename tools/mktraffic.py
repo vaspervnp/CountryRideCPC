@@ -6,8 +6,8 @@ A traffic car is two pieces - a top (closed or open) on a bottom (sport,
 saloon or GT) - and any top goes on any bottom: their models share the body
 above the rear face, and the line between the pieces is the same for all.
 Each piece's paint is black (K): the game gives each car its colours, one
-for its top and one for its bottom - a pen, or two in a checkerboard - so a
-few sprites make dozens of cars. Black is used for nothing else (the
+for its top and one for its bottom - a pen each - so a few sprites make
+dozens of cars. Black is used for nothing else (the
 darkest of the rest is navy).
 
 The engine draws a sprite with PUSHes, two bytes - four pixels - at a time,
@@ -15,10 +15,13 @@ and gives the paint from registers: a byte (two pixels) is all paint or none.
 So, from the renders:
 
 - each cell (a mode 0 pixel) is paint where most of what covers it is (the
-  paint pass), else the mean colour of the rest, over the asphalt's grey,
-  brought to the pens without black (tools/dither.py) - what would be
-  black, navy;
+  paint pass), else the mean colour of the rest - its own, not over the
+  asphalt - brought to the nearest of PENS (tools/dither.py; since
+  2026-11-05 flat colours, no checkerboards, as the player's car) - what
+  would be black, navy;
 - a byte half paint is all paint or none, as the two cells' paint adds up;
+  a cell mostly paint in a byte that is not takes the other cell's colour
+  (or the byte is paint, the other cell clear);
 - lone cells are dropped, each line's run widened to whole pairs of bytes
   over the asphalt's grey.
 
@@ -49,10 +52,9 @@ CELLS, CELL_PX = mkcar.CELLS, mkcar.CELL_PX
 # the pens for what is not paint: the cars' own, but black
 LETTERS = {c: p for c, p in mkcars.LETTERS.items() if c != "K"}
 PALETTE = {c: pen_rgb(PEN[p]) for c, p in LETTERS.items()}
-# the pairs that may mix: neighbours on the reds', the blues' and the greys'
-# ramps
-PAIRS = ["DR", "RO", "OY", "YW", "RW", "NB", "BS", "SH", "HW", "SP", "PW", "GW", "GP",
-         "NG"]
+# the pens it is brought to (no blues: the glass's and the chrome's
+# reflections of the sky would edge it in pastel)
+PENS = "DROYWN"
 PAINT = "K"
 
 
@@ -84,26 +86,28 @@ def load(size, top, bottom):
 def art(size, top, bottom):
     """Rows of letters ('.' clear, K paint) and the rows the top covers."""
     n = CELL_PX[0] * CELL_PX[1]
-    ul = [dither._lin(float(v)) for v in dither.ASPHALT]
     cells = load(size, top, bottom)
-    colours, paint, toprows = [], [], set()
+    colours, paint, mostly, toprows = [], [], [], set()
     for y, row in enumerate(cells):
-        cr, pr = [], []
+        cr, pr, mr = [], [], []
         for x, (a, pa, tc, s) in enumerate(row):
             if tc / n >= 0.3:
                 toprows.add(y)
             if a / n < 0.5:
                 cr.append(None)
                 pr.append(0.0)
+                mr.append(False)
                 continue
-            rest = n - pa                       # what is not paint, the grey too
-            cr.append(tuple(dither._srgb((s[k] + ul[k] * (n - a)) / rest) for k in range(3))
+            rest = a - pa                       # what is not paint, its own
+            cr.append(tuple(dither._srgb(s[k] / rest) for k in range(3))
                       if rest > 0.5 else dither.ASPHALT)
             pr.append(pa / n)
+            mr.append(2 * pa >= a)
         colours.append(cr)
         paint.append(pr)
+        mostly.append(mr)
     graded = dither.grade(colours)
-    rows = [list(r) for r in dither.pattern(graded, PALETTE, PAIRS, mixed_only="G")]
+    rows = [list(r) for r in dither.pattern(graded, {c: PALETTE[c] for c in PENS}, [])]
     # what would be black - tyres, plastic, shadow - navy (dark grey is
     # nearer dark red, and black is the paint's)
     for y, row in enumerate(graded):
@@ -117,6 +121,13 @@ def art(size, top, bottom):
                 continue
             if paint[y][x] + paint[y][x + 1] >= 1.0:
                 rows[y][x] = rows[y][x + 1] = PAINT
+                continue
+            # a cell mostly paint in a byte that is not: its rim's colour
+            # would be a speck - the byte paint if the other cell is clear,
+            # else that cell's colour
+            for c, o in ((x, x + 1), (x + 1, x)):
+                if mostly[y][c] and not mostly[y][o]:
+                    rows[y][c] = rows[y][o] = rows[y][o] if rows[y][o] != "." else PAINT
     rows = mkcar.lone(["".join(r) for r in rows])
     return rows, toprows
 
@@ -168,13 +179,12 @@ def size_art(size):
                 bottoms={b: [r[cut] for r in v[:last + 1]] for b, v in bottoms.items()})
 
 
-# Colours a car's paint can take: a pen, or two in a checkerboard (a byte -
-# two pixels - one way round on even lines, the other on odd ones)
+# Colours a car's paint can take: a pen (or two in a checkerboard - a byte,
+# two pixels, one way round on even lines, the other on odd ones - which
+# the game no longer gives: scene.py TRAFFIC_COLOURS)
 COLOURS = [("RED",), ("ORANGE",), ("YELLOW",), ("WHITE",), ("BLUE",), ("SKY",),
            ("PASTEL",), ("GRASS_A",), ("BUSH",), ("MAUVE",), ("CAR_DARK",), ("BLACK",),
-           ("NAVY",), ("RED", "ORANGE"), ("ORANGE", "YELLOW"), ("YELLOW", "WHITE"),
-           ("BLUE", "SKY"), ("SKY", "WHITE"), ("RED", "CAR_DARK"), ("MAUVE", "PASTEL"),
-           ("GRASS_A", "GRASS_B"), ("HAZE", "WHITE")]
+           ("HAZE",), ("GRASS_B",)]
 
 
 def painted(rows, colour, line0=0):

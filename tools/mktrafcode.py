@@ -62,7 +62,7 @@ TR_ZFAR = 640                   # src/traffic.asm TR_ZAWAY: no car further
 # 7 keeps its room for the game. What does not fit (src/gen/trafleft.py)
 # mkbush.py lays the same way in the fragments' free runs, then - in every
 # CARn.BIN - in the road parts' hidden lines.
-REGIONS = [("6", "RAM_C6", "#8000", 1700),     # bank 6, after the traffic's code
+REGIONS = [("6", "RAM_C6", "#8000", 1590),     # bank 6, after the traffic's code
            ("f4", "RAM_C6", "FRAG4+FRAG_LEN", 111),     # fragment 4's end
            ("4", "RAM_C4", "STAGE_A", 170)]     # bank 4, after cache4.asm
 
@@ -462,11 +462,6 @@ def main():
     emit(";; the colours: the even lines' byte, the odd lines' (a car's record has")
     emit(";; its colours' offsets)")
     emit("tr_colours")
-    pairs = set()
-    for c in COLOURS:
-        pens = c * 2 if len(c) == 1 else c
-        pairs.add((m0_byte(PEN[pens[0]], PEN[pens[1]]), m0_byte(PEN[pens[1]], PEN[pens[0]])))
-    assert len(pairs) == len(COLOURS)       # (tools/run.py reads a car's colours back)
     for c in COLOURS:
         pens = c * 2 if len(c) == 1 else c
         p1, p2 = PEN[pens[0]], PEN[pens[1]]

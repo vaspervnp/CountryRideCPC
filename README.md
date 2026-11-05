@@ -116,10 +116,11 @@ sizes and at different distances from the road. They grow as they come
 nearer, from 5 to 16 lines, and leave by the sides of the screen.
 
 Up to two cars of traffic drive ahead in the lanes, slower than the player,
-who catches up with them and drives by - or bumps into them. Each
+who catches up with them and drives by - or bumps into them. Now and then
+one moves over into the lane next to it. Each
 has a closed or an open top - a coupé's cabin, or a windscreen with a driver
 behind it - on a sports car's, a saloon's or a GT's tail, and a colour for
-its top and one for its tail, out of sixteen: hundreds of different cars.
+its top and one for its tail, out of fourteen: hundreds of different cars.
 
 ### The race
 
@@ -802,9 +803,14 @@ with them and passes. Their art is rendered in Blender
 (`tools/traffic3d.py`): a common body, two tops (closed: a coupé's cabin;
 open: a windscreen, headrests and a driver) and three tails (a sports car's
 round lamps, a saloon's wide clusters, a GT's light bar), at eight sizes;
-`tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`). What
+`tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`) in
+flat colours, with no dithering (since 2026-11-05, as the player's car:
+each cell's own mean colour, the nearest of red, orange, yellow, white,
+dark red and navy; a cell mostly paint in a byte that is not takes its
+neighbour's colour, or the byte is paint). What
 takes the car's colour is black in the art, so any top goes with any tail
-and each has a colour of its own out of 16 (a pen, or two in a
+and each has a colour of its own out of 16 (`TRAFFIC_COLOURS`: a pen each
+- 14 pens, red and white twice; the engine could still give two in a
 checkerboard). The three nearest sizes come in two pieces, top and tail;
 the five further ones in one, a closed or open top on the saloon's tail,
 still in two colours. `tools/scene.py` says where a car goes and what it
@@ -817,6 +823,13 @@ looks like, and `src/traffic.asm` has to match it.
   (`tools/course.py` `traffic`, `tr_pauses` in bank 6, by `stage_id`) -
   and up to 31 more at random, and at least 160 units behind it; it goes
   when it has gone by or got away.
+- **Changing lanes.** 3 cars in 8 move over once, to the other lane on
+  their side or - from an inner lane, half of them - the other inner one,
+  beginning 384-480 units ahead (`TR_WHEN`), a 32nd of the way a picture
+  (1.3 s; `tp_lanes`). Its place is then its lane's and that share of the
+  way to the other's (`to_way`: one 8 x 8 multiplication, ~0.1 ms, only
+  while it changes). The two cars stay 160 units apart, so they never
+  meet.
 - **Projection.** As a bush's: its row from its depth, its size from its
   row, its line from *h / r*, and it is drawn only whole - on the screen,
   on the road (below its top) and over near lines. Its place is its lane's,
@@ -828,8 +841,8 @@ looks like, and `src/traffic.asm` has to match it.
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
-  pens in a checkerboard make a byte one way round on even lines, the other
-  on odd ones), and a word half paint takes its paint byte from E or IYL: a
+  pens in a checkerboard would make a byte one way round on even lines, the
+  other on odd ones), and a word half paint takes its paint byte from E or IYL: a
   painted car costs no more than a plain one. Pieces that end the same way
   share their last lines (~800 bytes less). A near size's top is drawn in
   its colour, then its tail in its own; a further size loads its tail's
@@ -844,7 +857,7 @@ looks like, and `src/traffic.asm` has to match it.
   car is drawn that time; from 10, 6.7 ms, only a car at a near size: the
   nearer one, if it is at one, and neither if not (`tr_dropped`). A far car
   blinks; a near one never.
-- **Memory.** The pieces (4K) go where there is room in a RAM configuration
+- **Memory.** The pieces (3.6K) go where there is room in a RAM configuration
   they can run in: bank 6 after the traffic's code and in the row tables'
   pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
   fragment 4, the fragments' free runs and, in every `CARn.BIN`, the road

@@ -26,55 +26,55 @@ TR_SINFO_LEN EQU 4
 ;; saloon and GT bottoms; a further size's closed and open whole cars
 tr_pieces
     defw tr_s0_closed
-    defb 0,2,13   ; 162 bytes, 420 us
+    defb RAM_C6,2,13   ; 150 bytes, 408 us
     defw tr_s0_open
-    defb 0,0,8   ; 165 bytes, 439 us
+    defb RAM_C6,0,8   ; 159 bytes, 433 us
     defw tr_s0_sport
-    defb RAM_C6,0,18   ; 356 bytes, 950 us
+    defb RAM_C6,0,18   ; 342 bytes, 936 us
     defw tr_s0_saloon
-    defb RAM_C6,0,18   ; 341 bytes, 935 us
+    defb RAM_C6,0,18   ; 334 bytes, 928 us
     defw tr_s0_gt
-    defb RAM_C6,0,18   ; 315 bytes, 909 us
+    defb RAM_C6,0,18   ; 308 bytes, 902 us
     defw tr_s1_closed
-    defb 0,2,11   ; 139 bytes, 379 us
+    defb 0,2,11   ; 133 bytes, 373 us
     defw tr_s1_open
-    defb 0,0,6   ; 175 bytes, 384 us
+    defb 0,0,6   ; 168 bytes, 377 us
     defw tr_s1_sport
-    defb RAM_C6,0,16   ; 274 bytes, 703 us
+    defb RAM_C6,0,16   ; 252 bytes, 681 us
     defw tr_s1_saloon
-    defb RAM_C6,0,16   ; 271 bytes, 700 us
+    defb RAM_C6,0,16   ; 249 bytes, 678 us
     defw tr_s1_gt
-    defb RAM_C6,0,16   ; 243 bytes, 672 us
+    defb RAM_C6,0,16   ; 215 bytes, 644 us
     defw tr_s2_closed
-    defb 0,2,10   ; 121 bytes, 317 us
+    defb 0,2,10   ; 101 bytes, 297 us
     defw tr_s2_open
-    defb 0,0,6   ; 146 bytes, 345 us
+    defb 0,0,6   ; 136 bytes, 335 us
     defw tr_s2_sport
-    defb RAM_C6,0,13   ; 231 bytes, 548 us
+    defb RAM_C6,0,13   ; 197 bytes, 514 us
     defw tr_s2_saloon
-    defb RAM_C6,0,13   ; 208 bytes, 525 us
+    defb RAM_C6,0,13   ; 182 bytes, 499 us
     defw tr_s2_gt
-    defb RAM_C6,0,13   ; 196 bytes, 513 us
+    defb RAM_C6,0,13   ; 167 bytes, 484 us
     defw tr_s3_closed
-    defb RAM_C6,2,9   ; 246 bytes, 641 us
+    defb RAM_C6,2,9   ; 212 bytes, 607 us
     defw tr_s3_open
-    defb RAM_C6,0,5   ; 266 bytes, 633 us
+    defb RAM_C6,0,5   ; 245 bytes, 612 us
     defw tr_s4_closed
-    defb 0,1,7   ; 198 bytes, 525 us
+    defb 0,1,7   ; 184 bytes, 511 us
     defw tr_s4_open
-    defb 0,0,5   ; 220 bytes, 519 us
+    defb 0,0,5   ; 211 bytes, 510 us
     defw tr_s5_closed
-    defb RAM_C6,1,6   ; 144 bytes, 375 us
+    defb 0,1,6   ; 128 bytes, 359 us
     defw tr_s5_open
-    defb RAM_C6,0,4   ; 156 bytes, 376 us
+    defb 0,0,4   ; 145 bytes, 365 us
     defw tr_s6_closed
-    defb RAM_C4,0,5   ; 108 bytes, 269 us
+    defb RAM_C4,0,5   ; 96 bytes, 257 us
     defw tr_s6_open
-    defb RAM_C4,0,3   ; 102 bytes, 246 us
+    defb RAM_C4,0,3   ; 91 bytes, 235 us
     defw tr_s7_closed
-    defb 0,0,3   ; 74 bytes, 160 us
+    defb 0,0,3   ; 65 bytes, 151 us
     defw tr_s7_open
-    defb 0,0,3   ; 71 bytes, 157 us
+    defb 0,0,3   ; 60 bytes, 146 us
 TR_PIECE_LEN EQU 5
 
 tr_rsize    ; per row: the size a car on it is drawn at - its record in
@@ -150,18 +150,18 @@ tr_colours
     defb #FF,#FF   ; MAUVE
     defb #3F,#3F   ; CAR_DARK
     defb #00,#00   ; BLACK
-    defb #4F,#8F   ; RED/ORANGE
-    defb #4C,#8C   ; BLUE/SKY
-    defb #9C,#6C   ; SKY/WHITE
-    defb #53,#A3   ; GRASS_A/GRASS_B
+    defb #F0,#F0   ; HAZE
+    defb #F3,#F3   ; GRASS_B
+    defb #3C,#3C   ; WHITE
+    defb #0F,#0F   ; RED
 
-;; region 6: 1699 of 1700 bytes
-;; region rh1: 74 of 75 bytes
+;; region 6: 1589 of 1590 bytes
+;; region rh1: 73 of 75 bytes
 ;; region rh2: 174 of 175 bytes
-;; region rh3: 173 of 175 bytes
-;; region rh4: 173 of 175 bytes
-;; region rh5: 170 of 175 bytes
-;; region rh6: 94 of 96 bytes
-;; region f4: 110 of 111 bytes
-;; region 4: 151 of 170 bytes
-;; in the fragments: 1265 bytes
+;; region rh3: 175 of 175 bytes
+;; region rh4: 174 of 175 bytes
+;; region rh5: 175 of 175 bytes
+;; region rh6: 95 of 96 bytes
+;; region f4: 97 of 111 bytes
+;; region 4: 124 of 170 bytes
+;; in the fragments: 1061 bytes

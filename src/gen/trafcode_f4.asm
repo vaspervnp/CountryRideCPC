@@ -2,64 +2,55 @@
 ;; Traffic sprite pieces, region f4 (RAM_C6).
 
 trafcode_f4
-tr_s5_closed_c7
+tr_s0_closed_c7
+    ld b,#CF
+    push bc
+    ld sp,hl
     call tr_st0
-    ld bc,#D4D4
+    ld bc,#D4C0
     push bc
-    ld c,#C0
+    push ix
+    push ix
+    push ix
+    ld bc,#9FCF
     push bc
+    ld bc,#6FE8
     push bc
-tr_s5_cars_tail
+    ld sp,hl
+    call tr_st0
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    ld sp,hl
+    call tr_st0
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
     ld sp,hl
     call tr_st1
-    push de
-    push de
-    push de
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
     ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
-    push iy
-    push iy
     ld b,iyl
-    ld c,#FC
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCCF
-    push bc
-    ld bc,#6D3C
-    push bc
-    ld bc,#3C8F
-    push bc
-    ld bc,#CFE8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
-    push iy
-    push iy
-    ld b,iyl
-    ld c,#FC
-    push bc
-    ld sp,hl
-    call tr_stm1
-    ld bc,#FCC0
+    ld c,#C0
     push bc
     push ix
     push ix
-    ld bc,#C0E8
-    push bc
-    ld sp,hl
-    ld bc,#D4D4
-    push bc
-    push bc
-    ld c,#FC
+    push ix
+    push ix
+    push ix
+    ld c,iyl
+    ld b,#C0
     push bc
     jp tr_done
 trafcode_f4_end

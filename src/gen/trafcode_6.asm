@@ -6,9 +6,6 @@ tr_s0_sport
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
     push de
     push de
     push de
@@ -16,9 +13,8 @@ tr_s0_sport
     push de
     push de
     push de
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
     push iy
@@ -107,9 +103,7 @@ tr_s0_sport
     push de
     push de
     push de
-    ld b,#2F
     push bc
-    ld bc,#0F2F
     push bc
     ld c,e
     push bc
@@ -158,13 +152,11 @@ tr_s0_sport
     push iy
     ld bc,#3FC0
     push bc
-    ld bc,#6ABD
-    push bc
-    ld bc,#E8E8
-    push bc
-    push bc
-    push bc
     ld bc,#6A95
+    push bc
+    push ix
+    push ix
+    push ix
     push bc
     ld bc,#C03F
     push bc
@@ -185,9 +177,6 @@ tr_s0_saloon
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
     push de
     push de
     push de
@@ -195,9 +184,8 @@ tr_s0_saloon
     push de
     push de
     push de
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
     push iy
@@ -244,11 +232,11 @@ tr_s0_saloon
     ld sp,hl
     call tr_st0
     ld b,e
-    ld c,#4F
+    ld c,#CF
     push bc
-    ld b,#4F
+    ld b,#CF
     push bc
-    ld bc,#8FCF
+    ld b,#8F
     push bc
     ld b,e
     ld c,#3C
@@ -259,7 +247,7 @@ tr_s0_saloon
     push bc
     ld bc,#CF4F
     push bc
-    ld b,#4F
+    ld c,#CF
     push bc
     ld c,e
     push bc
@@ -326,8 +314,7 @@ tr_s0_saloon
     ld b,iyl
     ld c,#C0
     push bc
-    ld bc,#C0E8
-    push bc
+    push ix
     push ix
     push ix
     push ix
@@ -335,6 +322,7 @@ tr_s0_saloon
     push ix
     push ix
     ld c,iyl
+    ld b,#C0
     push bc
     ld sp,hl
     call tr_st0
@@ -352,9 +340,6 @@ tr_s0_gt
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
     push de
     push de
     push de
@@ -362,9 +347,8 @@ tr_s0_gt
     push de
     push de
     push de
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
     push iy
@@ -424,11 +408,11 @@ tr_s0_gt
     ld b,iyl
     ld c,#C0
     push bc
-    ld bc,#6038
+    ld bc,#683C
     push bc
     ld b,#3C
     push bc
-    ld bc,#38D4
+    ld c,#94
     push bc
     ld c,iyl
     ld b,#C0
@@ -442,11 +426,11 @@ tr_s0_gt
     ld b,e
     ld c,#C0
     push bc
-    ld bc,#603C
+    ld bc,#683C
     push bc
     ld b,#3C
     push bc
-    ld c,#90
+    ld c,#94
     push bc
     ld c,e
     ld b,#C0
@@ -460,11 +444,11 @@ tr_s0_gt
     ld b,iyl
     ld c,#C0
     push bc
-    ld bc,#603C
+    ld bc,#683C
     push bc
     ld b,#3C
     push bc
-    ld c,#D4
+    ld c,#94
     push bc
     ld c,iyl
     ld b,#C0
@@ -546,23 +530,17 @@ tr_s1_sport
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
     push de
     push de
     push de
     push de
     push de
     push de
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
+    push iy
     push iy
     ld bc,#0F0F
     push bc
@@ -570,14 +548,10 @@ tr_s1_sport
     push iy
     push bc
     push iy
-    ld b,iyl
-    ld c,#FC
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
+    push de
     ld bc,#3F0F
     push bc
     ld b,#2F
@@ -586,33 +560,28 @@ tr_s1_sport
     push de
     ld bc,#0F1F
     push bc
+    ld c,#3F
     push bc
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
+    push iy
     ld bc,#3F0F
     push bc
     ld b,#2F
     push bc
     push iy
     push iy
-    ld bc,#0F3F
+    ld bc,#0F1F
     push bc
+    ld c,#3F
     push bc
-    ld b,iyl
-    ld c,#FC
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
     push de
-    ld bc,#1F0F
+    ld bc,#2F0F
     push bc
-    ld b,#2F
     push bc
     push de
     push de
@@ -659,11 +628,11 @@ tr_s1_sport
     push iy
     ld bc,#3FC0
     push bc
-    ld c,#D4
+    ld c,#95
     push bc
     push ix
     push ix
-    ld bc,#D43F
+    ld bc,#6A3F
     push bc
     ld b,#C0
     push bc
@@ -673,23 +642,17 @@ tr_s1_saloon
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
     push de
     push de
     push de
     push de
     push de
     push de
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
+    push iy
     ld b,iyl
     ld c,#0F
     push bc
@@ -704,14 +667,10 @@ tr_s1_saloon
     ld c,iyl
     ld b,#0F
     push bc
-    ld b,iyl
-    ld c,#FC
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
+    push de
     ld bc,#0F0F
     push bc
     push bc
@@ -721,25 +680,23 @@ tr_s1_saloon
     ld bc,#0F0F
     push bc
     push bc
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
     ld sp,hl
     call tr_st0
-    ld bc,#D4CF
+    ld b,iyl
+    ld c,#CF
     push bc
     ld b,#CF
     push bc
-    ld bc,#1E1E
-    push bc
     ld bc,#3C3C
     push bc
     push bc
-    ld bc,#1E1E
     push bc
-    ld bc,#CFCF
+    ld b,#CF
     push bc
-    ld c,#FC
+    ld c,#CF
+    push bc
+    ld c,iyl
     push bc
     ld sp,hl
     call tr_st0
@@ -780,51 +737,41 @@ tr_s1_saloon
     ld b,iyl
     ld c,#C0
     push bc
-    ld bc,#C0D4
-    push bc
+    push ix
     push ix
     push ix
     push ix
     push ix
     push ix
     ld c,iyl
+    ld b,#C0
     push bc
     jp tr_s1_bottoms_tail
 tr_s1_gt
     ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
     push de
     push de
     push de
     push de
     push de
     push de
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
     push iy
     push iy
     push iy
     push iy
     push iy
     push iy
-    ld b,iyl
-    ld c,#FC
-    push bc
+    push iy
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
+    push de
     ld bc,#0F0F
     push bc
     push bc
@@ -834,31 +781,24 @@ tr_s1_gt
     ld bc,#0F0F
     push bc
     push bc
-    ld b,e
-    ld c,#E8
-    push bc
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
     push iy
     push iy
     push iy
     push iy
     push iy
     push iy
-    ld b,iyl
-    ld c,#FC
-    push bc
+    push iy
+    push iy
     ld sp,hl
     call tr_st0
     push de
     push de
     push ix
-    ld bc,#7C3C
+    ld bc,#3C3C
     push bc
-    ld b,#3C
     push bc
     push ix
     push de
@@ -870,7 +810,6 @@ tr_s1_gt
     push ix
     ld bc,#3C3C
     push bc
-    ld c,#BC
     push bc
     push ix
     push iy
@@ -954,10 +893,8 @@ tr_s2_sport
     push bc
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
-    ld bc,#3F0F
+    push iy
+    ld bc,#2F0F
     push bc
     ld c,iyl
     ld b,#1F
@@ -968,14 +905,10 @@ tr_s2_sport
     push bc
     ld bc,#0F1F
     push bc
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
+    push de
     ld bc,#2F0F
     push bc
     ld c,e
@@ -985,16 +918,12 @@ tr_s2_sport
     ld b,e
     ld c,#2F
     push bc
-    ld bc,#0F3F
+    ld bc,#0F1F
     push bc
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
+    push iy
     ld bc,#0F0F
     push bc
     ld c,iyl
@@ -1006,14 +935,10 @@ tr_s2_sport
     push bc
     ld b,#0F
     push bc
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
     ld sp,hl
     call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
+    push de
     ld c,e
     ld b,#0F
     push bc
@@ -1026,11 +951,17 @@ tr_s2_sport
     push bc
     ld b,e
     push bc
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
     ld sp,hl
     call tr_st0
+    push iy
+    ld bc,#3FC0
+    push bc
+    push bc
+    push ix
+    ld bc,#C03F
+    push bc
+    push bc
     jp tr_s2_sport_c1
 trafcode_6_end
     ASSERT trafcode_6_end <= #8000

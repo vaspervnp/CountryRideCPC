@@ -10,7 +10,9 @@
 ;; sports car's, a saloon's or a GT's tail, its top and its bottom each one
 ;; of 16 colours - at random - no sooner than TR_GAP behind the last one,
 ;; so that only one is near at a time. It goes when it has gone by
-;; (TR_ZNEAR) or got away (TR_ZAWAY).
+;; (TR_ZNEAR) or got away (TR_ZAWAY). 3 in 8 change lanes, once, to one
+;; next to theirs: from 256 + TR_WHEN ahead on, TR_STEP of the way a
+;; picture.
 ;;
 ;; A picture (road_frame):
 ;;
@@ -32,7 +34,7 @@
 ;; ===========================================================================
 
 TR_MAX      EQU 2
-TR_REC      EQU 10                      ; a car:
+TR_REC      EQU 13                      ; a car:
 TR_ON       EQU 0                       ;   0: none
 TR_ZR       EQU 1                       ;   how far ahead (2)
 TR_LANE     EQU 3                       ;   0-3, left to right
@@ -42,6 +44,12 @@ TR_BOT      EQU 5                       ;   its bottom's (2 + 0-2) x TR_PIECE_LE
 TR_PT       EQU 6                       ;   its top's paint: the even lines'
                                         ;   byte, the odd lines' (tr_colours)
 TR_PB       EQU 8                       ;   its bottom's
+TR_SHIFT    EQU 10                      ;   changing lanes: its share of the
+                                        ;   way (/256; 0: not)
+TR_TO       EQU 11                      ;   the lane it changes to
+TR_WHEN     EQU 12                      ;   it begins 256 + this ahead (0:
+                                        ;   never, or done)
+TR_STEP     EQU 8                       ; of the way a picture (32: 1.3 s)
 TR_SPEED    EQU 3                       ; depth units a VSYNC
 TR_ZNEAR    EQU 72                      ; nearer: gone by (as a bush)
 TR_ZSPAWN   EQU 512                     ; where a car comes, out of sight
@@ -55,7 +63,7 @@ TR_LATE     EQU 10                      ; interrupts since the flip: from
                                         ; the one before, the nearer car
                                         ; alone, from this one only at a
                                         ; near size (traffic_draw)
-    ASSERT TR_ZR == 1
+    ASSERT TR_ZR == 1 && 256 % TR_STEP == 0
     ASSERT TR_SPEED == 3 && TR_ZNEAR < 256 && TR_ZAWAY == #280
 
 tr_cars     defs TR_MAX*TR_REC,0
@@ -248,7 +256,11 @@ tp_same
     call tp_paint
     ld a,b
     call tp_paint
+    ld (hl),0                           ; not changing lanes
+    inc hl
+    ex de,hl                            ; DE = its TR_TO
     call tr_rnd                         ; the next no sooner than the stage's
+    push hl                             ; (L: this one's lanes, below)
     and 31                              ; pause (tr_pauses), and up to 31
     ld b,a                              ; pictures more
     ld a,(stage_id)                     ; (race.asm: mapped in RAM_C6)
@@ -258,8 +270,35 @@ tp_same
     ld a,b
     add a,(hl)
     ld (tr_wait),a
+    pop bc                              ; C = random
+    ld hl,TR_LANE-TR_TO
+    add hl,de
+    ld a,(hl)                           ; the lane it may change to: the
+    ld b,a                              ; other on its side, or (bit 3) the
+    xor 1                               ; other side's inner one if it is
+    bit 3,c                             ; in an inner one
+    jr z,tp_to
+    inc b
+    bit 1,b
+    jr z,tp_to
+    xor 2
+tp_to
+    ld (de),a
+    inc de
+    ld a,c                              ; and when: 3 in 8, 256 + 128-224
+    and 7                               ; ahead (bits 4-5)
+    cp 3
+    ld a,0
+    jr nc,tp_when                       ; (never)
+    ld a,c
+    and #30
+    add a,a
+    add a,128
+tp_when
+    ld (de),a
     ret
     ASSERT TR_ON == 0 && TR_ZR == 1 && TR_LANE == 3 && TR_PB == 8
+    ASSERT TR_SHIFT == 10 && TR_TO == 11 && TR_WHEN == 12
 
 ;; colour A AND 15's paint (tr_colours) at HL on. Destroys AF, DE.
 tp_paint
@@ -281,8 +320,8 @@ tp_paint
     inc hl
     ret
 
-;; HL = a car: if on, DE further ahead; off if now out of TR_ZNEAR..TR_ZAWAY.
-;; Destroys AF, B.
+;; HL = a car: if on, DE further ahead; off if now out of TR_ZNEAR..TR_ZAWAY;
+;; on its way to another lane (tp_lanes). Destroys AF, B, HL.
 tp_one
     ld a,(hl)
     or a
@@ -303,17 +342,58 @@ tp_one
     jr nz,tp_one_off                    ; (and behind: negative)
     ld a,b
     cp lo(TR_ZAWAY)
-    ret c
+    jr c,tp_lanes
     jr tp_one_off
 tp_one_lo
     or a
-    ret nz
+    jr nz,tp_lanes1
     ld a,b
     cp TR_ZNEAR
-    ret nc
+    jr nc,tp_lanes
 tp_one_off
     ld (hl),0
     ret
+
+;; HL = a car still on, B its zr's low byte: changing lanes, TR_STEP more of
+;; the way - all of it, in that lane; 256-511 ahead (tp_lanes1) and no
+;; further than 256 + TR_WHEN, it begins to (once: TR_WHEN 0 then).
+tp_lanes
+    ld a,l
+    add a,TR_SHIFT
+    ld l,a
+    ld a,(hl)
+    or a
+    ret z
+    jr tp_step
+tp_lanes1
+    ld a,l
+    add a,TR_SHIFT
+    ld l,a
+    ld a,(hl)
+    or a
+    jr nz,tp_step
+    inc l
+    inc l
+    ld a,b
+    cp (hl)
+    ret nc                              ; not yet (or never: 0)
+    ld (hl),0
+    dec l
+    dec l
+    xor a
+tp_step
+    add a,TR_STEP
+    ld (hl),a
+    ret nz
+    inc l                               ; there (0)
+    ld b,(hl)
+    ld a,l
+    sub TR_TO-TR_LANE
+    ld l,a
+    ld (hl),b
+    ret
+    ASSERT TR_WHEN == TR_SHIFT+2 && TR_TO == TR_SHIFT+1
+    ASSERT hi(tr_cars) == hi(tr_cars+TR_MAX*TR_REC-1)
 
 ;; ---------------------------------------------------------------------------
 ;; traffic_draw - (road_frame, RAM_C6, after road_draw) the cars in sight
@@ -486,6 +566,65 @@ to_csop
     add a,(hl)                          ; (self-modified: sub (hl), or a)
     ret
 
+;; A = a lane: its place on row C, from the road's centre (bytes, signed) -
+;; lanes 2 and 3 tr_lat1 and tr_lat2 right of it, 1 and 0 those mirrored
+;; (-that - the car's width). Destroys D, HL.
+to_place
+    ld d,a
+    inc a                               ; (lanes 1 and 2: 2 and 3 - bit 1)
+    and 2
+    ld a,c
+    jr z,to_outer
+    add a,lo(tr_lat1)
+    ld l,a
+    adc a,hi(tr_lat1)
+    jr to_lat
+to_outer
+    add a,lo(tr_lat2)
+    ld l,a
+    adc a,hi(tr_lat2)
+to_lat
+    sub l
+    ld h,a
+    ld a,(hl)                           ; the place, right
+    bit 1,d
+    ret nz
+    neg
+    ld hl,(to_size)
+    sub (hl)                            ; mirrored: -place - width
+    ret
+
+;; A = car IX's share of the way to its TR_TO lane (/256), B = its place on
+;; row C: B on that far, rounded towards it. Destroys AF, HL.
+to_way
+    push de
+    push bc
+    ld e,a                              ; E = the share
+    ld a,(ix+TR_TO)
+    call to_place
+    sub b                               ; A = the way (signed)
+    ld c,a
+    jp p,$+5
+    neg
+    ld h,a
+    ld l,0
+    ld d,l
+    ld b,8
+to_mul                                  ; HL = |the way| x the share
+    add hl,hl
+    jr nc,$+3
+    add hl,de
+    djnz to_mul
+    ld a,h
+    bit 7,c
+    jr z,$+4
+    neg
+    pop bc
+    add a,b
+    ld b,a
+    pop de
+    ret
+
 ;; ---------------------------------------------------------------------------
 ;; tr_one - car IX into the buffer, if it is in sight: its row, its size,
 ;; its line, its left; then its pieces (tr_piece).
@@ -583,34 +722,17 @@ to_near
     ld (to_lines),de
 
     ; its left, from the middle of the screen (signed, a byte): its lane's
-    ; place from the road's centre on its row - lanes 2 and 3 tr_lat1 and
-    ; tr_lat2 right of it, 1 and 0 those mirrored (-that - its width)
+    ; place from the road's centre on its row (to_place) - changing lanes,
+    ; on from there its share of the way to the other's (to_way)
     call tr_centre
     ld e,a                              ; E = the centre (from the middle)
     ld a,(ix+TR_LANE)
+    call to_place
     ld b,a
-    inc a                               ; (lanes 1 and 2: 2 and 3 - bit 1)
-    and 2
-    ld a,c
-    jr z,to_outer
-    add a,lo(tr_lat1)
-    ld l,a
-    adc a,hi(tr_lat1)
-    jr to_lat
-to_outer
-    add a,lo(tr_lat2)
-    ld l,a
-    adc a,hi(tr_lat2)
-to_lat
-    sub l
-    ld h,a
-    ld a,(hl)                           ; the place, right
-    bit 1,b
-    jr nz,to_right
-    neg
-    ld hl,(to_size)
-    sub (hl)                            ; mirrored: -place - width
-to_right
+    ld a,(ix+TR_SHIFT)
+    or a
+    call nz,to_way
+    ld a,b
     add a,e
     ld b,a                              ; B = its left
     ; ... but on the road on its top line's row: its left from the centre

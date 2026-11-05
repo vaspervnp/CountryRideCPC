@@ -4302,172 +4302,106 @@ car0_traffic
 car0_p35_ph
     ORG #908F,car0_p35_ph
 car0_p35
-tr_s7_closed
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#D4D4
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#74C0
-    push bc
-    ld bc,#E8FC
-    push bc
-    jp tr_s7_cars_tail
-tr_s7_open
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    jp tr_s7_closed_c1
+prop_dead5   ; dead, size 5: 17 lines
+    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
+    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
+    defb #FC,#01,#A2,#FC,#FC
+prop_curve0   ; curve, size 0: 4 lines
+    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
 car0_p35_end
     ORG car0_p35_ph+car0_p35_end-car0_p35
-    defw #9800,car0_p36_end-car0_p36
+    defw #A800,car0_p36_end-car0_p36
 car0_p36_ph
-    ORG #9800,car0_p36_ph
+    ORG #A800,car0_p36_ph
 car0_p36
-tr_s7_closed_c1
-    call tr_st0
-    ld bc,#FCC0
-    push bc
-    ld bc,#E8E8
-    push bc
-tr_s7_cars_tail
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#5E
-    push bc
-    ld b,e
-    ld c,#AD
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#DE
-    push bc
-    ld b,iyl
-    ld c,#ED
-    push bc
-    ld sp,hl
-    ld bc,#D4D4
-    push bc
-    ld c,#FC
-    push bc
-    jp tr_done
-car0_p36_end
-    ORG car0_p36_ph+car0_p36_end-car0_p36
-    defw #A800,car0_p37_end-car0_p37
-car0_p37_ph
-    ORG #A800,car0_p37_ph
-car0_p37
-prop_limit5   ; limit, size 5: 17 lines
-    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
-    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
-    defb #3C,#0F,#01,#92,#0F
 prop_stump4   ; stump, size 4: 11 lines
     defb #03,#06,#06,#0B,#13,#9F,#01,#B2,#C3,#C3,#C3,#01,#A2,#00,#41,#01
     defb #B2,#C3,#C3,#C3,#01,#C1,#C3,#03,#C3,#C3,#01,#B1,#C3,#C3,#3F
-prop_limit3   ; limit, size 3: 10 lines
-    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
-    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
-car0_p37_end
-    ORG car0_p37_ph+car0_p37_end-car0_p37
-    defw #B000,car0_p38_end-car0_p38
-car0_p38_ph
-    ORG #B000,car0_p38_ph
-car0_p38
 prop_curve4   ; curve, size 4: 10 lines
     defb #01,#03,#05,#0A,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #01,#B0,#11,#11,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
 prop_curve5   ; curve, size 5: 13 lines
     defb #01,#03,#07,#0D,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #02,#B0,#11,#22,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
+car0_p36_end
+    ORG car0_p36_ph+car0_p36_end-car0_p36
+    defw #B000,car0_p37_end-car0_p37
+car0_p37_ph
+    ORG #B000,car0_p37_ph
+car0_p37
 prop_curve_r4   ; curve_r, size 4: 10 lines
     defb #01,#03,#05,#0A,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #01,#B0,#11,#22,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-car0_p38_end
-    ORG car0_p38_ph+car0_p38_end-car0_p38
-    defw #B800,car0_p39_end-car0_p39
-car0_p39_ph
-    ORG #B800,car0_p39_ph
-car0_p39
 prop_curve_r5   ; curve_r, size 5: 13 lines
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
+prop_limit3   ; limit, size 3: 10 lines
+    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
+    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
+prop_dead0   ; dead, size 0: 5 lines
+    defb #01,#03,#05,#05,#11,#FC
+car0_p37_end
+    ORG car0_p37_ph+car0_p37_end-car0_p37
+    defw #B800,car0_p38_end-car0_p38
+car0_p38_ph
+    ORG #B800,car0_p38_ph
+car0_p38
 prop_limit4   ; limit, size 4: 13 lines
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
 prop_curve3   ; curve, size 3: 8 lines
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
-prop_palm2   ; palm, size 2: 13 lines
-    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car0_p39_end
-    ORG car0_p39_ph+car0_p39_end-car0_p39
-    defw #0000,car0_p40_end-car0_p40
-car0_p40_ph
-    ORG #0000,car0_p40_ph
-car0_p40
-prop_dead5   ; dead, size 5: 17 lines
-    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
-    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
-    defb #FC,#01,#A2,#FC,#FC
-prop_palm4   ; palm, size 4: 21 lines
-    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
-    defb #91,#C3
-car0_p40_end
-    ORG car0_p40_ph+car0_p40_end-car0_p40
-    defw #003B,car0_p41_end-car0_p41
-car0_p41_ph
-    ORG #003B,car0_p41_ph
-car0_p41
-prop_dead2   ; dead, size 2: 8 lines
-    defb #02,#04,#08,#08,#12,#FC
-prop_dead3   ; dead, size 3: 10 lines
-    defb #02,#04,#0A,#0A,#12,#FC
-car0_p41_end
-    ORG car0_p41_ph+car0_p41_end-car0_p41
-    defw #2800,car0_p42_end-car0_p42
-car0_p42_ph
-    ORG #2800,car0_p42_ph
-car0_p42
 prop_curve_r3   ; curve_r, size 3: 8 lines
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
 prop_curve2   ; curve, size 2: 6 lines
     defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
     defb #33,#33
+prop_dead1   ; dead, size 1: 6 lines
+    defb #01,#03,#06,#06,#11,#FC
+car0_p38_end
+    ORG car0_p38_ph+car0_p38_end-car0_p38
+    defw #0000,car0_p39_end-car0_p39
+car0_p39_ph
+    ORG #0000,car0_p39_ph
+car0_p39
+prop_limit5   ; limit, size 5: 17 lines
+    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
+    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
+    defb #3C,#0F,#01,#92,#0F
+prop_palm4   ; palm, size 4: 21 lines
+    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
+    defb #91,#C3
+car0_p39_end
+    ORG car0_p39_ph+car0_p39_end-car0_p39
+    defw #2800,car0_p40_end-car0_p40
+car0_p40_ph
+    ORG #2800,car0_p40_ph
+car0_p40
 prop_curve_r2   ; curve_r, size 2: 6 lines
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
+prop_palm2   ; palm, size 2: 13 lines
+    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
 prop_palm1   ; palm, size 1: 10 lines
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
 prop_stump2   ; stump, size 2: 7 lines
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-prop_curve0   ; curve, size 0: 4 lines
-    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
-car0_p42_end
-    ORG car0_p42_ph+car0_p42_end-car0_p42
-    defw #3000,car0_p43_end-car0_p43
-car0_p43_ph
-    ORG #3000,car0_p43_ph
-car0_p43
 prop_curve1   ; curve, size 1: 5 lines
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
 prop_curve_r0   ; curve_r, size 0: 4 lines
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
 prop_curve_r1   ; curve_r, size 1: 5 lines
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
+prop_dead2   ; dead, size 2: 8 lines
+    defb #02,#04,#08,#08,#12,#FC
+car0_p40_end
+    ORG car0_p40_ph+car0_p40_end-car0_p40
+    defw #3000,car0_p41_end-car0_p41
+car0_p41_ph
+    ORG #3000,car0_p41_ph
+car0_p41
 prop_palm0   ; palm, size 0: 8 lines
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
 prop_stump0   ; stump, size 0: 4 lines
@@ -4480,12 +4414,10 @@ prop_limit1   ; limit, size 1: 6 lines
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
 prop_limit2   ; limit, size 2: 8 lines
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
-prop_dead0   ; dead, size 0: 5 lines
-    defb #01,#03,#05,#05,#11,#FC
-prop_dead1   ; dead, size 1: 6 lines
-    defb #01,#03,#06,#06,#11,#FC
-car0_p43_end
-    ORG car0_p43_ph+car0_p43_end-car0_p43
+prop_dead3   ; dead, size 3: 10 lines
+    defb #02,#04,#0A,#0A,#12,#FC
+car0_p41_end
+    ORG car0_p41_ph+car0_p41_end-car0_p41
     defw #FFFF
 car0_blob_end
     ASSERT car0_blob_end <= FRAG7   ; (in place before boot_car)
@@ -8797,155 +8729,91 @@ car1_traffic
 car1_p35_ph
     ORG #908F,car1_p35_ph
 car1_p35
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#D4D4
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#74C0
-    push bc
-    ld bc,#E8FC
-    push bc
-    jp tr_s7_cars_tail
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    jp tr_s7_closed_c1
+    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
+    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
+    defb #FC,#01,#A2,#FC,#FC
+    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
 car1_p35_end
     ORG car1_p35_ph+car1_p35_end-car1_p35
-    defw #9800,car1_p36_end-car1_p36
+    defw #A800,car1_p36_end-car1_p36
 car1_p36_ph
-    ORG #9800,car1_p36_ph
+    ORG #A800,car1_p36_ph
 car1_p36
-    call tr_st0
-    ld bc,#FCC0
-    push bc
-    ld bc,#E8E8
-    push bc
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#5E
-    push bc
-    ld b,e
-    ld c,#AD
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#DE
-    push bc
-    ld b,iyl
-    ld c,#ED
-    push bc
-    ld sp,hl
-    ld bc,#D4D4
-    push bc
-    ld c,#FC
-    push bc
-    jp tr_done
-car1_p36_end
-    ORG car1_p36_ph+car1_p36_end-car1_p36
-    defw #A800,car1_p37_end-car1_p37
-car1_p37_ph
-    ORG #A800,car1_p37_ph
-car1_p37
-    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
-    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
-    defb #3C,#0F,#01,#92,#0F
     defb #03,#06,#06,#0B,#13,#9F,#01,#B2,#C3,#C3,#C3,#01,#A2,#00,#41,#01
     defb #B2,#C3,#C3,#C3,#01,#C1,#C3,#03,#C3,#C3,#01,#B1,#C3,#C3,#3F
-    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
-    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
-car1_p37_end
-    ORG car1_p37_ph+car1_p37_end-car1_p37
-    defw #B000,car1_p38_end-car1_p38
-car1_p38_ph
-    ORG #B000,car1_p38_ph
-car1_p38
     defb #01,#03,#05,#0A,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #01,#B0,#11,#11,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
     defb #01,#03,#07,#0D,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #02,#B0,#11,#22,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
+car1_p36_end
+    ORG car1_p36_ph+car1_p36_end-car1_p36
+    defw #B000,car1_p37_end-car1_p37
+car1_p37_ph
+    ORG #B000,car1_p37_ph
+car1_p37
     defb #01,#03,#05,#0A,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #01,#B0,#11,#22,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-car1_p38_end
-    ORG car1_p38_ph+car1_p38_end-car1_p38
-    defw #B800,car1_p39_end-car1_p39
-car1_p39_ph
-    ORG #B800,car1_p39_ph
-car1_p39
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
+    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
+    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
+car1_p37_end
+    ORG car1_p37_ph+car1_p37_end-car1_p37
+    defw #B800,car1_p38_end-car1_p38
+car1_p38_ph
+    ORG #B800,car1_p38_ph
+car1_p38
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
-    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car1_p39_end
-    ORG car1_p39_ph+car1_p39_end-car1_p39
-    defw #0000,car1_p40_end-car1_p40
-car1_p40_ph
-    ORG #0000,car1_p40_ph
-car1_p40
-    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
-    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
-    defb #FC,#01,#A2,#FC,#FC
-    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
-    defb #91,#C3
-car1_p40_end
-    ORG car1_p40_ph+car1_p40_end-car1_p40
-    defw #003B,car1_p41_end-car1_p41
-car1_p41_ph
-    ORG #003B,car1_p41_ph
-car1_p41
-    defb #02,#04,#08,#08,#12,#FC
-    defb #02,#04,#0A,#0A,#12,#FC
-car1_p41_end
-    ORG car1_p41_ph+car1_p41_end-car1_p41
-    defw #2800,car1_p42_end-car1_p42
-car1_p42_ph
-    ORG #2800,car1_p42_ph
-car1_p42
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
     defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
     defb #33,#33
+    defb #01,#03,#06,#06,#11,#FC
+car1_p38_end
+    ORG car1_p38_ph+car1_p38_end-car1_p38
+    defw #0000,car1_p39_end-car1_p39
+car1_p39_ph
+    ORG #0000,car1_p39_ph
+car1_p39
+    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
+    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
+    defb #3C,#0F,#01,#92,#0F
+    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
+    defb #91,#C3
+car1_p39_end
+    ORG car1_p39_ph+car1_p39_end-car1_p39
+    defw #2800,car1_p40_end-car1_p40
+car1_p40_ph
+    ORG #2800,car1_p40_ph
+car1_p40
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
+    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
-car1_p42_end
-    ORG car1_p42_ph+car1_p42_end-car1_p42
-    defw #3000,car1_p43_end-car1_p43
-car1_p43_ph
-    ORG #3000,car1_p43_ph
-car1_p43
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
+    defb #02,#04,#08,#08,#12,#FC
+car1_p40_end
+    ORG car1_p40_ph+car1_p40_end-car1_p40
+    defw #3000,car1_p41_end-car1_p41
+car1_p41_ph
+    ORG #3000,car1_p41_ph
+car1_p41
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
     defb #01,#03,#02,#04,#11,#9F,#02,#91,#C3
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
-    defb #01,#03,#05,#05,#11,#FC
-    defb #01,#03,#06,#06,#11,#FC
-car1_p43_end
-    ORG car1_p43_ph+car1_p43_end-car1_p43
+    defb #02,#04,#0A,#0A,#12,#FC
+car1_p41_end
+    ORG car1_p41_ph+car1_p41_end-car1_p41
     defw #FFFF
 car1_blob_end
     ASSERT car1_blob_end <= FRAG7   ; (in place before boot_car)
@@ -13210,155 +13078,91 @@ car2_traffic
 car2_p35_ph
     ORG #908F,car2_p35_ph
 car2_p35
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#D4D4
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#74C0
-    push bc
-    ld bc,#E8FC
-    push bc
-    jp tr_s7_cars_tail
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    jp tr_s7_closed_c1
+    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
+    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
+    defb #FC,#01,#A2,#FC,#FC
+    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
 car2_p35_end
     ORG car2_p35_ph+car2_p35_end-car2_p35
-    defw #9800,car2_p36_end-car2_p36
+    defw #A800,car2_p36_end-car2_p36
 car2_p36_ph
-    ORG #9800,car2_p36_ph
+    ORG #A800,car2_p36_ph
 car2_p36
-    call tr_st0
-    ld bc,#FCC0
-    push bc
-    ld bc,#E8E8
-    push bc
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#5E
-    push bc
-    ld b,e
-    ld c,#AD
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#DE
-    push bc
-    ld b,iyl
-    ld c,#ED
-    push bc
-    ld sp,hl
-    ld bc,#D4D4
-    push bc
-    ld c,#FC
-    push bc
-    jp tr_done
-car2_p36_end
-    ORG car2_p36_ph+car2_p36_end-car2_p36
-    defw #A800,car2_p37_end-car2_p37
-car2_p37_ph
-    ORG #A800,car2_p37_ph
-car2_p37
-    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
-    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
-    defb #3C,#0F,#01,#92,#0F
     defb #03,#06,#06,#0B,#13,#9F,#01,#B2,#C3,#C3,#C3,#01,#A2,#00,#41,#01
     defb #B2,#C3,#C3,#C3,#01,#C1,#C3,#03,#C3,#C3,#01,#B1,#C3,#C3,#3F
-    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
-    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
-car2_p37_end
-    ORG car2_p37_ph+car2_p37_end-car2_p37
-    defw #B000,car2_p38_end-car2_p38
-car2_p38_ph
-    ORG #B000,car2_p38_ph
-car2_p38
     defb #01,#03,#05,#0A,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #01,#B0,#11,#11,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
     defb #01,#03,#07,#0D,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #02,#B0,#11,#22,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
+car2_p36_end
+    ORG car2_p36_ph+car2_p36_end-car2_p36
+    defw #B000,car2_p37_end-car2_p37
+car2_p37_ph
+    ORG #B000,car2_p37_ph
+car2_p37
     defb #01,#03,#05,#0A,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #01,#B0,#11,#22,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-car2_p38_end
-    ORG car2_p38_ph+car2_p38_end-car2_p38
-    defw #B800,car2_p39_end-car2_p39
-car2_p39_ph
-    ORG #B800,car2_p39_ph
-car2_p39
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
+    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
+    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
+car2_p37_end
+    ORG car2_p37_ph+car2_p37_end-car2_p37
+    defw #B800,car2_p38_end-car2_p38
+car2_p38_ph
+    ORG #B800,car2_p38_ph
+car2_p38
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
-    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car2_p39_end
-    ORG car2_p39_ph+car2_p39_end-car2_p39
-    defw #0000,car2_p40_end-car2_p40
-car2_p40_ph
-    ORG #0000,car2_p40_ph
-car2_p40
-    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
-    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
-    defb #FC,#01,#A2,#FC,#FC
-    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
-    defb #91,#C3
-car2_p40_end
-    ORG car2_p40_ph+car2_p40_end-car2_p40
-    defw #003B,car2_p41_end-car2_p41
-car2_p41_ph
-    ORG #003B,car2_p41_ph
-car2_p41
-    defb #02,#04,#08,#08,#12,#FC
-    defb #02,#04,#0A,#0A,#12,#FC
-car2_p41_end
-    ORG car2_p41_ph+car2_p41_end-car2_p41
-    defw #2800,car2_p42_end-car2_p42
-car2_p42_ph
-    ORG #2800,car2_p42_ph
-car2_p42
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
     defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
     defb #33,#33
+    defb #01,#03,#06,#06,#11,#FC
+car2_p38_end
+    ORG car2_p38_ph+car2_p38_end-car2_p38
+    defw #0000,car2_p39_end-car2_p39
+car2_p39_ph
+    ORG #0000,car2_p39_ph
+car2_p39
+    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
+    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
+    defb #3C,#0F,#01,#92,#0F
+    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
+    defb #91,#C3
+car2_p39_end
+    ORG car2_p39_ph+car2_p39_end-car2_p39
+    defw #2800,car2_p40_end-car2_p40
+car2_p40_ph
+    ORG #2800,car2_p40_ph
+car2_p40
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
+    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
-car2_p42_end
-    ORG car2_p42_ph+car2_p42_end-car2_p42
-    defw #3000,car2_p43_end-car2_p43
-car2_p43_ph
-    ORG #3000,car2_p43_ph
-car2_p43
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
+    defb #02,#04,#08,#08,#12,#FC
+car2_p40_end
+    ORG car2_p40_ph+car2_p40_end-car2_p40
+    defw #3000,car2_p41_end-car2_p41
+car2_p41_ph
+    ORG #3000,car2_p41_ph
+car2_p41
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
     defb #01,#03,#02,#04,#11,#9F,#02,#91,#C3
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
-    defb #01,#03,#05,#05,#11,#FC
-    defb #01,#03,#06,#06,#11,#FC
-car2_p43_end
-    ORG car2_p43_ph+car2_p43_end-car2_p43
+    defb #02,#04,#0A,#0A,#12,#FC
+car2_p41_end
+    ORG car2_p41_ph+car2_p41_end-car2_p41
     defw #FFFF
 car2_blob_end
     ASSERT car2_blob_end <= FRAG7   ; (in place before boot_car)
@@ -18246,155 +18050,91 @@ car3_traffic
 car3_p37_ph
     ORG #908F,car3_p37_ph
 car3_p37
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#D4D4
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#74C0
-    push bc
-    ld bc,#E8FC
-    push bc
-    jp tr_s7_cars_tail
-    ld sp,hl
-    ld bc,#0801
-    add hl,bc
-    bit 6,h
-    call nz,tr_next_row
-    ld bc,#FCDE
-    push bc
-    ld sp,hl
-    jp tr_s7_closed_c1
+    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
+    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
+    defb #FC,#01,#A2,#FC,#FC
+    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
 car3_p37_end
     ORG car3_p37_ph+car3_p37_end-car3_p37
-    defw #9800,car3_p38_end-car3_p38
+    defw #A800,car3_p38_end-car3_p38
 car3_p38_ph
-    ORG #9800,car3_p38_ph
+    ORG #A800,car3_p38_ph
 car3_p38
-    call tr_st0
-    ld bc,#FCC0
-    push bc
-    ld bc,#E8E8
-    push bc
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#5E
-    push bc
-    ld b,e
-    ld c,#AD
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#DE
-    push bc
-    ld b,iyl
-    ld c,#ED
-    push bc
-    ld sp,hl
-    ld bc,#D4D4
-    push bc
-    ld c,#FC
-    push bc
-    jp tr_done
-car3_p38_end
-    ORG car3_p38_ph+car3_p38_end-car3_p38
-    defw #A800,car3_p39_end-car3_p39
-car3_p39_ph
-    ORG #A800,car3_p39_ph
-car3_p39
-    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
-    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
-    defb #3C,#0F,#01,#92,#0F
     defb #03,#06,#06,#0B,#13,#9F,#01,#B2,#C3,#C3,#C3,#01,#A2,#00,#41,#01
     defb #B2,#C3,#C3,#C3,#01,#C1,#C3,#03,#C3,#C3,#01,#B1,#C3,#C3,#3F
-    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
-    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
-car3_p39_end
-    ORG car3_p39_ph+car3_p39_end-car3_p39
-    defw #B000,car3_p40_end-car3_p40
-car3_p40_ph
-    ORG #B000,car3_p40_ph
-car3_p40
     defb #01,#03,#05,#0A,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #01,#B0,#11,#11,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
     defb #01,#03,#07,#0D,#11,#A8,#01,#B0,#00,#00,#00,#01,#B0,#11,#33,#00
     defb #02,#B0,#11,#22,#22,#01,#B0,#11,#33,#00,#01,#B0,#00,#00,#00
+car3_p38_end
+    ORG car3_p38_ph+car3_p38_end-car3_p38
+    defw #B000,car3_p39_end-car3_p39
+car3_p39_ph
+    ORG #B000,car3_p39_ph
+car3_p39
     defb #01,#03,#05,#0A,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #01,#B0,#11,#22,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-car3_p40_end
-    ORG car3_p40_ph+car3_p40_end-car3_p40
-    defw #B800,car3_p41_end-car3_p41
-car3_p41_ph
-    ORG #B800,car3_p41_ph
-car3_p41
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
+    defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
+    defb #0F,#00,#0F,#01,#B0,#0F,#3C,#0F,#01,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
+car3_p39_end
+    ORG car3_p39_ph+car3_p39_end-car3_p39
+    defw #B800,car3_p40_end-car3_p40
+car3_p40_ph
+    ORG #B800,car3_p40_ph
+car3_p40
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
-    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car3_p41_end
-    ORG car3_p41_ph+car3_p41_end-car3_p41
-    defw #0000,car3_p42_end-car3_p42
-car3_p42_ph
-    ORG #0000,car3_p42_ph
-car3_p42
-    defb #03,#06,#07,#11,#13,#FC,#01,#93,#FC,#02,#A3,#FC,#FC,#01,#B2,#FC
-    defb #FC,#FC,#03,#A2,#FC,#FC,#01,#12,#FC,#91,#FC,#01,#21,#FC,#FC,#91
-    defb #FC,#01,#A2,#FC,#FC
-    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
-    defb #91,#C3
-car3_p42_end
-    ORG car3_p42_ph+car3_p42_end-car3_p42
-    defw #003B,car3_p43_end-car3_p43
-car3_p43_ph
-    ORG #003B,car3_p43_ph
-car3_p43
-    defb #02,#04,#08,#08,#12,#FC
-    defb #02,#04,#0A,#0A,#12,#FC
-car3_p43_end
-    ORG car3_p43_ph+car3_p43_end-car3_p43
-    defw #2800,car3_p44_end-car3_p44
-car3_p44_ph
-    ORG #2800,car3_p44_ph
-car3_p44
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
     defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
     defb #33,#33
+    defb #01,#03,#06,#06,#11,#FC
+car3_p40_end
+    ORG car3_p40_ph+car3_p40_end-car3_p40
+    defw #0000,car3_p41_end-car3_p41
+car3_p41_ph
+    ORG #0000,car3_p41_ph
+car3_p41
+    defb #02,#05,#07,#11,#12,#A8,#01,#92,#0F,#01,#B1,#0F,#3C,#0F,#02,#B1
+    defb #1E,#3C,#2D,#02,#B1,#1E,#00,#2D,#02,#B1,#1E,#3C,#2D,#01,#B1,#0F
+    defb #3C,#0F,#01,#92,#0F
+    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
+    defb #91,#C3
+car3_p41_end
+    ORG car3_p41_ph+car3_p41_end-car3_p41
+    defw #2800,car3_p42_end-car3_p42
+car3_p42_ph
+    ORG #2800,car3_p42_ph
+car3_p42
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
+    defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-    defb #01,#02,#02,#04,#11,#A8,#02,#A0,#33,#33
-car3_p44_end
-    ORG car3_p44_ph+car3_p44_end-car3_p44
-    defw #3000,car3_p45_end-car3_p45
-car3_p45_ph
-    ORG #3000,car3_p45_ph
-car3_p45
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
+    defb #02,#04,#08,#08,#12,#FC
+car3_p42_end
+    ORG car3_p42_ph+car3_p42_end-car3_p42
+    defw #3000,car3_p43_end-car3_p43
+car3_p43_ph
+    ORG #3000,car3_p43_ph
+car3_p43
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
     defb #01,#03,#02,#04,#11,#9F,#02,#91,#C3
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
-    defb #01,#03,#05,#05,#11,#FC
-    defb #01,#03,#06,#06,#11,#FC
-car3_p45_end
-    ORG car3_p45_ph+car3_p45_end-car3_p45
+    defb #02,#04,#0A,#0A,#12,#FC
+car3_p43_end
+    ORG car3_p43_ph+car3_p43_end-car3_p43
     defw #FFFF
 car3_blob_end
     ASSERT car3_blob_end <= FRAG7   ; (in place before boot_car)

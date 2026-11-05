@@ -3,12 +3,14 @@
 
 trafcode_4
 tr_s6_closed
-    ld ix,#D4D4
+    ld ix,#C0C0
     ld sp,hl
     call tr_st0
-    ld bc,#FCD4
+    ld b,e
+    ld c,#C0
     push bc
-    ld bc,#D4B8
+    ld c,e
+    ld b,#C0
     push bc
     ld sp,hl
     call tr_st1
@@ -18,19 +20,9 @@ tr_s6_closed
     ld c,iyl
     ld b,#C0
     push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
-    ld bc,#C0C0
-    push bc
-    ld b,e
-    ld c,#FC
-    push bc
     jp tr_s6_cars_tail
 tr_s6_open
-    ld ix,#D4D4
+    ld ix,#C0C0
     ld sp,hl
     ld bc,#0802
     add hl,bc
@@ -40,45 +32,39 @@ tr_s6_open
     push bc
     ld sp,hl
     call tr_st1
-    ld bc,#E8C0
-    push bc
-    ld c,#E8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
     push ix
-    ld b,e
-    ld c,#FC
+    ld bc,#6A95
     push bc
 tr_s6_cars_tail
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push de
     ld de,(tr_cw2)
     ld iy,(tr_cw2+2)
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
     push iy
-    ld b,iyl
-    ld c,#E8
-    push bc
+    push iy
+    push iy
     ld sp,hl
     call tr_st0
-    ld bc,#DECF
+    ld b,e
+    ld c,#CF
     push bc
     push de
-    ld bc,#CFED
+    ld c,e
+    ld b,#CF
     push bc
     ld sp,hl
     call tr_stm1
-    ld bc,#D4C0
+    ld b,iyl
+    ld c,#C0
     push bc
+    push ix
+    ld c,iyl
     ld b,#C0
-    push bc
-    ld c,#E8
     push bc
     ld sp,hl
     push ix

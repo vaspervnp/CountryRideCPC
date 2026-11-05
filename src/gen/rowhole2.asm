@@ -3,27 +3,7 @@
 
 trafcode_rh2
 tr_s2_sport_c2
-    ld b,#FC
-    push bc
-    ld bc,#0F0F
-    push bc
-    ld c,#2D
-    push bc
-    ld bc,#3C3C
-    push bc
-    ld bc,#1E0F
-    push bc
-    ld b,#0F
-    push bc
-    ld b,iyl
-    ld c,#E8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
-    ld bc,#CF4F
+    ld bc,#CF6D
     push bc
     ld c,e
     ld b,#3C
@@ -34,46 +14,37 @@ tr_s2_sport_c2
     push bc
     ld bc,#9ECF
     push bc
-    ld b,e
-    ld c,#FC
-    push bc
+    push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
     push iy
     push iy
     push iy
     push iy
     push iy
+    push iy
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st0
     ld b,iyl
-    ld c,#E8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#D4
-    push bc
-    ld bc,#C0D4
-    push bc
-    push ix
-    push ix
-    push ix
-    push ix
-    ld b,e
-    ld c,#FC
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#FCC0
+    ld c,#C0
     push bc
     push ix
     push ix
     push ix
     push ix
     push ix
-    ld bc,#C0E8
+    ld c,iyl
+    ld b,#C0
     push bc
     jp tr_s2_bottoms_tail
 tr_s2_gt
@@ -96,10 +67,37 @@ tr_s2_gt
     push de
     ld sp,hl
     call tr_st0
-    ld c,iyl
-    ld b,#FC
-    push bc
+    push iy
     ld bc,#0F0F
+    push bc
+    ld c,#2F
+    push bc
+    ld bc,#3F3F
+    push bc
+    ld bc,#1F0F
+    push bc
+    ld b,#0F
+    push bc
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push de
+    ld bc,#C068
+    push bc
+    ld bc,#3C3C
+    push bc
+    ld bc,#94C0
+    push bc
+    push de
+    push de
+    ld sp,hl
+    call tr_st0
+    push iy
+    push iy
+    ld bc,#C068
+    push bc
+    ld bc,#3C3C
     push bc
     jp tr_s2_sport_c3
 trafcode_rh2_end

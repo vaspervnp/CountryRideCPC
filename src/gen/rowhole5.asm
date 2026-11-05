@@ -3,84 +3,19 @@
 
 trafcode_rh5
 tr_s3_closed_c5
-    call tr_st0
-    ld bc,#FCE8
-    push bc
-    ld b,#E8
-    push bc
-    push bc
-    push bc
-    ld b,#C0
-    push bc
-tr_s3_cars_tail
-    ld sp,hl
-    call tr_st0
     push iy
     push iy
-    push iy
-    push iy
-    push iy
-    ld de,(tr_cw2)
-    ld iy,(tr_cw2+2)
-    ld sp,hl
-    call tr_st0
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld sp,hl
-    call tr_st1
-    ld b,iyl
-    ld c,#0F
-    push bc
-    ld bc,#0F2D
-    push bc
-    ld bc,#3C3C
-    push bc
-    ld bc,#1E0F
-    push bc
-    ld c,iyl
-    ld b,#0F
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
-    ld bc,#CF2D
-    push bc
-    ld bc,#2D3C
-    push bc
-    ld b,#3C
-    push bc
-    ld bc,#8FCF
-    push bc
-    ld b,e
-    ld c,#E8
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld c,iyl
-    ld b,#D4
-    push bc
-    push iy
-    push iy
-    push iy
-    push iy
-    ld b,iyl
-    ld c,#FC
-    push bc
     ld sp,hl
     call tr_stm1
-    ld bc,#FCC0
+    ld b,e
+    ld c,#C0
     push bc
-    ld b,#E8
-    push bc
     push ix
     push ix
     push ix
-    ld bc,#C0E8
+    push ix
+    ld c,e
+    ld b,#C0
     push bc
     ld sp,hl
     call tr_st0
@@ -96,5 +31,77 @@ tr_s3_cars_tail
     push ix
     push ix
     jp tr_done
+tr_s0_closed
+    ld ix,#C0C0
+    ld sp,hl
+    call tr_st1
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st1
+    push iy
+    push ix
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    push de
+    ld sp,hl
+    call tr_st0
+    push iy
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    push de
+    ld sp,hl
+    call tr_st0
+    push iy
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    push iy
+    ld sp,hl
+    call tr_st1
+    push de
+    ld b,e
+    jp tr_s0_closed_c6
 trafcode_rh5_end
     ASSERT trafcode_rh5_end <= rr_tlo2+256

@@ -763,10 +763,11 @@ TRAFFIC_TOPS = list(TRAFFIC_ART[0]["tops"])          # closed, open
 TRAFFIC_BOTTOMS = list(TRAFFIC_ART[0]["bottoms"])    # sport, saloon, gt
 TRAFFIC_PAINT = "K"
 # the colours a car's paint can take (0-15): a pen, or two in a checkerboard
+# - since 2026-11-05 a pen each, the cars flat (red and white twice as
+# likely)
 TRAFFIC_COLOURS = [("RED",), ("ORANGE",), ("YELLOW",), ("WHITE",), ("BLUE",), ("SKY",),
                    ("PASTEL",), ("GRASS_A",), ("BUSH",), ("MAUVE",), ("CAR_DARK",),
-                   ("BLACK",), ("RED", "ORANGE"), ("BLUE", "SKY"), ("SKY", "WHITE"),
-                   ("GRASS_A", "GRASS_B")]
+                   ("BLACK",), ("HAZE",), ("GRASS_B",), ("WHITE",), ("RED",)]
 assert len(TRAFFIC_COLOURS) == 16
 
 
@@ -803,6 +804,13 @@ def traffic_lefts(r, wb):
     return [((lo + hi) - 2 * wb) // 2 // 2 for lo, hi in lanes]
 
 
+def traffic_place(r, wb, lane):
+    """A car's left on row r, wb bytes wide, in a lane (0-3): bytes from the
+    road's centre."""
+    lat = traffic_lefts(r, wb)[0 if lane in (1, 2) else 1]
+    return lat if lane >= 2 else -lat - wb
+
+
 def traffic_edge(r):
     """How far either side of its centre row r's road reaches, in whole bytes:
     its asphalt and its kerb (the engine draws whole pairs, past it)."""
@@ -829,8 +837,10 @@ def traffic_rows(size, top, bottom):
 def traffic_items(hill, zcam, curve, cars, x=0):
     """The cars on screen, in the order they are drawn - the furthest first:
     (size, left byte, top line, rows, split, top colour, bottom colour).
-    cars: (z, lane, top, bottom, top colour, bottom colour) each - lanes 0-3
-    left to right, tops and bottoms as TRAFFIC_TOPS and TRAFFIC_BOTTOMS.
+    cars: (z, lane, top, bottom, top colour, bottom colour[, to, share])
+    each - lanes 0-3 left to right, tops and bottoms as TRAFFIC_TOPS and
+    TRAFFIC_BOTTOMS; changing lanes, on its way to lane `to` by share/256
+    (src/traffic.asm to_way: rounded towards its own).
     `hill` as the road engine draws it (effective_hill). A car is kept on the
     road its top line shows, its row's further than its own - narrower,
     more bent: only the road is drawn afresh where it was (rp_force)."""
@@ -839,7 +849,7 @@ def traffic_items(hill, zcam, curve, cars, x=0):
     road_top = ROAD_Y + ground_lines(hill)
     near = sum(1 for r in rows if r and row_depth(r) <= FAR_Z)
     out = []
-    for z, lane, top, bottom, ctop, cbot in cars:
+    for z, lane, top, bottom, ctop, cbot, *way in cars:
         zr = (z - zcam) % 65536
         r = bush_row(zr)
         if not r or r < far:
@@ -854,9 +864,12 @@ def traffic_items(hill, zcam, curve, cars, x=0):
         if y >= ROAD_END or y0 < road_top or ROAD_END - 1 - y0 >= near:
             continue
         wb = traffic_width(size)
-        lat = traffic_lefts(r, wb)[0 if lane in (1, 2) else 1]
-        cx = traffic_centre(curve, r, x)
-        left = cx + lat if lane >= 2 else cx - lat - wb
+        place = traffic_place(r, wb, lane)
+        if way and way[1]:
+            d = traffic_place(r, wb, way[0]) - place
+            assert -128 < d < 128
+            place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
+        left = traffic_centre(curve, r, x) + place
         rt = rows[y0 - ROAD_Y]                  # the row its top line shows
         ct, edge = traffic_centre(curve, rt, x), traffic_edge(rt)
         left = ct + max(min(left - ct, edge - wb), -edge)
