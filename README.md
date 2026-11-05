@@ -242,14 +242,14 @@ drives the car):
 Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - 0.4 pairs
-a picture at the full lock, 0.53 with grip 4 or 5 - and how little a curve
-carries it out of it: on a level 7 curve at its top speed 1.68, 1.40,
-1.05 or 0.97 pairs a picture with grip 2, 3, 4 or 5 - more than the full
+to 5.6 seconds. Grip is how fast the car is steered across - half a pair
+a picture at the full lock, 2/3 with grip 4 or 5 - and how little a curve
+carries it out of it: on a level 7 curve at its top speed 1.50, 1.24,
+0.92 or 0.86 pairs a picture with grip 2, 3, 4 or 5 - more than the full
 lock holds: at their top speeds the cars with grip 2 or 3 have to slow
-down for curves sharper than level 2, those with grip 4 or 5 for curves
-sharper than level 4 (Steering, below). (Since 2026-11-05 the wheel is a
-fifth slower and the curves carry the car out 30% more.)
+down for curves sharper than level 3, those with grip 4 or 5 for curves
+sharper than level 5 (Steering, below). (Since 2026-11-05 the curves carry
+the car out 15% more.)
 
 ![Picking a car](docs/screen-select.png)
 
@@ -583,14 +583,13 @@ its curves and how they come and go, in proportion to its road's width.
 Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
-the full lock the car moves 0.4 pairs (1.6 pixels) a picture - 0.53 with
+the full lock the car moves half a pair (2 pixels) a picture - 2/3 with
 grip 4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of
 its 193), less as much as it is slower, not at all standing still. (Till
-2026-11-05 a fifth more; till 2026-11-04 2.5 times as much: as Out Run's,
-by the road's width, a third less.)
+2026-11-04 twice that: as Out Run's, by the road's width, a third less.)
 A curve carries it out of it, in proportion to the speed and more than to
 the curve level - level *L* by *L* (1 + *L*/14) (`push_levels`), the
-sharpest half as much again: on a level 7 curve at full speed 346% of
+sharpest half as much again: on a level 7 curve at full speed 248% of
 the full lock for the first car (till 2026-11-05 214%, till 2026-11-04
 72%, as Out Run's
 common sharp curves, radius 60-66: 71-75%), so it has to slow down for
@@ -1007,7 +1006,7 @@ steering or steering from side to side: the worst takes 37.6 ms, with the
 traffic, the props and the sound (Steering in numbers, below). Over the
 race's five stages, driven by the autopilot in each of the four cars and
 zigzagging from side to side with the keys, with the music, none does
-either: the worst takes 39.3 ms - a prop is left out of 37 to 76 of each
+either: the worst takes 38.6 ms - a prop is left out of 37 to 76 of each
 race's ~6100 pictures, which were late already when it came to it (7 to
 18 before the sound; 5 to 52 with it, the worst 39.3 ms, before a near
 one needed the picture an interrupt earlier).
@@ -1101,10 +1100,9 @@ steps of two pairs only. With the keys (faster held, the car driven from
 `car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
 and the sharp curves push harder (2026-11-04): 121 pictures (4.8 s) on
 average a crossing with grip 3, 114 with grip 5 - from 54 to 593 as the
-curves carry the car with it or against it. With the wheel a fifth slower
-again and the curves pushing 30% more (2026-11-05): 173 pictures (6.9 s)
-with grip 3, 156 (6.3 s) with grip 5 - 165 and 109 just before, measured
-the same way. Before: 56-64 pictures
+curves carry the car with it or against it. With the curves pushing 15%
+more (2026-11-05): 164 pictures (6.6 s) with grip 3, 119 (4.8 s) with grip
+5 - 165 and 109 just before, measured the same way. Before: 56-64 pictures
 (2.2-2.6 s) a crossing with grip 2 or 3, 46-48 (1.9 s) with grip 4 or 5 - from 33 to
 104, as the curves carry the car with it or against it - the car on the
 screen 9 to 10 pairs from the middle on average; 79-82 and 54-61 with the

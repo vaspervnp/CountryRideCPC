@@ -443,13 +443,13 @@ cache_steps_step
 ;; STEER_RAMP a picture at most: 0.2 s to the full lock, 0.4 s from one to
 ;; the other.
 ;; The wheel moves the car - left: car_x up, the road under it going right
-;; - its turn x the car's k / 64 / 256 pairs a picture (0.4 or 0.53 at the
+;; - its turn x the car's k / 64 / 256 pairs a picture (1/2 or 2/3 at the
 ;; full lock): all of it from STEER_SPEED on, as much less as the car is
 ;; slower below it, none standing still. And a curve carries the car out of
 ;; it - out of a right curve the car goes left, the road right: push_v
 ;; goes towards the curve level L x (1 + L / 14) x the speed / 16 x the
 ;; car's m / 65536 pairs a picture, STEER_RAMP at most. On a level 7 curve
-;; at full speed that is 1.40 pairs a picture for the first car, 3.5 times
+;; at full speed that is 1.24 pairs a picture for the first car, 2.5 times
 ;; its full lock: it has to slow down (Out Run's common sharp curves carry
 ;; its car out 71-75% of its full lock). Both moves add up in car_x and its
 ;; fraction car_xf. The car moves on the screen at once, and the road
