@@ -177,22 +177,29 @@ def line_px(half):
 # with the horizon higher (105 lines of road, DEPTH_K 7760): a depth is as
 # far from the car, and a stripe as long, as then.
 DEPTH_K = 5980
-BAND_SHIFT = 6              # a stripe band is 64 depth units long
-FAR_Z = 660                 # beyond this the stripes stop (they would alias:
+BAND_SHIFT = 5              # a stripe band is 32 depth units long
+FAR_Z = 420                 # beyond this the stripes stop (they would alias:
                             # the rows are about a stripe apart - z * z /
                             # DEPTH_K - and a group of rows is all past it or
-                            # none of it: rows 1-9)
+                            # none of it: rows 1-14)
+STILL_Z = 660               # beyond this the dashes stand still too (rows 1-9)
+STRIPE_K = 2                # the road code's stripe coordinates: depth and
+                            # camera times this, their low bytes - so that its
+                            # band is bit 6 of them, the grass's bit 7
 
 
 def far_mask(r):
     """Past FAR_Z the grass and the asphalt stop striping, but the kerbs and
     the lane dashes keep moving - with a longer dash, so that it still
-    covers a row or two instead of flickering. The mask is the bit of
-    (depth + camera) that says which half of the dash the row is in: 64
-    near (the stripes' own), 128 far away."""
+    covers a row or two instead of flickering - up to STILL_Z, past which
+    the rows are too far apart for any: there they stand still. The mask is
+    the bit of (depth + camera) that says which half of the dash the row is
+    in: 32 near (the stripes' own), 64 far away, 0 at the horizon."""
     if row_depth(r) <= FAR_Z:
         return 1 << BAND_SHIFT
-    return 128
+    if row_depth(r) <= STILL_Z:
+        return 2 << BAND_SHIFT
+    return 0
 
 
 def row_depth(r):
@@ -368,8 +375,8 @@ GROUND_PEN = PEN["GRASS_A"]                # the strip between hills and peaks
 # where the road engine changes it). Further away it is GRASS_A, as is the
 # ground, and the grass between a bush's leaves.
 PLAIN_GRASS = PEN["GRASS_A"]
-GRASS_SHIFT = 7
-GRASS_ROW = 14
+GRASS_SHIFT = 6
+GRASS_ROW = 19
 GRASS_STRIPES = True
 
 

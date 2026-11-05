@@ -690,6 +690,12 @@ rc_0_11_0
     defb #F5,#D5,#D5,#01,#7C,#FC,#C5,#D5,#D5,#01,#FC,#7C,#C5,#D5,#D5,#01
     defb #FC,#BC,#C5,#D5,#D5,#F5,#D9,#08,#DD,#E9
     ASSERT hi(re_0_11_0) == hi($-1)
+re_2_8_1
+    defb 0,8,10,12,14,19
+rc_2_8_1
+    defb #01,#3C,#3C,#C5,#01,#FC,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#D5,#D5,#01
+    defb #3C,#FC,#C5,#01,#3C,#3C,#C5,#D9,#08,#DD,#E9
+    ASSERT hi(re_2_8_1) == hi($-1)
 re_0_6_0
     defb 0,8,13,18
 rc_0_6_0
@@ -702,19 +708,18 @@ rc_0_9_0
     defb #F5,#D5,#D5,#01,#FC,#7C,#C5,#D5,#01,#FC,#7C,#C5,#D5,#01,#BC,#FC
     defb #C5,#D5,#D5,#F5,#D9,#08,#DD,#E9
     ASSERT hi(re_0_9_0) == hi($-1)
+re_0_4_0
+    defb 0,5,7
+rc_0_4_0
+    defb #01,#FC,#0F,#C5,#D5,#D5,#D5,#01,#0F,#FC,#C5,#D9,#08,#DD,#E9
+    ASSERT hi(re_0_4_0) == hi($-1)
+    ALIGN 256
 re_0_5_0
     defb 0,8,13,21
 rc_0_5_0
     defb #01,#FC,#0F,#C5,#01,#7C,#FC,#C5,#01,#7C,#FC,#C5,#D5,#01,#FC,#BC
     defb #C5,#01,#0F,#FC,#C5,#D9,#08,#DD,#E9
     ASSERT hi(re_0_5_0) == hi($-1)
-re_2_5_1
-    defb 0,5,7,9
-rc_2_5_1
-    defb #01,#3C,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#3C,#C5,#D9,#08,#DD
-    defb #E9
-    ASSERT hi(re_2_5_1) == hi($-1)
-    ALIGN 256
 re_0_8_0
     defb 0,2,7,12,17,19
 rc_0_8_0
@@ -733,22 +738,54 @@ rc_0_6_1
     defb #F5,#D5,#01,#FC,#7C,#C5,#01,#7C,#FC,#C5,#D5,#01,#BC,#FC,#C5,#D5
     defb #F5,#D9,#08,#DD,#E9
     ASSERT hi(re_0_6_1) == hi($-1)
+re_2_8_0
+    defb 0,5,7,9,11,16
+rc_2_8_0
+    defb #01,#3C,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#3C,#C5
+    defb #D9,#08,#DD,#E9
+    ASSERT hi(re_2_8_0) == hi($-1)
 re_0_5_1
     defb 0,2,10,15
 rc_0_5_1
     defb #F5,#D5,#01,#FC,#7C,#C5,#01,#FC,#7C,#C5,#01,#BC,#FC,#C5,#D5,#F5
     defb #D9,#08,#DD,#E9
     ASSERT hi(re_0_5_1) == hi($-1)
+re_2_7_1
+    defb 0,5,7,9,11
+rc_2_7_1
+    defb #01,#3C,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#3C,#C5,#D9
+    defb #08,#DD,#E9
+    ASSERT hi(re_2_7_1) == hi($-1)
+re_2_6_1
+    defb 0,5,7,9,14
+rc_2_6_1
+    defb #01,#3C,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#3C,#C5,#D9,#08
+    defb #DD,#E9
+    ASSERT hi(re_2_6_1) == hi($-1)
+re_2_7_0
+    defb 0,5,7,9,14
+rc_2_7_0
+    defb #01,#FC,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#FC,#C5,#D9,#08
+    defb #DD,#E9
+    ASSERT hi(re_2_7_0) == hi($-1)
+re_2_5_1
+    defb 0,5,7,9
+rc_2_5_1
+    defb #01,#3C,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#3C,#C5,#D9,#08,#DD
+    defb #E9
+    ASSERT hi(re_2_5_1) == hi($-1)
+    ALIGN 256
+re_2_6_0
+    defb 0,5,7,9
+rc_2_6_0
+    defb #01,#FC,#3C,#C5,#D5,#D5,#D5,#D5,#D5,#01,#3C,#FC,#C5,#D9,#08,#DD
+    defb #E9
+    ASSERT hi(re_2_6_0) == hi($-1)
 re_2_5_0
     defb 0,5,7,12
 rc_2_5_0
     defb #01,#FC,#3C,#C5,#D5,#D5,#D5,#D5,#01,#3C,#FC,#C5,#D9,#08,#DD,#E9
     ASSERT hi(re_2_5_0) == hi($-1)
-re_0_4_0
-    defb 0,5,7
-rc_0_4_0
-    defb #01,#FC,#0F,#C5,#D5,#D5,#D5,#01,#0F,#FC,#C5,#D9,#08,#DD,#E9
-    ASSERT hi(re_0_4_0) == hi($-1)
 re_2_3_1
     defb 0,5,7
 rc_2_3_1
@@ -779,7 +816,6 @@ re_0_2_0
 rc_0_2_0
     defb #01,#FC,#0F,#C5,#D5,#01,#0F,#FC,#C5,#D9,#08,#DD,#E9
     ASSERT hi(re_0_2_0) == hi($-1)
-    ALIGN 256
 re_2_2_0
     defb 0,5
 rc_2_2_0

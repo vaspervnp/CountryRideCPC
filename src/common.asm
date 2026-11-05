@@ -1214,8 +1214,10 @@ rd_end
     ei
     ret
 
-;; rp_zsets - (road_project) A = zcam's low byte into its loops.
+;; rp_zsets - (road_project) A = zcam's low byte: twice it - the stripes'
+;; coordinates are depth and zcam doubled (cpcgfx.STRIPE_K) - into its loops.
 rp_zsets
+    add a,a
     ld (rp_zlo+1),a
     ld (rp_zlo2+1),a
     ld (rp_zlo3+1),a
@@ -1259,7 +1261,7 @@ rp_grass
     push hl
     ld l,(hl)                           ; the bottom line's row (a near one)
     ld h,hi(rr_depth)
-    ld a,(zcam)
+    ld a,(rp_zlo+1)                     ; zcam, doubled (rp_zsets)
     add a,(hl)
     rla                                 ; CF: its stripe
     ld a,lo(GRASS_PAIR)
@@ -1369,7 +1371,7 @@ rp_dzset
     ld (rp_zold2+1),a
     ld (rp_zo+1),a
     ld e,a
-    ld a,(zcam)
+    ld a,(rp_zlo+1)                     ; zcam, doubled (rp_zsets)
     ld (hl),a
     sub e                               ; the move since then
     cp 64

@@ -49,7 +49,7 @@ from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, NEAR_ROW, ROAD_END, ROAD_LI
                     ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
                     curve_c1, curve_d, road_shift, shift_tau, CURVE_ROW_GROUPS, PERSP_P,
                     PLAIN_GRASS, ROAD_X_MAX,
-                    GRASS_ROW, GRASS_SHIFT, GRASS_STRIPES, PEN, HUD_H, SKY_Y)
+                    GRASS_ROW, GRASS_SHIFT, GRASS_STRIPES, PEN, HUD_H, SKY_Y, STRIPE_K)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "src", "gen", "roadcores.asm")
@@ -343,7 +343,7 @@ def main():
     emit("GRASS_X     EQU #%02X" % ((m0_solid(PLAIN_GRASS) ^ m0_solid(PEN["GRASS_B"]))
                                      if GRASS_STRIPES else 0))
     emit("GRASS_ROW   EQU %d" % GRASS_ROW)
-    emit("GRASS_SHIFT EQU %d" % GRASS_SHIFT)
+    emit("GRASS_SHIFT EQU %d" % (GRASS_SHIFT + STRIPE_K.bit_length() - 1))
     slots, ghalf, grow = template_slots(variants)
     soff = {(kind, g): off for kind, g, size, off in slots}
     emit("")
@@ -526,8 +526,8 @@ def main():
         else:
             tl2.append("0")
             th2.append("0")
-        dp.append(str(row_depth(r) & 0xFF))
-        mk.append(str(far_mask(r)))
+        dp.append(str(row_depth(r) * STRIPE_K & 0xFF))
+        mk.append(str(far_mask(r) * STRIPE_K))
     emit(";; Per row r (1..%d; 0 = the ground), page-aligned so a row is an" % NEAR_ROW)
     emit(";; index and the next array is INC H away. The stripe or dash a row")
     emit(";; is in is (depth + camera) AND mask, which needs only low bytes.")
@@ -536,7 +536,7 @@ def main():
     emit(";; TMPL_B - TMPL_A = #2000 above band 0 - mask 64 rotated right once is")
     emit(";; the #20 to add to the high byte. Rows past FAR_Z: a longer dash, and")
     emit(";; band 0's or band 2's template.")
-    assert far_mask(NEAR_ROW) == 64 and (TMPL_B - TMPL_A) >> 8 == 64 >> 1
+    assert far_mask(NEAR_ROW) * STRIPE_K == 64 and (TMPL_B - TMPL_A) >> 8 == 64 >> 1
     page("rr_tlo", tl, "band 0 template, low byte")
     emit("    defs 128-%d,0" % len(tl))
     emit("rr_gfirst   ; per cache group (cache.asm: rp_mode_chg), its first row;")

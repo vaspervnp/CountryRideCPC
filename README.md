@@ -102,11 +102,14 @@ leaves the screen. The sky and the mountains turn sideways as the road
 bends, by hardware scrolling.
 
 The road has four lanes, each a little wider than the car. It
-has thick red and white kerbs. The asphalt is plain grey and the grass plain
-green: the stripes are in the kerbs and the lane dashes, which move all the
-way to the horizon; past the striped zone their dashes get longer with
-distance, so they don't flicker. The road never narrows to a point: far away
-it is still 10 pixels wide, kerb to kerb.
+has thick red and white kerbs. The asphalt is plain grey; the kerbs, the
+lane dashes and, nearer, the grass are striped, in short bands - since
+2026-11-05 half as long as they were, so the road seems to run by twice as
+fast, with the car no faster. The dashes move nearly all the way to the
+horizon: past the striped zone they get longer with distance, so they don't
+flicker, and in the farthest nine rows, too far apart for any dash, they
+stand still. The road never narrows to a point: far away it is still 10
+pixels wide, kerb to kerb.
 
 Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
@@ -474,7 +477,10 @@ the fragments, which it copies out, two to a block where the HUDs go later.
 
 The road is made of 80 rows (its shape is laid out over 84, as if it went
 on to the screen's last line). Each row has a depth, and its stripe band is a
-bit of (depth + camera position). For every row width, band and pixel parity,
+bit of (depth + camera position): bit 5, a band 32 depth units long, and
+the grass's bit 6. The road code has both doubled (`STRIPE_K`, `rp_zsets`),
+so that in their low bytes its band is bit 6 and the grass's bit 7, as when
+the bands were twice as long. For every row width, band and pixel parity,
 `tools/mkroad.py` generates straight-line code that draws the row with
 `PUSH` instructions:
 
@@ -495,9 +501,10 @@ Each frame:
    and far lines whose dash has not moved - told from the bit of
    (depth + camera) the dash is, now and when the buffer was last drawn. The
    list ends after the last line that changed.
-4. The grass never changes colour, so a line that shows the same row at the
-   same curve level as when its buffer was last drawn gets only its road
-   drawn, kerb to kerb, and its grass is left alone. Bit 0 of the template
+4. The grass changes colour only where its stripe moves, so a line that
+   shows the same row at the same curve level as when its buffer was last
+   drawn, in the grass's stripe it was in, gets only its road drawn, kerb to
+   kerb, and its grass is left alone. Bit 0 of the template
    pointer says so (templates sit at even addresses). If the hill has moved,
    `road_project` compares each line's row with the old hill level's; on a
    straight road a line that now shows a nearer row needs only its road
@@ -874,12 +881,15 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   it is, and a thud as it comes down (`car_shadow`). Never higher than the
   road's top in the picture (`car_jump`): over a crest the ground behind
   it is not drawn again. In each buffer the car's
-  lines where it was shown last and where it is now are drawn whole - the
-  grass's middle line's own template too (`cj_mark`), the shadow's lines
-  while the jump is on (`car_air`) - and while it is up the far lines'
-  road is drawn even where it is as it was (`jump_frame`, as `traffic_pre`
-  has it for a car up there), so nothing of it stays behind
-  (`src/jump.asm`).
+  lines where it was shown last are drawn whole - the grass's middle
+  line's own template too (`cj_mark`), the shadow's lines while the jump is
+  on (`car_air`) - and while it is up the far lines' road is drawn even
+  where it is as it was (`jump_frame`, as `traffic_pre` has it for a car
+  up there), so nothing of it stays behind; where it is now, the road is
+  as `road_project` has it, right for the car to be drawn over
+  (`src/jump.asm`). (Until 2026-11-05 those lines were drawn whole too;
+  with the shorter stripes, that made a picture in the air late - 40.3 ms,
+  1 in 6000 - where now the worst takes 38.9 ms.)
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -959,9 +969,11 @@ and 1.1 ms when every register was compared every time.
 
 Measured in the emulator over 3000 pictures (2 minutes) of the demo's
 crests, dips and curves, from the flip that starts a picture to the next
-flip being asked for, a picture takes about 22.5 ms of its 40 ms; 22.3 ms
-with the player not steering, the curves carrying the car out (at the top
-speed of 6.6 depth units a VSYNC; with the horizon higher, 27.1 and 26.7 ms,
+flip being asked for, a picture takes about 26.2 ms of its 40 ms; 26.5 ms
+with the player not steering, the curves carrying the car out, and 28.5 ms
+steering from side to side (at the top speed of 6.6 depth units a VSYNC;
+with the stripes twice as long, until 2026-11-05, 23.4, 24.8 and 27.0 ms -
+now more lines' grass changes; with the horizon higher, 27.1 and 26.7 ms,
 and 26.3 and 25.7 ms at 5.25). Roughly (measured with the horizon higher,
 at 5.25, before the road's last four lines were cut, which took off
 ~0.7 ms on average and up to ~1.5 ms):

@@ -9,8 +9,9 @@
 ;; lines of its rows: car_draw starts it car_up rows higher (car_raise).
 ;; Never higher than the road's top in the picture (car_jump): on a crest
 ;; the ground behind it is not drawn again. In each buffer the car's lines
-;; where it was drawn last and where it is now are drawn whole, so nothing
-;; of it stays behind (car_lines), a far line's too (jump_frame).
+;; where it was drawn last are drawn whole, so nothing of it stays behind
+;; (car_lines), a far line's too (jump_frame); where it is now the road is
+;; right as road_project has it, and the car is drawn over it.
 ;; ===========================================================================
 
 JUMP_SPEED  EQU SPEED_MAX*4/5   ; a crash this fast or faster: thrown up
@@ -19,8 +20,8 @@ JUMP_SPEED  EQU SPEED_MAX*4/5   ; a crash this fast or faster: thrown up
     REC_BEGIN JUMP_P0
 
 ;; car_jump - (car_lines) the jump a picture on: car_up the rows up, no
-;; higher than the road's top; this buffer's lines of the car then and now
-;; whole. Keeps C; NZ: in the air (car_lines has no more to do).
+;; higher than the road's top; this buffer's lines of the car then whole.
+;; Keeps C; NZ: in the air (car_lines has no more to do).
 car_jump
     ld a,(jump_t)
     ld hl,(drawn_up)
@@ -65,7 +66,7 @@ cj_air
     jr c,cj_up
     ld a,c
 cj_up                                   ; A = its rows up: this buffer's
-    ld (car_up),a                       ; lines of it then and now, whole
+    ld (car_up),a                       ; lines of it then, whole
     ld b,a
     ld hl,drawn_up
     call buf_entry                      ; (A lost)
@@ -75,8 +76,6 @@ cj_up                                   ; A = its rows up: this buffer's
     or c
     jr z,cj_done
     ld a,c
-    call cj_mark
-    ld a,(car_up)
     call cj_mark
 cj_done
     ld a,(car_up)
