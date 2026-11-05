@@ -307,8 +307,9 @@ the other way mirrored - in `tools/carsart.py` (`tools/mkcars.py`, which
 also draws `build/cars-sheet.png`). In the race the car is seen uphill
 where the road ahead climbs - the hill 20 or more into a dip - and
 downhill where it falls away, over a crest (`car_lines`). On the level its
-wheels stand on line 255 (`scene.CAR_GROUND`), 4 lines higher since
-2026-11-05: a monitor's bottom edge hid its rear wheels.
+wheels stand on line 257 (`scene.CAR_GROUND`), 2 lines higher since
+2026-11-05: a monitor's bottom edge hid its rear wheels (it stood 4
+higher for a while).
 
 On the select screen the cars are not their models' renders but pictures
 of the cars they are modelled on (since 2026-11-04; `tools/mkselect.py`
@@ -897,7 +898,8 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   or faster the crash throws the car up as it spins, a character row - 8
   lines - at a time, as its views' code is made for its rows (`car_draw`
   starts it higher: `car_raise`): up to 5 rows, 40 lines (6, 48, until
-  the car stood 4 lines higher, 2026-11-05), in 6 pictures,
+  the car stood higher, 2026-11-05: a 6th row would reach the ground
+  band), in 6 pictures,
   held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
   its shadow on the road under it, three black lines, smaller the higher
   it is, and a thud as it comes down (`car_shadow`). Never higher than the

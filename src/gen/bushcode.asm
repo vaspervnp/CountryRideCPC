@@ -33,7 +33,7 @@ car_code0
     push hl
     ld hl,#C00F
     push hl
-    ld hl,#C86C
+    ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
@@ -140,7 +140,7 @@ car_code0
     push bc
     ld hl,#4FED
     push hl
-    ld hl,#0812
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
@@ -179,7 +179,7 @@ car_code0
     push bc
     ld hl,#CFAD
     push hl
-    ld hl,#C872
+    ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
@@ -290,7 +290,7 @@ car_code0
     push de
     ld hl,#00A8
     push hl
-    ld hl,#0812
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
@@ -1140,7 +1140,7 @@ car_code1
     push hl
     ld hl,#853F
     push hl
-    ld hl,#C86C
+    ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
@@ -1252,7 +1252,7 @@ car_code1
     push hl
     ld hl,#BDFC
     push hl
-    ld hl,#0814
+    ld hl,#C874
     add hl,sp
     ld sp,hl
     ei
@@ -1293,7 +1293,7 @@ car_code1
     push hl
     ld hl,#BDFC
     push hl
-    ld hl,#C876
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
@@ -1421,7 +1421,7 @@ car_code1
     push de
     ld bc,#00BD
     push bc
-    ld hl,#0812
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei

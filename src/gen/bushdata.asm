@@ -140,7 +140,7 @@ bush_rz2   ; ... zr >= 512: (zr - 512) / 8
     push hl
     ld hl,#1FAD
     push hl
-    ld hl,#C86E
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
@@ -302,7 +302,7 @@ bush_spr2   ; size class 2, per row: its sprite's record (#FF none)
     ld c,#0F
     push bc
     push hl
-    ld hl,#0814
+    ld hl,#C874
     jp #97D5
 bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#03,#04,#05,#06,#07,#08,#08,#09,#0A,#0B,#0C,#0D,#0D
@@ -355,7 +355,7 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     push bc
     ld hl,#0FCF
     push hl
-    ld hl,#C874
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -499,7 +499,7 @@ bush_latR1   ; lateral class 1, right, per row: bytes from the road's centre (si
     defb #4E,#4F,#50,#51,#52
     ld c,#A8
     push bc
-    ld hl,#0812
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
