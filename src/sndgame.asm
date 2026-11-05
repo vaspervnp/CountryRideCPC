@@ -258,20 +258,21 @@ ep_slope
     ret
 
 ;; per gear: its slope - the period's fall a speed unit, in eighths - and
-;; its period at its start: 65 Hz up to 115, then 80-125, 95-139, 110-159,
-;; 125-174 and 140-204 Hz
+;; its period at its start: 65 Hz up to 132, then 95-165, 125-192, 155-238,
+;; 185-268 and 215-332 Hz - higher and higher, so the faster the car the
+;; faster it sounds (till 2026-11-05 65-115 ... 140-204)
 eng_gears
-    defb 12
+    defb 14
     defw ENG_IDLE
     defb 8
-    defw 781
-    defb 6
     defw 658
     defb 5
-    defw 568
-    defb 4
     defw 500
     defb 4
-    defw 446
+    defw 403
+    defb 3
+    defw 338
+    defb 3
+    defw 291
 
     REC_END SND_P10,SND_PIECE

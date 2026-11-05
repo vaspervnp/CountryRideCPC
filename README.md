@@ -242,12 +242,14 @@ drives the car):
 Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - half a pair
-a picture at the full lock, 2/3 with grip 4 or 5 - and how little a curve
-carries it out of it: on a level 7 curve at its top speed 1.29, 1.08,
-0.80 or 0.75 pairs a picture with grip 2, 3, 4 or 5 - more than the full
-lock holds: the cars with grip 2 or 3 have to slow down for curves sharper
-than level 3, those with grip 4 or 5 for level 7 (Steering, below).
+to 5.6 seconds. Grip is how fast the car is steered across - 0.4 pairs
+a picture at the full lock, 0.53 with grip 4 or 5 - and how little a curve
+carries it out of it: on a level 7 curve at its top speed 1.68, 1.40,
+1.05 or 0.97 pairs a picture with grip 2, 3, 4 or 5 - more than the full
+lock holds: at their top speeds the cars with grip 2 or 3 have to slow
+down for curves sharper than level 2, those with grip 4 or 5 for curves
+sharper than level 4 (Steering, below). (Since 2026-11-05 the wheel is a
+fifth slower and the curves carry the car out 30% more.)
 
 ![Picking a car](docs/screen-select.png)
 
@@ -581,14 +583,16 @@ its curves and how they come and go, in proportion to its road's width.
 Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
-the full lock the car moves half a pair (2 pixels) a picture - 2/3 with
+the full lock the car moves 0.4 pairs (1.6 pixels) a picture - 0.53 with
 grip 4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of
 its 193), less as much as it is slower, not at all standing still. (Till
-2026-11-04 twice that: as Out Run's, by the road's width, a third less.)
+2026-11-05 a fifth more; till 2026-11-04 2.5 times as much: as Out Run's,
+by the road's width, a third less.)
 A curve carries it out of it, in proportion to the speed and more than to
 the curve level - level *L* by *L* (1 + *L*/14) (`push_levels`), the
-sharpest half as much again: on a level 7 curve at full speed 214% of
-the full lock for the first car (till 2026-11-04 72%, as Out Run's
+sharpest half as much again: on a level 7 curve at full speed 346% of
+the full lock for the first car (till 2026-11-05 214%, till 2026-11-04
+72%, as Out Run's
 common sharp curves, radius 60-66: 71-75%), so it has to slow down for
 it; the push comes and goes, 0.11 pairs a picture each picture at most
 (Out Run: 5 a step). The two moves add up in `car_x` and its fraction `car_xf`
@@ -959,8 +963,10 @@ engine's note and volume (none in the demo); and an effect when something
 begins - the count's digit changing (a beep, GO!), the message (EXTENDED
 TIME, TIME UP, FINISH), `coll_t` going up (a bump, a crash). The engine's
 pitch comes from the gear the speed is in, as the HUD shows it, and how
-far up the gear it is (`eng_period`): 65 to 115 Hz in the first, then 80-125, 95-139, 110-159,
-125-174 and 140-204 Hz - it drops as the gear changes up. Every other
+far up the gear it is (`eng_period`): 65 to 132 Hz in the first, then
+95-165, 125-192, 155-238, 185-268 and 215-332 Hz - it drops as the gear
+changes up, and each gear sings higher than the last, so the faster the
+car, the faster it sounds (till 2026-11-05 65-115 up to 140-204 Hz). Every other
 picture it is 1/16 lower (a hum); on the grass a noise rumbles with it,
 and where a curve carries the car out hard (`push_v` from `SQUEAL_V` on)
 the tyres squeal, a higher noise.
@@ -1095,7 +1101,10 @@ steps of two pairs only. With the keys (faster held, the car driven from
 `car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
 and the sharp curves push harder (2026-11-04): 121 pictures (4.8 s) on
 average a crossing with grip 3, 114 with grip 5 - from 54 to 593 as the
-curves carry the car with it or against it. Before: 56-64 pictures
+curves carry the car with it or against it. With the wheel a fifth slower
+again and the curves pushing 30% more (2026-11-05): 173 pictures (6.9 s)
+with grip 3, 156 (6.3 s) with grip 5 - 165 and 109 just before, measured
+the same way. Before: 56-64 pictures
 (2.2-2.6 s) a crossing with grip 2 or 3, 46-48 (1.9 s) with grip 4 or 5 - from 33 to
 104, as the curves carry the car with it or against it - the car on the
 screen 9 to 10 pairs from the middle on average; 79-82 and 54-61 with the
