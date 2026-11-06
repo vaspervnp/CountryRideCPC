@@ -252,8 +252,8 @@ Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
 to 5.6 seconds. Grip is how fast the car is steered across - at the full
-lock 0.62, 0.66, 0.90 or 0.93 pairs a picture with grip 2, 3, 4 or 5 (since
-2026-11-06 25%, 30%, 35% and 40% more than half a pair, 2/3 with grip 4 or
+lock 0.62, 0.66, 0.84 or 0.87 pairs a picture with grip 2, 3, 4 or 5 (since
+2026-11-06 25%, 30%, 25% and 30% more than half a pair, 2/3 with grip 4 or
 5: `scene.py` `STEER_MORE`, a factor a car) - and how little a curve
 carries it out of it: on a level 7 curve at its top speed 1.50, 1.24,
 0.92 or 0.86 pairs a picture with grip 2, 3, 4 or 5. Turning, a car goes a
@@ -655,7 +655,7 @@ its curves and how they come and go, in proportion to its road's width.
 Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
-the full lock the car moves 0.62-0.93 pairs (2.5-3.7 pixels) a picture -
+the full lock the car moves 0.62-0.87 pairs (2.5-3.5 pixels) a picture -
 the more, the more grip it has - from a speed of 4 depth units a VSYNC on
 (Out Run: 128 of its 193), less as much as it is slower, not at all
 standing still. (Till 2026-11-06 half a pair, 2/3 with grip 4 or 5; till

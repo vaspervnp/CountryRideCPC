@@ -416,7 +416,7 @@ cache_steps_gate
 ;; STEER_RAMP a picture at most: 0.2 s to the full lock, 0.4 s from one to
 ;; the other.
 ;; The wheel moves the car - left: car_x up, the road under it going right
-;; - its turn x the car's k / 64 / 256 pairs a picture (0.63-0.93 at the
+;; - its turn x the car's k / 64 / 256 pairs a picture (0.62-0.87 at the
 ;; full lock): all of it from STEER_SPEED on, as much less as the car is
 ;; slower below it, none standing still. Turning, the car goes a gauge
 ;; segment slower at the most (STEER_LOSS). And a curve carries the car out of

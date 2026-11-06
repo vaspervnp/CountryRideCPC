@@ -137,9 +137,9 @@ car_stats
     defw #0690   ; ferrari: speed 5, acceleration 5, grip 2
     defb 6,81,89
     defw #0620   ; lotus: speed 4, acceleration 3, grip 5
-    defb 4,120,55
+    defb 4,112,55
     defw #05B0   ; bmw: speed 3, acceleration 5, grip 4
-    defb 6,116,63
+    defb 6,108,63
 CAR_STATS_LEN EQU 5   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table

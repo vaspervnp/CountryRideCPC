@@ -1010,12 +1010,13 @@ SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_of
 # 65536 pairs a picture (the first car 1.24 on a level 7 curve at full
 # speed, more than its full lock: slower there; more grip, less). Since
 # 2026-11-05 m is 115% of what it was; since 2026-11-06 the cars steer
-# 25-40% more than GRIP's k, the more the more grip they have.
+# 25-30% more than GRIP's k (the third and the fourth were 40% and 35%
+# for a while: too quick).
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
 ACCEL = {3: 4, 4: 5, 5: 6}
 GRIP = {2: (65, 89), 3: (65, 74), 4: (86, 63), 5: (86, 55)}
-STEER_MORE = [1.30, 1.25, 1.40, 1.35]   # per car, its k times this
+STEER_MORE = [1.30, 1.25, 1.30, 1.25]   # per car, its k times this
 def car_steer_k(car_id):
     return int(GRIP[CAR_LEVELS[car_id][2]][0] * STEER_MORE[car_id] + 0.5)
 assert all(k < 256 and m < 256 for k, m in GRIP.values())
