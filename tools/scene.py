@@ -1005,16 +1005,21 @@ SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_of
 # depth units a VSYNC; 5 is the most the pictures keep up with), the speed
 # gained a VSYNC, and the steering's and the curves' factors (game.asm
 # steer): k, the full lock moving the car 127 x k / 64 / 256 pairs a
-# picture (1/2 or 2/3), and m, a curve of level L at speed s (8.8)
-# carrying it out L (1 + L / 14) x s / 16 x m / 65536 pairs a picture
-# (the first car 1.24 on a level 7 curve at full speed, more than its full
-# lock: slower there; more grip, less). Since 2026-11-05 m is 115% of what
-# it was.
+# picture (GRIP's 1/2 or 2/3, times the car's STEER_MORE), and m, a curve
+# of level L at speed s (8.8) carrying it out L (1 + L / 14) x s / 16 x m /
+# 65536 pairs a picture (the first car 1.24 on a level 7 curve at full
+# speed, more than its full lock: slower there; more grip, less). Since
+# 2026-11-05 m is 115% of what it was; since 2026-11-06 the cars steer
+# 25-40% more than GRIP's k, the more the more grip they have.
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
 ACCEL = {3: 4, 4: 5, 5: 6}
 GRIP = {2: (65, 89), 3: (65, 74), 4: (86, 63), 5: (86, 55)}
+STEER_MORE = [1.30, 1.25, 1.40, 1.35]   # per car, its k times this
+def car_steer_k(car_id):
+    return int(GRIP[CAR_LEVELS[car_id][2]][0] * STEER_MORE[car_id] + 0.5)
 assert all(k < 256 and m < 256 for k, m in GRIP.values())
+assert all(car_steer_k(c) < 256 for c in range(len(CAR_LEVELS)))
 assert all(v < 0x1000 for v in TOP_SPEED.values())    # (speed / 16: a byte)
 assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
 

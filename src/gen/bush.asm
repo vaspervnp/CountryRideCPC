@@ -133,13 +133,13 @@ car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
 ;; (scene.py CAR_LEVELS; car_setup)
 car_stats
     defw #0690   ; player: speed 5, acceleration 4, grip 3
-    defb 5,65,74
+    defb 5,85,74
     defw #0690   ; ferrari: speed 5, acceleration 5, grip 2
-    defb 6,65,89
+    defb 6,81,89
     defw #0620   ; lotus: speed 4, acceleration 3, grip 5
-    defb 4,86,55
+    defb 4,120,55
     defw #05B0   ; bmw: speed 3, acceleration 5, grip 4
-    defb 6,86,63
+    defb 6,116,63
 CAR_STATS_LEN EQU 5   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table

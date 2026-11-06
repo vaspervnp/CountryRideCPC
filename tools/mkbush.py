@@ -1099,7 +1099,8 @@ def main():
     emit(";; (scene.py CAR_LEVELS; car_setup)")
     emit("car_stats")
     for c, (sp_, ac, gr) in enumerate(S.CAR_LEVELS):
-        steer_, drift = S.GRIP[gr]
+        drift = S.GRIP[gr][1]
+        steer_ = S.car_steer_k(c)
         emit("    defw #%04X   ; %s: speed %d, acceleration %d, grip %d"
              % (S.TOP_SPEED[sp_], S.CARS[c], sp_, ac, gr))
         emit("    defb %d,%d,%d" % (S.ACCEL[ac], steer_, drift))

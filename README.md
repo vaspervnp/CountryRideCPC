@@ -251,15 +251,19 @@ drives the car):
 Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
 pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
 3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - half a pair
-a picture at the full lock, 2/3 with grip 4 or 5 - and how little a curve
+to 5.6 seconds. Grip is how fast the car is steered across - at the full
+lock 0.62, 0.66, 0.90 or 0.93 pairs a picture with grip 2, 3, 4 or 5 (since
+2026-11-06 25%, 30%, 35% and 40% more than half a pair, 2/3 with grip 4 or
+5: `scene.py` `STEER_MORE`, a factor a car) - and how little a curve
 carries it out of it: on a level 7 curve at its top speed 1.50, 1.24,
-0.92 or 0.86 pairs a picture with grip 2, 3, 4 or 5 - more than the full
-lock holds: at their top speeds the cars with grip 2 or 3 have to slow
-down for curves sharper than level 3, those with grip 4 or 5 for curves
-sharper than level 5 (Steering, below). (Since 2026-11-05 the curves carry
-the car out 15% more.) On two lanes the curves are gentler (The track,
-below): none sharper than level 5.
+0.92 or 0.86 pairs a picture with grip 2, 3, 4 or 5. Turning, a car goes a
+segment of the speed gauge slower at most (`STEER_LOSS`, an eighth of the
+top speed of 5), and it slows down to that as on the grass; so at their
+top speeds the cars with grip 2 or 3 have to slow down for curves sharper
+than level 4, and those with grip 4 or 5 hold every curve (Steering,
+below). (Since 2026-11-05 the curves carry the car out 15% more.) On two
+lanes the curves are gentler (The track, below): none sharper than level
+5.
 
 ![Picking a car](docs/screen-select.png)
 
@@ -651,14 +655,20 @@ its curves and how they come and go, in proportion to its road's width.
 Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
-the full lock the car moves half a pair (2 pixels) a picture - 2/3 with
-grip 4 or 5 - from a speed of 4 depth units a VSYNC on (Out Run: 128 of
-its 193), less as much as it is slower, not at all standing still. (Till
+the full lock the car moves 0.62-0.93 pairs (2.5-3.7 pixels) a picture -
+the more, the more grip it has - from a speed of 4 depth units a VSYNC on
+(Out Run: 128 of its 193), less as much as it is slower, not at all
+standing still. (Till 2026-11-06 half a pair, 2/3 with grip 4 or 5; till
 2026-11-04 twice that: as Out Run's, by the road's width, a third less.)
+Left or right held, the top speed on the road is a gauge segment lower
+(`STEER_LOSS`: `steer` sets `speed_player`'s `sp_max`), and the car slows
+down to it 12/256 depth units a VSYNC, as on the grass - ~0.35 s from the
+top speed.
 A curve carries it out of it, in proportion to the speed and more than to
 the curve level - level *L* by *L* (1 + *L*/14) (`push_levels`), the
-sharpest half as much again: on a level 7 curve at full speed 248% of
-the full lock for the first car (till 2026-11-05 214%, till 2026-11-04
+sharpest half as much again: on a level 7 curve at full speed 189% of
+the full lock for the first car (till 2026-11-06 248%, till 2026-11-05
+214%, till 2026-11-04
 72%, as Out Run's
 common sharp curves, radius 60-66: 71-75%), so it has to slow down for
 it; the push comes and goes, 0.11 pairs a picture each picture at most
@@ -1212,6 +1222,11 @@ half drawn whole (2026-11-06): 24 races along six routes in the four
 cars, the clock kept and not, 38.8 ms at worst, none past 39.5 ms;
 crashes 38.0 ms at worst; every picture of 8 races as `scene.py` has it
 (a car's lines drawn whole in ~14700 of them, only its top half in 61%).
+With the wheel 25-40% quicker and a gauge segment lost turning (later on
+2026-11-06): the same 24 races, 39.2 ms at worst - pictures on a hill with
+a step, begun late - none past 39.5 ms; crashes 37.9 ms at worst; the
+road, the HUD and the screen in the three R5 models as `scene.py` has
+them, for all four cars.
 
 With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
 four routes in the four cars, the clock kept and not, 37.6-38.7 ms at

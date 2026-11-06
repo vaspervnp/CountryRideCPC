@@ -416,9 +416,10 @@ cache_steps_gate
 ;; STEER_RAMP a picture at most: 0.2 s to the full lock, 0.4 s from one to
 ;; the other.
 ;; The wheel moves the car - left: car_x up, the road under it going right
-;; - its turn x the car's k / 64 / 256 pairs a picture (1/2 or 2/3 at the
+;; - its turn x the car's k / 64 / 256 pairs a picture (0.63-0.93 at the
 ;; full lock): all of it from STEER_SPEED on, as much less as the car is
-;; slower below it, none standing still. And a curve carries the car out of
+;; slower below it, none standing still. Turning, the car goes a gauge
+;; segment slower at the most (STEER_LOSS). And a curve carries the car out of
 ;; it - out of a right curve the car goes left, the road right: push_v
 ;; goes towards the curve level L x (1 + L / 14) x the speed / 16 x the
 ;; car's m / 65536 pairs a picture, STEER_RAMP at most. On a level 7 curve
@@ -451,7 +452,8 @@ STEER_RAMP  EQU 28              ; the most the wheel's turn and the push
                                 ; (8.8 pairs a picture) move a picture: Out
                                 ; Run's 64 and 5 a step, ~10.9 steps a second
 STEER_SPEED EQU #0400           ; slower, the wheel moves the car less
-CAR_STEER_K EQU 65              ; (the first car's; car_setup: each its own)
+STEER_LOSS  EQU SPEED_MAX/GAUGE_SEGS ; the top speed lost turning: a segment
+CAR_STEER_K EQU 85              ; (the first car's; car_setup: each its own)
 CAR_PUSH_M  EQU 64
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
                                 ; its base line on the car's lower half...
@@ -525,6 +527,15 @@ steer_both
     xor a
 steer_keys
     ld (car_view),a
+    ld a,l                      ; turning (the wheel to go to a full lock):
+    or a                        ; the top speed on the road a gauge segment
+    push hl                     ; lower (speed_player's - it slows down to
+    ld hl,(demo_max+1)          ; it as on the grass)
+    ld de,-STEER_LOSS
+    jr z,$+3
+    add hl,de
+    ld (sp_max+1),hl
+    pop hl
     ld de,(steer_s)
     call ramp
     ld (steer_s),hl

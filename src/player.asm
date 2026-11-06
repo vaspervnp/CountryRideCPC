@@ -115,7 +115,8 @@ rk_row                          ; A = #40 + row: its keys, 1 = held
 ;; neither. On the grass - a wheel off the road, car_x OFFROAD_X (5 a lane)
 ;; or more either way - the car goes no faster than SPEED_GRASS: over it, it slows
 ;; down by SPEED_DRAG a VSYNC. Goes on with demo_speed_set, HL = the speed.
-;; The top speeds and the acceleration are the car's (car_setup).
+;; The top speeds and the acceleration are the car's (car_setup); turning,
+;; the top speed on the road is a gauge segment lower (steer: sp_max).
 ;; ---------------------------------------------------------------------------
 SPEED_COAST EQU 2
 SPEED_GRASS EQU SPEED_MAX/2
