@@ -98,6 +98,8 @@ roadc_start
     INCLUDE "gen/roadrows.asm"
     INCLUDE "road6.asm"
     INCLUDE "traffic.asm"
+    INCLUDE "signal.asm"
+    INCLUDE "gen/blinks.asm"
     INCLUDE "gen/stages6.asm"
     INCLUDE "gen/traffic.asm"
     INCLUDE "gen/trafcode_6.asm"
@@ -210,6 +212,7 @@ race_end
 
     ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
     ASSERT TR_TOPS == 1 && TR_BOTTOMS == 2              ; (traffic.asm: tp_new)
+    ASSERT car_off == car_x+1 && car_vfull == car_view+1  ; (game.asm: car_blink)
     ASSERT lo(rd_ltop) == 0                             ; (lanes5.asm: lg5_end)
     ASSERT lane_next == lane_now+1 && TR_NARROW == 256  ; (traffic.asm:
                                                         ; tr_lanes_at)

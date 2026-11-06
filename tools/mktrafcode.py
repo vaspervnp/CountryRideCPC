@@ -405,17 +405,26 @@ def main():
     emit("TR_ZNEARSIZE EQU %d   ; nearer than this, a car is at a near size" % znear)
     emit("")
     emit(";; per size: its width (bytes), its lines, its top's lines, its first")
-    emit(";; piece's record (tr_pieces)")
+    emit(";; piece's record (tr_pieces); then its left indicator with each bottom")
+    emit(";; (BOTTOMS): its line from its top, its pixel from its left")
+    emit(";; (scene.traffic_blinker)")
     emit("tr_sinfo")
     index = {p[0]: i for i, p in enumerate(ps)}
     for k, s in enumerate(TRAFFIC_ART):
         top = s["tops"][T.TOPS[0]]
         bottom = next(iter(s["bottoms"].values()))
         first = index["tr_s%d_%s" % (k, T.TOPS[0])]
-        emit("    defb %d,%d,%d,%d   ; size %d: %d x %d pixels" % (
-            len(top[0]) // 2, len(top) + len(bottom), s["split"], first * 5, k, len(top[0]),
-            len(top) + len(bottom)))
-    emit("TR_SINFO_LEN EQU 4")
+        blink = [v for b in range(len(T.BOTTOMS)) for v in S.traffic_blinker(k, b)]
+        emit("    defb %d,%d,%d,%d, %s   ; size %d: %d x %d pixels" % (
+            len(top[0]) // 2, len(top) + len(bottom), s["split"], first * 5,
+            ",".join(map(str, blink)), k, len(top[0]), len(top) + len(bottom)))
+    emit("TR_SINFO_LEN EQU %d" % (4 + 2 * len(T.BOTTOMS)))
+    emit("TR_SINFO_BLINK EQU 4")
+    emit("TR_BLINK    EQU %d   ; frames_drawn's bit: an indicator lit" % S.TRAFFIC_BLINK)
+    assert S.TRAFFIC_BLINK & (S.TRAFFIC_BLINK - 1) == 0
+    lit = G.PEN[S.CAR_PEN[S.TRAFFIC_LIT]]
+    emit("TR_LIT_L    EQU #%02X   ; its pixel lit: the left one of a byte" % G.m0_left(lit))
+    emit("TR_LIT_R    EQU #%02X   ; the right one" % G.m0_right(lit))
     emit("")
     emit(";; per piece: its code, its RAM configuration (0: any), the lines before")
     emit(";; its first (from its top), where its first line's run ends (bytes from")
@@ -432,7 +441,7 @@ def main():
     emit("")
     emit("tr_rsize    ; per row: the size a car on it is drawn at - its record in")
     emit("            ; tr_sinfo (#FF: none)")
-    vals = [0xFF if v is None else 4 * v for v in rsize]
+    vals = [0xFF if v is None else (4 + 2 * len(T.BOTTOMS)) * v for v in rsize]
     for j in range(0, len(vals), 16):
         emit("    defb " + ",".join("#%02X" % v for v in vals[j:j + 16]))
     lats = [(4, 0, "the inner right lane of four"), (4, 1, "the outer right lane of four"),

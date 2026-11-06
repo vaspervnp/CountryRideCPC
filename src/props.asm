@@ -295,7 +295,9 @@ pr_free
 ;; everything.
 ;; ---------------------------------------------------------------------------
 PROP_LATE   EQU 10
-PROP_BIG_Z  EQU 168
+PROP_BIG_Z  EQU 184                     ; (size 6 and 7 nearer: cpcgfx
+                                        ; prop_size_of - 168 till 2026-11-06,
+                                        ; and a palm at 174 took 3.5 ms)
 prp_late    defb 0                      ; (tools/run.py: not drawn)
 
 prop_one

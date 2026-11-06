@@ -274,6 +274,11 @@ pic_road
     call bush_draw              ; this picture's on top of it
 pic_bushes
     call car_draw               ; and the car on top of all
+    ld a,(coll_t)               ; its indicator (signal.asm, bank 6: what
+    ld de,(car_x)               ; it needs of bank 7's - car_off, car_vfull
+    ld hl,(car_view)            ; next)
+    ld ix,(car_id)
+    call car_blink_go
 pic_car
     ld a,(irq_n)                ; the HUD, with the time left (RAM_C1)
     ld b,HUD_SHARE

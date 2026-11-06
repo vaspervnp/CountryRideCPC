@@ -105,18 +105,33 @@ rp_force_all
 
 ;; IX = a car's lines of last time (tr_drawn): rp_force's - unless it stood
 ;; out over the grass (bit 7 of the first: to_whole): rp_cars_whole's
-;; then. Keeps BC, DE.
+;; then, all of them - or those down to the middle one (bit 7 of the last
+;; too), rp_force's all the same. Keeps BC, DE.
 rp_force_car
     bit 7,(ix+0)
     jp z,rp_force
+    bit 7,(ix+1)
+    ret z
+    push ix
+    ld a,(ix+0)
+    and #7F
+    ld (rfc_lines),a
+    ld a,(ix+1)
+    and #7F
+    ld (rfc_lines+1),a
+    ld ix,rfc_lines
+    call rp_force
+    pop ix
     ret
+rfc_lines   defb 0,0
 
 ;; ---------------------------------------------------------------------------
 ;; rp_cars_whole - (rp_done: every line flagged by then - rp_force_all comes
 ;; before the lines after a moved row are, and on rp_near_go's way not at
 ;; all) the lines this buffer's cars stood on last time where one stood out
-;; over the grass (bit 7 of its first: to_whole) drawn whole: flag 0.
-;; Destroys AF, BC, DE, HL.
+;; over the grass (bit 7 of its first: to_whole) drawn whole: flag 0 - down
+;; to the middle one only if bit 7 of its last is set too. Destroys AF, BC,
+;; DE, HL.
 ;; ---------------------------------------------------------------------------
 rp_cars_whole
     push ix
@@ -131,6 +146,15 @@ rp_car_whole
     bit 7,(ix+0)
     ret z
     ld a,(ix+1)
+    bit 7,a
+    jr z,rcw_all
+    and #7F
+    ld c,a
+    ld a,(ix+0)
+    and #7F
+    add a,c
+    rra                                 ; (first + last) / 2: its middle one
+rcw_all
     cpl
     add a,LAST_Y+1
     ld l,a                              ; L = the first entry, LAST_Y - last
@@ -655,6 +679,9 @@ tr_reach
 ;; tr_drawn. Destroys everything.
 ;; ---------------------------------------------------------------------------
 traffic_draw
+    ld a,(frames_drawn)                 ; the indicators lit this picture?
+    and TR_BLINK
+    ld (to_lit+1),a
     ld a,(hill)                         ; what the hill and the curve give,
     add a,128                           ; if they are not as they were
     srl a
@@ -867,6 +894,7 @@ to_way
     ld a,(ix+TR_TO)
     call to_place
     sub b                               ; A = the way (signed)
+    ld (to_dir),a                       ; (to_blink: its side)
     ld c,a
     jp p,$+5
     neg
@@ -1004,10 +1032,10 @@ to_near
     ; ... but on the road on its top line's row - narrower and bent more
     ; than its own - and then on its own row's (a narrow road bent hard:
     ; its lower lines bend less and are not that much wider): to_fit. On
-    ; two lanes - both outer ones - on its own row's alone: kept on the top
-    ; line's, a near car stood a few bytes too far in for ours to go by in
-    ; the other lane. Its lines are drawn whole when it is taken away then
-    ; (to_whole).
+    ; three lanes and two on its own row's alone: kept on the top line's, a
+    ; near car in an outer lane stood a byte or a few too far in for ours to
+    ; go by in the next lane. Its lines are drawn whole when it is taken
+    ; away then (to_whole).
 to_entry
     ld a,0                              ; (self-modified: its top line's
 to_rows                                 ; entry)
@@ -1021,8 +1049,8 @@ to_rows                                 ; entry)
     ld a,c
     ld (to_top+1),a
     ld a,(ix+TR_LANE)
-    cp 7
-    call c,to_fit                       ; (not on two lanes)
+    cp 4
+    call c,to_fit                       ; (on four lanes only)
 to_own
     ld c,0                              ; (self-modified: its own row)
     call to_fit
@@ -1031,11 +1059,32 @@ to_top
     ld c,0                              ; (self-modified: its top line's)
     call to_fit
     pop af
-    cp b                                ; on both? If not (a narrow road
-    ld b,a                              ; bent hard, two lanes), its lines
-    ld a,0                              ; are drawn whole when it is taken
-    jr z,$+4                            ; away (bit 7 of the first noted:
-    ld a,#80                            ; to_whole, rp_force_car)
+    cp b                                ; on both? If not (three lanes or
+    ld b,a                              ; two; a narrow road bent hard), its
+    ld a,0                              ; lines are drawn whole when it is
+    jr z,to_fits                        ; taken away (to_whole, rp_cars_whole)
+    push bc                             ; - only those above its middle line
+    ld de,(to_lines)                    ; if it is on that one's row's road
+    ld a,e                              ; (the lines below are on rows nearer
+    add a,d                             ; still: wider, bent less)
+    rra
+    cpl
+    add a,LAST_Y+1                      ; its middle line's entry
+    ld hl,(to_rows+1)
+    add a,l
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld c,(hl)                           ; C = its row
+    call to_fit
+    pop af
+    cp b
+    ld b,a
+    ld a,#C0                            ; (its top half)
+    jr z,to_fits
+    ld a,#80                            ; (all of them)
+to_fits
     ld (to_whole+1),a
     ld a,b
     xor #80                             ; (+ 128: unsigned)
@@ -1075,12 +1124,21 @@ to_hit
     ld a,b
     ld (coll),a
 
-to_drawn                                ; drawn: its lines noted
+    ; drawn: its lines noted - drawn whole when it is taken away, bit 7 of
+    ; the first; only down to the middle one, bit 7 of the last too
+to_drawn
     ld de,(to_lines)
-    ld a,e
 to_whole
-    or 0                                ; (self-modified: #80 - to_fit)
+    ld a,0                              ; (self-modified: 0, #80, #C0 - to_fit)
+    ld c,a
+    and #80
+    or e
     ld e,a
+    ld a,c
+    add a,a
+    and #80
+    or d
+    ld d,a
 to_note
     ld hl,0                             ; (self-modified: this buffer's next)
     ld (hl),e
@@ -1088,6 +1146,19 @@ to_note
     ld (hl),d
     inc l
     ld (to_note+1),hl
+
+    ; changing lanes, its indicator on the side it goes to lit every other
+    ; TR_BLINK pictures: its pixel drawn after its pieces (to_bl)
+    xor a
+    ld (to_bl+1),a
+    ld a,(ix+TR_SHIFT)
+    or a
+    jr z,to_unlit
+to_lit
+    ld a,0                              ; (self-modified: lit this picture -
+    or a                                ; traffic_draw)
+    call nz,to_blink
+to_unlit
 
     ; the pieces: a near size's top in its colour, then its bottom in
     ; another; a further size's whole car, its bottom's colour from its
@@ -1115,7 +1186,8 @@ to_note
     ld (tr_cw2+2),hl
     ld a,c
     ld b,0
-    jp tr_piece
+    call tr_piece
+    jr to_bl
 to_near_size
     ld c,a
     push bc
@@ -1132,8 +1204,74 @@ to_near_size
     ld iyl,a
     ld a,c
     add a,(ix+TR_BOT)
-    jp tr_piece                         ; (B: lines on from its top)
+    call tr_piece                       ; (B: lines on from its top)
+to_bl
+    ld a,0                              ; (self-modified: the indicator's byte's
+    or a                                ; other pixel kept - 0: none lit)
+    ret z
+to_bl_at
+    ld hl,0                             ; (self-modified: its byte)
+    and (hl)
+to_bl_px
+    or 0                                ; (self-modified: its pixel lit)
+    ld (hl),a
+    ret
 
+;; to_blink - car IX changing lanes, its lines and its left found, its
+;; indicator lit this picture: its pixel's byte on the side it goes to
+;; (to_dir) - its size's and its bottom's place (tr_sinfo), mirrored on
+;; the right - for to_bl. Destroys AF, BC, DE, HL.
+to_blink
+    ld hl,(to_size)
+    ld c,(hl)                           ; C = its width
+    ld de,TR_SINFO_BLINK
+    ld a,(ix+TR_BOT)
+    cp (TR_TOPS+1)*TR_PIECE_LEN
+    jr c,$+4
+    ld e,TR_SINFO_BLINK+2               ; (its second bottom's)
+    add hl,de
+    ld a,(to_line)
+    add a,(hl)
+    add a,a
+    ld e,a
+    ld d,hi(bush_ltab)                  ; DE = its line's entry
+    inc hl
+    ld a,(to_dir)
+    or a
+    ld a,(hl)                           ; A = its pixel from the left: on the
+    jp m,to_bl_side                     ; left
+    sla c
+    dec c
+    sub c
+    neg                                 ; on the right: 2 x width - 1 - it
+to_bl_side
+    ld c,a                              ; C = its pixel
+    srl a
+    ld hl,to_left
+    add a,(hl)                          ; + its left: its byte
+    ex de,hl
+    add a,(hl)
+    inc l
+    ld h,(hl)
+    ld l,a
+    jr nc,$+3
+    inc h
+    ld a,(road_buf)
+    or a
+    jr z,$+4
+    res 7,h                             ; (buffer 1's)
+    ld (to_bl_at+1),hl
+    ld hl,#55*256+TR_LIT_L              ; (the left pixel: the right one kept)
+    bit 0,c
+    jr z,$+5
+    ld hl,#AA*256+TR_LIT_R
+    ld a,l
+    ld (to_bl_px+1),a
+    ld a,h
+    ld (to_bl+1),a
+    ret
+
+to_dir      defb 0                      ; the way to the lane it changes to
 to_size     defw 0                      ; the car's size's record
 to_lines                                ; its lines, from ROAD_AREA_Y:
 to_line     defb 0                      ; its top

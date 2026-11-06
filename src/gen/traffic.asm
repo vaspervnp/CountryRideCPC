@@ -8,17 +8,23 @@ TR_ROW_MIN  EQU 12
 TR_ZNEARSIZE EQU 120   ; nearer than this, a car is at a near size
 
 ;; per size: its width (bytes), its lines, its top's lines, its first
-;; piece's record (tr_pieces)
+;; piece's record (tr_pieces); then its left indicator with each bottom
+;; (BOTTOMS): its line from its top, its pixel from its left
+;; (scene.traffic_blinker)
 tr_sinfo
-    defb 18,22,8,0   ; size 0: 36 x 22 pixels
-    defb 16,19,8,15   ; size 1: 32 x 19 pixels
-    defb 14,16,7,30   ; size 2: 28 x 16 pixels
-    defb 12,13,6,45   ; size 3: 24 x 13 pixels
-    defb 10,12,5,50   ; size 4: 20 x 12 pixels
-    defb 8,9,4,55   ; size 5: 16 x 9 pixels
-    defb 6,7,3,60   ; size 6: 12 x 7 pixels
-    defb 4,5,2,65   ; size 7: 8 x 5 pixels
-TR_SINFO_LEN EQU 4
+    defb 18,22,8,0, 16,4,13,2   ; size 0: 36 x 22 pixels
+    defb 16,19,8,15, 14,4,11,2   ; size 1: 32 x 19 pixels
+    defb 14,16,7,30, 12,4,10,4   ; size 2: 28 x 16 pixels
+    defb 12,13,6,45, 8,4,8,4   ; size 3: 24 x 13 pixels
+    defb 10,12,5,50, 7,2,7,2   ; size 4: 20 x 12 pixels
+    defb 8,9,4,55, 5,2,5,2   ; size 5: 16 x 9 pixels
+    defb 6,7,3,60, 4,2,4,2   ; size 6: 12 x 7 pixels
+    defb 4,5,2,65, 3,0,3,0   ; size 7: 8 x 5 pixels
+TR_SINFO_LEN EQU 8
+TR_SINFO_BLINK EQU 4
+TR_BLINK    EQU 4   ; frames_drawn's bit: an indicator lit
+TR_LIT_L    EQU #22   ; its pixel lit: the left one of a byte
+TR_LIT_R    EQU #11   ; the right one
 
 ;; per piece: its code, its RAM configuration (0: any), the lines before
 ;; its first (from its top), where its first line's run ends (bytes from
@@ -59,11 +65,11 @@ TR_BOTTOMS  EQU 2
 
 tr_rsize    ; per row: the size a car on it is drawn at - its record in
             ; tr_sinfo (#FF: none)
-    defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#1C,#1C,#1C,#1C
-    defb #1C,#1C,#18,#18,#18,#18,#18,#18,#18,#14,#14,#14,#14,#14,#14,#14
-    defb #10,#10,#10,#10,#10,#10,#10,#10,#10,#0C,#0C,#0C,#0C,#0C,#0C,#0C
-    defb #0C,#0C,#08,#08,#08,#08,#08,#08,#08,#08,#08,#08,#04,#04,#04,#04
-    defb #04,#04,#04,#04,#04,#04,#04,#04,#04,#00,#00,#00,#00,#00,#00,#00
+    defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#38,#38,#38,#38
+    defb #38,#38,#30,#30,#30,#30,#30,#30,#30,#28,#28,#28,#28,#28,#28,#28
+    defb #20,#20,#20,#20,#20,#20,#20,#20,#20,#18,#18,#18,#18,#18,#18,#18
+    defb #18,#18,#10,#10,#10,#10,#10,#10,#10,#10,#10,#10,#08,#08,#08,#08
+    defb #08,#08,#08,#08,#08,#08,#08,#08,#08,#00,#00,#00,#00,#00,#00,#00
     defb #00,#00,#00,#00,#00
 tr_lat1    ; per row: a car's left in the inner right lane of four, bytes from the road's
     ; centre (the left lanes': -this - its width)

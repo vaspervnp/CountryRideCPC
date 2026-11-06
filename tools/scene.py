@@ -785,6 +785,27 @@ TRAFFIC_COLOURS = [("RED",), ("ORANGE",), ("YELLOW",), ("WHITE",), ("BLUE",), ("
 assert len(TRAFFIC_COLOURS) == 16
 
 
+# Changing lanes, a car blinks its indicator on the side it goes to: one
+# pixel in yellow, lit TRAFFIC_BLINK pictures in every 2 x TRAFFIC_BLINK
+# (src/traffic.asm tr_lit: a bit of frames_drawn) - ~3 times a second.
+TRAFFIC_BLINK = 4
+TRAFFIC_LIT = "Y"                   # (CAR_PEN: YELLOW)
+
+
+def traffic_blinker(size, bottom):
+    """A size's left indicator with a bottom (TRAFFIC_BOTTOMS's): (its line
+    from the car's top, its pixel from its left) - the outermost of its
+    lights' lowest line, or with none (the furthest size) of its lowest line
+    in paint. The right one is its mirror."""
+    rows, _ = traffic_rows(size, TRAFFIC_TOPS[0], TRAFFIC_BOTTOMS[bottom])
+    half = len(rows[0]) // 2
+    for j in range(len(rows) - 1, -1, -1):
+        lights = [i for i, c in enumerate(rows[j][:half]) if c in "RO"]
+        if lights:
+            return j, min(lights)
+    return max(j for j, row in enumerate(rows) if row[0] == TRAFFIC_PAINT), 0
+
+
 def traffic_size(r):
     """The size a car on row r is drawn at (None: none)."""
     if r < TRAFFIC_ROW_MIN:
@@ -868,18 +889,19 @@ def traffic_rows(size, top, bottom):
 def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
     """The cars on screen, in the order they are drawn - the furthest first:
     (size, left byte, top line, rows, split, top colour, bottom colour).
-    cars: (z, lane, top, bottom, top colour, bottom colour[, to, share])
-    each - lanes as TRAFFIC_LANES, tops and bottoms as TRAFFIC_TOPS and
-    TRAFFIC_BOTTOMS; changing lanes, on its way to lane `to` by share/256
-    (src/traffic.asm to_way: rounded towards its own).
+    cars: (z, lane, top, bottom, top colour, bottom colour[, to, share[,
+    lit]]) each - lanes as TRAFFIC_LANES, tops and bottoms as TRAFFIC_TOPS
+    and TRAFFIC_BOTTOMS; changing lanes, on its way to lane `to` by share/256
+    (src/traffic.asm to_way: rounded towards its own), its indicator on that
+    side in TRAFFIC_LIT if `lit` (traffic_blinker).
     `hill` as the road engine draws it (effective_hill). A car is kept on the
     road its top line shows, its row's further than its own - narrower,
     more bent - and then on its own row's (a narrower road, bent hard: its
     lower lines' bend less than its top's and are not that much wider),
     each as wide as its lanes are (`lanes`: row_lanes'): only the road is
-    drawn afresh where it was (rp_force). In a lane of two (7, 8: both
-    outer ones) only on its own row's, for ours to go by in the other: its
-    lines are drawn afresh whole then (to_whole)."""
+    drawn afresh where it was (rp_force). In a lane of three or two (4-8)
+    only on its own row's, for ours to go by in the next: its lines are
+    drawn afresh whole then (to_whole)."""
     rows = project(hill)
     far = next(r for r in rows if r)            # the furthest row in sight
     road_top = ROAD_Y + ground_lines(hill)
@@ -905,9 +927,14 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
             d = traffic_place(r, wb, way[0]) - place
             assert -128 < d < 128
             place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
+            if way[2:] and way[2]:
+                j, i = traffic_blinker(size, bottom)
+                if d >= 0:
+                    i = 2 * wb - 1 - i
+                art = art[:j] + [art[j][:i] + TRAFFIC_LIT + art[j][i + 1:]] + art[j + 1:]
         left = traffic_centre(curve, r, x) + place
         rt = rows[y0 - ROAD_Y]                  # the row its top line shows,
-        for q in (rt, r) if lane < 7 else (r,):  # then its own
+        for q in (rt, r) if lane < 4 else (r,):  # then its own
             ct, edge = traffic_centre(curve, q, x), traffic_edge(q, row_lanes(q, lanes))
             left = ct + max(min(left - ct, edge - wb), -edge)
         if left < 0 or left + wb > SCR_W // 2:
@@ -1038,12 +1065,42 @@ def car_runs(view=0):
 
 SHADOW_W, SHADOW_IN, SHADOW_H = 26, 6, 3     # (bush.asm car_shadow, bytes)
 
+# Moving over to another lane, the car blinks its indicator on that side as
+# the traffic does (TRAFFIC_BLINK, TRAFFIC_LIT; src/signal.asm): one pixel,
+# the outermost of its lights on that side - per car the lights' letters,
+# and the lines they are on on the level, uphill and downhill (the red
+# cars' paint is R, the yellow one's shading O).
+CAR_LIGHTS = {
+    "player": ("O", ((11, 14), (13, 16), (11, 13))),
+    "ferrari": ("O", ((11, 14), (13, 16), (11, 13))),
+    "lotus": ("R", ((11, 14), (13, 16), (10, 12))),
+    "bmw": ("O", ((15, 17), (12, 20), (8, 15))),
+}
 
-def draw_car(lines, y0, view=0, off=0, up=0):
+
+def car_blinker(view, car_id=None):
+    """The car's (the picked one's, or car_id's) indicators seen as car_view
+    `view` (0-8): ((line, pixel) of the left one, of the right one) in its
+    art - the outermost of its lights' pixels either side of its middle,
+    the lowest of those on the left, the highest on the right."""
+    car = CARS[CAR_ID if car_id is None else car_id]
+    letters, groups = CAR_LIGHTS[car]
+    r0, r1 = groups[view // 3]
+    art = GAME_ART[car][view]
+    xs = [i for row in art for i, c in enumerate(row) if c not in ".G"]
+    mid = (min(xs) + max(xs)) / 2
+    px = [(j, i) for j in range(r0, r1 + 1) for i, c in enumerate(art[j]) if c in letters]
+    left = min((t for t in px if t[1] < mid), key=lambda t: (t[1], -t[0]))
+    right = max((t for t in px if t[1] > mid), key=lambda t: (t[1], t[0]))
+    return left, right
+
+
+def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
     as car_view `view` says, `off` pairs right of the middle (the game's
     car_off), `up` character rows higher (thrown up in a crash: jump.asm's
-    car_up) - its shadow on the road under it then (bush.asm car_shadow)."""
+    car_up) - its shadow on the road under it then (bush.asm car_shadow) -
+    its indicator lit if `blink` (1 left, 2 right: signal.asm car_lit)."""
     if up:
         w = SHADOW_W - 2 * up
         mid = SCR_W // 2 + 4 * off
@@ -1054,6 +1111,9 @@ def draw_car(lines, y0, view=0, off=0, up=0):
         for i, c in enumerate(row):
             if c != ".":
                 lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
+    if blink:
+        j, i = car_blinker(view)[blink - 1]
+        lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[TRAFFIC_LIT]]
 
 
 # ---------------------------------------------------------------------------
@@ -1108,7 +1168,8 @@ def sky_lines(heading=0):
 
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
-              car_off=0, traffic=(), prop=None, only=None, car_up=0, lanes=None):
+              car_off=0, traffic=(), prop=None, only=None, car_up=0, lanes=None,
+              car_blink=0):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
     traffic (traffic_items' cars), the prop in sight (prop_item's), the
     bushes (those in `only`, if given) and the car (seen as car_view
@@ -1122,7 +1183,7 @@ def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x, only)
     if car:
-        draw_car(lines, ROAD_AREA_Y, view, car_off, car_up)
+        draw_car(lines, ROAD_AREA_Y, view, car_off, car_up, car_blink)
     return lines
 
 

@@ -244,6 +244,16 @@ rf_drawn                        ; (tools: timing)
     ret
 
 ;; ---------------------------------------------------------------------------
+;; car_blink_go - (draw_picture) the car's indicator (signal.asm car_blink,
+;; bank 6): A, DE, HL, IX what it needs of bank 7's. RAM_C1 in and out.
+;; ---------------------------------------------------------------------------
+car_blink_go
+    SET_RAM RAM_C6
+    call car_blink
+    SET_RAM RAM_C1
+    ret
+
+;; ---------------------------------------------------------------------------
 ;; road_reset - forget what the road looked like (nothing is skipped).
 ;; ---------------------------------------------------------------------------
 road_reset

@@ -400,12 +400,13 @@ def traffic_cars(g):
     pal = g.bank(6, g.sym["TR_COLOURS"], 32)
     colour = {(pal[2 * c], pal[2 * c + 1]): c for c in range(16)}
     zcam, pl = g.word("ZCAM"), g.sym["TR_PIECE_LEN"]
+    lit = g.bank(6, g.sym["TO_LIT"] + 1, 1)[0] != 0     # (traffic_draw)
     out = []
     for i in range(0, n * rec, rec):
         r = raw[i:i + rec]
         if r[0]:
             out.append(((zcam + (r[1] | r[2] << 8)) & 0xFFFF, r[3], r[4] // pl, r[5] // pl - g.sym["TR_TOPS"],
-                        colour[r[6], r[7]], colour[r[8], r[9]], r[11], r[10]))
+                        colour[r[6], r[7]], colour[r[8], r[9]], r[11], r[10], lit))
     dropped = g.bank(6, g.sym["TR_DROPPED"], 1)[0]
     if dropped == 2:
         # the picture was late already and no car at a near size: neither
@@ -432,8 +433,17 @@ def road_model(g):
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
                             traffic=traffic_cars(g), prop=prop_in_sight(g),
                             only=bushes_in_reach(g), car_up=g.byte("CAR_UP"),
-                            lanes=lanes),
+                            lanes=lanes, car_blink=car_blink(g, view)),
             hill, zcam, curve, x)
+
+
+def car_blink(g, view):
+    """The car's indicator drawn this picture (src/signal.asm car_blink): 0
+    none, 1 left, 2 right."""
+    if (not g.bank(6, g.sym["CB_T"] + 1, 1)[0] or not g.byte("FRAMES_DRAWN") & g.sym["TR_BLINK"]
+            or g.byte("CAR_UP") or view >= g.sym["SPIN_VIEW"]):
+        return 0
+    return g.bank(6, g.sym["CB_SIDE"] + 1, 1)[0] // 2 + 1
 
 
 def prop_in_sight(g):

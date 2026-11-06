@@ -267,7 +267,9 @@ In the race the car is seen from behind, low down, 40 or 44 pixels wide
 and up to 26 lines high, a little above the bottom of the screen. Steering,
 it is seen turning, OutRun's way: turning left, it turns about its rear
 axle, its nose going left, the left flank and the hubs of its tyres in
-view.
+view. Moving over to another lane - steered that way and going that way
+on the road, not merely held in a curve - it blinks its indicator on that
+side, as the traffic does.
 
 The cars are photorealistic renders of 3D models (`tools/cars3d.py`, in
 Blender with Cycles: paint under a clear coat, glass that mirrors the sky,
@@ -758,6 +760,16 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   2 ms more). Seen turning, the car is
   bigger: 1.3 ms to draw instead of 1.1. The straight and the left one are
   in page 1, the right one in the page 2 fragments.
+- **Its indicators.** Steered left or right with its place on the road
+  (`car_x`) a pair or more that way since the last picture, it blinks on
+  that side till 12 pictures after (`CAR_SIGNAL_T`), lit as the traffic's
+  (`TR_BLINK`): one yellow pixel, the outermost of its lights on that side
+  - per car their colour and the lines they are on, level, uphill and
+  downhill (`scene.CAR_LIGHTS`, `car_blinker`) - not in a bump or a crash,
+  up in the air or spun. `car_blink` is in bank 6 (`src/signal.asm`, with
+  every car's 36 bytes of places, `car_blinks`: buffer 0 addresses, bit 14
+  a byte's right pixel), called through `car_blink_go` in fragment 1 with
+  what it needs of bank 7's in registers; ~0.05 ms.
 
 ### Bushes
 
@@ -854,8 +866,9 @@ right, a speed limit. The demo has dead trees and the signs.
   close by ~3.9 ms) and some to erase; while one is in sight at most one
   bush is in reach - one that would still be in reach then never comes -
   and if the picture is late already (10 interrupts since the flip - or
-  9 for one nearer than `PROP_BIG_Z`, the big ones, up to ~4 ms) it is
-  not drawn that time, as the traffic's far car.
+  9 for one nearer than `PROP_BIG_Z`, 184: the big ones, sizes 6 and 7,
+  up to ~4 ms - 168 till a palm at 174 made a picture late) it is not
+  drawn that time, as the traffic's far car.
 
 The sprites (1.4K) are in page 1 beside the bushes' code and in the hidden
 lines (CARn.BIN), the drawing in bank 7 and fragment 0.
@@ -904,8 +917,13 @@ looks like, and `src/traffic.asm` has to match it.
   beginning 384-480 units ahead (`TR_WHEN`), a 32nd of the way a picture
   (1.3 s; `tp_lanes`). Its place is then its lane's and that share of the
   way to the other's (`to_way`: one 8 x 8 multiplication, ~0.1 ms, only
-  while it changes). The two cars stay 160 units apart, so they never
-  meet.
+  while it changes). Meanwhile - and moving over where the lanes change -
+  it blinks its indicator on that side: one pixel in yellow, the outermost
+  of its tail lights' lowest line (`scene.traffic_blinker`, in
+  `tr_sinfo`; the furthest size, without lights, its lowest line's in
+  paint), lit 4 pictures in 8 (`TR_BLINK`, a bit of `frames_drawn`), ~3
+  times a second, drawn after its pieces (`to_blink`, `to_bl`: ~0.05 ms).
+  The two cars stay 160 units apart, so they never meet.
 - **Projection.** As a bush's: its row from its depth, its size from its
   row, its line from *h / r*, and it is drawn only whole - on the screen,
   on the road (below its top) and over near lines. Its place is its lane's,
@@ -919,14 +937,24 @@ looks like, and `src/traffic.asm` has to match it.
   out over the grass - or, where it cannot be on both (two lanes in a
   sharp curve), its lines are drawn whole when it is taken away
   (`rp_cars_whole`, at the end of `road_project`, once every line has
-  its flag) instead of only their road. On two lanes, though, both of
-  them outer ones, it is kept on its own row's road alone: on the top
-  line's a near car stood 3-4 bytes too far in, and ours, going by in the
-  other lane, touched it (a bump) unless it went by on the kerb. Where its
-  top lines stand out over the grass then, they are drawn whole the same
-  way: the races' heaviest picture is 39.0 ms (38.6 before). On two-lane
-  stages the test autopilot now bumps into ~6 cars a stage (19 before),
-  as on the others.
+  its flag) instead of only their road: those down to its middle line
+  only, if it is on that line's row's road (the lines below stand on
+  nearer rows, wider and bent less; bit 7 of the last noted, as of the
+  first for whole lines) - the top half, mostly, a near car's ~10 lines
+  instead of ~20. On three lanes and two, though,
+  it is kept on its own row's road alone: on the top line's a near car in
+  an outer lane stood a byte or a few too far in, and ours, going by in
+  the next lane, touched it (a bump) - on two lanes, both of them outer
+  ones, by 3-4 bytes, unless it went by on the kerb; on three, from the
+  middle one, by 1-2. Where its top lines stand out over the grass then,
+  they are drawn whole the same way - for a near car on two lanes in a
+  dip ~1 ms, with a palm and bushes 40.5 ms, a picture late, till only
+  the top half went whole and `PROP_BIG_Z` was 184 (Props): the races'
+  heaviest picture is 38.8 ms now (38.6 before). The test autopilot
+  now bumps into ~6 cars a stage on two-lane stages (19 before), as on
+  the others; on three lanes, going by from the middle lane, into fewer
+  than half as many (0.9 a minute, 2.2 before; in its middle 2 bytes are
+  left - the rest are curves').
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
@@ -1178,6 +1206,12 @@ flip, the track's rings
 and the props as `tools/course.py` has them for the route taken; crashes
 at the top speed 34.5 ms on average in the air, 38.0 ms at worst; the
 demo, the player not steering and side to side 37.6 / 37.7 / 37.5 ms.
+
+With three and two lanes' own-row traffic, the indicators and the top
+half drawn whole (2026-11-06): 24 races along six routes in the four
+cars, the clock kept and not, 38.8 ms at worst, none past 39.5 ms;
+crashes 38.0 ms at worst; every picture of 8 races as `scene.py` has it
+(a car's lines drawn whole in ~14700 of them, only its top half in 61%).
 
 With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
 four routes in the four cars, the clock kept and not, 37.6-38.7 ms at
@@ -1438,7 +1472,6 @@ docs/           screenshots
   allow;
 - a taper where the lanes change (the road's edge steps in now, at
   `lane_z`): rows of widths between, which band 0 has no cores for;
-- the outer lanes of three and four on their own rows' roads too, as two's
-  are: going by from the middle lane of three, ours touches a car in an
-  outer one by 1-2 bytes now - though every far car in an outer lane
-  would have its lines drawn whole then, on the wider, heavier roads.
+- the outer lanes of four on their own rows' roads too, as three's and
+  two's are - though every far car in one would have its lines drawn
+  whole then, on the widest, heaviest road.
