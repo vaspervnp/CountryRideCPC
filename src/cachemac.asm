@@ -219,3 +219,30 @@ tl_{n}_next
     jr z,@sp                            ; (#FE: the end)
     TM_PUT {n},{lg},{tab},{cache},tl_{n}_next
 MEND
+
+;; LANE_COPY n,tab - lc_<n>: E = an index of a per group table ({tab}, two
+;; pages: g, or NGROUPS + g), D = the first page of a lane count's own
+;; (lanes.asm, lanes5.asm): its entries - +0, +64, +128, +192 of both
+;; pages - copied into the table. Destroys AF, B, HL.
+MACRO LANE_COPY n,tab
+lc_{n}
+    ld b,hi({tab})
+    call @page
+    inc d
+    inc b
+    call @page
+    dec d
+    ret
+@page
+    ld l,e
+@byte
+    ld h,d
+    ld a,(hl)
+    ld h,b
+    ld (hl),a
+    ld a,l
+    add a,64
+    ld l,a
+    jr nc,@byte
+    ret
+MEND

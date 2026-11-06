@@ -820,6 +820,7 @@ steer_demo
     ld de,demo_steer
     add hl,de
     ld a,(hl)
+    call demo_lanes             ; (cache.asm: as wide as the road is)
 steer_demo_x
     ld (steer_x),a
     ld a,(road_x)               ; (the car in the middle, for when the

@@ -51,27 +51,27 @@ FRAG_ST14   EQU #7800
 FRAG_ST15   EQU #7800+FRAG_LEN
 
 ;; ---------------------------------------------------------------------------
-;; bank 4: band A - the ground's template at #4000 (free after it), the
-;; cache set at #5E00, the cores from #6000 (road_draw tells a band A
-;; template from a band B one by bit 13)
+;; bank 4: band A - the cache set at #4000 (road_draw tells a band A
+;; template from a band B one by bit 13), the cores after it, the cache's
+;; and the lanes' work and tables; the next step's staging set at #7E00
 ;; ---------------------------------------------------------------------------
     BANK
     ORG TMPL_A
 roada_start
     INCLUDE "gen/roadtmpla.asm"
-    ASSERT $ <= TMPL_A+#2000
-    ORG CORES_A
+    ASSERT $ == CORES_A
     INCLUDE "gen/roada.asm"
     INCLUDE "gen/roadgeoa.asm"
     INCLUDE "cache4.asm"
+    INCLUDE "lanes.asm"
     INCLUDE "gen/trafcode_4.asm"        ; (traffic sprite pieces: room)
 roada_end
-    ASSERT roada_end <= #8000
+    ASSERT roada_end <= STAGE_A
     SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
-;; bank 5: band B - the cores in #4000-#5FFF, the cache's per group arrays
-;; from #6000 (free after them), the cache set at #7E00
+;; bank 5: band B - the cores in #4000-#5FFF, the cache set at #6000, the
+;; cache's per group arrays after it (free after them)
 ;; ---------------------------------------------------------------------------
     BANK
     ORG CORES_B
@@ -82,8 +82,9 @@ roadb_start
     ASSERT $ <= TMPL_B
     ORG TMPL_B
     INCLUDE "gen/roadtmplb.asm"
+    INCLUDE "lanes5.asm"
 roadb_end
-    ASSERT roadb_end <= CACHE_B
+    ASSERT roadb_end <= SB                  ; (cache5.asm)
     SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"
 
 ;; ---------------------------------------------------------------------------
@@ -209,6 +210,9 @@ race_end
 
     ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
     ASSERT TR_TOPS == 1 && TR_BOTTOMS == 2              ; (traffic.asm: tp_new)
+    ASSERT lo(rd_ltop) == 0                             ; (lanes5.asm: lg5_end)
+    ASSERT lane_next == lane_now+1 && TR_NARROW == 256  ; (traffic.asm:
+                                                        ; tr_lanes_at)
     ASSERT stage_id < #4000 || stage_id >= #8000 && stage_id < #C000
                                             ; (... mapped in RAM_C6 too)
     PRINT "bank 4 (ROADA.BIN): ",{hex}roada_end-#4000," bytes"

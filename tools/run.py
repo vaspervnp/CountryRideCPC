@@ -188,7 +188,9 @@ def cmd_shots():
     whole: flat and straight, behind the top of a crest (road down to 1/3 of
     the screen, ground showing), in a dip (road up to 2/5), and the sharpest
     curve - the demo track never bends on a hill. A shape counts once the
-    curve level has held for 8 VSYNCs, so both buffers were drawn with it.
+    curve level has held for 8 VSYNCs, so both buffers were drawn with it;
+    the road of three lanes and of two, straight and flat, near the middle,
+    and narrowing to three, half way (lanes5.asm).
     And the screen the car is picked on, the game loaded, the third car
     picked (its frame moved twice to the right)."""
     docs = os.path.join(ROOT, "docs")
@@ -206,10 +208,13 @@ def cmd_shots():
     print("wrote", path)
     del c
     g = Game()
-    want = {"flat": lambda h, k: h == 0 and k == 0,
-            "crest": lambda h, k: 90 <= h <= 127 and k == 0,
-            "dip": lambda h, k: -128 <= h <= -86 and k == 0,
-            "curve": lambda h, k: k == 7}
+    want = {"flat": lambda h, k, n: h == 0 and k == 0 and n & 7 == 4,
+            "crest": lambda h, k, n: 90 <= h <= 127 and k == 0,
+            "dip": lambda h, k, n: -128 <= h <= -86 and k == 0,
+            "curve": lambda h, k, n: k == 7,
+            "lanes3": lambda h, k, n: h == 0 and k == 0 and n == 3 + 8,
+            "lanes2": lambda h, k, n: h == 0 and k == 0 and n == 2 + 8,
+            "narrowing": lambda h, k, n: abs(h) <= 16 and k == 0 and n == 16 + 8}
     taken = {}
     last, held = None, 0
     for _ in range(50 * 180):
@@ -222,8 +227,13 @@ def cmd_shots():
         last = k
         if held < 8:
             continue
+        lh = g.byte("LANE_H")
+        n = g.byte("LANE_NOW") if not lh else \
+            16 if 18 <= lh <= 40 and g.byte("LANE_NEXT") == 3 else 0
+        if abs(_signed(g.byte("ROAD_X"))) <= 8:
+            n += 8                              # (the road near the middle)
         for name, test in want.items():
-            if name in taken or not test(h, k):
+            if name in taken or not test(h, k, n):
                 continue
             path = os.path.join(docs, "screen-%s.png" % name)
             at_vsync(g)
@@ -418,9 +428,11 @@ def road_model(g):
     x = _signed(g.byte("ROAD_X"))
     view = g.game_byte("CAR_VFULL")
     off = _signed(g.game_byte("CAR_OFF"))
+    lanes = list(g.bank(5, g.sym["RA_LN"], scene.NGROUPS))
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
                             traffic=traffic_cars(g), prop=prop_in_sight(g),
-                            only=bushes_in_reach(g), car_up=g.byte("CAR_UP")),
+                            only=bushes_in_reach(g), car_up=g.byte("CAR_UP"),
+                            lanes=lanes),
             hill, zcam, curve, x)
 
 

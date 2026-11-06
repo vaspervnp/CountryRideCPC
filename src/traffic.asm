@@ -6,13 +6,15 @@
 ;; gen/rowhole*.asm) - and the tables; scene.py says where they go and what
 ;; they look like, and this has to match it.
 ;;
-;; A car comes TR_ZSPAWN ahead (out of sight), in a lane, closed, a sports
-;; car's or a saloon's tail, its top and its bottom each one of 16 colours
-;; - at random - no sooner than TR_GAP behind the last one,
+;; A car comes TR_ZSPAWN ahead (out of sight), in a lane of the road's
+;; there (tr_lanes_at: 4, 3 or 2 - lanes5.asm), closed, a sports car's or a
+;; saloon's tail, its top and its bottom each one of 16 colours - at random
+;; - no sooner than TR_GAP behind the last one,
 ;; so that only one is near at a time. It goes when it has gone by
 ;; (TR_ZNEAR) or got away (TR_ZAWAY). 3 in 8 change lanes, once, to one
 ;; next to theirs: from 256 + TR_WHEN ahead on, TR_STEP of the way a
-;; picture.
+;; picture. Where the road's lanes change, a car goes over to the nearest
+;; of the new ones (tr_merge) the same way.
 ;;
 ;; A picture (road_frame):
 ;;
@@ -30,14 +32,17 @@
 ;; under it) and over near lines (road_project forces those). Its place is
 ;; its lane's (tr_lat1/2) from the road's centre - its template group's,
 ;; the curve's shift (tr_cs) and road_x's share (rd_gp) - kept on the road
-;; its top line shows (tr_edge), narrower and bent more than its own row's.
+;; its top line shows (tr_edge<n>, as that row's lanes are: a group whose
+;; lanes changed has the road narrower or wider), narrower and bent more
+;; than its own row's.
 ;; ===========================================================================
 
 TR_MAX      EQU 2
 TR_REC      EQU 13                      ; a car:
 TR_ON       EQU 0                       ;   0: none
 TR_ZR       EQU 1                       ;   how far ahead (2)
-TR_LANE     EQU 3                       ;   0-3, left to right
+TR_LANE     EQU 3                       ;   0-3 of four, 4-6 of three,
+                                        ;   7-8 of two, left to right
 TR_TOP      EQU 4                       ;   its top's piece: 0 (from its
                                         ;   size's first; the closed alone)
 TR_BOT      EQU 5                       ;   its bottom's (TR_TOPS + 0-1) x
@@ -91,11 +96,48 @@ rp_force_all
     ld ix,rp_dlo
     call nz,rp_force
     ld ix,(tr_rngp)
-    call rp_force
+    call rp_force_car
     inc ix
     inc ix
-    call rp_force
+    call rp_force_car
     pop ix
+    ret
+
+;; IX = a car's lines of last time (tr_drawn): rp_force's - or, if it stood
+;; out over the grass (bit 7 of the first: to_fit's), every one drawn
+;; whole (flag 0). Keeps BC, DE.
+rp_force_car
+    bit 7,(ix+0)
+    jp z,rp_force
+    push bc
+    push de
+    ld a,(ix+1)
+    cpl
+    add a,LAST_Y+1
+    ld l,a                              ; L = the first entry, LAST_Y - last
+    ld a,(ix+0)
+    and #7F
+    cpl
+    add a,LAST_Y+1
+    sub l
+    jr c,rfc_none
+    inc a
+    ld b,a
+    ld h,0
+    add hl,hl
+    add hl,hl
+    ld de,(rp_slot)
+    add hl,de
+    ld de,4
+rfc_line
+    ld a,(hl)
+    and #FC
+    ld (hl),a
+    add hl,de
+    djnz rfc_line
+rfc_none
+    pop de
+    pop bc
     ret
 
 ;; A = H = 16 random bits' high byte (xorshift 7, 9, 8), L the low.
@@ -123,6 +165,46 @@ tr_rnd
 ;; Destroys everything.
 ;; ---------------------------------------------------------------------------
 traffic_pre
+    ld a,(lane_h)                       ; the lanes: groups that must have the
+    or a                                ; new ones now (lanes5.asm), if the
+    jr z,tp_lanes_ok                    ; time before the flip did not do it
+    ld hl,(zcam)
+    ld de,(lane_bt)
+    or a
+    sbc hl,de
+    bit 7,h
+    call z,lane_must                    ; (common.asm)
+tp_lanes_ok
+    ld a,(road_buf)                     ; a far group's changed since this
+    add a,lo(lane_glo)                  ; buffer was drawn: the far lines
+    ld l,a                              ; drawn too (rp_lane_whole: whole)
+    ld h,hi(lane_glo)
+    ld a,(hl)
+    cp NFAR
+    jr nc,tp_reach
+    ld a,#80
+    ld (rp_dirty),a
+tp_reach                                ; the road's reach on a row as its
+    ld a,(lane_h)                       ; lanes are (to_lrow): lane_next's on
+    ld c,0                              ; the rows of the groups that have
+    or a                                ; them
+    jr z,tp_lrow
+    ld c,255
+    cp NGROUPS+1
+    jr nc,tp_lrow
+    add a,lo(rr_gfirst)-1
+    ld l,a
+    ld h,hi(rr_gfirst)
+    ld c,(hl)                           ; C = the next one's first row
+tp_lrow
+    ld a,c
+    ld (to_lrow+1),a
+    ld a,(lane_now)
+    call tr_reach
+    ld (to_rold+1),hl
+    ld a,(lane_next)
+    call tr_reach
+    ld (to_rnew+1),hl
     ld a,(road_buf)                     ; this buffer's cars of last time:
     add a,a                             ; their lines (rp_force_all)
     add a,a
@@ -138,14 +220,18 @@ traffic_pre
     ld d,hi(level_near)
     ld a,(de)
     ld c,a                              ; C = the near lines now
-    ld a,LAST_Y
-    sub (hl)
+    ld a,(hl)
+    and #7F                             ; (bit 7: rp_force_car's)
+    cpl
+    add a,LAST_Y+1
     cp c
     jr nc,tp_dirty
     inc l
     inc l
-    ld a,LAST_Y
-    sub (hl)
+    ld a,(hl)
+    and #7F
+    cpl
+    add a,LAST_Y+1
     cp c
     jr c,tp_move
 tp_dirty
@@ -219,9 +305,24 @@ tp_new
     call tr_rnd
     ld b,a
     ld c,l
+    push bc
+    ld de,TR_ZSPAWN                     ; a lane of the road's there
+    call tr_lanes_at
+    pop bc
+    add a,a
+    add a,a
+    ld e,a
+    ld a,b
+    and 3                               ; (bits 0-1)
+    add a,e
+    add a,lo(tr_spawn-8)
+    ld l,a
+    adc a,hi(tr_spawn-8)
+    sub l
+    ld h,a
+    ld a,(hl)
     pop hl
-    and 3
-    ld (hl),a                           ; lane: bits 0-1
+    ld (hl),a                           ; lane
     inc hl
     ld (hl),0                           ; the top: closed (the only one)
     inc hl
@@ -262,16 +363,17 @@ tp_same
     pop bc                              ; C = random
     ld hl,TR_LANE-TR_TO
     add hl,de
-    ld a,(hl)                           ; the lane it may change to: the
-    ld b,a                              ; other on its side, or (bit 3) the
-    xor 1                               ; other side's inner one if it is
-    bit 3,c                             ; in an inner one
-    jr z,tp_to
-    inc b
-    bit 1,b
-    jr z,tp_to
-    xor 2
-tp_to
+    ld a,(hl)                           ; the lane it may change to (tr_chg:
+    add a,a                             ; bit 3 picks)
+    bit 3,c
+    jr z,$+3
+    inc a
+    add a,lo(tr_chg)
+    ld l,a
+    adc a,hi(tr_chg)
+    sub l
+    ld h,a
+    ld a,(hl)
     ld (de),a
     inc de
     ld a,c                              ; and when: 3 in 8, 256 + 128-224
@@ -344,16 +446,18 @@ tp_one_off
     ret
 
 ;; HL = a car still on, B its zr's low byte: changing lanes, TR_STEP more of
-;; the way - all of it, in that lane; 256-511 ahead (tp_lanes1) and no
-;; further than 256 + TR_WHEN, it begins to (once: TR_WHEN 0 then).
+;; the way - all of it, in that lane; else where the road's lanes are not
+;; its lane's, it begins to go over to the nearest (tp_merge); 256-511
+;; ahead (tp_lanes1) and no further than 256 + TR_WHEN, to one next to its
+;; own (once: TR_WHEN 0 then).
 tp_lanes
     ld a,l
     add a,TR_SHIFT
     ld l,a
     ld a,(hl)
     or a
-    ret z
-    jr tp_step
+    jr nz,tp_step
+    jr tp_merge
 tp_lanes1
     ld a,l
     add a,TR_SHIFT
@@ -361,6 +465,8 @@ tp_lanes1
     ld a,(hl)
     or a
     jr nz,tp_step
+    call tp_merge
+    ret nz
     inc l
     inc l
     ld a,b
@@ -383,6 +489,149 @@ tp_step
     ret
     ASSERT TR_WHEN == TR_SHIFT+2 && TR_TO == TR_SHIFT+1
     ASSERT hi(tr_cars) == hi(tr_cars+TR_MAX*TR_REC-1)
+
+;; HL = a car's TR_SHIFT (0): if the road's lanes where it is are not its
+;; lane's (tr_lcount), it begins to go over to the nearest of them
+;; (tr_merge) - and changes lanes no other way (TR_WHEN 0): NZ. Else Z.
+;; Keeps BC, DE, HL.
+tp_merge
+    push bc
+    push de
+    push hl
+    ld a,l
+    sub TR_SHIFT-TR_ZR
+    ld l,a
+    ld e,(hl)
+    inc l
+    ld d,(hl)                           ; DE = how far ahead
+    inc l
+    ld c,(hl)                           ; C = its lane
+    call tr_lanes_at
+    ld b,a                              ; B = the road's lanes there
+    ld a,c
+    add a,lo(tr_lcount)
+    ld l,a
+    adc a,hi(tr_lcount)
+    sub l
+    ld h,a
+    ld a,(hl)
+    cp b
+    jr z,tm_ret                         ; its lane's: Z
+    ld a,c
+    add a,a
+    add a,c
+    add a,4
+    sub b                               ; 3 lane + 4 - lanes (0 and up:
+    add a,lo(tr_merge)                  ; the carry is the page's)
+    ld l,a
+    adc a,hi(tr_merge)
+    sub l
+    ld h,a
+    ld a,(hl)                           ; the lane it goes over to
+    pop hl
+    push hl
+    inc l
+    ld (hl),a                           ; TR_TO
+    inc l
+    ld (hl),0                           ; TR_WHEN
+    dec l
+    dec l
+    ld a,TR_STEP
+    ld (hl),a                           ; under way: NZ
+    or a
+tm_ret
+    pop hl
+    pop de
+    pop bc
+    ret
+
+;; tr_lanes_at - DE = how far ahead: A = the road's lanes there while they
+;; change (lanes5.asm) - lane_next's from lane_z on, or from TR_NARROW
+;; before it if they are fewer (a car goes over to them before the road
+;; narrows under it) - else lane_now's. Destroys F, HL.
+TR_NARROW   EQU 256                     ; (inc h; lane_next after lane_now:
+                                        ; main.asm)
+tr_lanes_at
+    ld a,(lane_h)
+    or a
+    ld a,(lane_now)
+    ret z
+    ld hl,(zcam)
+    add hl,de
+    push de
+    ld de,(lane_z)
+    or a
+    sbc hl,de                           ; HL = how far past lane_z
+    ld de,(lane_now)                    ; E = lane_now, D = lane_next
+    ld a,d
+    cp e
+    jr nc,tla_more
+    inc h                               ; (fewer: TR_NARROW before)
+tla_more
+    bit 7,h
+    pop de
+    ret z                               ; lane_next's
+    ld a,(lane_now)
+    ret
+
+;; to_fit - C = a row, B = a car's left (from the middle of the screen):
+;; B kept on the road there - its left from the centre no more than the
+;; road's reach less the car's width, nor less than minus the reach - as
+;; wide as the row's lanes are (to_lrow). HL = its size's record. Destroys
+;; AF, C, DE.
+to_fit
+    call tr_centre
+    ld e,a                              ; E = the centre there
+    ld a,c
+to_lrow
+    cp 0                                ; (self-modified: the rows before it
+to_rold                                 ; have lane_next's lanes - tp_reach)
+    ld hl,0                             ; (self-modified: lane_now's reach)
+    jr nc,to_reach
+to_rnew
+    ld hl,0                             ; (self-modified: lane_next's)
+to_reach
+    add a,l
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a
+    ld c,(hl)                           ; C = the road's reach there
+    ld a,b
+    sub e
+    ld b,a                              ; B = its left from the centre there
+    ld hl,(to_size)
+    add a,(hl)
+    sub c                               ; its right past the reach, by A?
+    jr z,to_in_r
+    jp m,to_in_r
+    neg
+    add a,b
+    ld b,a                              ; then that far in
+to_in_r
+    ld a,b
+    add a,c
+    jp p,to_in_l                        ; its left past minus the reach?
+    ld a,c
+    neg
+    ld b,a                              ; then at it
+to_in_l
+    ld a,b
+    add a,e
+    ld b,a                              ; B = its left
+    ret
+
+;; tr_reach - A = lanes: HL = how far either side of its centre a row's
+;; road reaches with them (tr_edge<n>). Destroys F, DE.
+tr_reach
+    ld hl,tr_edge2
+    ld de,tr_edge3-tr_edge2
+    cp 3
+    ret c
+    add hl,de
+    ret z
+    add hl,de
+    ret
 
 ;; ---------------------------------------------------------------------------
 ;; traffic_draw - (road_frame, RAM_C6, after road_draw) the cars in sight
@@ -555,32 +804,42 @@ to_csop
     add a,(hl)                          ; (self-modified: sub (hl), or a)
     ret
 
-;; A = a lane: its place on row C, from the road's centre (bytes, signed) -
-;; lanes 2 and 3 tr_lat1 and tr_lat2 right of it, 1 and 0 those mirrored
-;; (-that - the car's width). Destroys D, HL.
+;; A = a lane (TR_LANE): its place on row C, from the road's centre
+;; (bytes, signed) - a right one's its tr_lat table's (tr_lsel) right of
+;; it, a left one's that mirrored (-that - the car's width), the middle one
+;; of three's centred. Destroys D, HL.
 to_place
-    ld d,a
-    inc a                               ; (lanes 1 and 2: 2 and 3 - bit 1)
-    and 2
-    ld a,c
-    jr z,to_outer
-    add a,lo(tr_lat1)
+    add a,a
+    add a,lo(tr_lsel)
     ld l,a
-    adc a,hi(tr_lat1)
-    jr to_lat
-to_outer
-    add a,lo(tr_lat2)
-    ld l,a
-    adc a,hi(tr_lat2)
-to_lat
+    adc a,hi(tr_lsel)
     sub l
     ld h,a
-    ld a,(hl)                           ; the place, right
+    ld a,(hl)                           ; its table, from tr_lat1
+    inc hl
+    ld d,(hl)                           ; D: 0 right, 1 left, 2 the middle
     bit 1,d
-    ret nz
+    jr nz,to_mid
+    add a,c
+    ld l,a
+    ld h,0
+    rl h
+    push de
+    ld de,tr_lat1
+    add hl,de
+    pop de
+    ld a,(hl)                           ; the place, right
+    bit 0,d
+    ret z
     neg
     ld hl,(to_size)
     sub (hl)                            ; mirrored: -place - width
+    ret
+to_mid
+    ld hl,(to_size)
+    ld a,(hl)
+    srl a
+    neg                                 ; centred: -width / 2
     ret
 
 ;; A = car IX's share of the way to its TR_TO lane (/256), B = its place on
@@ -724,9 +983,11 @@ to_near
     ld a,b
     add a,e
     ld b,a                              ; B = its left
-    ; ... but on the road on its top line's row: its left from the centre
-    ; there no more than the road's reach there less its width, nor less
-    ; than minus the reach
+    ld a,c
+    ld (to_own+1),a
+    ; ... but on the road on its top line's row - narrower and bent more
+    ; than its own - and then on its own row's (a narrow road bent hard:
+    ; its lower lines bend less and are not that much wider): to_fit
 to_entry
     ld a,0                              ; (self-modified: its top line's
 to_rows                                 ; entry)
@@ -737,37 +998,24 @@ to_rows                                 ; entry)
     sub l
     ld h,a
     ld c,(hl)                           ; C = the row there
-    call tr_centre
-    ld e,a                              ; E = the centre there
     ld a,c
-    add a,lo(tr_edge)
-    ld l,a
-    adc a,hi(tr_edge)
-    sub l
-    ld h,a
-    ld c,(hl)                           ; C = the road's reach there
+    ld (to_top+1),a
+    call to_fit
+to_own
+    ld c,0                              ; (self-modified: its own row)
+    call to_fit
+    push bc
+to_top
+    ld c,0                              ; (self-modified: its top line's)
+    call to_fit
+    pop af
+    cp b                                ; on both? If not (a narrow road
+    ld b,a                              ; bent hard), its lines are drawn
+    ld a,0                              ; whole when it is taken away (bit
+    jr z,$+4                            ; 7 of the first noted: to_whole,
+    ld a,#80                            ; rp_force_car)
+    ld (to_whole+1),a
     ld a,b
-    sub e
-    ld b,a                              ; B = its left from the centre there
-    ld hl,(to_size)
-    add a,(hl)
-    sub c                               ; its right past the reach, by A?
-    jr z,to_in_r
-    jp m,to_in_r
-    neg
-    add a,b
-    ld b,a                              ; then that far in
-to_in_r
-    ld a,b
-    add a,c
-    jp p,to_in_l                        ; its left past minus the reach?
-    ld a,c
-    neg
-    ld b,a                              ; then at it
-to_in_l
-    ld a,b
-    add a,e
-    ld b,a                              ; B = its left
     xor #80                             ; (+ 128: unsigned)
     cp 128-SCR_BYTES/2
     ret c                               ; out to the left
@@ -807,6 +1055,10 @@ to_hit
 
 to_drawn                                ; drawn: its lines noted
     ld de,(to_lines)
+    ld a,e
+to_whole
+    or 0                                ; (self-modified: #80 - to_fit)
+    ld e,a
 to_note
     ld hl,0                             ; (self-modified: this buffer's next)
     ld (hl),e

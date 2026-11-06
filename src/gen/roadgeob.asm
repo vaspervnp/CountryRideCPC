@@ -2,7 +2,8 @@
 ;; Per group g (index g; band 2's of the far groups NGROUPS + g)
 ;; and parity p, at rd_t5 + g, + 128 for p = 0: lo(lgrassb) + PAIRS
 ;; + H + p (+0) and the core's code, low byte (+64); a page on, its
-;; entry table's low byte (+0) and the code's high byte (+64).
+;; entry table's low byte (+0) and the code's high byte (+64) - each
+;; group's as its lanes are (lanes5.asm: from rd_s5_<n>, n lanes').
     ALIGN 256
 rd_t5
     defb (lo(lgrassb)+52)&255,(lo(lgrassb)+52)&255,(lo(lgrassb)+52)&255,(lo(lgrassb)+53)&255,(lo(lgrassb)+54)&255,(lo(lgrassb)+55)&255,(lo(lgrassb)+56)&255,(lo(lgrassb)+57)&255,(lo(lgrassb)+59)&255,(lo(lgrassb)+60)&255,(lo(lgrassb)+61)&255,(lo(lgrassb)+62)&255,(lo(lgrassb)+63)&255,(lo(lgrassb)+64)&255,(lo(lgrassb)+65)&255,(lo(lgrassb)+67)&255,(lo(lgrassb)+68)&255,(lo(lgrassb)+69)&255,(lo(lgrassb)+70)&255,(lo(lgrassb)+71)&255,(lo(lgrassb)+72)&255,(lo(lgrassb)+74)&255,(lo(lgrassb)+75)&255,(lo(lgrassb)+76)&255,(lo(lgrassb)+77)&255,(lo(lgrassb)+78)&255,(lo(lgrassb)+79)&255,(lo(lgrassb)+81)&255,(lo(lgrassb)+82)&255,(lo(lgrassb)+83)&255,(lo(lgrassb)+84)&255,(lo(lgrassb)+85)&255,(lo(lgrassb)+86)&255,(lo(lgrassb)+88)&255,(lo(lgrassb)+89)&255,(lo(lgrassb)+90)&255,(lo(lgrassb)+91)&255,(lo(lgrassb)+92)&255,(lo(lgrassb)+93)&255,(lo(lgrassb)+94)&255,(lo(lgrassb)+96)&255,(lo(lgrassb)+97)&255,(lo(lgrassb)+98)&255,(lo(lgrassb)+99)&255,(lo(lgrassb)+100)&255,(lo(lgrassb)+101)&255,(lo(lgrassb)+103)&255,(lo(lgrassb)+104)&255,(lo(lgrassb)+105)&255,(lo(lgrassb)+106)&255,(lo(lgrassb)+107)&255,(lo(lgrassb)+52)&255,(lo(lgrassb)+52)&255,(lo(lgrassb)+52)&255,(lo(lgrassb)+53)&255,(lo(lgrassb)+54)&255,(lo(lgrassb)+55)&255,(lo(lgrassb)+56)&255,(lo(lgrassb)+57)&255,(lo(lgrassb)+59)&255

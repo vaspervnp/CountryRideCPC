@@ -43,7 +43,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from functools import lru_cache
-from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, NEAR_ROW, ROAD_END, ROAD_LINES,
+from cpcgfx import (BANDS, HALF_MAX, MIN_HALF, ROWS, NEAR_ROW, ROAD_END, ROAD_LINES, LANES,
+                    lane_half, MIN_LINE_ROW,
                     FAR_Z, far_mask, m0_byte, m0_solid,
                     road_row_pixels, row_half_bytes, row_depth, SCR_BYTES,
                     ROAD_Y, ROAD_TOP_MAX, CURVE_K, curve_group, curve_shift,
@@ -60,7 +61,11 @@ CENTRE = SCR_BYTES // 2         # the road is centred on byte 48
 TMPL_SET = 512                  # a set of templates (two pages)
 TMPL_A = 0x4000                 # bank 4: band A's (and 2's) templates
 TMPL_B = 0x6000                 # bank 5: band B's, at the same offsets
-CORES_A = 0x6000                # bank 4: band 0 and 2 cores
+CORES_A = TMPL_A + TMPL_SET     # bank 4: band 0 and 2 cores, after them
+LANE_COUNTS = (4, 3, 2)         # the lanes the road can have, each its width
+                                # (cpcgfx.lane_half) and its band 0 cores:
+LANE_BAND = {4: 0, 3: 3, 2: 4}  # band 0's with four lanes, 3 and 4 with three
+BAND_LANES = {0: 4, 1: 4, 2: 4, 3: 3, 4: 2}     # and two (lanes5.asm)
 CORES_B = 0x4000                # bank 5: band 1 cores
 LEVELS = 2 * CURVE_K + 1
 
@@ -74,8 +79,9 @@ def core_bytes(band, half, parity):
     """Screen bytes of the core - the kerbs and the asphalt -
     left to right, and H (bytes each side of the centre before the parity
     widening). What is left of the pairs it covers is kerb too (no grass:
-    the grass is striped, the core is not): scene.road_line."""
-    pens, total = road_row_pixels(half, band)
+    the grass is striped, the core is not): scene.road_line. Bands 3 and 4
+    are band 0 with three lanes and with two."""
+    pens, total = road_row_pixels(half, PIX_BAND[band], BAND_LANES[band])
     H = (total + 1) // 2
     kerb = pens[0]
     # pixel 0 of the byte-aligned core is centre_px - 2H
@@ -92,7 +98,8 @@ def core_bytes(band, half, parity):
 # The register set a band's cores run with: band 2 (far away) is drawn by
 # road_draw as band A, so its white kerb cannot be PUSH AF (AF' is red then)
 # and comes out as LD BC/PUSH BC.
-REG_BAND = {0: 0, 1: 1, 2: 0}
+REG_BAND = {0: 0, 1: 1, 2: 0, 3: 0, 4: 0}       # the registers a band is drawn with
+PIX_BAND = {0: 0, 1: 1, 2: 2, 3: 0, 4: 0}       # ... and its pixels' (cpcgfx.BANDS)
 FAR_HALF = row_half_bytes(max(r for r in range(1, ROWS + 1)
                               if row_depth(r) > FAR_Z))
 
@@ -108,31 +115,43 @@ def compile_variant(band, half, parity):
     assert n % 2 == 0
     code = []
     entry = []
-    bc = None                          # what BC' holds, if this pair follows on
     for j in range(n // 2):
         lo = data[n - 2 - 2 * j]       # left byte of the pair
         hi = data[n - 1 - 2 * j]       # right byte, written first by PUSH
         entry.append(len(code))
-        bc = None
         if lo == hi == road:
             code.append(0xD5)                     # PUSH DE
         elif lo == hi == kerb:
             code.append(0xF5)                     # PUSH AF
-        elif word(lo, hi) == bc:
-            code.append(0xC5)                     # PUSH BC, BC' as it is
         else:
             w = word(lo, hi)
             code += [0x01, w & 0xFF, w >> 8, 0xC5]  # LD BC,nn / PUSH BC
-            bc = w
     entry.append(len(code))
     code += [0xD9, 0x08, 0xDD, 0xE9]              # EXX / EX AF,AF' / JP (IX)
     return code, entry, n // 2, H
 
 
+LINE_HALF = row_half_bytes(MIN_LINE_ROW)       # narrower: no lane lines
+
+
 def halves(band):
     """The widths a row can have. Band 2 is only ever used past FAR_Z, where
-    the road is narrow."""
+    the road is narrow; bands 3 and 4 (three lanes, two) only at their
+    widths - and as band 0 where there are no lines."""
+    if band in (3, 4):
+        return sorted(set(lane_half(h, BAND_LANES[band]) for h in
+                          set(row_half_bytes(r) for r in range(1, ROWS + 1)))
+                      - set(range(LINE_HALF)))
     return range(MIN_HALF, (FAR_HALF if band == 2 else HALF_MAX) + 1)
+
+
+def lane_variant(band, h, lanes):
+    """The band and half-width a group of four's half-width h is drawn
+    with, with `lanes` lanes."""
+    hw = lane_half(h, lanes)
+    if band == 0 and lanes != 4 and hw >= LINE_HALF:
+        band = LANE_BAND[lanes]
+    return band, hw
 
 
 def geometry(band, half, shift):
@@ -183,9 +202,9 @@ def template(variants, band, half, shift):
 
 GROUND = ["empty_core", "#0040", "lgrassa+%d" % PAIRS]
 
-CACHE_LEVEL = LEVELS            # the cache set: TMPL_A + CACHE_LEVEL * TMPL_SET,
-                                # where a sixteenth curve level's would be (each
-                                # level had its own set till 2026-11-05)
+CACHE_LEVEL = 0                 # the cache set: TMPL_A + CACHE_LEVEL * TMPL_SET
+                                # (each curve level had its own set too till
+                                # 2026-11-05, the cache the sixteenth)
 G_OFF = 112                     # added to a pair position in the cache maths
 
 
@@ -260,10 +279,12 @@ def pack_pages(keys, size):
     return pages
 
 
-# Bank 5's per group arrays (cache5.asm), a page each from TMPL_B on: at
-# BA_LANE + g, so that L is #CD + g - the last group's at #FF.
+# Bank 5's per group arrays (cache5.asm), a page each from BA_PAGE on (past
+# the cache set): at BA_LANE + g, so that L is #CD + g - the last group's at
+# #FF.
+BA_PAGE = (TMPL_B + TMPL_SET) >> 8
 BA_ARRAYS = ["P2L", "P2H", "P4L", "P4H", "AL", "AH", "AO", "WL", "WH", "FL",
-             "C1L", "C1H", "DA", "KK", "H"]
+             "C1L", "C1H", "DA", "KK", "H", "LN"]
 BA_LANE = 0xCD
 
 
@@ -279,7 +300,7 @@ def bank5_arrays(near):
         vals = dict(P2L=2 * p & 255, P2H=2 * p >> 8, P4L=4 * p & 255, P4H=4 * p >> 8,
                     AL=128 + 64, AH=H, AO=0x80, WL=0, WH=W_NONE >> 8 if none else 0,
                     FL=0 if none else ("hi(rd_tent%d)" % (h & 1)),
-                    C1L=c1 & 255, C1H=c1 >> 8, DA=-d, KK=CURVE_K, H=H)
+                    C1L=c1 & 255, C1H=c1 >> 8, DA=-d, KK=CURVE_K, H=H, LN=LANES)
         for name in BA_ARRAYS:
             out[name].append(vals[name])
     return out
@@ -292,7 +313,7 @@ W_NONE = 0x1C00
 def main():
     import scene
     variants = {}
-    for band in range(3):
+    for band in range(5):
         for half in halves(band):
             for parity in range(2):
                 variants[(band, half, parity)] = compile_variant(band, half, parity)
@@ -300,7 +321,7 @@ def main():
     # --- the code: bands 0 and 2 (drawn with band A's registers) in bank 4,
     # band 1 in bank 5 ---
     sizes = {}
-    for fname, bands in (("roada.asm", (0, 2)), ("roadb.asm", (1,))):
+    for fname, bands in (("roada.asm", (0, 2, 3, 4)), ("roadb.asm", (1,))):
         lines = [";; Generated by tools/mkroad.py - do not edit.",
                  ";; Road core variants for stripe band(s) %s:" % (bands,),
                  ";; rc_<band>_<half>_<parity>, each after its entry table",
@@ -352,6 +373,7 @@ def main():
     emit(";; CACHE_LEVEL * TMPL_SET; band B's TMPL_B - TMPL_A above band A's, in")
     emit(";; bank 5")
     emit("CURVE_K     EQU %d" % CURVE_K)
+    emit("LANES       EQU %d   ; the lanes the road starts with (lanes5.asm)" % LANES)
     emit("TMPL_SET    EQU %d" % TMPL_SET)
     emit("TMPL_A      EQU #%04X" % TMPL_A)
     emit("TMPL_B      EQU #%04X" % TMPL_B)
@@ -360,14 +382,16 @@ def main():
     near, nfar, nfaronly = cache_groups()
     emit("")
     emit(";; the cache sets (common.asm): the road off the middle of the screen")
-    emit("CACHE_LEVEL EQU %d   ; (where a sixteenth curve level's set would be)" % CACHE_LEVEL)
+    emit("CACHE_LEVEL EQU %d" % CACHE_LEVEL)
     emit("NGROUPS     EQU %d   ; template groups, slot 1 + g of a set" % len(near))
     emit("NFAR        EQU %d   ; the first NFAR have far rows: a slot NGROUPS on" % nfar)
     emit("NFARONLY    EQU %d   ; ... the first NFARONLY nothing else" % nfaronly)
+    emit("LANE_D0     EQU %d   ; group 0's furthest row's depth (lanes5.asm)"
+         % row_depth(near[0][2]))
     emit(";; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g")
     emit("W_NONE      EQU #%04X   ; a row with no bias: W this far off" % W_NONE)
     for i, name in enumerate(BA_ARRAYS):
-        emit("RA_%-8s EQU #%04X" % (name, TMPL_B + i * 256 + BA_LANE))
+        emit("RA_%-8s EQU #%04X" % (name, (BA_PAGE + i) * 256 + BA_LANE))
     emit("G_OFF       EQU %d   ; added to a pair position in the cache maths" % G_OFF)
     emit("ROAD_X_MAX  EQU %d   ; road_x goes this far either way" % ROAD_X_MAX)
     emit("PERSP_P     EQU %d   ; a pair of it moves half-width h h * PERSP_P / 256"
@@ -410,50 +434,79 @@ def main():
                 template(variants, band, ghalf[g], curve_shift(k, grow[g]))
     assert soff[("ground", None)] == 0
     lines = [";; Generated by tools/mkroad.py - do not edit.",
-             ";; The ground's template, a line with no road (road_init's lines; the",
-             ";; cache set's slot 0, job4_ground): dw core entry (IY), left grass",
-             ";; entry (IX), AF (A = right grass entry, F: Z = no exit patch).", "",
+             ";; Band A's cache set (cache4.asm), its slot 0 the ground's template,",
+             ";; a line with no road (road_init's lines too): dw core entry (IY),",
+             ";; left grass entry (IX), AF (A = right grass entry, F: Z = no exit",
+             ";; patch); the groups' slots are made at the start (cache_init).", "",
              "tmpl_ground",
              "    defw " + ",".join(GROUND),
-             "    defs 2,0"]
+             "    defs %d,0" % (TMPL_SET - 6)]
     open(os.path.join(ROOT, "src", "gen", "roadtmpla.asm"), "w").write("\n".join(lines) + "\n")
     arrays = bank5_arrays(near)
     lines = [";; Generated by tools/mkroad.py - do not edit.",
              ";; Bank 5's per group arrays (cache5.asm), a page each: group g at",
              ";; RA_<name> + g, as they start - the road in the middle at curve",
              ";; level 0.", ""]
-    for name in BA_ARRAYS:
+    # what a group's lanes change (lanes5.asm), in the room under the
+    # first three arrays: per lane count, 64 bytes, each group's H (RA_H)
+    # with them; per group the depth of its furthest row, low bytes and a
+    # page on the high ones - its lanes change when that is past lane_z
+    deps = [row_depth(min(q for q in range(1, ROWS + 1) if curve_group(q) == g))
+            for g, h, r in near]
+    under = {"P2L": ["lane_hs"], "P2H": ["lane_dl"], "P4L": ["lane_dh"]}
+    for c in LANE_COUNTS:
+        vals = [core_bytes(1, lane_half(h, c), 0)[1] for g, h, r in near]
+        under["P2L"] += ["    defb " + ",".join(str(v) for v in vals),
+                         "    defs %d,0" % (64 - len(vals))]
+    under["P2H"].append("    defb " + ",".join(str(v & 255) for v in deps))
+    under["P4L"].append("    defb " + ",".join(str(v >> 8) for v in deps))
+    assert 64 * len(LANE_COUNTS) <= BA_LANE and LANE_COUNTS == (4, 3, 2)
+    for i, name in enumerate(BA_ARRAYS):
+        if name in under:
+            lines += ["    defs #%04X-$,0" % ((BA_PAGE + i) * 256)] + under[name]
         lines += ["    defs RA_%s-$,0" % name,
                   "    defb " + ",".join(str(v) for v in arrays[name])]
     assert BA_LANE + len(near) == 256
-    open(os.path.join(ROOT, "src", "gen", "roadtmplb.asm"), "w").write("\n".join(lines) + "\n")
+    tmplb = lines
 
     # --- what the Z80 needs to make a cache set's templates (cachemac.asm):
     # per bank, per group and parity, the core's code and entry table ---
     near, nfar, nfaronly = cache_groups()
     assert nfar == nfaronly and len(near) + nfar <= 64
+    statics = {}
     for fname, tab, bands, lg in (("roadgeoa.asm", "rd_t4", (0, 2), "lgrassa"),
                                   ("roadgeob.asm", "rd_t5", (1, 1), "lgrassb")):
         lines = [";; Generated by tools/mkroad.py - do not edit.",
                  ";; Per group g (index g; band 2's of the far groups NGROUPS + g)",
                  ";; and parity p, at %s + g, + 128 for p = 0: lo(%s) + PAIRS" % (tab, lg),
                  ";; + H + p (+0) and the core's code, low byte (+64); a page on, its",
-                 ";; entry table's low byte (+0) and the code's high byte (+64).",
-                 "    ALIGN 256",
-                 tab]
+                 ";; entry table's low byte (+0) and the code's high byte (+64) - each",
+                 ";; group's as its lanes are (lanes5.asm: from %s_<n>, n lanes')."
+                 % ("rd_s4" if tab == "rd_t4" else "rd_s5")]
         emit = lines.append
         idx = [(bands[0], h) for g, h, r in near] + [(bands[1], h) for g, h, r in near[:nfar]]
-        for page in range(2):
-            for p in (1, 0):
-                for lane in range(2):
-                    vals = []
-                    for band, h in idx:
-                        H = core_bytes(band, h, p)[1]
-                        n = "%d_%d_%d" % (band, h, p)
-                        vals.append(((("(lo(%s)+%d)&255" % (lg, PAIRS + H + p)), "lo(rc_%s)" % n),
-                                     ("lo(re_%s)" % n, "hi(rc_%s)" % n))[page][lane])
-                    emit("    defb " + ",".join(vals))
-                    emit("    defs %d,0" % (64 - len(vals)))
+
+        def geo(label, idx, out):
+            out.append("    ALIGN 256")
+            out.append(label)
+            for page in range(2):
+                for p in (1, 0):
+                    for lane in range(2):
+                        vals = []
+                        for band, h in idx:
+                            H = core_bytes(band, h, p)[1]
+                            n = "%d_%d_%d" % (band, h, p)
+                            vals.append(((("(lo(%s)+%d)&255" % (lg, PAIRS + H + p)),
+                                          "lo(rc_%s)" % n),
+                                         ("lo(re_%s)" % n, "hi(rc_%s)" % n))[page][lane])
+                        out.append("    defb " + ",".join(vals))
+                        out.append("    defs %d,0" % (64 - len(vals)))
+        geo(tab, [lane_variant(b, h, LANES) for b, h in idx], lines)
+        statics[tab] = []
+        for c in LANE_COUNTS:
+            geo("%s_%d" % ("rd_s4" if tab == "rd_t4" else "rd_s5", c),
+                [lane_variant(b, h, c) for b, h in idx],
+                lines if tab == "rd_t4" else statics[tab])
         if tab == "rd_t5":
             emit(";; Per w (-128..127, as a byte): the bias t - 64 (cpcgfx.road_shift:")
             emit(";; shift_tau(4 w), turned round for an odd half-width in rd_tent1, at")
@@ -470,6 +523,11 @@ def main():
                 for i in range(0, 256, 32):
                     emit("    defb " + ",".join(str(v) for v in vals[i:i + 32]))
         open(os.path.join(ROOT, "src", "gen", fname), "w").write("\n".join(lines) + "\n")
+
+    # --- bank 5, after its arrays: what a group's lanes change (lanes5.asm)
+    tmplb += ["", ";; per lane count (LANE_COUNTS: %s), band B's per group table as" % (LANE_COUNTS,),
+              ";; rd_t5 (roadgeob.asm)"] + statics["rd_t5"]
+    open(os.path.join(ROOT, "src", "gen", "roadtmplb.asm"), "w").write("\n".join(tmplb) + "\n")
 
     # --- bank 6: rows, hill tables, line addresses ---
     lines = [";; Generated by tools/mkroad.py - do not edit.",

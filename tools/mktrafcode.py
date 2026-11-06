@@ -57,16 +57,19 @@ TR_ZFAR = 640                   # src/traffic.asm TR_ZAWAY: no car further
 # (src/main.asm, common.asm), or at its start (the holes below). A piece is
 # laid in the regions of one configuration, on from one to the next with a
 # JP where one is full (fragment 4's goes with bank 6's: it is mapped
-# whatever the configuration). Banks 4 and 5 have the cache's sets and the
-# staging sets besides their code: only #7D56-#7DFF of bank 4 is free. Bank
-# 7 keeps its room for the game. What does not fit (src/gen/trafleft.py)
+# whatever the configuration). Bank 4 has its code, the cache's sets and
+# the lanes' tables, and the staging set from #7E00: 5.2K free before it
+# since 2026-11-06, but only 170 bytes of it are offered (the rest kept for
+# the road), as bank 7 keeps its room for the game. What does not fit
+# (src/gen/trafleft.py)
 # mkbush.py lays the same way in the fragments' free runs, then - in every
 # CARn.BIN - in the road parts' hidden lines.
 REGIONS = [("6", "RAM_C6", "#8000", 5430),     # bank 6, after the traffic's code
                                                 # (all of it, since the hill
                                                 # tables are shared: mkroad.py)
-           ("f4", "RAM_C6", "FRAG4+FRAG_LEN", 111),     # fragment 4's end
-           ("4", "RAM_C4", "STAGE_A", 170)]     # bank 4, after cache4.asm
+           ("f4", "RAM_C6", "FRAG4+FRAG_LEN", 21),      # fragment 4's end
+           ("4", "RAM_C4", "STAGE_A", 170)]     # bank 4, after the lanes'
+                                                # tables (main.asm)
 
 
 def holes():
@@ -432,9 +435,11 @@ def main():
     vals = [0xFF if v is None else 4 * v for v in rsize]
     for j in range(0, len(vals), 16):
         emit("    defb " + ",".join("#%02X" % v for v in vals[j:j + 16]))
-    for name, lane in (("tr_lat1", 0), ("tr_lat2", 1)):
-        emit("%s    ; per row: a car's left in the %s right lane, bytes from the road's"
-             % (name, "inner" if lane == 0 else "outer"))
+    lats = [(4, 0, "the inner right lane of four"), (4, 1, "the outer right lane of four"),
+            (3, 0, "the right lane of three"), (2, 0, "the right lane of two")]
+    for i, (lanes, lane, what) in enumerate(lats):
+        emit("tr_lat%d    ; per row: a car's left in %s, bytes from the road's"
+             % (i + 1, what))
         emit("    ; centre (the left lanes': -this - its width)")
         vals = []
         for r in range(G.ROWS + 1):
@@ -443,13 +448,67 @@ def main():
                 continue
             s = TRAFFIC_ART[rsize[r]]
             wb = len(s["tops"][T.TOPS[0]][0]) // 2
-            vals.append(S.traffic_lefts(r, wb)[lane] & 0xFF)
+            vals.append(S.traffic_lefts(r, wb, lanes)[lane] & 0xFF)
         for j in range(0, len(vals), 16):
             emit("    defb " + ",".join("#%02X" % v for v in vals[j:j + 16]))
-    emit("tr_edge     ; per row: how far either side of its centre its road reaches")
-    vals = [S.traffic_edge(r) if r else 0 for r in range(G.ROWS + 1)]
-    for j in range(0, len(vals), 16):
-        emit("    defb " + ",".join("%d" % v for v in vals[j:j + 16]))
+    emit("    ASSERT tr_lat4 == tr_lat1+%d" % (3 * (G.ROWS + 1)))
+    assert 3 * (G.ROWS + 1) < 256
+    # the lanes (scene.TRAFFIC_LANES): each one's table, from tr_lat1, and
+    # 0 right of the middle, 1 left (mirrored), 2 the middle one of three
+    L = S.TRAFFIC_LANES
+    sel = []
+    for lanes, way in L:
+        if way == 0:
+            sel += [0, 2]
+            continue
+        k = next(i for i, (n, l, w) in enumerate(lats) if n == lanes and l == abs(way) - 1)
+        sel += [k * (G.ROWS + 1), 1 if way < 0 else 0]
+    emit("tr_lsel     ; per lane (TR_LANE): its tr_lat table, from tr_lat1, and 0")
+    emit("            ; right of the middle, 1 left, 2 the middle one of three")
+    emit("    defb " + ",".join(str(v) for v in sel))
+    emit("tr_lcount   ; per lane: the road's lanes it is one of")
+    emit("    defb " + ",".join(str(n) for n, w in L))
+    # where a car is: its lane's middle, in twelfths of the road's half
+    # (four: 3, 9; three: 0, 8; two: 6)
+    mid = {(4, 1): 3, (4, 2): 9, (3, 0): 0, (3, 1): 8, (2, 1): 6}
+    pos = [mid[(n, abs(w))] * (1 if w >= 0 else -1) for n, w in L]
+    emit("tr_spawn    ; per lanes 2, 3, 4 and two random bits: the lane a car")
+    emit("            ; comes in")
+    spawn = {2: [7, 8, 7, 8], 3: [4, 5, 6, 5], 4: [0, 1, 2, 3]}
+    emit("    defb " + ",".join(str(v) for n in (2, 3, 4) for v in spawn[n]))
+    assert all(L[v][0] == n for n in spawn for v in spawn[n])
+    emit("tr_chg      ; per lane, and bit 3 of a random byte: the lane next to it")
+    emit("            ; it may change to (the other on its side, or the other")
+    emit("            ; side's inner one)")
+    chg = []
+    for i, (n, w) in enumerate(L):
+        mine = [j for j, (m, v) in enumerate(L) if m == n and j != i]
+        side = [j for j in mine if pos[j] * pos[i] > 0] or \
+            [min(mine, key=lambda j: abs(pos[j] - pos[i]))]
+        inner = [j for j in mine if abs(L[j][1]) == 1 and pos[j] * pos[i] < 0]
+        if n == 3 and w == 0:
+            inner = [j for j in mine if pos[j] > 0]  # (the middle one: the right)
+        chg += [side[0], inner[0] if (n == 4 and abs(w) == 1) or (n == 3 and w == 0)
+                else side[0]]
+    emit("    defb " + ",".join(str(v) for v in chg))
+    emit("tr_merge    ; per lane and lanes 4, 3, 2 there: the nearest lane of those")
+    emit("            ; (its middle's; the one towards the road's middle if two)")
+    merge = []
+    for i, (n, w) in enumerate(L):
+        for m in (4, 3, 2):
+            them = [j for j, (k, v) in enumerate(L) if k == m]
+            merge.append(min(them, key=lambda j: (abs(pos[j] - pos[i]), abs(pos[j]),
+                                                   pos[j] < 0)))
+    emit("    defb " + ",".join(str(v) for v in merge))
+    for n in (2, 3, 4):
+        emit("tr_edge%d    ; per row: how far either side of its centre its road reaches"
+             % n)
+        emit("            ; with %d lanes" % n)
+        vals = [S.traffic_edge(r, n) if r else 0 for r in range(G.ROWS + 1)]
+        for j in range(0, len(vals), 16):
+            emit("    defb " + ",".join("%d" % v for v in vals[j:j + 16]))
+    emit("    ASSERT tr_edge3 == tr_edge2+%d && tr_edge4 == tr_edge3+%d"
+         % (G.ROWS + 1, G.ROWS + 1))
     emit("")
     emit(";; per curve level 1..CURVE_K, per template group (NGROUPS, bush_rh's")
     emit(";; order): how far right the level moves it")

@@ -76,8 +76,9 @@ mus_want    defb 1                      ; 0: no music (M: player.asm
 
 sf_noise
     ld a,(car_x)                        ; on the grass: its rumble
-    add a,OFFROAD_X-1
-    cp 2*OFFROAD_X-1
+sf_off
+    add a,OFFROAD_X-1                   ; (self-modified: cache.asm
+    cp 2*OFFROAD_X-1                    ; lane_road)
     ld bc,(MIX_TONES-MIX_NOISE_C)*256+ENG_GRASS
     jr nc,sf_mix
     ld hl,(push_v)                      ; a curve carrying the car out hard:

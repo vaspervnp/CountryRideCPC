@@ -366,9 +366,11 @@ cj_none
     xor a                               ; too close to the flip
     ret
 cj_go
+    call lane_can                       ; the lanes first (lanes5.asm)
+    ret nz
     ld a,(rd_n2)
     or a
-    jp z,cache_pre
+    jp z,lane_pre
     ld a,(pre_g)
     or a
     jr nz,cache_drop                    ; (a job moves the sums as they are)
@@ -379,6 +381,53 @@ cj_go
     ld hl,job5
     ld de,job4
     jp cache_both
+
+;; lane_can - the groups that can have the new lanes now given them
+;; (lanes5.asm: lane_g5c, lane_g4) - not while a step or a curve level is
+;; worked out ahead (lane_due): NZ if there were any. And the car's way
+;; onto the grass the lanes' (road15.asm lane_road). RAM_C1 in and out.
+;; Destroys everything.
+lane_can
+    call lane_road
+    ld a,(lane_h)
+    or a
+    ret z
+    call lane_due                       ; (common.asm)
+    jr nz,lc_not
+    ld hl,(zcam)
+    ld de,(lane_at)
+    sbc hl,de                           ; (CF 0: OR A)
+    jp m,lc_not                         ; not yet
+    ld hl,lane_g5c
+    ld de,lane_g4
+    jp cache_both
+lc_not
+    xor a
+    ret
+
+;; lane_pre - cache_pre, but with the lanes changing (lanes5.asm): no step
+;; worked out ahead - one is dropped (lane_due: they wait for none) - only
+;; a curve level the road has still to take, to the game's (no hill holds
+;; it back there: tools/course.py check_lanes).
+lane_pre
+    ld a,(lane_h)
+    or a
+    jp z,cache_pre
+    ld a,(road_curve)
+    ld hl,curve
+    cp (hl)
+    jr z,lp_none                        ; at the curve's level
+    ld a,(pre_g)
+    or a
+    jp z,cache_pre                      ; (a new one: a level, or a step
+    ld a,(pre_k)                        ; dropped next time)
+    or a
+    jp nz,cache_pre                     ; a level: on with it
+lp_none
+    ld a,(pre_g)
+    or a
+    jp nz,cache_drop
+    ret                                 ; (Z: no work)
 
 ;; ---------------------------------------------------------------------------
 ;; cache_drop - the step or curve level worked out ahead dropped: the sums
@@ -432,7 +481,7 @@ cache_init
     ld (pre_sync),a
     ld (rd_s),a
     ld hl,cache_reset
-    ld de,job4_ground
+    ld de,cr_ret
     call cache_both
     ld a,(road_curve)
     ld (cache_k),a
@@ -622,6 +671,23 @@ cache_kstep
     ld de,cm4
     call cache_both
     jp sky_stay                         ; (the next picture has the road bent)
+
+;; demo_lanes - (game.asm steer_demo) A = where the demo steers to with
+;; four lanes: as far with lane_now's - three quarters, a half - even.
+;; Destroys F, B, HL.
+demo_lanes
+    ld hl,lane_now
+    bit 2,(hl)
+    ret nz                              ; four
+    sra a
+    ld b,a
+    bit 0,(hl)
+    jr z,dl_even                        ; two
+    sra a
+    add a,b
+dl_even
+    and #FE
+    ret
 
 cache1_end
     ASSERT cache1_end <= #7F00

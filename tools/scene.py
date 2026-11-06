@@ -17,7 +17,7 @@ import os
 from cpcgfx import (ROAD_TOP_MAX, PEN, SCR_W, SCR_H, HUD_H, SKY_Y, BLOCK_BOTTOM, ROAD_Y, ROWS,
                     ROAD_END, NEAR_ROW,
                     HORIZON_Y, road_shift, player_shift, curve_group, curve_shift,
-                    far_mask,
+                    far_mask, LANES, lane3_c, lane_half,
                     ROAD_TOP_MIN, BANDS, GROUND_PEN, BAND_SHIFT, FAR_Z,
                     PLAIN_GRASS, grass_pen, TRACK_PERIOD, BUSH_SIZES, BUSH_LATS, BUSH_LAT_OF,
                     BUSH_H, BUSH_ASPECT, BUSH_ZNEAR, BUSH_ZFAR, BUSH_GAP,
@@ -458,13 +458,14 @@ HILL_MAX = max(h for h in range(0, 128, 2)
                + ROAD_Y <= ROAD_TOP_MAX)
 
 
-def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS):
-    """Pens of one road line showing row r (None = ground strip). The engine
-    draws the road in whole pairs (4 pixels): the kerb fills them out."""
+def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS, lanes=LANES):
+    """Pens of one road line showing row r (None = ground strip), the road
+    as wide as its lanes are (lane_half). The engine draws the road in whole
+    pairs (4 pixels): the kerb fills them out."""
     if r is None:
         return [GROUND_PEN] * SCR_W
     out = [grass] * SCR_W
-    pens, left = road_row_pixels(row_half_bytes(r), band)
+    pens, left = road_row_pixels(lane_half(row_half_bytes(r), lanes), band, lanes)
     x0 = cx - left
     x1 = x0 + len(pens)
     for x in range(max(0, x0 & ~3), min(SCR_W, (x1 + 3) & ~3)):
@@ -472,13 +473,26 @@ def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS):
     return out
 
 
-def road_lines(hill, zcam, curve=0, x=0):
+# the template groups (src/cache.asm), the furthest first: each row's
+GROUP_OF_ROW = [None] + [list(dict.fromkeys(curve_group(q) for q in range(1, ROWS + 1)))
+                         .index(curve_group(r)) for r in range(1, ROWS + 1)]
+NGROUPS = GROUP_OF_ROW[-1] + 1
+
+
+def row_lanes(r, lanes=None):
+    """Row r's lanes: `lanes` is each template group's (src/lanes5.asm:
+    RA_LN), or None - LANES all."""
+    return lanes[GROUP_OF_ROW[r]] if lanes else LANES
+
+
+def road_lines(hill, zcam, curve=0, x=0, lanes=None):
     """Lines ROAD_Y..SCR_H-1, the road bent by curve level `curve` and x
     pairs right of the middle (cpcgfx.road_shift), down to ROAD_END; black
-    under it."""
+    under it. `lanes`: each template group's (row_lanes), the road on its
+    rows as wide as they are."""
     rows = project(hill, zcam)
     return [road_line(r, row_band(r, zcam), SCR_W // 2 + 2 * road_shift(curve, r, x),
-                      grass_pen(r, zcam))
+                      grass_pen(r, zcam), row_lanes(r, lanes))
             if r else road_line(None, 0) for r in rows] + \
         [[PEN["BLACK"]] * SCR_W for _ in range(ROAD_END, SCR_H)]
 
@@ -784,37 +798,54 @@ def traffic_width(size):
     return len(TRAFFIC_ART[size]["tops"][TRAFFIC_TOPS[0]][0]) // 2
 
 
-def traffic_lefts(r, wb):
+def traffic_lefts(r, wb, lanes=LANES):
     """For row r and a car wb bytes wide: its left, in bytes from the road's
-    centre, in the inner and the outer right lane - centred in it, between
-    the lane lines (band A's pixels), rounded towards the middle."""
-    half = row_half_bytes(r)
-    pens, total = road_row_pixels(half, 0)
+    centre, in the lanes right of the middle - with four, the inner and the
+    outer one; with three or two, the right one - centred in it, between the
+    lane lines (band A's pixels), rounded towards the middle; the road as
+    wide as its lanes are (lane_half)."""
+    half = lane_half(row_half_bytes(r), lanes)
+    pens, total = road_row_pixels(half, 0, lanes)
     right = pens[total:]                        # from the centre outwards
     lines = [i for i, p in enumerate(right) if p == PEN["WHITE"]]
     edge = len(right) - kerb_px(half)           # the asphalt's end
-    if lines:
-        mid_end = max(i for i in lines if i < 4) + 1 if any(i < 4 for i in lines) else 0
+    mid_end = max(i for i in lines if i < 4) + 1 if any(i < 4 for i in lines) else 0
+    if lanes == 3:
+        c = lane3_c(half, 0)
+        out = ((max(lines) + 1 if lines else c, edge),)
+    elif lanes == 2:
+        out = ((mid_end, edge),)
+    elif lines:
         nxt = min(i for i in lines if i >= mid_end + 1)
         nxt_end = max(i for i in lines if i < nxt + 4) + 1
-        lanes = (mid_end, nxt), (nxt_end, edge)
+        out = (mid_end, nxt), (nxt_end, edge)
     else:
         c = 2 * (half // 2)
-        lanes = (0, c), (c, edge)
-    return [((lo + hi) - 2 * wb) // 2 // 2 for lo, hi in lanes]
+        out = (0, c), (c, edge)
+    return [((lo + hi) - 2 * wb) // 2 // 2 for lo, hi in out]
+
+
+# A car's lane: (the road's lanes, which one from the middle - left of it
+# negative, 0 the middle one), as src/traffic.asm numbers them.
+TRAFFIC_LANES = [(4, -2), (4, -1), (4, 1), (4, 2), (3, -1), (3, 0), (3, 1),
+                 (2, -1), (2, 1)]
 
 
 def traffic_place(r, wb, lane):
-    """A car's left on row r, wb bytes wide, in a lane (0-3): bytes from the
-    road's centre."""
-    lat = traffic_lefts(r, wb)[0 if lane in (1, 2) else 1]
-    return lat if lane >= 2 else -lat - wb
+    """A car's left on row r, wb bytes wide, in a lane (TRAFFIC_LANES):
+    bytes from the road's centre - the middle one's centred."""
+    lanes, way = TRAFFIC_LANES[lane]
+    if way == 0:
+        return -wb // 2
+    lat = traffic_lefts(r, wb, lanes)[abs(way) - 1]
+    return lat if way > 0 else -lat - wb
 
 
-def traffic_edge(r):
-    """How far either side of its centre row r's road reaches, in whole bytes:
-    its asphalt and its kerb (the engine draws whole pairs, past it)."""
-    half = row_half_bytes(r)
+def traffic_edge(r, lanes=LANES):
+    """How far either side of its centre row r's road reaches with `lanes`
+    lanes, in whole bytes: its asphalt and its kerb (the engine draws whole
+    pairs, past it)."""
+    half = lane_half(row_half_bytes(r), lanes)
     return half + kerb_px(half) // 2
 
 
@@ -834,16 +865,19 @@ def traffic_rows(size, top, bottom):
     return a["tops"][top] + a["bottoms"][bottom], a["split"]
 
 
-def traffic_items(hill, zcam, curve, cars, x=0):
+def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
     """The cars on screen, in the order they are drawn - the furthest first:
     (size, left byte, top line, rows, split, top colour, bottom colour).
     cars: (z, lane, top, bottom, top colour, bottom colour[, to, share])
-    each - lanes 0-3 left to right, tops and bottoms as TRAFFIC_TOPS and
+    each - lanes as TRAFFIC_LANES, tops and bottoms as TRAFFIC_TOPS and
     TRAFFIC_BOTTOMS; changing lanes, on its way to lane `to` by share/256
     (src/traffic.asm to_way: rounded towards its own).
     `hill` as the road engine draws it (effective_hill). A car is kept on the
     road its top line shows, its row's further than its own - narrower,
-    more bent: only the road is drawn afresh where it was (rp_force)."""
+    more bent - and then on its own row's (a narrower road, bent hard: its
+    lower lines' bend less than its top's and are not that much wider),
+    each as wide as its lanes are (`lanes`: row_lanes'): only the road is
+    drawn afresh where it was (rp_force)."""
     rows = project(hill)
     far = next(r for r in rows if r)            # the furthest row in sight
     road_top = ROAD_Y + ground_lines(hill)
@@ -870,9 +904,10 @@ def traffic_items(hill, zcam, curve, cars, x=0):
             assert -128 < d < 128
             place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
         left = traffic_centre(curve, r, x) + place
-        rt = rows[y0 - ROAD_Y]                  # the row its top line shows
-        ct, edge = traffic_centre(curve, rt, x), traffic_edge(rt)
-        left = ct + max(min(left - ct, edge - wb), -edge)
+        rt = rows[y0 - ROAD_Y]                  # the row its top line shows,
+        for q in (rt, r):                       # then its own
+            ct, edge = traffic_centre(curve, q, x), traffic_edge(q, row_lanes(q, lanes))
+            left = ct + max(min(left - ct, edge - wb), -edge)
         if left < 0 or left + wb > SCR_W // 2:
             continue
         out.append((zr, size, left, y0, art, split, ctop, cbot))
@@ -880,9 +915,10 @@ def traffic_items(hill, zcam, curve, cars, x=0):
     return [t[1:] for t in out]
 
 
-def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0):
+def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0, lanes=None):
     """Draw the cars into `lines` (pen rows, the first being line y0)."""
-    for size, left, top, art, split, ctop, cbot in traffic_items(hill, zcam, curve, cars, x):
+    for size, left, top, art, split, ctop, cbot in traffic_items(hill, zcam, curve, cars, x,
+                                                                 lanes):
         for j, row in enumerate(art):
             colour = TRAFFIC_COLOURS[ctop if j < split else cbot]
             pens = [PEN[p] for p in (colour * 2 if len(colour) == 1 else colour)]
@@ -1070,16 +1106,16 @@ def sky_lines(heading=0):
 
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
-              car_off=0, traffic=(), prop=None, only=None, car_up=0):
+              car_off=0, traffic=(), prop=None, only=None, car_up=0, lanes=None):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
     traffic (traffic_items' cars), the prop in sight (prop_item's), the
     bushes (those in `only`, if given) and the car (seen as car_view
     `view`, car_off pairs right of the middle, car_up rows up). `hill` as
-    the road engine draws it (effective_hill)."""
+    the road engine draws it (effective_hill); `lanes` as road_lines'."""
     lines = ([[GROUND_PEN] * SCR_W for _ in range(ROAD_AREA_Y, ROAD_Y)]
-             + road_lines(hill, zcam, curve, x))
+             + road_lines(hill, zcam, curve, x, lanes))
     if traffic:
-        draw_traffic(lines, ROAD_AREA_Y, hill, zcam, curve, traffic, x)
+        draw_traffic(lines, ROAD_AREA_Y, hill, zcam, curve, traffic, x, lanes)
     draw_prop(lines, ROAD_AREA_Y, prop, hill, curve, x)
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x, only)

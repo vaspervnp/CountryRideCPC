@@ -65,7 +65,7 @@ tr_rsize    ; per row: the size a car on it is drawn at - its record in
     defb #0C,#0C,#08,#08,#08,#08,#08,#08,#08,#08,#08,#08,#04,#04,#04,#04
     defb #04,#04,#04,#04,#04,#04,#04,#04,#04,#00,#00,#00,#00,#00,#00,#00
     defb #00,#00,#00,#00,#00
-tr_lat1    ; per row: a car's left in the inner right lane, bytes from the road's
+tr_lat1    ; per row: a car's left in the inner right lane of four, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#FF,#00,#00,#00
     defb #00,#00,#FF,#FF,#00,#00,#00,#00,#00,#FF,#FF,#00,#00,#00,#00,#00
@@ -73,7 +73,7 @@ tr_lat1    ; per row: a car's left in the inner right lane, bytes from the road'
     defb #01,#01,#00,#00,#00,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01
     defb #01,#01,#01,#02,#02,#02,#03,#03,#03,#02,#02,#02,#02,#03,#03,#03
     defb #03,#03,#03,#03,#04
-tr_lat2    ; per row: a car's left in the outer right lane, bytes from the road's
+tr_lat2    ; per row: a car's left in the outer right lane of four, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#03,#04,#04,#04
     defb #05,#05,#05,#05,#06,#06,#06,#07,#07,#07,#07,#08,#08,#08,#09,#09
@@ -81,13 +81,63 @@ tr_lat2    ; per row: a car's left in the outer right lane, bytes from the road'
     defb #10,#10,#10,#10,#10,#11,#11,#12,#12,#13,#13,#13,#13,#13,#14,#15
     defb #15,#15,#15,#16,#16,#17,#18,#18,#18,#17,#18,#19,#19,#1A,#1A,#1A
     defb #1B,#1B,#1C,#1C,#1D
-tr_edge     ; per row: how far either side of its centre its road reaches
+tr_lat3    ; per row: a car's left in the right lane of three, bytes from the road's
+    ; centre (the left lanes': -this - its width)
+    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#01,#02,#02,#02
+    defb #03,#03,#02,#02,#03,#03,#03,#04,#04,#03,#03,#04,#04,#04,#05,#05
+    defb #04,#05,#05,#05,#05,#06,#06,#06,#07,#06,#06,#07,#07,#07,#07,#08
+    defb #08,#08,#08,#08,#08,#09,#09,#0A,#0A,#0A,#0A,#0A,#0A,#0A,#0B,#0B
+    defb #0B,#0B,#0B,#0C,#0C,#0D,#0D,#0D,#0D,#0C,#0D,#0E,#0E,#0E,#0E,#0E
+    defb #0F,#0F,#10,#10,#10
+tr_lat4    ; per row: a car's left in the right lane of two, bytes from the road's
+    ; centre (the left lanes': -this - its width)
+    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
+    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
+    defb #00,#00,#00,#00,#00,#00,#01,#01,#01,#00,#00,#00,#00,#01,#01,#01
+    defb #01,#01,#00,#00,#01,#01,#01,#01,#01,#01,#02,#02,#01,#01,#01,#01
+    defb #01,#02,#02,#02,#02,#02,#02,#02,#03,#02,#02,#02,#02,#02,#02,#03
+    defb #03,#03,#03,#03,#03
+    ASSERT tr_lat4 == tr_lat1+255
+tr_lsel     ; per lane (TR_LANE): its tr_lat table, from tr_lat1, and 0
+            ; right of the middle, 1 left, 2 the middle one of three
+    defb 85,1,0,1,0,0,85,0,170,1,0,2,170,0,255,1,255,0
+tr_lcount   ; per lane: the road's lanes it is one of
+    defb 4,4,4,4,3,3,3,2,2
+tr_spawn    ; per lanes 2, 3, 4 and two random bits: the lane a car
+            ; comes in
+    defb 7,8,7,8,4,5,6,5,0,1,2,3
+tr_chg      ; per lane, and bit 3 of a random byte: the lane next to it
+            ; it may change to (the other on its side, or the other
+            ; side's inner one)
+    defb 1,1,0,2,3,1,2,2,5,5,4,6,5,5,8,8,7,7
+tr_merge    ; per lane and lanes 4, 3, 2 there: the nearest lane of those
+            ; (its middle's; the one towards the road's middle if two)
+    defb 0,4,7,1,5,7,2,5,8,3,6,8,0,4,7,2,5,8,3,6,8,1,4,7,2,6,8
+tr_edge2    ; per row: how far either side of its centre its road reaches
+            ; with 2 lanes
+    defb 0,2,2,2,2,2,2,2,3,3,3,4,4,4,4,6
+    defb 6,6,7,7,7,8,8,8,8,9,9,9,10,10,10,10
+    defb 11,11,11,13,13,13,14,14,14,14,15,15,15,16,16,16
+    defb 17,17,17,17,18,18,18,19,19,19,21,21,21,21,22,22
+    defb 22,23,23,23,23,24,24,24,25,25,25,26,26,26,26,28
+    defb 28,28,29,29,29
+tr_edge3    ; per row: how far either side of its centre its road reaches
+            ; with 3 lanes
+    defb 0,2,2,2,2,2,3,3,4,4,6,6,6,7,7,8
+    defb 9,9,9,9,10,11,11,13,13,13,13,14,15,15,16,16
+    defb 16,17,17,18,18,19,19,19,21,21,22,23,23,23,23,24
+    defb 25,25,26,26,26,28,28,29,29,30,30,30,31,31,32,33
+    defb 33,33,33,35,35,36,37,37,37,37,38,39,39,40,40,40
+    defb 42,42,43,43,44
+tr_edge4    ; per row: how far either side of its centre its road reaches
+            ; with 4 lanes
     defb 0,2,2,2,2,3,4,4,6,6,7,8,8,9,9,10
     defb 11,11,13,13,14,15,15,16,16,17,17,18,19,19,21,21
     defb 22,23,23,24,24,25,26,26,28,28,29,30,30,31,31,32
     defb 33,33,35,35,36,37,37,38,38,39,40,40,42,42,43,44
     defb 44,45,45,46,46,47,48,48,50,50,51,52,52,53,53,54
     defb 55,55,57,57,58
+    ASSERT tr_edge3 == tr_edge2+85 && tr_edge4 == tr_edge3+85
 
 ;; per curve level 1..CURVE_K, per template group (NGROUPS, bush_rh's
 ;; order): how far right the level moves it
@@ -142,5 +192,5 @@ tr_colours
 ;; region rh4: 0 of 175 bytes
 ;; region rh5: 0 of 175 bytes
 ;; region rh6: 0 of 96 bytes
-;; region f4: 0 of 111 bytes
+;; region f4: 0 of 21 bytes
 ;; region 4: 0 of 170 bytes

@@ -200,3 +200,66 @@ rp_part_k2
 rp_part_k1
     ld (rp_skip_r+1),a
     ret
+
+;; ---------------------------------------------------------------------------
+;; rp_lane_whole - (rp_done) the lines that show rows of the groups whose
+;; lanes changed since this buffer was last drawn (lane_ghi, lane_glo:
+;; lanes5.asm) drawn whole - their road is narrower or wider: flag 0. A far
+;; one is drawn at all then (traffic_pre: rp_dirty). The line -> row table
+;; runs from the nearest row to the furthest and the ground. Destroys AF,
+;; BC, DE, HL, IXL.
+;; ---------------------------------------------------------------------------
+rp_lane_whole
+    ld a,(road_buf)
+    add a,lo(lane_ghi)
+    ld l,a
+    ld h,hi(lane_ghi)
+    ld a,(hl)
+    or a
+    ret z                               ; none
+    ld (hl),0
+    add a,lo(rr_gfirst)
+    ld e,a
+    inc l
+    inc l
+    ld a,(hl)
+    ld (hl),255
+    add a,lo(rr_gfirst)
+    ld l,a
+    ld h,hi(rr_gfirst)
+    ld b,(hl)                           ; B = the first group's first row
+    ld l,e
+    ld c,(hl)                           ; C = the row after the last's
+    ld hl,(rp_vars)
+    ld l,(hl)                           ; (rp_level: this buffer's, now)
+    ld h,0
+    add hl,hl
+    ld de,level_addr
+    add hl,de
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a                              ; HL = its line -> row table
+    ld de,(rp_slot)
+    ld a,(rp_count)
+    or a
+    ret z
+    ld ixl,a
+rlw_line
+    ld a,(hl)                           ; the row this line shows
+    inc hl
+    cp c
+    jr nc,rlw_next                      ; nearer than them
+    cp b
+    ret c                               ; further: so are the rest
+    ld a,(de)
+    and #FC
+    ld (de),a                           ; whole
+rlw_next
+    inc e                               ; (an entry never crosses a page)
+    inc de
+    inc e
+    inc e
+    dec ixl
+    jr nz,rlw_line
+    ret

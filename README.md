@@ -4,8 +4,8 @@ A racing game for the Amstrad CPC 6128, written in Z80 assembly.
 
 ![The road on the flat](docs/screen-flat.png)
 
-A four-lane road runs over crests, dips and curves - never a curve on a
-hill - with bushes of different sizes beside it at random intervals, now
+A road of four, three or two lanes runs over crests, dips and curves -
+never a curve on a hill - with bushes of different sizes beside it at random intervals, now
 and then a palm, a dead tree or a road sign, and cars on it, at 25 frames
 a second. A demo drives a loop of it until you
 press fire; then you race the clock over five stages - at each one's end
@@ -101,8 +101,17 @@ is, to the most at the horizon; in the sharpest curves the far road
 leaves the screen. The sky and the mountains turn sideways as the road
 bends, by hardware scrolling.
 
-The road has four lanes, each a little wider than the car. It
-has thick red and white kerbs. The asphalt is plain grey; the kerbs, the
+The road has four lanes, each a little wider than the car - or, on
+stretches of the course, three or two, and the road is that much
+narrower. Where they change, the road narrows (or widens) from the
+horizon on as the road comes, and the traffic moves over to the new
+lanes before they begin.
+
+| Four lanes | Narrowing to three | Three | Two |
+|---|---|---|---|
+| ![Four lanes](docs/screen-flat.png) | ![Narrowing](docs/screen-narrowing.png) | ![Three lanes](docs/screen-lanes3.png) | ![Two lanes](docs/screen-lanes2.png) |
+
+It has thick red and white kerbs. The asphalt is plain grey; the kerbs, the
 lane dashes and, nearer, the grass are striped, in short bands - since
 2026-11-05 half as long as they were, so the road seems to run by twice as
 fast, with the car no faster. The dashes move nearly all the way to the
@@ -407,8 +416,8 @@ The banks hold the rest:
 
 | Bank | Contents | Seen at |
 |---|---|---|
-| 4 | for stripe band A: the ground's template (`#4000`; free after it, 7.5K), the cache's templates (`#5E00`), road code (`#6000`) and the next step's staging set (`#7E00`) | `#4000` (C4) |
-| 5 | for stripe band B: road code (`#4000`), the next step's staging set (`#5E00`), the cache's per group arrays (`#6000`, a page each; free after them, 3.75K, and 205 bytes under each) and its templates (`#7E00`) | `#4000` (C5) |
+| 4 | for stripe band A: the cache's templates (`#4000`, the ground's first), road code (`#4200`), the lanes' code and band A's tables for three and two lanes (0.9K free after them) and the next step's staging set (`#7E00`) | `#4000` (C4) |
+| 5 | for stripe band B: road code (`#4000`), the next step's staging set (`#5E00`), the cache's templates (`#6000`) and per group arrays (`#6200`, a page each; the lanes' widths and depths under the first three, 205 bytes under each of the others), band B's tables for three and two lanes and the lanes' code (1.5K free after them) | `#4000` (C5) |
 | 6 | the road's row tables and the precomputed hill tables; the traffic: its code, tables and most of its sprites' code | `#4000` (C6) |
 | 7 | the game (main loop, HUD, graphics, the panorama, the track's rings and the props' size table at `#F000`, over what runs once at the start) | `#C000` (C1/C3) |
 
@@ -538,8 +547,10 @@ is near, the next curve level to work out). Those come from two rings of
 entries ahead of the camera from a list of segments: n entries straight,
 a curve to level v and back, one level an entry, or a hill of height v,
 a sine from a quarter-sine table. Two bytes a segment: the demo's loop is
-16 of them (`course_demo`), the race's nine stages 14 to 21 each
-(`course_st0`..). Any list can follow from the next entry on, after the
+18 of them (`course_demo`), the race's nine stages 14 to 21 each
+(`course_st0`..). A segment `0, 16 + n` has the road's lanes n (4, 3 or
+2) from there on (`lane_ask`, below). Any list can follow from the next
+entry on, after the
 road is first brought to the flat - a curve level and 12 of hill an entry
 - so the race starts on a straight wherever the demo was, and the demo
 takes its loop up again wherever the race ended. A stage's list ends at
@@ -548,10 +559,52 @@ a straight), the left one or the right one as the car is then
 (`stage_fork`), with its props (`stage_lists`); past the fifth, the
 finish's straight. `tools/course.py` has the lists and the
 model of all this, to the bit, and makes sure the road never bends on a
-hill - and, in the race, that a hill comes 12 entries or more after a
-curve: the road can still be a level or two into the curve there, and a
+hill - and that a hill comes 12 entries or more after a curve: the road can still be a level or two into the curve there, and a
 picture with the road bent on a hill that moves is the heaviest there is
 (with 6 entries, 39.9 ms).
+
+The lanes (`L` in `tools/course.py`): the demo's loop has four, then three,
+then two; the stages begin with their own - four in the countryside and at
+sunset, two in the desert, at the summit and at night, three elsewhere -
+and five of them change half way (`src/lanes5.asm`). There is no curve
+from 24 entries before an `L` to 28 after it (`check_lanes`), as the
+lanes change with no step worked out ahead (below) - and in the race no
+hill either: the road can still be a level into the curve before, and
+bent on a hill that moves, with a jump, the change's bit more made a
+picture late.
+
+### Lanes
+
+With three lanes or two the road is three quarters or half as wide
+(`cpcgfx.lane_half`), each lane as wide as four's; band 0's cores (the
+only ones with lane lines) are made for each count (`tools/mkroad.py`:
+bands 3 and 4 - with three, two lines at the whole bytes nearest a third
+of the asphalt either side of the middle; with two, the middle one alone),
+band B's and band 2's are the four lanes' of the narrower width. Each
+template group has its own lanes (`RA_LN`, bank 5) and the tables that
+make its templates (`rd_t5`, `rd_t4`) its own count's (from `rd_s5_<n>`,
+`rd_s4_<n>`).
+
+A change is asked for by the track (`lane_ask`: 768 depth units on,
+`lane_z`), and goes in group by group from the furthest, as the road
+comes: a group takes the new lanes when its furthest row is past `lane_z`
+(`lane_dl`, `lane_dh`) - or up to 64 units before, in the time left before
+a flip (`lane_can`: up to 5 groups) - and otherwise before `road_project`
+(`lane_must`: one a picture, ~0.4-0.8 ms). Its width `H` (`lane_hs`) and so its sum `A'` and
+its place `a` move as far as its core's edge does (its shift and its
+share of `road_x` stay: they go by its depth), its tables are copied
+(`LANE_COPY`), its templates made afresh (`lanes5.asm`, `lanes.asm`), and
+both buffers draw its rows whole next (`lane_ghi`, `lane_glo`;
+`rp_lane_whole`, and every far line if it has far rows). The rows past
+`lane_z` at the start (the furthest five) change at once; the rest follow
+over ~950 units, a few groups a picture near the car at speed. Meanwhile
+no step is worked out ahead - one is dropped first (`lane_pre`) - so steps
+go there and then; a curve level the road has still to take goes on, and
+the groups wait for it. A change asked for while one goes on
+follows it. The car is on the grass from 5 a lane either way
+(`lane_road`), and the demo steers that much narrower. `tools/scene.py`
+draws each row as wide as its group's lanes (`road_lines`, from `RA_LN`),
+and `run.py check` holds the two to it.
 
 ### Curves
 
@@ -830,8 +883,18 @@ looks like, and `src/traffic.asm` has to match it.
   (`tools/course.py` `traffic`, `tr_pauses` in bank 6, by `stage_id`) -
   and up to 31 more at random, and at least 160 units behind it; it goes
   when it has gone by or got away.
+- **Lanes.** A car's lane (`TR_LANE`) is one of four (0-3), of three
+  (4-6) or of two (7-8), left to right (`scene.TRAFFIC_LANES`); it comes
+  in one of the road's where it comes (`tr_lanes_at`, `tr_spawn`: the
+  middle one of three twice as often), and is placed as the lines are
+  there (`tr_lat1`-`tr_lat4`; the middle one of three centred). Where the
+  road's lanes are not its lane's - it has driven past where they change,
+  or to 256 units of where fewer begin - it moves over to the nearest of
+  the new ones (`tp_merge`, `tr_merge`; the one nearer the middle if two
+  are), as below.
 - **Changing lanes.** 3 cars in 8 move over once, to the other lane on
-  their side or - from an inner lane, half of them - the other inner one,
+  their side or - from an inner lane, half of them - the other inner one
+  (`tr_chg`; of three, the middle one's either way),
   beginning 384-480 units ahead (`TR_WHEN`), a 32nd of the way a picture
   (1.3 s; `tp_lanes`). Its place is then its lane's and that share of the
   way to the other's (`to_way`: one 8 x 8 multiplication, ~0.1 ms, only
@@ -844,7 +907,12 @@ looks like, and `src/traffic.asm` has to match it.
   curve level's shift for its template group (`tr_cs`, mirrored for left
   curves) and road_x's share of it (`rd_gp`). Its top lines stand on
   further rows, narrower and bent more: it is kept on the road its top
-  line shows (`tr_edge`), so it never stands out over the grass.
+  line shows, and then on its own row's (`to_fit`: on a narrow road bent
+  hard its lower lines bend less, and are not that much wider), each as
+  wide as that row's lanes (`tr_edge2`-`tr_edge4`), so it does not stand
+  out over the grass - or, where it cannot be on both (two lanes in a
+  sharp curve), its lines are drawn whole when it is taken away
+  (`rp_force_car`) instead of only their road.
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
@@ -1278,6 +1346,9 @@ src/            the game
   cache4.asm    ... its part in bank 4 (band A)
   cache5.asm    ... and in bank 5 (band B)
   cachemac.asm  making a cache template (both banks)
+  lanes5.asm    the lanes changing: a group's width, tables and band B
+                templates (bank 5)
+  lanes.asm     ... and its band A and band 2 templates (bank 4)
   game.asm      main loop, the race's rules, demo drive, steering
   player.asm    the keys (M and ESC: race_keys), the player's speed
                 (page 1)
@@ -1351,7 +1422,5 @@ docs/           screenshots
 - curves that come from the horizon (the whole road bends at one level
   now) - a level a row, which the cache, made a level at a time, does not
   allow;
-- 3- and 2-lane roads (the generator already has the `LANES` parameter) -
-  a lane count's code takes ~7.1K of bank 4 and ~6.4K of bank 5; since
-  2026-11-05 (no template sets per curve level) ~7.5K and ~6.9K are free
-  there, bank 5's partly in 205-byte pieces.
+- a taper where the lanes change (the road's edge steps in now, at
+  `lane_z`): rows of widths between, which band 0 has no cores for.

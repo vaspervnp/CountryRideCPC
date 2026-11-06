@@ -430,9 +430,11 @@ irq_size
     jp isr_out
 
 ;; cache_mark - (cf_run5, job5) A = a group worked out afresh: both
-;; buffers have its rows to draw as moved. Destroys AF, HL.
+;; buffers have its rows to draw as moved (mark_hl: HL = lane_ghi, a
+;; group's lanes changed - lanes5.asm). Destroys AF, HL.
 cache_mark
     ld hl,rd_ghi
+mark_hl
     inc a
     cp (hl)
     jr c,$+3
@@ -1389,6 +1391,77 @@ rp_dzset_go
     ld (rp_dz2+1),a
     ld (rp_dz7+1),a
     ld (rp_dz8+1),a
+    ret
+
+;; ---------------------------------------------------------------------------
+;; The lanes (lanes5.asm, lanes.asm): 4, 3 or 2 - lane_now's, and lane_next's
+;; from lane_z on while they change (lane_h), each group's in bank 5 (RA_LN).
+;; ---------------------------------------------------------------------------
+lane_h      defb 0          ; 0: none changing; else 1 + the group whose
+                            ; lanes change next (NGROUPS + 1: all done,
+                            ; till the camera is past lane_z)
+lane_now    defb LANES      ; the lanes (before lane_z)
+lane_next   defb LANES      ; ... from lane_z on
+lane_z      defw 0          ; where they change
+lane_at     defw 0          ; the camera's depth from which lane_h's group
+lane_bt     defw 0          ; can have the new lanes, and must
+lane_pend   defb 0          ; lanes asked for while they change (0: none)
+lane_ghi    defb 0,0        ; per buffer: 1 + the last group whose lanes
+lane_glo    defb 255,255    ; changed since it was drawn (0: none), and the
+    ASSERT hi(lane_ghi) == hi(lane_glo+1)   ; first (cache_mark's way)
+LANE_IN     EQU 768         ; how far past where they are asked for they change
+LANE_EARLY  EQU 64          ; how far before lane_bt a group's can (lane_at)
+
+;; lane_ask - A = lanes (4, 3 or 2) from HL, a depth on the track, LANE_IN
+;; on - if a change has begun, once it is done (lane_pend). Destroys AF, DE,
+;; HL.
+lane_ask
+    ld de,LANE_IN
+    add hl,de                           ; HL = where
+    ld e,a
+    ld a,(lane_h)
+    cp 2
+    jr c,la_new                         ; (none changed yet: this instead)
+    ld a,e
+    ld (lane_pend),a
+    ret
+la_new
+    ld a,(lane_now)
+    cp e
+    ld a,0
+    jr z,la_h                           ; as they are: none
+    ld a,e
+    ld (lane_next),a
+    ld (lane_z),hl
+    ld de,-LANE_D0                      ; group 0 from when its furthest row
+    add hl,de                           ; is past it
+    ld (lane_bt),hl
+    ld de,-LANE_EARLY
+    add hl,de
+    ld (lane_at),hl
+    ld a,1
+la_h
+    ld (lane_h),a
+    ret
+
+;; lane_must - (traffic_pre, RAM_C6) the groups that must have the new lanes
+;; before road_project (lane_g5m, lane_g4) - not while a step or a curve
+;; level is worked out ahead (lane_due). Destroys everything.
+lane_must
+    call lane_due
+    ret nz
+    SET_RAM RAM_C5
+    call lane_g5m
+    SET_RAM RAM_C4
+    call lane_g4
+    SET_RAM RAM_C6
+    ret
+
+;; lane_due - Z if groups can change lanes now: nothing worked out ahead
+;; (cache_pre: it is dropped first - cache.asm lane_pre). Destroys AF.
+lane_due
+    ld a,(pre_g)
+    or a
     ret
 
     INCLUDE "gen/trafcode_f4.asm"

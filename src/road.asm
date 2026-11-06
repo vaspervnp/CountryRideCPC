@@ -410,6 +410,7 @@ rp_zlo4
 ;; The end marker goes after the last line that is drawn: far lines that
 ;; are already right at the end of the list are not even looked at.
 rp_done
+    call rp_lane_whole                  ; (road6.asm: lanes changed)
     ld hl,(rp_tail)
     ld (hl),lo(tmpl_end)
     inc hl

@@ -61,17 +61,17 @@ rr_mask   ; 64; 128 past FAR_Z; 0 for the ground
     INCLUDE "rowhole3.asm"
     ALIGN 256
 rr_thi   ; band 0 template, high byte
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5E,#5E,#5E,#5E
-    defb #5E,#5E,#5E,#5E,#5F,#5F,#5F,#5F
-    defb #5F,#5F,#5F,#5F,#5F,#5F,#5F,#5F
-    defb #5F,#5F,#5F,#5F,#5F,#5F,#5F,#5F
-    defb #5F,#5F,#5F,#5F,#5F,#5F,#5F,#5F
-    defb #5F
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#40,#40,#40,#40
+    defb #40,#40,#40,#40,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,#41
+    defb #41
     INCLUDE "rowhole4.asm"
     ALIGN 256
 rr_tlo2   ; far rows: band 2 template, low byte
@@ -198,8 +198,8 @@ level_near
     INCLUDE "rowhole7.asm"
     ALIGN 256
 rr_thi2   ; far rows: band 2 template, high byte
-    defb #5E,#5F,#5F,#5F,#5F,#5F,#5F,#5F
-    defb #5F,#5F,#5F,#5F,#5F,#5F,#5F,0
+    defb #40,#41,#41,#41,#41,#41,#41,#41
+    defb #41,#41,#41,#41,#41,#41,#41,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0
     defb 0,0,0,0,0,0,0,0

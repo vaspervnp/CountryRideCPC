@@ -10,7 +10,9 @@ A segment is (n, v): n entries of
                 ends at 0);
   |v| >= 16     a hill, v * sin(pi t / n) at entry t (a crest ahead is
                 positive, a dip negative), from a quarter sine table.
-The road never bends on a hill: one at a time.
+The road never bends on a hill: one at a time. A segment (0, 16 + k) has no
+entries: from there on the road has k lanes (L; src/lanes5.asm) - with no
+curve near (check_lanes).
 """
 
 import math
@@ -29,6 +31,13 @@ SINE_Q = [round(255 * math.sin(math.pi * i / 128)) for i in range(65)]
 
 def F(n):
     return (n, 0)
+
+
+def L(k):
+    """The road's lanes from here on: 4, 3 or 2, and its width with them.
+    They change LANE_IN depth units on (src/common.asm: lane_ask)."""
+    assert k in (4, 3, 2)
+    return (0, 16 + k)
 
 
 def C(n, k):
@@ -78,9 +87,10 @@ def ramp(h, k):
     return out
 
 
-# The demo's loop: 256 entries, round and round.
-DEMO = [F(6), H(32, 95), F(4), C(30, 5), F(4), H(32, -90), F(4), C(30, -7),
-        F(4), H(26, 60), F(4), C(20, -3), F(4), H(24, 95), F(4), C(28, 7)]
+# The demo's loop: 256 entries, round and round - four lanes, three, two.
+DEMO = [L(4), H(24, 95), F(4), C(30, 5), F(12), H(16, -60), L(3), H(20, 60),
+        F(8), C(30, -7), F(12), H(16, 70), L(2), H(20, -90), F(8), C(28, 7),
+        F(12), H(16, 60)]
 
 
 def stage(segs):
@@ -107,66 +117,61 @@ def stage(segs):
 # from 10 down; a slower car has more about it.
 STAGES = [
     dict(name="COUNTRYSIDE", traffic=64, pens={}, trees=["dead"],
-         segs=stage([F(12), C(24, 3), F(12), H(28, 70), F(6), C(30, -4),
-                     F(4), C(24, 4), F(12), H(32, -60), F(6), C(32, 5),
-                     F(12), H(24, 80), F(6), C(28, -5), F(12), H(30, -70),
-                     F(6), C(30, 3)])),
+         segs=stage([L(4), F(28), C(24, 3), F(12), H(28, 70), F(6), C(30, -4),
+                     F(4), C(24, 4), F(24), L(3), F(28), C(32, 5), F(12),
+                     H(24, 80), F(6), C(28, -5), F(12), H(30, -70)])),
     dict(name="DESERT", traffic=48,             # long straights, big crests
          pens=dict(HAZE=25, GRASS_A=25, GRASS_B=24, BUSH=12, MAUVE=3),
          trees=["palm", "dead", "stump"],
-         segs=stage([F(30), H(40, 95), F(20), C(30, 7), F(24), H(36, -90),
-                     F(16), C(26, -7), F(30), H(40, 95), F(20), C(30, 6),
-                     F(16)])),
+         segs=stage([L(2), F(30), H(40, 95), F(20), C(30, 7), F(24),
+                     H(36, -90), F(16), C(26, -7), F(30), H(40, 95), F(20),
+                     C(30, 6)])),
     dict(name="RIVIERA", traffic=40,            # the coast: sweeping, gentle
          pens=dict(HAZE=20, GRASS_A=22, GRASS_B=19, BUSH=9, MAUVE=2),
          trees=["palm"],
-         segs=stage([F(12), C(40, 4), F(10), C(36, -5), F(12), H(28, 60),
-                     F(8), C(44, 5), F(8), C(30, -3), F(12), H(32, -70),
-                     F(8), C(40, -6), F(10), C(36, 4), F(10)])),
+         segs=stage([L(3), F(32), C(40, 4), F(10), C(36, -5), F(12),
+                     H(28, 60), F(8), C(44, 5), F(24), L(2), F(28), C(40, -6),
+                     F(10), C(36, 4)])),
     dict(name="SUMMIT", traffic=32,             # hill after hill
          pens=dict(HAZE=26, GRASS_A=23, GRASS_B=26, BUSH=9, MAUVE=11),
          trees=["dead"],
-         segs=stage([F(8), H(30, 90), F(4), H(28, -90), F(6), C(24, -5),
-                     F(12), H(26, 95), F(4), H(32, -80), F(6), C(30, 6),
-                     F(12), H(24, 85), F(4), H(30, -90), F(6), C(22, -6),
-                     F(12), H(28, 90)])),
+         segs=stage([L(2), F(28), H(30, 90), F(4), H(28, -90), F(6),
+                     C(24, -5), F(12), H(26, 95), F(4), H(32, -80), F(6),
+                     C(30, 6), F(12), H(24, 85), F(4), H(30, -90), F(6),
+                     C(22, -6)])),
     dict(name="MESA", traffic=28,               # canyons: deep dips, sharp
          pens=dict(HAZE=16, GRASS_A=15, GRASS_B=12, BUSH=3, MAUVE=3),
          trees=["dead", "stump"],
-         segs=stage([F(14), H(36, -95), F(10), H(30, 85), F(12), C(26, 7),
-                     F(8), C(26, -6), F(14), H(40, -90), F(10), C(30, 6),
-                     F(12), H(28, 95), F(6), H(26, -80), F(12), C(24, -7),
-                     F(12)])),
+         segs=stage([L(3), F(28), H(36, -95), F(10), H(30, 85), F(12),
+                     C(26, 7), F(8), C(26, -6), F(12), H(40, -90), F(8),
+                     C(30, 6), F(12), H(28, 95), F(12), C(24, -7)])),
     dict(name="SUNSET", traffic=20,             # long sweeping curves
          pens=dict(BLUE=4, SKY=16, PASTEL=15, HAZE=25, GRASS_A=9, GRASS_B=19,
                    BUSH=0, MAUVE=7),
          trees=["palm", "stump"],
-         segs=stage([F(8), C(60, 5), F(6), C(56, -6), F(12), H(32, 70),
-                     F(6), C(48, 6), F(6), C(44, -4), F(12), H(30, -80),
-                     F(6), C(40, 7)])),
+         segs=stage([L(4), F(32), C(60, 5), F(6), C(56, -6), F(24), L(3),
+                     F(28), C(48, 6), F(6), C(44, -4), F(12), H(28, -80)])),
     dict(name="AUTUMN", traffic=16,             # winding, over hills
          pens=dict(HAZE=25, GRASS_A=12, GRASS_B=9, BUSH=15, MAUVE=7),
          trees=["dead", "stump"],
-         segs=stage([F(10), C(28, 5), F(6), C(28, -5), F(12), H(30, 75),
-                     F(6), C(24, 6), C(24, -6), F(12), H(26, -85), F(8),
-                     C(32, 4), F(6), C(26, -7), F(12), H(30, 80), F(8),
-                     C(28, 5)])),
+         segs=stage([L(3), F(32), C(28, 5), F(6), C(28, -5), F(12),
+                     H(30, 75), F(6), C(24, 6), C(24, -6), F(24), L(2), F(28),
+                     C(32, 4), F(6), C(26, -7), F(12), H(30, 80)])),
     dict(name="NIGHT", traffic=10,              # winding
          pens=dict(BLUE=1, SKY=1, PASTEL=2, HAZE=7, GRASS_A=9, GRASS_B=1,
                    BUSH=0, MAUVE=4),
          trees=["palm"],
-         segs=stage([F(8), C(22, 6), C(22, -6), F(4), C(24, 7), F(12),
-                     H(28, 80), F(4), C(20, -7), C(20, 7), F(12), H(30, -90),
-                     F(4), C(24, -6), C(24, 6), F(12), H(26, 95), F(4),
-                     C(28, -7)])),
+         segs=stage([L(2), F(32), C(22, 6), C(22, -6), F(4), C(24, 7),
+                     F(12), H(28, 80), F(4), C(20, -7), C(20, 7), F(12),
+                     H(30, -90), F(4), C(24, -6), C(24, 6), F(12), H(26, 95),
+                     F(4), C(28, -7)])),
     dict(name="STORM", traffic=4,               # grey skies, hard curves
          pens=dict(BLUE=1, SKY=13, PASTEL=14, HAZE=13, GRASS_A=9, GRASS_B=13,
                    BUSH=0, MAUVE=1),
          trees=["dead"],
-         segs=stage([F(20), H(36, 90), F(12), C(30, -7), F(10), C(30, 7),
-                     F(14), H(32, -95), F(12), H(28, 70), F(6), C(26, -6),
-                     F(8), C(22, 6), F(14), H(30, -80), F(6), C(30, 5),
-                     F(10)])),
+         segs=stage([L(3), F(28), H(36, 90), F(12), C(30, -7), F(10),
+                     C(30, 7), F(24), L(4), F(28), H(28, 70), F(6), C(26, -6),
+                     F(8), C(22, 6), F(14), H(30, -80)])),
 ]
 LEVELS = 5                      # stages a race
 FORK_AHEAD = 64                 # entries before a stage's end its fork's
@@ -315,7 +320,9 @@ STAGE_PENS = ["BLUE", "SKY", "PASTEL", "HAZE", "GRASS_A", "BUSH", "GRASS_B",
 
 FINISH = [F(64)]                # past the last checkpoint, then straight on
 CURVE_HILL = 12                 # straight entries at least from a curve to a
-                                # hill in the race: the road can be levels
+                                # hill (the demo's too: the lanes change only
+                                # with the road at the curve's level, which
+                                # a hill holds back): the road can be levels
                                 # behind the track, and a level off the
                                 # middle on a hill that moves makes a picture
                                 # late (~39.9 ms with 6)
@@ -343,22 +350,55 @@ def stage_fw(i):
     return [STAGES[i]["pens"].get(p, base[p]) for p in STAGE_PENS]
 
 
+# The lanes change (src/lanes5.asm) with no step worked out ahead and a
+# little more to draw: no curve from LANE_BEFORE entries before an L - the
+# track is worked out COURSE_AHEAD (8) on, and the road's level has 16 more
+# to come back to the middle - to LANE_AFTER on (LANE_IN, 24, till the
+# camera is past where they change, and 4 for the next level to be worked
+# out ahead). In the race no hill there either: the road can still be a
+# level into the curve before, and bent on a hill that moves, with a jump
+# too, the change made a picture late (40.8 ms). The demo has no jumps.
+LANE_BEFORE = 24
+LANE_AFTER = 28
+
+
+def check_lanes(segs, loop, flat=True):
+    es = entries(segs)
+    at, e = [], 0
+    for n, v in segs:
+        if n == 0:
+            at.append(e)
+        e += n
+    for z in at:
+        for i in range(z - LANE_BEFORE, z + LANE_AFTER):
+            if loop or 0 <= i < len(es):
+                assert es[i % len(es)][1] == 0 and not (flat and es[i % len(es)][0]), \
+                    ("lanes", z, i)
+    gaps = [b - a for a, b in zip(at, at[1:])] + ([at[0] + len(es) - at[-1]] if loop else [])
+    assert all(d >= LANE_AFTER + 8 for d in gaps), gaps
+
+
 def check():
+    check_lanes(DEMO, True, False)
     for segs in [DEMO] + [st["segs"] for st in STAGES] + [FINISH]:
         es = entries(segs)
         assert all(h == 0 or k == 0 for h, k in es)
         assert all(abs(a[1] - b[1]) <= 1 for a, b in zip(es, es[1:]))
-        assert all(n > 0 for n, v in segs)
+        assert all(n > 0 or v - 16 in (4, 3, 2) for n, v in segs)
     assert len(entries(DEMO)) == 256
     for route in routes():
+        check_lanes(race(route), False)
+    for segs in [DEMO + DEMO] + [race(route) for route in routes()]:
         flat = None                     # (straight since the last curve)
-        for n, v in race(route):
+        for n, v in segs:
+            if n == 0:
+                continue                # (lanes)
             if v == 0:
                 flat = None if flat is None else flat + n
             elif abs(v) <= G.CURVE_K:
                 flat = 0
             else:
-                assert flat is None or flat >= CURVE_HILL, (route, n, v, flat)
+                assert flat is None or flat >= CURVE_HILL, (n, v, flat)
                 flat = None
     assert len(STAGES) == 2 * LEVELS - 1
     for st in STAGES:

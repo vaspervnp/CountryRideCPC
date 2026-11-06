@@ -2,8 +2,9 @@
 ;; cache4.asm - the cache's work in bank 4 (RAM_C4; see cache.asm).
 ;; ===========================================================================
 
-CACHE_A     EQU TMPL_A+CACHE_LEVEL*TMPL_SET
-    ASSERT (CACHE_A & #1FF) == 0 && (rd_t4 & #FF) == 0
+CACHE_A     EQU TMPL_A+CACHE_LEVEL*TMPL_SET  ; (its slot 0, the ground's
+    ASSERT (CACHE_A & #1FF) == 0 && (rd_t4 & #FF) == 0  ; template, is
+    ASSERT tmpl_ground == CACHE_A                       ; roadtmpla.asm's)
 
 ;; ---------------------------------------------------------------------------
 ;; st4, job4 - after st5 (a step sideways) or job5: band A's templates of
@@ -13,17 +14,6 @@ CACHE_A     EQU TMPL_A+CACHE_LEVEL*TMPL_SET
 st4
 job4
     TM_PASS a,lgrassa,rd_t4,CACHE_A
-
-;; ---------------------------------------------------------------------------
-;; job4_ground - (cache_init) the ground's template, slot 0 of band A's
-;; cache set.
-;; ---------------------------------------------------------------------------
-job4_ground
-    ld hl,tmpl_ground
-    ld de,CACHE_A
-    ld bc,8
-    ldir
-    ret
 
 ;; ---------------------------------------------------------------------------
 ;; The next step worked out ahead (cache5.asm): band A's and band 2's
@@ -65,4 +55,4 @@ rs4
     jr c4_n
 
 cache4_end
-    ASSERT cache4_end <= STAGE_A && STAGE_A+8*(1+NGROUPS+NFAR) <= #8000
+    ASSERT STAGE_A+8*(1+NGROUPS+NFAR) <= #8000

@@ -10,7 +10,8 @@
 ;; so the track is as long as its list, and another list can follow from
 ;; any entry on - the road first brought to the flat (course_set). A
 ;; stage's list ends at a fork: the next stage's follows, the one on the
-;; side of the road the car is on then (stage_fork).
+;; side of the road the car is on then (stage_fork). A list's 0,16 + n has
+;; the lanes n from there on (lane_ask).
 ;; ===========================================================================
 
 COURSE_AHEAD EQU 8              ; entries kept worked out past the camera's
@@ -130,6 +131,8 @@ ce_next                                 ; the next segment
     ld c,(hl)
     or a
     jr nz,ce_load
+    bit 4,c
+    jr nz,ce_lanes
     dec c                               ; 0,1: straight on for good
     ld b,a
     ret z
@@ -138,6 +141,14 @@ ce_next                                 ; the next segment
     call z,stage_fork                   ; 0,2: the next stage's (its props
     ld (crs_ptr),hl                     ; from its first entry on)
     ld (crs_start),hl
+    jr ce_next
+ce_lanes                                ; 0,16 + n: n lanes from here on
+    inc hl                              ; (lane_ask: LANE_IN on)
+    ld (crs_ptr),hl
+    ld a,c
+    and 7
+    ld hl,(crs_z)
+    call lane_ask                       ; (common.asm)
     jr ce_next
 ce_load
     inc hl

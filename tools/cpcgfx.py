@@ -142,7 +142,9 @@ ROWS = SCR_H - ROAD_Y       # 84 rows: the road's shape
 NEAR_ROW = ROAD_LINES       # 80: the nearest row drawn
 HORIZON_Y = ROAD_Y - 1      # row r sits on line HORIZON_Y + r when flat
 
-LANES = 4
+LANES = 4                   # the lanes the road starts with: 4, 3 or 2 -
+                            # the track changes them (course.py L), and the
+                            # road's width with them (lane_half)
 LANE_W_BOTTOM = 50          # pixels per lane on the bottom line (car is 45)
 KERB_BOTTOM = 16            # kerb width on the bottom line, pixels
 LINE_BOTTOM = 3             # lane line width on the bottom line, pixels
@@ -401,16 +403,41 @@ def road_row_pixels(half, band, lanes=LANES):
         pens[i] = b["kerb"]
         pens[2 * total - 1 - i] = b["kerb"]
     if lw:
-        # lane lines: the middle one centred, the others 2 * (half // 2)
-        # pixels either side - a whole number of bytes, so that the rounding
-        # of road_shift can keep them straight - and as wide again outwards
-        assert lanes == 4
-        c = 2 * (half // 2)
-        for start in (total - c - lw, total - lw // 2, total + c):
+        for start in lane_line_starts(half, lanes, lw, total):
             for i in range(start, start + lw):
                 if kw <= i < 2 * total - kw:
                     pens[i] = b["line"]
     return pens, total
+
+
+def lane_line_starts(half, lanes, lw, total):
+    """Where a row's lane lines start, pixels from its left kerb's outer
+    edge (the centre being `total` in): with four lanes the middle one
+    centred, the others 2 * (half // 2) pixels either side - a whole number
+    of bytes, so that the rounding of road_shift can keep them straight -
+    and as wide again outwards; with two the middle one alone; with three,
+    two lines c either side and outwards, c the whole bytes nearest a third
+    of the asphalt (less a line) - the lanes as wide as each other."""
+    if lanes == 4:
+        c = 2 * (half // 2)
+        return (total - c - lw, total - lw // 2, total + c)
+    if lanes == 2:
+        return (total - lw // 2,)
+    assert lanes == 3
+    c = lane3_c(half, lw)
+    return (total - c - lw, total + c)
+
+
+def lane_half(half, lanes):
+    """A row's asphalt half-width with `lanes` lanes, as wide as four's
+    each: `half` (row_half_bytes, four's) scaled, in whole bytes."""
+    return max(MIN_HALF, (half * lanes + 2) // 4)
+
+
+def lane3_c(half, lw):
+    """Three lanes: how far either side of the centre the lines are, pixels
+    (even)."""
+    return 2 * int((2 * half - lw) / 6 + 0.5)
 
 
 # ---------------------------------------------------------------------------

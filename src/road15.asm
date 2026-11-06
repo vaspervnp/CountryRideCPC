@@ -220,6 +220,23 @@ rp_rows_op                                            ; one, flag 1
     xor a
     ret
 
+;; lane_road - (cache.asm lane_can; here for room) the car on the grass
+;; from OFFROAD_X - 5 a lane - on either way (player.asm sp_off, sndgame.asm
+;; sf_off): lane_now's. Destroys AF, B.
+lane_road
+    ld a,(lane_now)
+    ld b,a
+    add a,a
+    add a,a
+    add a,b
+    dec a
+    ld (sp_off+1),a                     ; OFFROAD_X - 1
+    ld (sf_off+1),a
+    add a,a
+    inc a
+    ld (sp_off+3),a                     ; 2 OFFROAD_X - 1
+    ld (sf_off+3),a
+    ret
 
 road15_end
     ASSERT road15_end <= FRAG15+FRAG_LEN
