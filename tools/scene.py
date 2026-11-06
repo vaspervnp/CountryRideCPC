@@ -877,7 +877,9 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
     more bent - and then on its own row's (a narrower road, bent hard: its
     lower lines' bend less than its top's and are not that much wider),
     each as wide as its lanes are (`lanes`: row_lanes'): only the road is
-    drawn afresh where it was (rp_force)."""
+    drawn afresh where it was (rp_force). In a lane of two (7, 8: both
+    outer ones) only on its own row's, for ours to go by in the other: its
+    lines are drawn afresh whole then (to_whole)."""
     rows = project(hill)
     far = next(r for r in rows if r)            # the furthest row in sight
     road_top = ROAD_Y + ground_lines(hill)
@@ -905,7 +907,7 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
             place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
         left = traffic_centre(curve, r, x) + place
         rt = rows[y0 - ROAD_Y]                  # the row its top line shows,
-        for q in (rt, r):                       # then its own
+        for q in (rt, r) if lane < 7 else (r,):  # then its own
             ct, edge = traffic_centre(curve, q, x), traffic_edge(q, row_lanes(q, lanes))
             left = ct + max(min(left - ct, edge - wb), -edge)
         if left < 0 or left + wb > SCR_W // 2:

@@ -87,18 +87,39 @@ def ramp(h, k):
     return out
 
 
+# On a road of two lanes, half as wide as four's, a curve has half the room
+# for carrying the car out (src/game.asm steer): there each is LANE2_GENTLER
+# levels gentler than written, but not below 3 (a lower one as it is). At
+# full speed, the full lock held against them, the first two cars are
+# carried out at most 0.9 and 1.4 times the road's room then (2.0 and 2.9
+# before) - about as on three lanes; the other two cars hold them all.
+LANE2_GENTLER = 2
+
+
+def gentle(segs):
+    out, lanes = [], 4
+    for n, v in segs:
+        if n == 0:
+            lanes = v - 16
+        elif lanes == 2 and v and abs(v) <= G.CURVE_K:
+            k = max(abs(v) - LANE2_GENTLER, min(abs(v), 3))
+            v = k if v > 0 else -k
+        out.append((n, v))
+    return out
+
+
 # The demo's loop: 256 entries, round and round - four lanes, three, two.
-DEMO = [L(4), H(24, 95), F(4), C(30, 5), F(12), H(16, -60), L(3), H(20, 60),
-        F(8), C(30, -7), F(12), H(16, 70), L(2), H(20, -90), F(8), C(28, 7),
-        F(12), H(16, 60)]
+DEMO = gentle([L(4), H(24, 95), F(4), C(30, 5), F(12), H(16, -60), L(3),
+               H(20, 60), F(8), C(30, -7), F(12), H(16, 70), L(2), H(20, -90),
+               F(8), C(28, 7), F(12), H(16, 60)])
 
 
 def stage(segs):
-    """A stage's segments, a straight to the checkpoint making it
+    """A stage's segments (gentle), a straight to the checkpoint making it
     STAGE_LEN entries."""
     n = sum(n for n, v in segs)
     assert n <= STAGE_LEN - 8, n
-    return segs + [F(STAGE_LEN - n)]
+    return gentle(segs) + [F(STAGE_LEN - n)]
 
 
 # The race: five stages, one after the other - the first, then at each

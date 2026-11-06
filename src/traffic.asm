@@ -103,14 +103,33 @@ rp_force_all
     pop ix
     ret
 
-;; IX = a car's lines of last time (tr_drawn): rp_force's - or, if it stood
-;; out over the grass (bit 7 of the first: to_fit's), every one drawn
-;; whole (flag 0). Keeps BC, DE.
+;; IX = a car's lines of last time (tr_drawn): rp_force's - unless it stood
+;; out over the grass (bit 7 of the first: to_whole): rp_cars_whole's
+;; then. Keeps BC, DE.
 rp_force_car
     bit 7,(ix+0)
     jp z,rp_force
-    push bc
-    push de
+    ret
+
+;; ---------------------------------------------------------------------------
+;; rp_cars_whole - (rp_done: every line flagged by then - rp_force_all comes
+;; before the lines after a moved row are, and on rp_near_go's way not at
+;; all) the lines this buffer's cars stood on last time where one stood out
+;; over the grass (bit 7 of its first: to_whole) drawn whole: flag 0.
+;; Destroys AF, BC, DE, HL.
+;; ---------------------------------------------------------------------------
+rp_cars_whole
+    push ix
+    ld ix,(tr_rngp)
+    call rp_car_whole
+    inc ix
+    inc ix
+    call rp_car_whole
+    pop ix
+    ret
+rp_car_whole
+    bit 7,(ix+0)
+    ret z
     ld a,(ix+1)
     cpl
     add a,LAST_Y+1
@@ -120,7 +139,7 @@ rp_force_car
     cpl
     add a,LAST_Y+1
     sub l
-    jr c,rfc_none
+    ret c
     inc a
     ld b,a
     ld h,0
@@ -129,15 +148,12 @@ rp_force_car
     ld de,(rp_slot)
     add hl,de
     ld de,4
-rfc_line
+rcw_line
     ld a,(hl)
     and #FC
     ld (hl),a
     add hl,de
-    djnz rfc_line
-rfc_none
-    pop de
-    pop bc
+    djnz rcw_line
     ret
 
 ;; A = H = 16 random bits' high byte (xorshift 7, 9, 8), L the low.
@@ -987,7 +1003,11 @@ to_near
     ld (to_own+1),a
     ; ... but on the road on its top line's row - narrower and bent more
     ; than its own - and then on its own row's (a narrow road bent hard:
-    ; its lower lines bend less and are not that much wider): to_fit
+    ; its lower lines bend less and are not that much wider): to_fit. On
+    ; two lanes - both outer ones - on its own row's alone: kept on the top
+    ; line's, a near car stood a few bytes too far in for ours to go by in
+    ; the other lane. Its lines are drawn whole when it is taken away then
+    ; (to_whole).
 to_entry
     ld a,0                              ; (self-modified: its top line's
 to_rows                                 ; entry)
@@ -1000,7 +1020,9 @@ to_rows                                 ; entry)
     ld c,(hl)                           ; C = the row there
     ld a,c
     ld (to_top+1),a
-    call to_fit
+    ld a,(ix+TR_LANE)
+    cp 7
+    call c,to_fit                       ; (not on two lanes)
 to_own
     ld c,0                              ; (self-modified: its own row)
     call to_fit
@@ -1010,10 +1032,10 @@ to_top
     call to_fit
     pop af
     cp b                                ; on both? If not (a narrow road
-    ld b,a                              ; bent hard), its lines are drawn
-    ld a,0                              ; whole when it is taken away (bit
-    jr z,$+4                            ; 7 of the first noted: to_whole,
-    ld a,#80                            ; rp_force_car)
+    ld b,a                              ; bent hard, two lanes), its lines
+    ld a,0                              ; are drawn whole when it is taken
+    jr z,$+4                            ; away (bit 7 of the first noted:
+    ld a,#80                            ; to_whole, rp_force_car)
     ld (to_whole+1),a
     ld a,b
     xor #80                             ; (+ 128: unsigned)

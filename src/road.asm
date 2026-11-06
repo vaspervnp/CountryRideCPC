@@ -411,6 +411,7 @@ rp_zlo4
 ;; are already right at the end of the list are not even looked at.
 rp_done
     call rp_lane_whole                  ; (road6.asm: lanes changed)
+    call rp_cars_whole                  ; (traffic.asm: cars over the grass)
     ld hl,(rp_tail)
     ld (hl),lo(tmpl_end)
     inc hl

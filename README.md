@@ -152,7 +152,7 @@ routes, nine stages:
 | Stage | Left | Right |
 |---|---|---|
 | 1 | COUNTRYSIDE: curves and hills by turns; green and lime | |
-| 2 | DESERT: long straights, big crests, sharp curves; sand, dark red rock | RIVIERA: the coast, sweeping and gentle; sea green, a cyan haze |
+| 2 | DESERT: long straights, big crests; sand, dark red rock | RIVIERA: the coast, sweeping and gentle; sea green, a cyan haze |
 | 3 | SUMMIT: hill after hill; snow and ice | MESA: canyons, deep dips, sharp curves; orange rock, a pink haze |
 | 4 | SUNSET: long sweeping curves; an orange and pink sky, dark grass | AUTUMN: winding over hills; lime and olive, orange bushes |
 | 5 | NIGHT: winding; a dark sky, dark grass and navy | STORM: grey skies, hard curves |
@@ -258,7 +258,8 @@ carries it out of it: on a level 7 curve at its top speed 1.50, 1.24,
 lock holds: at their top speeds the cars with grip 2 or 3 have to slow
 down for curves sharper than level 3, those with grip 4 or 5 for curves
 sharper than level 5 (Steering, below). (Since 2026-11-05 the curves carry
-the car out 15% more.)
+the car out 15% more.) On two lanes the curves are gentler (The track,
+below): none sharper than level 5.
 
 ![Picking a car](docs/screen-select.png)
 
@@ -571,7 +572,12 @@ from 24 entries before an `L` to 28 after it (`check_lanes`), as the
 lanes change with no step worked out ahead (below) - and in the race no
 hill either: the road can still be a level into the curve before, and
 bent on a hill that moves, with a jump, the change's bit more made a
-picture late.
+picture late. On two lanes, half as wide as four, a curve has half the
+room to carry the car out, so each is two levels gentler than written
+(`gentle`: 7 is 5, 6 is 4, 5 and 4 are 3, not below 3) - at their top
+speeds the first two cars are carried out at most 0.9 and 1.4 times the
+road's room there with the full lock held (2.0 and 2.9 before), about as
+on three lanes, and the other two hold every curve of two lanes.
 
 ### Lanes
 
@@ -912,7 +918,15 @@ looks like, and `src/traffic.asm` has to match it.
   wide as that row's lanes (`tr_edge2`-`tr_edge4`), so it does not stand
   out over the grass - or, where it cannot be on both (two lanes in a
   sharp curve), its lines are drawn whole when it is taken away
-  (`rp_force_car`) instead of only their road.
+  (`rp_cars_whole`, at the end of `road_project`, once every line has
+  its flag) instead of only their road. On two lanes, though, both of
+  them outer ones, it is kept on its own row's road alone: on the top
+  line's a near car stood 3-4 bytes too far in, and ours, going by in the
+  other lane, touched it (a bump) unless it went by on the kerb. Where its
+  top lines stand out over the grass then, they are drawn whole the same
+  way: the races' heaviest picture is 39.0 ms (38.6 before). On two-lane
+  stages the test autopilot now bumps into ~6 cars a stage (19 before),
+  as on the others.
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
@@ -1423,4 +1437,8 @@ docs/           screenshots
   now) - a level a row, which the cache, made a level at a time, does not
   allow;
 - a taper where the lanes change (the road's edge steps in now, at
-  `lane_z`): rows of widths between, which band 0 has no cores for.
+  `lane_z`): rows of widths between, which band 0 has no cores for;
+- the outer lanes of three and four on their own rows' roads too, as two's
+  are: going by from the middle lane of three, ours touches a car in an
+  outer one by 1-2 bytes now - though every far car in an outer lane
+  would have its lines drawn whole then, on the wider, heavier roads.
