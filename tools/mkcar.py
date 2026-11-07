@@ -32,6 +32,21 @@ from cpcgfx import PEN, pen_rgb  # noqa: E402
 CELLS = (64, 40)
 CELL_PX = (16, 8)
 MID = CELLS[0] // 2
+# the race's cars - the player's and the traffic - are drawn this much of
+# their renders' width (narrow(); since 2026-11-07, 20% narrower)
+NARROW = 0.8
+
+
+def narrow(im, k=NARROW):
+    """The render squeezed across to k of its width about its middle (the
+    screen's), in a frame as wide as it was: each pixel the mean of what
+    it covers."""
+    w, h = im.size
+    nw = int(round(w * k / 2)) * 2
+    small = im.convert("RGBa").resize((nw, h), Image.BOX).convert("RGBA")
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    out.paste(small, ((w - nw) // 2, 0))
+    return out
 
 # letter -> pen, as scene.py CAR_PEN
 LETTERS = dict(R="RED", O="ORANGE", Y="YELLOW", K="BLACK", G="GREY",

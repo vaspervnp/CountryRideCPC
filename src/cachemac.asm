@@ -98,7 +98,7 @@ tm_{n}_page
     ld a,(hl)
     sub c                               ; lo(lg) + PAIRS - l
     cp lo({lg})+1
-    jr c,@none_r                        ; l >= PAIRS: none of it either
+    jp c,@none_r                        ; l >= PAIRS: none of it either
     cp lo({lg})+PAIRS+1
     jr nc,@both                         ; l < 0: cut off on the left too
     ld iyh,a
@@ -179,8 +179,9 @@ MEND
 
 ;; TM_ENTRY - A = j, C's bit 0 j's, B = a core's code's low byte, HL = its
 ;; entry table (re_..., the code's page): HL = pair j's code - the entry
-;; table has every other pair's; an odd pair is 1 byte on, or 4 after LD
-;; BC,nn / PUSH BC. Destroys AF.
+;; table has every other pair's; an odd pair is 1 byte on, 4 after LD BC,nn
+;; / PUSH BC, or 6 after an odd core's right edge (EXX ... EXX: mkroad.py
+;; compile_variant). Destroys AF.
 MACRO TM_ENTRY
     srl a
     add a,l
@@ -193,7 +194,12 @@ MACRO TM_ENTRY
     ld a,(hl)
     inc l
     cp 1
+    jr z,@ldbc
+    cp #D9
     jr nz,@even
+    inc l
+    inc l
+@ldbc
     inc l
     inc l
     inc l

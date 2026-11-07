@@ -131,48 +131,51 @@ def stage(segs):
 # Each its colours (pen: firmware colour) - the sky, the haze, the far
 # mountains, the grass and the bushes - and its trees; its name for the
 # fork's message; its traffic: the pictures at least between two cars
-# coming (src/traffic.asm tr_pauses, and 0-31 more at random), fewer the
+# coming (src/traffic.asm tr_pauses, and 0-15 more at random), fewer the
 # further on - and on a fork's right than on its left. Measured (the
 # autopilot, the ROSSO GT), the cars on the road on average for a pause:
 # 0.9 for 64, 1.2 for 48, 1.55 for 32, 1.8 for 20, 2 (all there can be)
-# from 10 down; a slower car has more about it.
+# from 10 down; a slower car has more about it - that with 0-31 more,
+# before 2026-11-07: since, every speed is 1.5 times and the pauses 2/3 as
+# long: 2/3 of a pause and of the 15.5 the random part was on average,
+# less the 7.5 it is now (64 then is 46 now, 48 35, 32 24, 20 16, 10 10).
 STAGES = [
-    dict(name="COUNTRYSIDE", traffic=64, pens={}, trees=["dead"],
+    dict(name="COUNTRYSIDE", traffic=46, pens={}, trees=["dead"],
          segs=stage([L(4), F(28), C(24, 3), F(12), H(28, 70), F(6), C(30, -4),
                      F(4), C(24, 4), F(24), L(3), F(28), C(32, 5), F(12),
                      H(24, 80), F(6), C(28, -5), F(12), H(30, -70)])),
-    dict(name="DESERT", traffic=48,             # long straights, big crests
+    dict(name="DESERT", traffic=35,             # long straights, big crests
          pens=dict(HAZE=25, GRASS_A=25, GRASS_B=24, BUSH=12, MAUVE=3),
          trees=["palm", "dead", "stump"],
          segs=stage([L(2), F(30), H(40, 95), F(20), C(30, 7), F(24),
                      H(36, -90), F(16), C(26, -7), F(30), H(40, 95), F(20),
                      C(30, 6)])),
-    dict(name="RIVIERA", traffic=40,            # the coast: sweeping, gentle
+    dict(name="RIVIERA", traffic=30,            # the coast: sweeping, gentle
          pens=dict(HAZE=20, GRASS_A=22, GRASS_B=19, BUSH=9, MAUVE=2),
          trees=["palm"],
          segs=stage([L(3), F(32), C(40, 4), F(10), C(36, -5), F(12),
                      H(28, 60), F(8), C(44, 5), F(24), L(2), F(28), C(40, -6),
                      F(10), C(36, 4)])),
-    dict(name="SUMMIT", traffic=32,             # hill after hill
+    dict(name="SUMMIT", traffic=24,             # hill after hill
          pens=dict(HAZE=26, GRASS_A=23, GRASS_B=26, BUSH=9, MAUVE=11),
          trees=["dead"],
          segs=stage([L(2), F(28), H(30, 90), F(4), H(28, -90), F(6),
                      C(24, -5), F(12), H(26, 95), F(4), H(32, -80), F(6),
                      C(30, 6), F(12), H(24, 85), F(4), H(30, -90), F(6),
                      C(22, -6)])),
-    dict(name="MESA", traffic=28,               # canyons: deep dips, sharp
+    dict(name="MESA", traffic=22,               # canyons: deep dips, sharp
          pens=dict(HAZE=16, GRASS_A=15, GRASS_B=12, BUSH=3, MAUVE=3),
          trees=["dead", "stump"],
          segs=stage([L(3), F(28), H(36, -95), F(10), H(30, 85), F(12),
                      C(26, 7), F(8), C(26, -6), F(12), H(40, -90), F(8),
                      C(30, 6), F(12), H(28, 95), F(12), C(24, -7)])),
-    dict(name="SUNSET", traffic=20,             # long sweeping curves
+    dict(name="SUNSET", traffic=16,             # long sweeping curves
          pens=dict(BLUE=4, SKY=16, PASTEL=15, HAZE=25, GRASS_A=9, GRASS_B=19,
                    BUSH=0, MAUVE=7),
          trees=["palm", "stump"],
          segs=stage([L(4), F(32), C(60, 5), F(6), C(56, -6), F(24), L(3),
                      F(28), C(48, 6), F(6), C(44, -4), F(12), H(28, -80)])),
-    dict(name="AUTUMN", traffic=16,             # winding, over hills
+    dict(name="AUTUMN", traffic=14,             # winding, over hills
          pens=dict(HAZE=25, GRASS_A=12, GRASS_B=9, BUSH=15, MAUVE=7),
          trees=["dead", "stump"],
          segs=stage([L(3), F(32), C(28, 5), F(6), C(28, -5), F(12),
@@ -186,7 +189,7 @@ STAGES = [
                      F(12), H(28, 80), F(4), C(20, -7), C(20, 7), F(12),
                      H(30, -90), F(4), C(24, -6), C(24, 6), F(12), H(26, 95),
                      F(4), C(28, -7)])),
-    dict(name="STORM", traffic=4,               # grey skies, hard curves
+    dict(name="STORM", traffic=6,               # grey skies, hard curves
          pens=dict(BLUE=1, SKY=13, PASTEL=14, HAZE=13, GRASS_A=9, GRASS_B=13,
                    BUSH=0, MAUVE=1),
          trees=["dead"],

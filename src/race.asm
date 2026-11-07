@@ -253,7 +253,7 @@ rules_start
     jp course_set
 
 ;; the best times, as total_time: m, s tens, s units, cs tens, cs units
-times_tab   defb 3,3,0,0,0, 3,4,0,0,0, 3,5,0,0,0, 4,0,0,0,0, 4,1,0,0,0
+times_tab   defb 2,3,7,5,0, 2,4,5,0,0, 2,5,2,5,0, 3,0,0,0,0, 3,0,7,5,0
     ASSERT $-times_tab == TIMES*5
 times_new   defb 0              ; the last race's place among them (0: none)
 demo_slot   defb 0              ; the demo's message line's slot

@@ -763,6 +763,19 @@ def cars_asm(pieces, ends, codes, traffic):
               for a, d, c in traffic]
         for j, (addr, dest, code) in enumerate(ps + tr):
             if j == len(ps):
+                # (a car's records too short for that: one onto itself -
+                # at least a byte, as LDIR's 0 is 65536 - to get there)
+                pad = "car%d_pad" % n
+                lines += [pad,
+                          "    IF %s+5 <= #%04X" % (pad, TRAF_BLOB_MIN),
+                          "    defw %s+4,#%04X-%s-4" % (pad, TRAF_BLOB_MIN, pad),
+                          "    defs #%04X-%s-4" % (TRAF_BLOB_MIN, pad),
+                          "    ELSE",
+                          "    IF %s < #%04X" % (pad, TRAF_BLOB_MIN),
+                          "    defw %s+4,1" % pad,
+                          "    defs 1",
+                          "    ENDIF",
+                          "    ENDIF"]
                 lines += ["car%d_traffic" % n,
                           "    ASSERT car%d_traffic >= #%04X   ; (read before they go there)"
                           % (n, TRAF_BLOB_MIN)]
@@ -1099,7 +1112,7 @@ def main():
     emit(";; (scene.py CAR_LEVELS; car_setup)")
     emit("car_stats")
     for c, (sp_, ac, gr) in enumerate(S.CAR_LEVELS):
-        drift = S.GRIP[gr][1]
+        drift = S.car_push_m(c)
         steer_ = S.car_steer_k(c)
         emit("    defw #%04X   ; %s: speed %d, acceleration %d, grip %d"
              % (S.TOP_SPEED[sp_], S.CARS[c], sp_, ac, gr))

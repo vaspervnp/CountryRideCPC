@@ -112,13 +112,15 @@ lanes before they begin.
 | ![Four lanes](docs/screen-flat.png) | ![Narrowing](docs/screen-narrowing.png) | ![Three lanes](docs/screen-lanes3.png) | ![Two lanes](docs/screen-lanes2.png) |
 
 It has thick red and white kerbs. The asphalt is plain grey; the kerbs, the
-lane dashes and, nearer, the grass are striped, in short bands - since
-2026-11-05 half as long as they were, so the road seems to run by twice as
-fast, with the car no faster. The dashes move nearly all the way to the
-horizon: past the striped zone they get longer with distance, so they don't
-flicker, and in the farthest nine rows, too far apart for any dash, they
-stand still. The road never narrows to a point: far away it is still 10
-pixels wide, kerb to kerb.
+lane dashes and, nearer, the grass are striped, in bands 64 depth units
+long, the grass's 128. (From 2026-11-05 to 2026-11-07 they were half as
+long, so that the road seemed to run by twice as fast with the car no
+faster; at 1.5 times the speed - 2026-11-07 - the grass changed on more
+lines than the pictures could draw whole, and a picture on a hill was late
+now and then.) The dashes move all the way to the horizon: past the
+striped zone they get longer with distance, so they don't flicker. The
+road never narrows to a point: far away it is still 10 pixels wide, kerb
+to kerb.
 
 Bushes stand on the grass on either side, at random intervals, in three
 sizes and at different distances from the road. They grow as they come
@@ -135,10 +137,13 @@ and one for its tail, out of fourteen: hundreds of different cars.
 Fire pressed while the demo drives, GET READY: the road ahead flattens
 out and straightens, the car brakes to a standstill in the third lane from
 the left, the count goes 3, 2, 1 in the gear's place, and GO! - the player
-drives, from a standstill. TIME starts at 70 seconds and counts down; TOTAL
-TIME counts up.
+drives, from a standstill. TIME starts at 53 seconds and counts down; TOTAL
+TIME counts up. (Since 2026-11-07 every speed is half as much again as it
+was, and the times three quarters - the races take about three quarters
+of the time, as the bumps and the crashes take as long as they did: TIME
+started at 70.)
 
-A race is five stages of 12288 depth units each (about 40-50 seconds),
+A race is five stages of 12288 depth units each (about 27-33 seconds),
 each with its own track and colours - the sky near the horizon, the haze,
 the far mountains, the grass and the bushes. The first is always the
 countryside; at the end of each of the others' predecessors the road
@@ -178,7 +183,7 @@ autopilot; a slower car has more about it: 1.2 to 2 for the TOURING),
 below).
 
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
-50 more seconds (EXTENDED TIME), 2 fewer at each next one, down to 36, and
+37 more seconds (EXTENDED TIME), 1 fewer at each next one, down to 27, and
 never over 99; then the next stage's number shows, and its colours are
 there at once. Past the fifth, FINISH: the car brakes to a standstill on
 the straight that follows, and TOTAL TIME is the race's - FASTEST TIME!
@@ -190,9 +195,11 @@ road has flattened out. (`rules_vbl` in `src/game.asm`; the numbers are
 its `START_TIME`, `EXT_FIRST`, `EXT_DROP`, `EXT_MIN`; the stages are
 `tools/course.py`.) The autopilot used for testing - keeping to a lane,
 out of the traffic's way, often bumping it, never slowing down for a
-curve - finishes, taking the left at every fork, with 34 seconds left in
-the ROSSO GT, 24 in the BERLINETTA, 15 in the WEDGE TURBO and 10 in the
-TOURING.
+curve - finishes, taking the left at every fork, with 28 seconds left in
+the ROSSO GT, 31 in the BERLINETTA, 19 in the WEDGE TURBO and 25 in the
+TOURING (34, 24, 15 and 10 before 2026-11-07, at two thirds of the speed;
+with the times two thirds of what they were, as they were for a while
+then, 5, 8, none and 9).
 
 The messages - PRESS FIRE (blinking in the demo), GET READY, GO!, STAGE 1-5,
 a fork's two stages, EXTENDED TIME, TIME UP, FINISH, FASTEST TIME!, GAME
@@ -204,7 +211,7 @@ and it goes on.
 
 The five best times to the finish are kept as long as the machine is on:
 in the demo the message line shows PRESS FIRE (5 seconds), then TOP TIMES
-and each of the five - its place and its TOTAL TIME, 3'30"00 to 4'10"00
+and each of the five - its place and its TOTAL TIME, 2'37"50 to 3'07"50
 before any race has beaten them - 1.3 seconds each. A race that finishes
 faster than one of them takes its place, the slower ones moving down; the
 demo then starts with them, and its own blinks (`src/race.asm`).
@@ -248,10 +255,13 @@ drives the car):
 | WEDGE TURBO | 4 | 3 | 5 |
 | TOURING | 3 | 5 | 4 |
 
-Speed 5 is the top speed of 6.6 depth units a VSYNC - the most the
-pictures keep up with - 4 is 6.1, 3 is 5.7; on the grass, half. Acceleration
-3 to 5 is 4 to 6 (1/256 depth units a VSYNC, every VSYNC): full speed in 8.4
-to 5.6 seconds. Grip is how fast the car is steered across - at the full
+Speed 5 is the top speed of 9.8 depth units a VSYNC - 4 is 9.2, 3 is 8.5;
+on the grass, half (since 2026-11-07 half as much again as they were: 6.6,
+6.1 and 5.7). Acceleration 3 to 5 is 6 to 9 (1/256 depth units a VSYNC,
+every VSYNC; 4 to 6 till then): full speed in 7.8 to 4.9 seconds, as
+before. The curves' m is two thirds of what it was, so that a curve
+carries a car out as far at a share of its top speed as it did
+(`scene.SPEED_UP`). Grip is how fast the car is steered across - at the full
 lock 0.62, 0.66, 0.84 or 0.87 pairs a picture with grip 2, 3, 4 or 5 (since
 2026-11-06 25%, 30%, 25% and 30% more than half a pair, 2/3 with grip 4 or
 5: `scene.py` `STEER_MORE`, a factor a car) - and how little a curve
@@ -267,8 +277,9 @@ lanes the curves are gentler (The track, below): none sharper than level
 
 ![Picking a car](docs/screen-select.png)
 
-In the race the car is seen from behind, low down, 40 or 44 pixels wide
-and up to 26 lines high, a little above the bottom of the screen. Steering,
+In the race the car is seen from behind, low down, 32 or 36 pixels wide
+(40 or 44 till 2026-11-07, when every car - the player's and the traffic -
+was made 20% narrower) and up to 26 lines high, a little above the bottom of the screen. Steering,
 it is seen turning, OutRun's way: turning left, it turns about its rear
 axle, its nose going left, the left flank and the hubs of its tyres in
 view. Moving over to another lane - steered that way and going that way
@@ -300,8 +311,10 @@ whole lines:
 The drawings and photographs themselves are not in the repository. The
 ROSSO GT's picture is an image made by an AI (it was found as "Ferrari
 Drago Rosso"), of no real car: from behind, where the race sees it, it is
-a Testarossa. They are brought
-to mode 0 in flat colours, with no dithering and no outline (since
+a Testarossa. Each render is squeezed across to 0.8 of its width about
+its middle (`mkcar.narrow`, `NARROW`: since 2026-11-07 the cars are 20%
+narrower than their models; the dust of the spun views with them), then
+brought to mode 0 in flat colours, with no dithering and no outline (since
 2026-11-05; `tools/mkcars.py` `flat_pens`, `tools/dither.py`): each mode 0
 pixel takes the mean colour of the render pixels of the car under it -
 half of them at least, else it is clear - made more saturated and its
@@ -501,15 +514,20 @@ the fragments, which it copies out, two to a block where the HUDs go later.
 
 The road is made of 80 rows (its shape is laid out over 84, as if it went
 on to the screen's last line). Each row has a depth, and its stripe band is a
-bit of (depth + camera position): bit 5, a band 32 depth units long, and
-the grass's bit 6. The road code has both doubled (`STRIPE_K`, `rp_zsets`),
-so that in their low bytes its band is bit 6 and the grass's bit 7, as when
-the bands were twice as long. For every row width, band and pixel parity,
+bit of (depth + camera position): bit 6, a band 64 depth units long, and
+the grass's bit 7. (With the bands half as long the road code had both
+doubled, `STRIPE_K` 2 - `rp_zsets` - so that in their low bytes the bits
+stayed where they are.) For every row width, band and pixel parity,
 `tools/mkroad.py` generates straight-line code that draws the row with
 `PUSH` instructions:
 
 - the asphalt and the kerbs come from registers;
 - everything else comes from `LD BC,nn / PUSH BC`;
+- at an odd byte the code covers a byte more either side, the grass: from
+  the grass's register, the other byte of its pair as `LD C,n` (or `LD
+  B,n`) puts it (since 2026-11-07; till then kerb, and the kerb's outer
+  edge stepped 4 pixels at a time, its inner one 2, so that the kerbs
+  looked jagged);
 - the grass is shared blocks of 48 pushes, entered part-way.
 
 A *template* says how to draw a row: where to enter the code, how much grass
@@ -656,13 +674,14 @@ Left or right turns the wheel (`steer_s`) towards the full lock, neither
 brings it back, 28 of 127 a picture at most: 0.2 s to the full lock, 0.4
 s from one to the other (Out Run: 64 a step, ~10.9 steps a second). At
 the full lock the car moves 0.62-0.87 pairs (2.5-3.5 pixels) a picture -
-the more, the more grip it has - from a speed of 4 depth units a VSYNC on
+the more, the more grip it has - from a speed of 6 depth units a VSYNC on
+(4 till 2026-11-07)
 (Out Run: 128 of its 193), less as much as it is slower, not at all
 standing still. (Till 2026-11-06 half a pair, 2/3 with grip 4 or 5; till
 2026-11-04 twice that: as Out Run's, by the road's width, a third less.)
 Left or right held, the top speed on the road is a gauge segment lower
 (`STEER_LOSS`: `steer` sets `speed_player`'s `sp_max`), and the car slows
-down to it 12/256 depth units a VSYNC, as on the grass - ~0.35 s from the
+down to it 18/256 depth units a VSYNC, as on the grass - ~0.35 s from the
 top speed.
 A curve carries it out of it, in proportion to the speed and more than to
 the curve level - level *L* by *L* (1 + *L*/14) (`push_levels`), the
@@ -799,8 +818,8 @@ art and works out where they go, and `src/bush.asm` has to match it.
   line from *h / r* as for the road. Off the middle it moves exactly as far
   as its row's group does (`rd_gp`, kept by the cache), so it keeps its
   place beside the kerb; it stands a byte further out than its lateral
-  class says, as at an odd byte a row's kerb is a byte wider (the core's
-  parity). It is drawn while its centre is on the screen and its row is not
+  class says, as at an odd byte a row's kerb was a byte wider till
+  2026-11-07 (the core's parity). It is drawn while its centre is on the screen and its row is not
   behind a crest.
 - **Drawing.** The grass is plain, so a sprite is drawn as it is, with no
   mask: a run of whole pairs of bytes a line, the grass between its leaves
@@ -885,14 +904,19 @@ lines (CARn.BIN), the drawing in bank 7 and fragment 0.
 
 ### Traffic
 
-Up to two cars drive ahead at 3 depth units a VSYNC; the player catches up
+Up to two cars drive ahead at 4.5 depth units a VSYNC (3 till 2026-11-07,
+`TR_SPEED` in halves); the player catches up
 with them and passes. Their art is rendered in Blender
 (`tools/traffic3d.py`): a common body, two tops (closed: a coupé's cabin;
 open: a windscreen, headrests and a driver) and three tails (a sports car's
 round lamps, a saloon's wide clusters, a GT's light bar), at eight sizes -
 of which the game has half since 2026-11-05, for room: the closed top, the
 sports car's and the saloon's tails (`TOPS`, `BOTTOMS`; 2.4K of code
-instead of 3.7K); `tools/mktraffic.py` brings them to the pens (`tools/trafficart.py`) in
+instead of 3.7K, 2.1K since they are narrower); `tools/mktraffic.py`
+squeezes them across as the player's car (since 2026-11-07, 0.8 of their
+width - the nearest size 0.78 and the fourth 0.82, which their bytes round
+better: 28, 24, 20, 20, 16, 12, 8 and 8 pixels wide, 36 down to 8 in fours
+before; `NARROW_SIZE`) and brings them to the pens (`tools/trafficart.py`) in
 flat colours, with no dithering (since 2026-11-05, as the player's car:
 each cell's own mean colour, the nearest of red, orange, yellow, white,
 dark red and navy; a cell mostly paint in a byte that is not takes its
@@ -907,10 +931,12 @@ looks like, and `src/traffic.asm` has to match it.
 
 - **Coming and going.** A car comes 512 depth units ahead, at the horizon,
   in a lane, with a tail and colours at random, no sooner than its
-  stage's pause after the last one - 64 pictures (2.6 s) in the
-  countryside, fewer further on and on a fork's right, 4 in the storm
+  stage's pause after the last one - 46 pictures (1.8 s) in the
+  countryside, fewer further on and on a fork's right, 6 in the storm
   (`tools/course.py` `traffic`, `tr_pauses` in bank 6, by `stage_id`) -
-  and up to 31 more at random, and at least 160 units behind it; it goes
+  and up to 15 more at random, and at least 160 units behind it (since
+  2026-11-07 two thirds of what they were, as everything goes half as fast
+  again: 64 and up to 31 in the countryside); it goes
   when it has gone by or got away.
 - **Lanes.** A car's lane (`TR_LANE`) is one of four (0-3), of three
   (4-6) or of two (7-8), left to right (`scene.TRAFFIC_LANES`); it comes
@@ -1017,8 +1043,8 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   picture (8 a step), and the player drives off again from a standstill.
   The spin (`spin_views`) is a view each 2 pictures: turning, spun, spun,
   turning one way, then the other - first its nose swung towards the side
-  that was hit, as the blow turns it. A spun view's box is wider (60 pixels, the white car's
-  64), so further than `SPIN_OFF` (16 pairs) from the middle it would run
+  that was hit, as the blow turns it. A spun view's box is wider (52 pixels, the white car's
+  48; 60 and 64 till the cars were made narrower, 2026-11-07), so further than `SPIN_OFF` (16 pairs) from the middle it would run
   off the screen: there `car_lines` shows the car turning instead. Spun,
   the car is seen on the level whatever the slope.
 - **A bush at speed: thrown up.** At `JUMP_SPEED` (4/5 of the top speed)
@@ -1029,7 +1055,8 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   band), in 6 pictures,
   held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
   its shadow on the road under it, three black lines, smaller the higher
-  it is, and a thud as it comes down (`car_shadow`). Never higher than the
+  it is (40 pixels wide a row up, 24 five up: `SHADOW_W`, 26 bytes till
+  2026-11-07, as the car narrower), and a thud as it comes down (`car_shadow`). Never higher than the
   road's top in the picture (`car_jump`): over a crest the ground behind
   it is not drawn again. In each buffer the car's
   lines where it was shown last are drawn whole - the grass's middle
@@ -1227,6 +1254,26 @@ With the wheel 25-40% quicker and a gauge segment lost turning (later on
 a step, begun late - none past 39.5 ms; crashes 37.9 ms at worst; the
 road, the HUD and the screen in the three R5 models as `scene.py` has
 them, for all four cars.
+
+With every car 20% narrower (2026-11-07): the same 24 races, 39.0 ms at
+worst, none past 39.5 ms; crashes 38.6 ms at worst, every picture as
+`scene.py` draws it, the shadow too; the traffic changing lanes and the
+indicators as `scene.py` has them; the road, the HUD and the screen in the
+three R5 models as `scene.py` has them, for all four cars.
+
+With every speed half as much again, the kerbs' outer edge on the byte
+grid and the stripes as long as before 2026-11-05 (later on 2026-11-07):
+the same 24 races, 38.7 ms at worst, none past 39.5 ms; the demo 38.2 ms
+(26.6 ms on average); crashes at the top speed 38.5 ms at worst, every
+picture as `scene.py` draws it; the traffic and the indicators as
+`scene.py` has them; the road, the HUD and the screen as `scene.py` has
+them, for all four cars. With the shorter stripes 14 pictures in 16 races
+were late (40.3 ms at worst, from the flip): all on hills, the rows moved,
+nearly every near line drawn whole - the grass's stripe had changed on
+three in five of them, the camera moving 39 depth units between two
+pictures of a buffer - road_draw ~22 ms and road_project ~9 ms. Also:
+`rp_lane_whole` passes over the nearer lines eight at a time (1.45 ms on a
+picture the lanes change on, now 0.2).
 
 With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
 four routes in the four cars, the clock kept and not, 37.6-38.7 ms at

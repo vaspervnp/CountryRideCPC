@@ -2,4 +2,4 @@
 ;; the stages' traffic (tools/course.py STAGES): the pictures at least
 ;; between two cars coming, by stage_id (src/traffic.asm)
 tr_pauses
-    defb 64,48,40,32,28,20,16,10,4   ; COUNTRYSIDE DESERT RIVIERA SUMMIT MESA SUNSET AUTUMN NIGHT STORM
+    defb 46,35,30,24,22,16,14,10,6   ; COUNTRYSIDE DESERT RIVIERA SUMMIT MESA SUNSET AUTUMN NIGHT STORM

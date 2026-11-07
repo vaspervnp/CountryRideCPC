@@ -22,12 +22,15 @@ MODE_DEMO   EQU 0               ; the demo drives; fire starts a race
 MODE_READY  EQU 1               ; to a standstill at the start, the count
 MODE_RACE   EQU 2               ; the player races the clock
 MODE_OVER   EQU 3               ; time up: to a standstill, GAME OVER
-START_TIME  EQU 70              ; seconds on the clock at the start
+START_TIME  EQU 53              ; seconds on the clock at the start (the
+                                ; times 3/4 of what they were since the
+                                ; speeds are 1.5 times, 2026-11-07: the
+                                ; races take about 3/4 of the time)
 START_X     EQU -6              ; road_x at the start: the car in the third
                                 ; lane from the left (lanes 12.5 pairs wide)
-EXT_FIRST   EQU 50              ; seconds the first checkpoint gives,
-EXT_DROP    EQU 2               ; ... each next one this many fewer,
-EXT_MIN     EQU 36              ; ... down to these
+EXT_FIRST   EQU 37              ; seconds the first checkpoint gives,
+EXT_DROP    EQU 1               ; ... each next one this many fewer,
+EXT_MIN     EQU 27              ; ... down to these
 TIME_MAX    EQU 99
 COUNT_T     EQU 150             ; VSYNCs of the count, 3-2-1
 GO_T        EQU 50              ; ... GO! shown
@@ -87,10 +90,12 @@ pic_bent    defb 0              ; 1: this picture's curve level is new to
 heading     defb 0              ; where the sky looks: words right
 head_acc    defw 0              ; turning towards the next word, signed
 
-SPEED_MAX   EQU #0690           ; 6.6 depth units per VSYNC: a kerb stripe
-                                ; (64) in ~5 pictures
-SPEED_ACC   EQU 5               ; per VSYNC, 8.8 - full speed in ~6.7 s
-SPEED_BRK   EQU 12
+SPEED_MAX   EQU #09D8           ; 9.8 depth units per VSYNC: a kerb stripe
+                                ; and the gap after it (64) in ~3.3
+                                ; pictures (#0690 till 2026-11-07: every
+                                ; speed is 1.5 times since)
+SPEED_ACC   EQU 8               ; per VSYNC, 8.8 - full speed in ~6.3 s
+SPEED_BRK   EQU 18
 GEAR_STEP   EQU SPEED_MAX/6+1   ; speed per gear
 MAX_STEPS   EQU 4               ; 50 Hz steps caught up per picture at most
 HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
@@ -451,7 +456,7 @@ CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
 STEER_RAMP  EQU 28              ; the most the wheel's turn and the push
                                 ; (8.8 pairs a picture) move a picture: Out
                                 ; Run's 64 and 5 a step, ~10.9 steps a second
-STEER_SPEED EQU #0400           ; slower, the wheel moves the car less
+STEER_SPEED EQU #0600           ; slower, the wheel moves the car less
 STEER_LOSS  EQU SPEED_MAX/GAUGE_SEGS ; the top speed lost turning: a segment
 CAR_STEER_K EQU 85              ; (the first car's; car_setup: each its own)
 CAR_PUSH_M  EQU 64
@@ -461,10 +466,10 @@ HIT_TRIM    EQU 2               ; ... the two overlapping, this many bytes in
 BUMP_T      EQU 25              ; a bump (Out Run: a car hit), pictures
 BUMP_V      EQU 240             ; ... the shove away from it, 8.8 pairs a
                                 ; picture (Out Run: 12 a step for 10 steps)
-BUMP_SPEED  EQU TR_SPEED*256-#40 ; ... the speed at most: the car hit goes on
+BUMP_SPEED  EQU TR_SPEED*128-#40 ; ... the speed at most: the car hit goes on
 CRASH_T     EQU 45              ; a crash (a bush), pictures (Out Run: 1.5-2 s)
 CRASH_V     EQU 480             ; ... the shove away from it (24 a step, 20)
-CRASH_BRK   EQU 16              ; ... the speed lost a VSYNC, to a standstill
+CRASH_BRK   EQU 24              ; ... the speed lost a VSYNC, to a standstill
 BACK_V      EQU 160             ; then back to the middle (8 a step)
 BACK_T      EQU 64              ; ... in this many pictures at most
 
@@ -561,13 +566,18 @@ steer_k
     ld e,CAR_STEER_K            ; (car_setup: the car's)
     jr steer_mul
 steer_slow
-    ASSERT STEER_SPEED == #0400
+    ASSERT STEER_SPEED == #0600
     srl d
     rr e
     srl d
     rr e
-    ld h,e                      ; speed / 4 (below #400: a byte)
-    ld a,(steer_k+1)
+    srl d
+    rr e
+    ld h,e                      ; speed / 8 (below #600: under 192)
+    ld e,170
+    call mul8
+    add hl,hl                   ; H = speed / 6, nearly (below #600: 253
+    ld a,(steer_k+1)            ; at most)
     ld e,a
     call mul8
     ld e,h

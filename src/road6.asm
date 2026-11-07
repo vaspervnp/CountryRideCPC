@@ -245,6 +245,44 @@ rp_lane_whole
     or a
     ret z
     ld ixl,a
+    push de                             ; the lines nearer than the groups
+    ld de,8                             ; passed over 8 at a time while the
+rlw_eight                               ; eighth on is (the rows only get
+    ld a,ixl                            ; further up the table), then one
+    cp 9                                ; at a time
+    jr c,rlw_one
+    add hl,de
+    ld a,(hl)
+    cp c
+    jr c,rlw_back
+    ld a,ixl
+    sub e
+    ld ixl,a
+    jr rlw_eight
+rlw_back
+    or a
+    sbc hl,de
+rlw_one
+    ld a,(hl)
+    cp c
+    jr c,rlw_found
+    inc hl
+    dec ixl
+    jr nz,rlw_one
+    pop de
+    ret
+rlw_found
+    ld a,(rp_count)
+    sub ixl
+    pop de
+    push hl
+    ld l,a
+    ld h,0
+    add hl,hl
+    add hl,hl
+    add hl,de
+    ex de,hl                            ; DE = its entry
+    pop hl
 rlw_line
     ld a,(hl)                           ; the row this line shows
     inc hl

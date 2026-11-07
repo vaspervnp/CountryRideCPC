@@ -54,9 +54,9 @@ NEAR_ROW      EQU 80
 HORIZON_Y     EQU 187
 HALF_MAX      EQU 50
 MIN_HALF      EQU 2
-BAND_SHIFT    EQU 5
-FAR_Z         EQU 420
-FAR_ROW       EQU 14   ; rows 1..FAR_ROW are past FAR_Z
+BAND_SHIFT    EQU 6
+FAR_Z         EQU 660
+FAR_ROW       EQU 9   ; rows 1..FAR_ROW are past FAR_Z
 MOUNT_TOP     EQU 150   ; first line of the mountain strip
 PANO_Y0       EQU 148   ; first line of the panorama (a character row)
 PANO_WORDS    EQU 96   ; panorama width in CRTC words (4 pixels)

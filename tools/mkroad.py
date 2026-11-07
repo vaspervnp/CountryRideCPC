@@ -12,13 +12,19 @@ Variant (band, half, parity):
   parity  whether the core's right edge falls on an odd byte. PUSH writes the
           screen two bytes at a time from line_end downwards, so a core whose
           edge is odd is compiled one byte wider on each side, the extra bytes
-          being grass.
+          being grass (the line's, striped: kerb from 2026-10-22 to
+          2026-11-07, the kerb's outer edge on the 4-pixel grid).
 
 Each pair of bytes (written right to left) becomes one of:
   PUSH DE          asphalt, both pixels          (DE' = asphalt pair)
   PUSH AF          kerb, both pixels             (AF' = kerb pair)
   LD BC,nn / PUSH BC   anything else
-and the variant ends with EXX / EX AF,AF' / JP (IX).
+  EXX / LD C,n / PUSH BC / LD C,B / EXX   an odd core's right edge: its
+                   left byte n, its right one the grass (BC, both bytes)
+  EXX / LD B,n / PUSH BC / LD B,C   an odd core's left edge, the other
+                   way round - and the variant goes on in the main set
+and the variant ends with EXX (but after an odd core's left edge) / EX
+AF,AF' / JP (IX).
 
 The variant runs in the shadow register set. Every pair can be entered (no
 pair leans on the LD BC,nn of the one before), so a core hanging off the
@@ -78,9 +84,11 @@ def word(lo, hi):
 def core_bytes(band, half, parity):
     """Screen bytes of the core - the kerbs and the asphalt -
     left to right, and H (bytes each side of the centre before the parity
-    widening). What is left of the pairs it covers is kerb too (no grass:
-    the grass is striped, the core is not): scene.road_line. Bands 3 and 4
-    are band 0 with three lanes and with two."""
+    widening). What is left of the bytes it covers is kerb too; the byte
+    the parity widening adds either side is the grass, which is striped:
+    compile_variant takes it from the line's (since 2026-11-07; till then
+    kerb, and the kerb's outer edge on the 4-pixel grid): scene.road_line.
+    Bands 3 and 4 are band 0 with three lanes and with two."""
     pens, total = road_row_pixels(half, PIX_BAND[band], BAND_LANES[band])
     H = (total + 1) // 2
     kerb = pens[0]
@@ -115,11 +123,20 @@ def compile_variant(band, half, parity):
     assert n % 2 == 0
     code = []
     entry = []
+    assert n >= 4 or not parity
     for j in range(n // 2):
         lo = data[n - 2 - 2 * j]       # left byte of the pair
         hi = data[n - 1 - 2 * j]       # right byte, written first by PUSH
         entry.append(len(code))
-        if lo == hi == road:
+        if parity and j == 0:
+            # its outer byte the grass (the other set's BC, both bytes
+            # the line's green): EXX / LD C,lo / PUSH BC / LD C,B / EXX
+            code += [0xD9, 0x0E, lo, 0xC5, 0x48, 0xD9]
+        elif parity and j == n // 2 - 1:
+            # ... and on the left, and back to that set for good:
+            # EXX / LD B,hi / PUSH BC / LD B,C
+            code += [0xD9, 0x06, hi, 0xC5, 0x41]
+        elif lo == hi == road:
             code.append(0xD5)                     # PUSH DE
         elif lo == hi == kerb:
             code.append(0xF5)                     # PUSH AF
@@ -127,7 +144,12 @@ def compile_variant(band, half, parity):
             w = word(lo, hi)
             code += [0x01, w & 0xFF, w >> 8, 0xC5]  # LD BC,nn / PUSH BC
     entry.append(len(code))
-    code += [0xD9, 0x08, 0xDD, 0xE9]              # EXX / EX AF,AF' / JP (IX)
+    for j in range(1, n // 2, 2):                 # (cachemac.asm TM_ENTRY)
+        e = entry[j - 1]
+        assert entry[j] == e + {0x01: 4, 0xD9: 6}.get(code[e], 1), (band, half, parity, j)
+    if not parity:
+        code.append(0xD9)                         # EXX
+    code += [0x08, 0xDD, 0xE9]                    # EX AF,AF' / JP (IX)
     return code, entry, n // 2, H
 
 
@@ -326,8 +348,9 @@ def main():
                  ";; Road core variants for stripe band(s) %s:" % (bands,),
                  ";; rc_<band>_<half>_<parity>, each after its entry table",
                  ";; re_<band>_<half>_<parity>: the offset of every other pair's",
-                 ";; code (pairs 0, 2, 4 ...; an odd pair is 1 byte on, or 4 if the",
-                 ";; even one is LD BC,nn / PUSH BC). Each variant is in one page:",
+                 ";; code (pairs 0, 2, 4 ...; an odd pair is 1 byte on, 4 if the",
+                 ";; even one is LD BC,nn / PUSH BC, 6 if it is an odd core's right",
+                 ";; edge, EXX ... EXX). Each variant is in one page:",
                  ";; its entries are low bytes (cachemac.asm).", ""]
         emit = lines.append
         keys = [(band, half, parity) for band in bands for half in halves(band)
@@ -366,6 +389,7 @@ def main():
                                      if GRASS_STRIPES else 0))
     emit("GRASS_ROW   EQU %d" % GRASS_ROW)
     emit("GRASS_SHIFT EQU %d" % (GRASS_SHIFT + STRIPE_K.bit_length() - 1))
+    emit("STRIPE_K    EQU %d   ; depth and zcam times this in the stripes' maths" % STRIPE_K)
     slots, ghalf, grow = template_slots(variants)
     soff = {(kind, g): off for kind, g, size, off in slots}
     emit("")

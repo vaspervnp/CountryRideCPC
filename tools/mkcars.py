@@ -4,13 +4,13 @@
 tools/cars3d.py (run in Blender) renders each car - the player's first -
 seen from behind, on the level, uphill and downhill, each straight and
 turning left, into assets/cars/<car>_<flat|up|down>_<0|left>.png. This
-brings each to the pens (tools/dither.py: each cell's mean colour over the
-asphalt's grey, graded, the nearest pen - no checkerboards, and no outline:
-since 2026-11-05 the car is drawn in flat colours), drops lone cells,
-widens each row's run to whole pairs over the asphalt's grey
-(tools/mkcar.py), in one box for
-all of a car's views, and adds the views turning right: the left ones
-mirrored. Nine sprites a car, in tools/carsart.py. Also draws them all into
+squeezes each across (mkcar.narrow: since 2026-11-07 the cars are 20%
+narrower than their models), brings it to the pens (tools/dither.py: each
+cell's mean colour over the asphalt's grey, graded, the nearest pen - no
+checkerboards, and no outline: since 2026-11-05 the car is drawn in flat
+colours), drops lone cells, widens each row's run to whole pairs over the
+asphalt's grey (tools/mkcar.py), in one box for all of a car's views, and
+adds the views turning right: the left ones mirrored. Nine sprites a car, in tools/carsart.py. Also draws them all into
 build/cars-sheet.png.
 
 The race also shows each car spun in a crash (assets/cars/<car>_spin.png,
@@ -69,8 +69,10 @@ def repaint(cells, hue):
 def flat_pens(name, path, cells):
     """A render's cells, each its own colour (not over the asphalt), the
     paint's again where the sky greyed it, brought to the nearest of the
-    car's pens, lone ones dropped."""
-    graded = dither.grade(dither.cell_colours(path, cells, under=None))
+    car's pens, lone ones dropped; the render squeezed across first
+    (mkcar.narrow)."""
+    im = mkcar.narrow(Image.open(path).convert("RGBA"))
+    graded = dither.grade(dither.cell_colours(im, cells, under=None))
     if name in PAINT_HUE:
         graded = repaint(graded, PAINT_HUE[name])
     palette = {c: PALETTE[c] for c in CAR_PENS[name]}
@@ -81,10 +83,13 @@ def flat_pens(name, path, cells):
 # middle, is moved SPIN_SHIFT cells (its tail swings out right of the
 # others: this keeps its box nearer theirs); then dust at its rear wheels,
 # clouds of (x, y, half width, half height) in the frame's cells: white
-# over the car at their hearts, specks of it further out.
+# over the car at their hearts, specks of it further out - drawn for the car
+# as wide as rendered, squeezed across with it (about the render's middle).
 SPIN_CELLS = 80
 SPIN_SHIFT = -4
 DUST = [(54, 19, 3.5, 6), (58, 14, 3, 5), (49, 23, 4, 3.4), (42, 24.5, 5, 1.8)]
+_AXIS = mkcar.MID + SPIN_SHIFT
+DUST = [(_AXIS + (x - _AXIS) * mkcar.NARROW, y, rx * mkcar.NARROW, ry) for x, y, rx, ry in DUST]
 
 
 def dusty(rows):

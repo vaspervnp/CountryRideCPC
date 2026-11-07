@@ -461,14 +461,15 @@ HILL_MAX = max(h for h in range(0, 128, 2)
 def road_line(r, band, cx=SCR_W // 2, grass=PLAIN_GRASS, lanes=LANES):
     """Pens of one road line showing row r (None = ground strip), the road
     as wide as its lanes are (lane_half). The engine draws the road in whole
-    pairs (4 pixels): the kerb fills them out."""
+    bytes (2 pixels): the kerb fills them out (till 2026-11-07 in whole
+    pairs, 4 pixels)."""
     if r is None:
         return [GROUND_PEN] * SCR_W
     out = [grass] * SCR_W
     pens, left = road_row_pixels(lane_half(row_half_bytes(r), lanes), band, lanes)
     x0 = cx - left
     x1 = x0 + len(pens)
-    for x in range(max(0, x0 & ~3), min(SCR_W, (x1 + 3) & ~3)):
+    for x in range(max(0, x0 & ~1), min(SCR_W, (x1 + 1) & ~1)):
         out[x] = pens[x - x0] if x0 <= x < x1 else pens[0]
     return out
 
@@ -1011,11 +1012,17 @@ SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_of
 # speed, more than its full lock: slower there; more grip, less). Since
 # 2026-11-05 m is 115% of what it was; since 2026-11-06 the cars steer
 # 25-30% more than GRIP's k (the third and the fourth were 40% and 35%
-# for a while: too quick).
+# for a while: too quick). Since 2026-11-07 every speed is SPEED_UP times
+# what it was - the top speeds and the acceleration (and in the game the
+# brakes, the traffic's, ...) - and m that much less, so a curve pushes as
+# hard at a share of the top speed as it did.
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
-TOP_SPEED = {3: 0x05B0, 4: 0x0620, 5: 0x0690}
-ACCEL = {3: 4, 4: 5, 5: 6}
+SPEED_UP = 1.5
+TOP_SPEED = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 0x05B0, 4: 0x0620, 5: 0x0690}.items()}
+ACCEL = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 4, 4: 5, 5: 6}.items()}
 GRIP = {2: (65, 89), 3: (65, 74), 4: (86, 63), 5: (86, 55)}
+def car_push_m(car_id):
+    return int(GRIP[CAR_LEVELS[car_id][2]][1] / SPEED_UP + 0.5)
 STEER_MORE = [1.30, 1.25, 1.30, 1.25]   # per car, its k times this
 def car_steer_k(car_id):
     return int(GRIP[CAR_LEVELS[car_id][2]][0] * STEER_MORE[car_id] + 0.5)
@@ -1069,18 +1076,19 @@ def car_runs(view=0):
     return out
 
 
-SHADOW_W, SHADOW_IN, SHADOW_H = 26, 6, 3     # (bush.asm car_shadow, bytes)
+SHADOW_W, SHADOW_IN, SHADOW_H = 22, 4, 3     # (bush.asm car_shadow, bytes)
 
 # Moving over to another lane, the car blinks its indicator on that side as
 # the traffic does (TRAFFIC_BLINK, TRAFFIC_LIT; src/signal.asm): one pixel,
 # the outermost of its lights on that side - per car the lights' letters,
 # and the lines they are on on the level, uphill and downhill (the red
-# cars' paint is R, the yellow one's shading O).
+# cars' paint is R, the yellow one's shading O; the white one's lower
+# lights are either since 2026-11-07, 20% narrower).
 CAR_LIGHTS = {
     "player": ("O", ((11, 14), (13, 16), (11, 13))),
     "ferrari": ("O", ((11, 14), (13, 16), (11, 13))),
     "lotus": ("R", ((11, 14), (13, 16), (10, 12))),
-    "bmw": ("O", ((15, 17), (12, 20), (8, 15))),
+    "bmw": ("OR", ((15, 17), (12, 20), (8, 15))),
 }
 
 

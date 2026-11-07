@@ -9,8 +9,9 @@ GRASS_PAIR  EQU #0303
 ;; the grass's other stripe: its byte is GRASS_X apart; the rows from
 ;; GRASS_ROW on are striped by bit GRASS_SHIFT of (depth + zcam)
 GRASS_X     EQU #F0
-GRASS_ROW   EQU 19
+GRASS_ROW   EQU 14
 GRASS_SHIFT EQU 7
+STRIPE_K    EQU 1   ; depth and zcam times this in the stripes' maths
 
 ;; the templates (see tools/mkroad.py): the cache set at TMPL_A +
 ;; CACHE_LEVEL * TMPL_SET; band B's TMPL_B - TMPL_A above band A's, in
@@ -26,8 +27,8 @@ CORES_B     EQU #4000
 ;; the cache sets (common.asm): the road off the middle of the screen
 CACHE_LEVEL EQU 0
 NGROUPS     EQU 51   ; template groups, slot 1 + g of a set
-NFAR        EQU 9   ; the first NFAR have far rows: a slot NGROUPS on
-NFARONLY    EQU 9   ; ... the first NFARONLY nothing else
+NFAR        EQU 6   ; the first NFAR have far rows: a slot NGROUPS on
+NFARONLY    EQU 6   ; ... the first NFARONLY nothing else
 LANE_D0     EQU 5980   ; group 0's furthest row's depth (lanes5.asm)
 ;; bank 5's per group arrays (cache5.asm): group g at RA_<name> + g
 W_NONE      EQU #1C00   ; a row with no bias: W this far off

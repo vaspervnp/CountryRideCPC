@@ -12,13 +12,13 @@ TR_ZNEARSIZE EQU 120   ; nearer than this, a car is at a near size
 ;; (BOTTOMS): its line from its top, its pixel from its left
 ;; (scene.traffic_blinker)
 tr_sinfo
-    defb 18,22,8,0, 16,4,13,2   ; size 0: 36 x 22 pixels
-    defb 16,19,8,15, 14,4,11,2   ; size 1: 32 x 19 pixels
-    defb 14,16,7,30, 12,4,10,4   ; size 2: 28 x 16 pixels
-    defb 12,13,6,45, 8,4,8,4   ; size 3: 24 x 13 pixels
-    defb 10,12,5,50, 7,2,7,2   ; size 4: 20 x 12 pixels
-    defb 8,9,4,55, 5,2,5,2   ; size 5: 16 x 9 pixels
-    defb 6,7,3,60, 4,2,4,2   ; size 6: 12 x 7 pixels
+    defb 14,22,9,0, 16,2,13,2   ; size 0: 28 x 22 pixels
+    defb 12,19,8,15, 14,2,11,2   ; size 1: 24 x 19 pixels
+    defb 10,16,7,30, 12,2,10,2   ; size 2: 20 x 16 pixels
+    defb 10,13,6,45, 8,2,8,2   ; size 3: 20 x 13 pixels
+    defb 8,12,5,50, 7,2,7,2   ; size 4: 16 x 12 pixels
+    defb 6,9,4,55, 5,2,5,2   ; size 5: 12 x 9 pixels
+    defb 4,7,3,60, 4,0,4,0   ; size 6: 8 x 7 pixels
     defb 4,5,2,65, 3,0,3,0   ; size 7: 8 x 5 pixels
 TR_SINFO_LEN EQU 8
 TR_SINFO_BLINK EQU 4
@@ -32,33 +32,33 @@ TR_LIT_R    EQU #11   ; the right one
 ;; bottoms (BOTTOMS); a further size's whole cars, one a top
 tr_pieces
     defw tr_s0_closed
-    defb RAM_C6,0,13   ; 150 bytes, 408 us
+    defb RAM_C6,0,10   ; 135 bytes, 404 us
     defw tr_s0_sport
-    defb RAM_C6,0,18   ; 342 bytes, 936 us
+    defb RAM_C6,0,14   ; 294 bytes, 766 us
     defw tr_s0_saloon
-    defb RAM_C6,0,18   ; 331 bytes, 925 us
+    defb RAM_C6,0,14   ; 269 bytes, 741 us
     defw tr_s1_closed
-    defb RAM_C6,0,11   ; 130 bytes, 370 us
+    defb RAM_C6,0,9   ; 106 bytes, 328 us
     defw tr_s1_sport
-    defb RAM_C6,0,16   ; 252 bytes, 681 us
+    defb RAM_C6,0,12   ; 230 bytes, 596 us
     defw tr_s1_saloon
-    defb RAM_C6,0,16   ; 246 bytes, 675 us
+    defb RAM_C6,0,12   ; 194 bytes, 560 us
     defw tr_s2_closed
-    defb RAM_C6,0,10   ; 98 bytes, 294 us
+    defb RAM_C6,0,7   ; 91 bytes, 269 us
     defw tr_s2_sport
-    defb RAM_C6,0,13   ; 197 bytes, 514 us
+    defb RAM_C6,0,10   ; 193 bytes, 465 us
     defw tr_s2_saloon
-    defb RAM_C6,0,13   ; 179 bytes, 496 us
+    defb RAM_C6,0,10   ; 160 bytes, 432 us
     defw tr_s3_closed
-    defb RAM_C6,0,9   ; 209 bytes, 604 us
+    defb RAM_C6,0,7   ; 196 bytes, 564 us
     defw tr_s4_closed
-    defb RAM_C6,0,7   ; 176 bytes, 503 us
+    defb RAM_C6,0,6   ; 159 bytes, 468 us
     defw tr_s5_closed
-    defb RAM_C6,0,6   ; 120 bytes, 351 us
+    defb RAM_C6,0,5   ; 110 bytes, 323 us
     defw tr_s6_closed
-    defb RAM_C6,0,5   ; 93 bytes, 254 us
+    defb RAM_C6,0,3   ; 78 bytes, 210 us
     defw tr_s7_closed
-    defb RAM_C6,0,3   ; 62 bytes, 148 us
+    defb RAM_C6,0,3   ; 56 bytes, 122 us
 TR_PIECE_LEN EQU 5
 TR_TOPS     EQU 1   ; a near size's tops, then its bottoms
 TR_BOTTOMS  EQU 2
@@ -74,35 +74,35 @@ tr_rsize    ; per row: the size a car on it is drawn at - its record in
 tr_lat1    ; per row: a car's left in the inner right lane of four, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#FF,#00,#00,#00
-    defb #00,#00,#FF,#FF,#00,#00,#00,#00,#00,#FF,#FF,#00,#00,#00,#00,#00
-    defb #FF,#00,#00,#00,#00,#00,#00,#00,#01,#00,#00,#00,#00,#00,#00,#01
-    defb #01,#01,#00,#00,#00,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01
-    defb #01,#01,#01,#02,#02,#02,#03,#03,#03,#02,#02,#02,#02,#03,#03,#03
-    defb #03,#03,#03,#03,#04
+    defb #00,#00,#00,#00,#01,#01,#01,#01,#01,#00,#00,#01,#01,#01,#01,#01
+    defb #00,#01,#01,#01,#01,#01,#01,#01,#02,#01,#01,#01,#01,#01,#01,#02
+    defb #02,#02,#02,#02,#02,#03,#03,#03,#03,#03,#03,#03,#03,#03,#03,#03
+    defb #03,#03,#03,#04,#04,#04,#05,#05,#05,#04,#04,#04,#04,#05,#05,#05
+    defb #05,#05,#05,#05,#06
 tr_lat2    ; per row: a car's left in the outer right lane of four, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#03,#04,#04,#04
-    defb #05,#05,#05,#05,#06,#06,#06,#07,#07,#07,#07,#08,#08,#08,#09,#09
-    defb #09,#0A,#0A,#0A,#0A,#0B,#0C,#0C,#0D,#0C,#0D,#0E,#0E,#0E,#0E,#0F
-    defb #10,#10,#10,#10,#10,#11,#11,#12,#12,#13,#13,#13,#13,#13,#14,#15
-    defb #15,#15,#15,#16,#16,#17,#18,#18,#18,#17,#18,#19,#19,#1A,#1A,#1A
-    defb #1B,#1B,#1C,#1C,#1D
+    defb #05,#05,#06,#06,#07,#07,#07,#08,#08,#08,#08,#09,#09,#09,#0A,#0A
+    defb #0A,#0B,#0B,#0B,#0B,#0C,#0D,#0D,#0E,#0D,#0E,#0F,#0F,#0F,#0F,#10
+    defb #11,#11,#12,#12,#12,#13,#13,#14,#14,#15,#15,#15,#15,#15,#16,#17
+    defb #17,#17,#17,#18,#18,#19,#1A,#1A,#1A,#19,#1A,#1B,#1B,#1C,#1C,#1C
+    defb #1D,#1D,#1E,#1E,#1F
 tr_lat3    ; per row: a car's left in the right lane of three, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#01,#02,#02,#02
-    defb #03,#03,#02,#02,#03,#03,#03,#04,#04,#03,#03,#04,#04,#04,#05,#05
-    defb #04,#05,#05,#05,#05,#06,#06,#06,#07,#06,#06,#07,#07,#07,#07,#08
-    defb #08,#08,#08,#08,#08,#09,#09,#0A,#0A,#0A,#0A,#0A,#0A,#0A,#0B,#0B
-    defb #0B,#0B,#0B,#0C,#0C,#0D,#0D,#0D,#0D,#0C,#0D,#0E,#0E,#0E,#0E,#0E
-    defb #0F,#0F,#10,#10,#10
+    defb #03,#03,#03,#03,#04,#04,#04,#05,#05,#04,#04,#05,#05,#05,#06,#06
+    defb #05,#06,#06,#06,#06,#07,#07,#07,#08,#07,#07,#08,#08,#08,#08,#09
+    defb #09,#09,#0A,#0A,#0A,#0B,#0B,#0C,#0C,#0C,#0C,#0C,#0C,#0C,#0D,#0D
+    defb #0D,#0D,#0D,#0E,#0E,#0F,#0F,#0F,#0F,#0E,#0F,#10,#10,#10,#10,#10
+    defb #11,#11,#12,#12,#12
 tr_lat4    ; per row: a car's left in the right lane of two, bytes from the road's
     ; centre (the left lanes': -this - its width)
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
-    defb #00,#00,#00,#00,#00,#00,#01,#01,#01,#00,#00,#00,#00,#01,#01,#01
-    defb #01,#01,#00,#00,#01,#01,#01,#01,#01,#01,#02,#02,#01,#01,#01,#01
-    defb #01,#02,#02,#02,#02,#02,#02,#02,#03,#02,#02,#02,#02,#02,#02,#03
-    defb #03,#03,#03,#03,#03
+    defb #00,#00,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01,#01
+    defb #01,#01,#01,#01,#01,#01,#02,#02,#02,#01,#01,#01,#01,#02,#02,#02
+    defb #02,#02,#02,#02,#03,#03,#03,#03,#03,#03,#04,#04,#03,#03,#03,#03
+    defb #03,#04,#04,#04,#04,#04,#04,#04,#05,#04,#04,#04,#04,#04,#04,#05
+    defb #05,#05,#05,#05,#05
     ASSERT tr_lat4 == tr_lat1+255
 tr_lsel     ; per lane (TR_LANE): its tr_lat table, from tr_lat1, and 0
             ; right of the middle, 1 left, 2 the middle one of three
@@ -191,7 +191,7 @@ tr_colours
     defb #3C,#3C   ; WHITE
     defb #0F,#0F   ; RED
 
-;; region 6: 2391 of 5430 bytes
+;; region 6: 2125 of 5430 bytes
 ;; region rh1: 0 of 75 bytes
 ;; region rh2: 0 of 175 bytes
 ;; region rh3: 0 of 175 bytes

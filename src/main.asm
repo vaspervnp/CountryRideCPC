@@ -83,6 +83,7 @@ roadb_start
     ORG TMPL_B
     INCLUDE "gen/roadtmplb.asm"
     INCLUDE "lanes5.asm"
+    INCLUDE "cache5b.asm"
 roadb_end
     ASSERT roadb_end <= SB                  ; (cache5.asm)
     SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"

@@ -56,13 +56,14 @@ TR_TO       EQU 11                      ;   the lane it changes to
 TR_WHEN     EQU 12                      ;   it begins 256 + this ahead (0:
                                         ;   never, or done)
 TR_STEP     EQU 8                       ; of the way a picture (32: 1.3 s)
-TR_SPEED    EQU 3                       ; depth units a VSYNC
+TR_SPEED    EQU 9                       ; half depth units a VSYNC (3
+                                        ; whole ones till 2026-11-07)
 TR_ZNEAR    EQU 72                      ; nearer: gone by (as a bush)
 TR_ZSPAWN   EQU 512                     ; where a car comes, out of sight
 TR_ZAWAY    EQU 640                     ; further: got away
 TR_GAP      EQU 160                     ; the last car at least this far
                                         ; ahead of where a new one comes
-TR_PAUSE    EQU 24                      ; pictures at least between two
+TR_PAUSE    EQU 16                      ; pictures at least between two
                                         ; at the start (then the stage's:
                                         ; tr_pauses, gen/stages6.asm)
 TR_LATE     EQU 10                      ; interrupts since the flip: from
@@ -70,7 +71,7 @@ TR_LATE     EQU 10                      ; interrupts since the flip: from
                                         ; alone, from this one only at a
                                         ; near size (traffic_draw)
     ASSERT TR_ZR == 1 && 256 % TR_STEP == 0
-    ASSERT TR_SPEED == 3 && TR_ZNEAR < 256 && TR_ZAWAY == #280
+    ASSERT TR_SPEED == 9 && TR_ZNEAR < 256 && TR_ZAWAY == #280
 
 tr_cars     defs TR_MAX*TR_REC,0
 tr_seed     defw #ACE1
@@ -286,13 +287,20 @@ tp_move
     or a
     sbc hl,de
     ld a,(frame_vbls)
+    cp MAX_STEPS+1                      ; (no more than zcam's: main_loop
+    jr c,$+4                            ; catches up so many at most)
+    ld a,MAX_STEPS
     ld c,a
     add a,a
+    add a,a
+    add a,a
     add a,c
+    srl a                               ; x TR_SPEED / 2
     ld e,a
     ld d,0
     ex de,hl
-    sbc hl,de                           ; (CF clear)
+    or a
+    sbc hl,de
     ex de,hl                            ; DE = how far ahead a car went
     ld hl,tr_cars
     call tp_one
@@ -391,7 +399,7 @@ tp_same
     ex de,hl                            ; DE = its TR_TO
     call tr_rnd                         ; the next no sooner than the stage's
     push hl                             ; (L: this one's lanes, below)
-    and 31                              ; pause (tr_pauses), and up to 31
+    and 15                              ; pause (tr_pauses), and up to 15
     ld b,a                              ; pictures more
     ld a,(stage_id)                     ; (race.asm: mapped in RAM_C6)
     add a,lo(tr_pauses)

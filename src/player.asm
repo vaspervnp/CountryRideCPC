@@ -118,9 +118,9 @@ rk_row                          ; A = #40 + row: its keys, 1 = held
 ;; The top speeds and the acceleration are the car's (car_setup); turning,
 ;; the top speed on the road is a gauge segment lower (steer: sp_max).
 ;; ---------------------------------------------------------------------------
-SPEED_COAST EQU 2
+SPEED_COAST EQU 3
 SPEED_GRASS EQU SPEED_MAX/2
-SPEED_DRAG  EQU 12
+SPEED_DRAG  EQU 18
 OFFROAD_X   EQU 20
 
 speed_player

@@ -4,18 +4,18 @@
 ;; pixel (bank 6: signal.asm car_blink)
 car_blinks
     ; player
-    defb #E7,#FB,#F8,#BB,#E7,#B3,#58,#CC,#47,#8C,#F8,#F3,#47,#CC,#58,#8C
-    defb #49,#DC,#58,#DC,#47,#9C,#56,#9C,#E8,#BB,#F7,#FB,#E8,#BB,#F8,#BB
-    defb #E7,#FB,#F7,#FB
+    defb #49,#CC,#56,#8C,#E8,#F3,#56,#CC,#49,#8C,#F7,#B3,#49,#8C,#56,#CC
+    defb #4B,#9C,#57,#9C,#48,#DC,#54,#DC,#E9,#FB,#F6,#BB,#E9,#F3,#F6,#FB
+    defb #E9,#BB,#F6,#B3
     ; ferrari
-    defb #E7,#FB,#F8,#BB,#E7,#B3,#58,#CC,#47,#8C,#F8,#F3,#47,#CC,#58,#8C
-    defb #49,#DC,#58,#DC,#47,#9C,#56,#9C,#E8,#BB,#F7,#FB,#E8,#BB,#F8,#BB
-    defb #E7,#FB,#F7,#FB
+    defb #49,#CC,#56,#8C,#E8,#F3,#56,#CC,#49,#8C,#F7,#B3,#49,#8C,#56,#CC
+    defb #4B,#9C,#57,#9C,#48,#DC,#54,#DC,#E9,#FB,#F6,#BB,#E9,#F3,#F6,#FB
+    defb #E9,#BB,#F6,#B3
     ; lotus
-    defb #4A,#CC,#55,#8C,#4B,#CC,#56,#8C,#49,#CC,#54,#8C,#4A,#DC,#55,#9C
-    defb #4B,#DC,#56,#D4,#49,#94,#54,#9C,#EA,#FB,#F5,#BB,#EB,#FB,#F6,#BB
-    defb #E9,#FB,#F4,#BB
+    defb #4B,#CC,#54,#8C,#4C,#CC,#54,#CC,#4B,#8C,#53,#8C,#4B,#DC,#54,#9C
+    defb #4C,#DC,#55,#9C,#4A,#DC,#53,#9C,#EB,#FB,#F4,#BB,#EC,#FB,#F4,#FB
+    defb #EB,#BB,#F3,#BB
     ; bmw
-    defb #49,#A4,#56,#E4,#4B,#A4,#58,#A4,#47,#E4,#54,#E4,#49,#BC,#56,#FC
-    defb #4B,#84,#58,#B4,#47,#F4,#54,#C4,#49,#8C,#56,#CC,#4A,#CC,#F7,#E3
-    defb #E8,#A3,#55,#8C
+    defb #4A,#E4,#55,#A4,#4C,#A4,#56,#A4,#49,#E4,#53,#E4,#4A,#FC,#55,#BC
+    defb #4C,#BC,#56,#F4,#49,#B4,#53,#FC,#4A,#D4,#55,#94,#4C,#94,#56,#8C
+    defb #49,#CC,#53,#D4

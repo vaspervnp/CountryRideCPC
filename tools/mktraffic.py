@@ -59,13 +59,22 @@ PALETTE = {c: pen_rgb(PEN[p]) for c, p in LETTERS.items()}
 # reflections of the sky would edge it in pastel)
 PENS = "DROYWN"
 PAINT = "K"
+# each size is squeezed across to mkcar.NARROW of its render's width, but
+# these, whose bytes round it badly at 0.8: size 0's up to 32 pixels (89% of
+# the 36 it was, its bumper wider than its body), 28 at 0.78; size 3's to 16
+# but a line of 20, 20 at 0.82
+NARROW_SIZE = {0: 0.78, 3: 0.82}
 
 
 def load(size, top, bottom):
     """A render's cells: (alpha, paint, top, linear rgb sum of what is not
-    paint), each summed over the cell's pixels."""
-    ims = {p: Image.open(os.path.join(SRC, "s%d_%s_%s_%s.png" % (size, top, bottom, p)))
-           .convert("RGBA") for p in ("car", "paint", "top")}
+    paint), each summed over the cell's pixels - its passes squeezed across
+    (mkcar.narrow, NARROW_SIZE: since 2026-11-07 the cars are 20% narrower
+    than their models)."""
+    k = NARROW_SIZE.get(size, mkcar.NARROW)
+    ims = {p: mkcar.narrow(Image.open(os.path.join(SRC, "s%d_%s_%s_%s.png"
+                                                   % (size, top, bottom, p)))
+                           .convert("RGBA"), k) for p in ("car", "paint", "top")}
     w, h = ims["car"].size
     assert (w, h) == (CELLS[0] * CELL_PX[0], CELLS[1] * CELL_PX[1])
     car, paint, tp = (list(ims[p].get_flattened_data()) for p in ("car", "paint", "top"))
