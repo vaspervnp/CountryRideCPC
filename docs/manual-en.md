@@ -25,12 +25,21 @@ RUN"COUNTRY
 
 Then press RETURN. The title screen with the four cars appears while the game loads, which takes less than half a minute. When a flashing frame appears around the first car, you can pick yours.
 
-## Picking a car
+## Picking a car and the difficulty
 
 ![The title screen and the four cars](screen-select.png)
 
+- Press **E**, **M** or **H** to pick the difficulty. The one you pick flashes under the cars. **MEDIUM** is picked to begin with.
 - Press **1** to **4** to pick a car and start at once.
 - Or move the flashing frame with the **cursor keys**, **O** and **P**, or the **joystick**, then start with **fire**, **space** or **RETURN**.
+
+The difficulty decides what hitting a car costs you. Everything else is the same.
+
+| Difficulty | Hitting a car |
+|---|---|
+| **EASY** | Wherever you hit it, you drop to just below the traffic's speed and are pushed a little to the side. |
+| **MEDIUM** | Square on, you lose most of your speed. Off its side you lose less, but you are thrown across the road. |
+| **HARD** | As on MEDIUM, but you lose more speed and are thrown further. |
 
 The four cars drive differently. The bars on the screen rate each one out of five:
 
@@ -172,7 +181,7 @@ Up to two cars at a time drive ahead of you, slower than your car can go. They c
 
 A car with a flashing indicator is moving over to the next lane on that side. Your own car flashes too when you move across the road.
 
-**A bump.** Hit a car and for a second you are shoved away from it, wobbling and slowed to just below the traffic's speed. You can go on steering.
+**A bump.** Hit a car and for a second you are shoved away from it, wobbling, though you can go on steering. What it costs depends on the difficulty, and on MEDIUM and HARD on where you hit it. Square on, you lose most of your speed and hardly move sideways. Off its side, you lose less, but you are thrown across the road, and out onto the grass unless you steer against it.
 
 ### Bushes, trees and signs
 
@@ -186,7 +195,8 @@ Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds
 - Stay off the grass. It halves your speed, and it is where the crashes are.
 - Move out early when a car is ahead. Do not pass on the side its indicator is flashing.
 - When the two stage names appear, get to that side of the road in good time.
-- Crashes cost far more time than bumps. A bump is over in a second, while a crash leaves you at a standstill.
+- After hitting a car off its side, steer against the shove to stay off the grass.
+- Crashes cost far more time than bumps. A bump is over in a second and leaves you rolling, while a crash leaves you at a standstill.
 
 ## Sound
 

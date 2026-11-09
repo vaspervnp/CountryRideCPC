@@ -171,7 +171,7 @@ prr_on
     ld a,(prp_ncode)
     ld (prp_code),a
     call prop_take
-    jp prop_next
+    jr prop_next
 prr_far
     rla
     ret nc                              ; further than 255

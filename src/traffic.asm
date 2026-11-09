@@ -1125,11 +1125,15 @@ to_fits
     inc b                               ; (right)
     neg
 to_hit
+    ld e,a
     add a,c                             ; - |theirs - ours| + its half width
     add a,CAR_HALF-HIT_TRIM              ; + ours: still above 0?
     jp m,to_drawn
     jr z,to_drawn
-    ld a,b
+    ld a,e
+    neg
+    and #0E                             ; (under 16 bytes off its middle)
+    or b                                ; (game.asm bump_tab: the blow)
     ld (coll),a
 
     ; drawn: its lines noted - drawn whole when it is taken away, bit 7 of

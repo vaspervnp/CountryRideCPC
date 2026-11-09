@@ -19,9 +19,7 @@
 ;; their lines are taken as above, the rest by road_project's own loop.
 ;; ---------------------------------------------------------------------------
 rp_near_skip
-    exx
-    ld b,a
-    exx
+    ld ixh,a
 rp_skip_line
     ld a,(bc)                           ; the row this line shows
 rp_skip_r
@@ -42,7 +40,7 @@ rp_zlo10
     ex de,hl
     cp (hl)                             ; the template of then?
     jr nz,rp_skip_diff
-    dec hl
+    dec l
     ex de,hl
     ld h,hi(rr_tlo)
 rp_skip_same
@@ -56,25 +54,23 @@ rp_skip_put
     inc de                              ; next entry's template slot
     inc e
     inc e
-    exx
-    dec b
-    exx
+    dec ixh
     jr nz,rp_skip_line
 rp_skip_end
     call rp_force_all                   ; (traffic.asm)
     jp rp_far
 rp_skip_diff                            ; the stripe of then? (the level's
-    ld ixh,a                            ; set may be another: the row is
+    ld ixl,a                            ; set may be another: the row is
     xor (hl)                            ; where it was; bit 14: not an
     and #60                             ; interrupt's return address there)
-    ld a,ixh
+    ld a,ixl
     ld (hl),a
     dec hl
     ex de,hl
     ld h,hi(rr_tlo)
     jr z,rp_skip_same
 rp_skip_chg                             ; another stripe: only the road - but
-    ld a,ixh                            ; band A's now, on a striped row, the
+    ld a,ixl                            ; band A's now, on a striped row, the
     and #20                             ; grass's stripe has moved on too: all
     jr nz,rp_skip_road                  ; of it
     ld a,l
@@ -93,9 +89,7 @@ rp_skip_rest0
     call rp_force_all                   ; road_project's way (rp_near_go,
                                         ; rp_cmp_go)
 rp_skip_rest1                           ; (rp_near_cmp: rp_force at the end)
-    exx
-    ld a,b
-    exx
+    ld a,ixh
 rp_skip_jp
     jp 0                                ; (self-modified)
 

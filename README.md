@@ -45,9 +45,9 @@ Insert `build/countryride.dsk` in a CPC 6128, or any emulator of one, and type:
 RUN"COUNTRY
 ```
 
-Pick a car (below). The demo drives until you press fire (or space,
-cursor up, Q, joystick up). Then steer with the cursor keys, O and P, or a
-joystick: left and right.
+Pick a car and the difficulty (below). The demo drives until you press
+fire (or space, cursor up, Q, joystick up). Then steer with the cursor
+keys, O and P, or a joystick: left and right.
 Faster: cursor up, Q, space, joystick up or fire; slower: cursor down, A,
 joystick down. With neither held the car slows down a little; with a
 wheel on the grass (the road 20 pairs or more to one side) it goes no
@@ -245,7 +245,9 @@ low yellow wedge with a louvred engine cover (WEDGE TURBO, after a Lotus
 Esprit S2/S3) and a white estate with a spoiler over its rear window
 (TOURING, after a BMW M3 Touring of 2022). 1-4 picks one and
 starts; the arrow keys, O and P or the joystick move the flashing frame,
-and fire, space or return start.
+and fire, space or return start. Under them, E, M and H pick the difficulty -
+EASY, MEDIUM (picked at first) or HARD, the one picked flashing: what
+hitting a car costs (Collisions).
 
 They drive differently - speed, acceleration and grip, shown as bars of
 five (`scene.py` `CAR_LEVELS`; `car_setup` puts them into the code that
@@ -410,9 +412,9 @@ row count and R5 lines.
   Moving its start address one character scrolls it a word (4 pixels)
   sideways for good; only the column that comes in has to be written, from
   the panorama (384 pixels in bank 7: per column of a word, its four
-  character rows' addresses, each row - 16 bytes, two a line - kept once:
+  character rows' numbers, each row - 16 bytes, two a line - kept once:
   150 different ones of 384, the sky and the mountains' bodies being many
-  columns'; 3.2K instead of 6K). That takes
+  columns'; 2.8K instead of 6K). That takes
   ~1.4 ms, done at the flip, before the sky part is on screen, so it never
   tears. The dithered sky repeats every word, so only the mountains seem to
   move.
@@ -423,6 +425,33 @@ row count and R5 lines.
   sky part's size waits for the interrupt at ~170, in the sky part. The VSYNC's handler checks that it is in VSYNC; if a frame
   is ever out of step, the handler falls back to a plain frame until the
   next VSYNC.
+
+### The loader
+
+`disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, loads `SELECT.SCR`
+at `&C000` (the title and the cars, `tools/mkselect.py`, "LOADING" in pen
+14), then each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and `GAME.BIN` at
+`&4000` with its bank (4-7) switched in there, `SOUND.BIN` at `&98C0` and
+`RACE.BIN` at `&A0C0`. Then it inks "LOADING" out and the keys' line in,
+draws the picked car's frame in pen 13 (flashing, `INK 13,24,15`; the
+others' in pen 2) with `DRAWR`, and prints the difficulties where "LOADING"
+was: the small font's letters as characters 240-249 (`SYMBOL`), with `TAG`
+at the graphics cursor, a letter at a time, each key in pen 15, each word in
+pen 3 (the credits' sky blue) and the one picked in 13. When the car is
+picked it loads its `CARn.BIN` at `&1900` (`CAR_BLOB`), POKEs the
+difficulty into it (`&1906`, `CAR_DIFF`: its first record's byte, 32 a
+step, which `boot_car` puts in `coll_diff`), and loads `BOOT.BIN` at
+`&4000` and calls it.
+
+It has no room for more. BASIC loads nothing under `HIMEM` ("Memory full"),
+so `HIMEM` stays under `CAR_BLOB`, the lowest file; and its first file takes
+4K under `HIMEM` for its buffers. So the program, its variables and those
+4K share `&0170-&18FF`: `FRE(0)` after `MEMORY &18FF` was 4233 bytes (some
+60 to spare), 2843 with the difficulties written as the other lines were -
+"Memory full". So the loader's notes are here, not in `REM`s, and the
+letters (7 lines each) and the words (each letter's number and pixel) are
+in `SELECT.SCR`'s hidden bytes, the last 48 of its first three 2K blocks,
+read with `PEEK`: 4473 free now.
 
 ### Memory
 
@@ -1041,14 +1070,37 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   the car's lower half (`HIT_Y`), the two overlapping by more than
   `HIT_TRIM` bytes in from either's side: what is seen touching it. The
   traffic's (`tr_one`) and the bushes' (`bush_one`) drawing tells, as it
-  places them, into `coll` (common memory), with the side it was on;
+  places them, into `coll` (common memory), with the side it was on and,
+  a car, how many bytes its middle is off ours (13 at most);
   `car_lines` leaves the car's place for them in `car_offc`. A bush beside
   the road can touch the car only when it is on the grass.
 - **A car: a bump.** For a second (`BUMP_T`) the car is shoved away from
-  the one it hit, 0.94 pairs a picture (Out Run: 12 a step for 10 steps),
-  wobbling - its turning views left and right - and no faster than
-  `BUMP_SPEED`, just slower than the traffic, so that the car hit goes on
-  ahead; meanwhile nothing else bumps it. The player steers on.
+  the one it hit, wobbling - its turning views left and right - and slows
+  at once, so that the car hit goes on ahead; meanwhile nothing else bumps
+  it. The player steers on. How hard goes by the difficulty picked (The
+  loader) and, but on EASY, by where it hit (since 2026-11-09, `bump_tab`
+  in `game.asm`, by the bytes off the other's middle; the difficulty's 32
+  bytes `coll_diff`'s): the shove, pairs a picture (25 pictures of it in
+  all), and the speed at most after it:
+
+  | Off its middle | EASY | MEDIUM | HARD |
+  |---|---|---|---|
+  | 0-3 bytes | 0.94, 4.25 | 0.25, 1.75 | 0.38, 1 |
+  | 4-5 | 0.94, 4.25 | 0.38, 2.5 | 0.63, 1.5 |
+  | 6-7 | 0.94, 4.25 | 0.63, 3.25 | 1, 2 |
+  | 8-9 | 0.94, 4.25 | 1, 4.25 | 1.5, 2.5 |
+  | 10-11 | 0.94, 4.25 | 1.5, 4.25 | 2, 3 |
+  | 12-13 | 0.94, 4.25 | 1.9, 4.25 | 2, 3 |
+
+  Speeds in depth units a VSYNC: the traffic goes at 4.5, the fastest car
+  at 9.8. EASY is Out Run's bump (12 a step for 10 steps), as it was till
+  then, just slower than the traffic, so that the car hit goes on ahead.
+  On MEDIUM, square on the car loses most of its speed and hardly moves;
+  off the other's side it loses what it did on EASY and is thrown across
+  the road, at the sixth row as hard as a crash, the wheel's 0.6-0.9 a
+  picture not enough to hold it. HARD is slower still and throws it
+  further (no more than 2 pairs a picture: the crash's 1.9 is what the
+  road's steps have been measured with).
 - **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
   it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
   of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
@@ -1104,13 +1156,16 @@ down, the ground elsewhere (`src/labels.asm`: 156 bytes of masks for 604
 of pixels, in `SOUND.BIN`, put where the first picture's road goes).
 
 The last line holds the game's message: 15 cells of the small font's
-glyphs (the digits, the 18 letters and the marks the messages use, 24
-bytes each),
+glyphs (the digits, the 18 letters and the marks the messages use: 3 bytes
+on 8 lines, each different line kept once - 67 of 256, `small_rows` - and
+`small_digits` for each glyph the low byte of its 8, 457 bytes in all for
+768),
 each buffer redrawing the cells that differ from what it shows, left to
-right, 4 at most a picture (~0.25 ms each, its 3 x 8 bytes copied by
-`draw_cell`: the line is a character row's first) and only before the
+right, 4 at most a picture (~0.3 ms each, its 3 x 8 bytes copied by
+`draw_cell`: TOTAL TIME's digits too, `draw_small`, across a character row)
+and only before the
 9th interrupt since the flip - so a message comes and goes as a wipe over
-a few pictures (`hud_msg`): ~1.5 ms in each of those, nothing in the
+a few pictures (`hud_msg`): ~1.7 ms in each of those, nothing in the
 others (a buffer looks again only when the message changes).
 
 ### Sound
@@ -1302,6 +1357,40 @@ taken (bush erase 2.4 ms, project 10.2, road 19.7, the near car 2.4, bushes
 indicator takes as long as it did. It no longer comes up, but only because
 the races take other paths: such a picture can still happen.
 
+With a pass over the speed and the memory (later on 2026-11-09), nothing on
+the screen changed: the same 24 races, 29.72 ms on average (30.31 before),
+38.5 ms at worst (39.2), none past the flip; crashes 37.9 ms at worst (38.1);
+every check as before; the demo 0.4-0.8 ms quicker on average, 38.6 ms at worst
+as before. A road line's dispatch no longer reads and
+writes a variable (`line_done_a`, `_b`: `LD SP,nn`, its operand each band's own)
+and goes by a `JR` to the other band, whose switch leaves the grass in its
+register (the other set's `BC` carries the port); `rp_line_cmp` has `BC` to work
+with, the rows in the other set; `rp_near_skip` counts in `IXH`; the sky's turn
+multiplies nothing on a road with no curve - a hill's, the heaviest. In the
+heaviest pictures (58 of 3965 over 36.5 ms): the road 18.9 ms, of which 3.9 the
+grass and 2 the lines' dispatch; `road_project` 8.9; the bushes and props 2.1;
+the traffic 1.9; the car 1.4; the erase 1.4; the game 1; the HUD 0.8. Their lines:
+21 whole, 35 the road alone, 5 with a margin, 17 already right.
+
+And for room in bank 7, the same pictures byte for byte: the small font as above
+(311 bytes less, less 30 before a page) and `pano_cols` a row's number, not its
+address (384 less, less 8 before a page; `ring_col`: ~0.02 ms more a column,
+at the flip): 651 bytes free there, against 9.
+
+With the bumps going by where they hit (later still on 2026-11-09, `bump_tab`
+under Collisions): the same 24 races, 38.2 ms at worst, none past the flip;
+29.50 ms on average, only because a slower car has fewer heavy pictures; every
+check as before; 595 bytes free in bank 7. The autopilot, which hits 8-25 cars a
+race and has no idea of the shove, finishes all 24 with 14-32 s left (18-38
+before). That became MEDIUM, the bumps before it EASY, and HARD was added (the
+loader picks one): on the same four races, logged hit by hit, the autopilot
+finished with 23-36 s left on EASY, 16-32 on MEDIUM and 11-22 on HARD. The
+whole suite on HARD: 38.96 ms at worst in the races (38.64 on MEDIUM), none past
+the flip, every check as before, all 24 finished with 3-30 s left (14-34 on
+MEDIUM); 529 bytes free in bank 7. The demo's worst, 39.15 ms, is the same on
+both, with no bump in it: the game starts a few pictures later now (the loader
+prints the difficulties), and the demo met traffic the old start never had.
+
 With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
 four routes in the four cars, the clock kept and not, 37.6-38.7 ms at
 worst, none past the flip (the build before, the same races: 37.7-39.7
@@ -1436,7 +1525,8 @@ worst instead of 39.3, steering as it was.
 [floooh/chips](https://github.com/floooh/chips), with the real ROMs. It boots
 BASIC and types `RUN"COUNTRY`, the way a person would, and on the loader's
 screen the car's number: the first car, or `CAR` (0-3) - the reference
-model then draws that one.
+model then draws that one - after the difficulty's key, `LEVEL` (E, M or H;
+M if none).
 
 `make check` then:
 
@@ -1548,7 +1638,8 @@ tools/
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts, the cars', the traffic's and the trees' renders; the
                 select screen's pictures of the cars (assets/cars/photo_*)
-disc/           BASIC loader: the car picked as the game loads
+disc/           BASIC loader: the car and the difficulty picked as the game
+                loads
 docs/           screenshots, the manuals (manual-en, manual-el: .md and .pdf)
 ```
 

@@ -166,11 +166,16 @@ init_end
 ;; loads at CAR_BLOB for the car picked and boot.asm puts in place), and the
 ;; screen the car is picked on (SELECT.SCR, tools/mkselect.py)
 ;; ---------------------------------------------------------------------------
-CAR_BLOB    EQU #1900                   ; (the loader's MEMORY is below it;
+CAR_BLOB    EQU #1900                   ; (past the loader's program, its
+                                        ; MEMORY above: disc/country.bas;
                                         ; the hidden lines of buffer 1's block 3
                                         ; are below it too: boot_car puts code
                                         ; there)
 CAR_MAGIC   EQU #5243                   ; "CR"
+CAR_DIFF    EQU CAR_BLOB+6              ; the difficulty picked, 0, 1 or 2 x
+                                        ; DIFF_ROWS (game.asm): its record's
+                                        ; byte, the first - the loader POKEs it
+                                        ; (disc/country.bas line 310)
     INCLUDE "gen/cars.asm"
 
 ;; ---------------------------------------------------------------------------

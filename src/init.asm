@@ -127,7 +127,7 @@ draw_static
     call draw_label
     ld ix,lbl_quote
     ld bc,(TOTAL_VAL_X+TOTAL_QUOTE_X)*256+TOTAL_VAL_Y
-    jp draw_label
+    jr draw_label
 
 ;; ---------------------------------------------------------------------------
 ;; draw_label - IX = label (defb width, then 8 lines), B = x, C = y.

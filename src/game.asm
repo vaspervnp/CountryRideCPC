@@ -348,10 +348,10 @@ draw_picture_hud
 cache_steps
     ld a,(rp_cmp)               ; a level only if the last picture's hill
     or a                        ; did not move
-    jp nz,cache_steps_x
+    jr nz,cache_steps_x
     ld b,HILL_STEP_AHEAD+1      ; nor is a hill here or just ahead
     call hill_near_b
-    jp nz,cache_steps_x
+    jr nz,cache_steps_x
     ld a,(curve_wait)
     or a
     jr nz,cache_steps_x
@@ -463,10 +463,8 @@ CAR_PUSH_M  EQU 64
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
                                 ; its base line on the car's lower half...
 HIT_TRIM    EQU 2               ; ... the two overlapping, this many bytes in
-BUMP_T      EQU 25              ; a bump (Out Run: a car hit), pictures
-BUMP_V      EQU 240             ; ... the shove away from it, 8.8 pairs a
-                                ; picture (Out Run: 12 a step for 10 steps)
-BUMP_SPEED  EQU TR_SPEED*128-#40 ; ... the speed at most: the car hit goes on
+BUMP_T      EQU 25              ; a bump (Out Run: a car hit), pictures: the
+                                ; shove and the speed as bump_tab says
 CRASH_T     EQU 45              ; a crash (a bush), pictures (Out Run: 1.5-2 s)
 CRASH_V     EQU 480             ; ... the shove away from it (24 a step, 20)
 CRASH_BRK   EQU 24              ; ... the speed lost a VSYNC, to a standstill
@@ -717,21 +715,45 @@ neg_hl
 ;; ---------------------------------------------------------------------------
 ;; coll_start - B = what the car touched (coll): a bump or a crash begins,
 ;; as in Out Run (SMS: L2B84). A car (bit 7): BUMP_T pictures of the car
-;; shoved away from it, and no faster than BUMP_SPEED, so that the one it
-;; hit goes on ahead; meanwhile no other bump. A bush (bit 6), off the
-;; road: a crash, CRASH_T pictures of the car shoved away from it - across
-;; the road - out of control, slowing to a standstill (speed_player); then
-;; back to the middle of the road, BACK_T pictures at most, and off again.
-;; Both wobble (coll_step).
+;; shoved away from it, meanwhile no other bump - hit square on, it loses
+;; most of its speed and is hardly shoved, so that the one it hit goes on
+;; ahead; off its side, it loses less and is thrown out (bump_tab: by the
+;; difficulty picked, coll_diff). A bush
+;; (bit 6), off the road: a crash, CRASH_T pictures of the car shoved away
+;; from it - across the road - out of control, slowing to a standstill
+;; (speed_player); then back to the middle of the road, BACK_T pictures at
+;; most, and off again. Both wobble (coll_step). Keeps C.
 ;; ---------------------------------------------------------------------------
 coll_start
-    ld hl,BUMP_V
-    ld de,BUMP_T                        ; (D: the kind, a bump)
     bit 6,b
-    jr z,coll_set
+    jr z,coll_car
     call jump_start                     ; (jump.asm: at speed, thrown up)
     ld hl,CRASH_V
     ld de,256+CRASH_T+BACK_T
+    jr coll_set
+coll_car
+    ld a,b
+    and #0E                             ; (bytes off its middle, even)
+    add a,a
+coll_diff
+    add a,DIFF_ROWS                     ; (CARn.BIN: the difficulty picked,
+                                        ; DIFF_ROWS a step - main.asm CAR_DIFF)
+    add a,lo(bump_tab)
+    ld l,a
+    adc a,hi(bump_tab)
+    sub l
+    ld h,a
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld a,(hl)
+    ld (coll_most+1),a
+    inc hl
+    ld a,(hl)
+    ld (coll_most+2),a
+    ex de,hl                            ; HL = the shove
+    ld de,BUMP_T                        ; (D: the kind, a bump)
 coll_set
     bit 0,b                             ; away: its right of ours, our car
     call z,neg_hl                       ; left (car_x up)
@@ -740,13 +762,50 @@ coll_set
     ASSERT coll_kind == coll_t+1
     bit 6,b
     ret nz
-    ld hl,(speed)                       ; a bump: no faster than BUMP_SPEED
-    ld de,BUMP_SPEED
+    ld hl,(speed)                       ; a bump: no faster than this
+coll_most
+    ld de,0                             ; (self-modified)
     or a
     sbc hl,de
     ret c
     ld (speed),de
     ret
+
+;; a bump, by the difficulty and by how many bytes our car's middle is off
+;; the car it hit's: the shove away from it (8.8 pairs a picture, for BUMP_T
+;; pictures), the speed at most (8.8 depth units a VSYNC: the traffic goes at
+;; #0480, the top speed is #09D8 at most)
+bump_tab
+    ; EASY: as Out Run, wherever it hit
+    defw 240,#0440                      ; 0-1: square on
+    defw 240,#0440                      ; 2-3
+    defw 240,#0440                      ; 4-5
+    defw 240,#0440                      ; 6-7
+    defw 240,#0440                      ; 8-9
+    defw 240,#0440                      ; 10-11
+    defw 240,#0440                      ; 12-13: off its side
+    defw 240,#0440                      ; 14-15
+DIFF_ROWS   EQU $-bump_tab
+    ; MEDIUM: square on, most of the speed lost; off its side, thrown out
+    defw 64,#01C0
+    defw 64,#01C0
+    defw 96,#0280
+    defw 160,#0340
+    defw 256,#0440
+    defw 384,#0440
+    defw 480,#0440
+    defw 480,#0440
+    ; HARD: slower still, and thrown out further
+    defw 96,#0100
+    defw 96,#0100
+    defw 160,#0180
+    defw 256,#0200
+    defw 384,#0280
+    defw 512,#0300
+    defw 512,#0300
+    defw 512,#0300
+    ASSERT $-bump_tab == 3*DIFF_ROWS && 3*DIFF_ROWS <= 256
+    ASSERT DIFF_ROWS == 32              ; (disc/country.bas line 310)
 
 ;; coll_step - A = coll_t, not 0: a picture of a bump or a crash. HL = the
 ;; car's move: the shove added - or, the crash over, the way back to the
@@ -1064,6 +1123,8 @@ demo_z_ok
 
     ; the sky turns with the road: head_acc += curve x speed (whole depth
     ; units a VSYNC), a word right or left every HEAD_STEP
+    or a
+    jr z,demo_head_done         ; (none: head_acc stays under a step)
     ld e,a
     ld d,0
     rla
@@ -1106,7 +1167,7 @@ demo_head_set
     ld (heading),a
 demo_head_done
 
-    jp rules_vbl
+    jr rules_vbl
 
 ;; ---------------------------------------------------------------------------
 ;; rules_vbl - (demo_step) a VSYNC of the race's rules (the start of a race,
@@ -1125,7 +1186,7 @@ rules_vbl
     dec a
     jr z,rules_ready
     dec a
-    jp z,rules_race
+    jr z,rules_race
     dec a
     jp z,rules_over
     jp rules_demo               ; (race.asm)

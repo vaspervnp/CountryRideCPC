@@ -198,7 +198,7 @@ rp_second
     dec b
     exx
     jr nz,rp_pair
-    jp rp_far
+    jr rp_far
 
 ;; Past FAR_Z the grass and the asphalt stay band A's; the kerbs and lane
 ;; dashes go on moving: band 0's template or band 2's, by a longer dash.
@@ -255,7 +255,7 @@ rp_far
     ld hl,(rp_vars)
     ld a,(rp_old_level)
     cp (hl)
-    jp nz,rp_far_hill
+    jr nz,rp_far_hill
 
 rp_far_line
     ld a,(bc)                           ; the row this line shows
@@ -351,7 +351,7 @@ rp_fdash2
     exx
     dec b
     exx
-    jp nz,rp_far_hill_line
+    jr nz,rp_far_hill_line
     jp rp_done
 rp_far_hill_new                         ; another row: the whole line, or a
 rp_far_near                             ; margin if the hill alone moved
@@ -386,7 +386,7 @@ rp_far_hill_next
     dec b
     exx
     jp nz,rp_far_hill_line
-    jp rp_done
+    jr rp_done
 
 ;; the curve moved (or nothing is known): every far line is drawn, with
 ;; only its road and a margin if the hill is the same (rp_mode)
@@ -582,7 +582,9 @@ rp_cmp_d
 rp_cmp_all
     pop af
     push iy
+    push bc
     exx
+    pop de                              ; DE': the rows now
     pop hl                              ; HL': the rows then
     ld b,a                              ; B': lines
     exx
@@ -592,23 +594,22 @@ rp_cmp_all
 ;; one in the list (as rp_near_same) - when nothing but the hill moved; else
 ;; flagged as RP_LINE does. Another row: as rp_mode_rows says (rp_flx), or
 ;; 0, all of it, if the grass's stripe on it is not the one on the row then.
+;; C = depth + zcam, B = another row's flag.
 rp_line_cmp
-    ld a,(bc)                           ; the row this line shows
-    inc bc
-    ld l,a
-    ld h,hi(rr_depth)
-    ld a,(hl)                           ; depth, low byte
-rp_zlo7
-    add a,0                             ; + zcam (self-modified)
-    ld ixl,a
-    ld a,l
     exx
+    ld a,(de)                           ; the row this line shows ...
+    inc de
     cp (hl)                             ; ... and showed then
     inc hl
     exx
+    ld l,a
+    ld h,hi(rr_depth)
     jr nz,rp_other_cmp
+    ld a,(hl)                           ; depth, low byte
+rp_zlo7
+    add a,0                             ; + zcam (self-modified)
+    ld c,a
     inc h
-    ld a,ixl
     and (hl)                            ; 64 (0 for the ground)
     rrca
     inc h
@@ -623,7 +624,7 @@ rp_cmp_sk
     ld h,hi(rr_tlo)
     ld a,3
     jr z,rp_same_cmp                    ; the same: skipped
-    ld a,ixl
+    ld a,c
     add a,a
 rp_dz7
     cp 0                                ; (self-modified, as rp_dz)
@@ -640,6 +641,11 @@ rp_same_cmp
     dec b
     exx
     jr nz,rp_line_cmp
+rp_cmp_end
+    exx
+    push de
+    exx
+    pop bc                              ; (the rows now: on to the far lines)
     jp rp_skip_end                      ; (road15.asm: rp_force, rp_far)
 
 rp_put_cmp
@@ -647,7 +653,7 @@ rp_put_cmp
     or (hl)                             ; template, low byte
     ld (de),a
     inc e
-    ld a,ixl
+    ld a,c
     inc h
     inc h
     and (hl)                            ; 64 (0 for the ground)
@@ -662,7 +668,7 @@ rp_put_cmp
     dec b
     exx
     jr nz,rp_line_cmp
-    jp rp_skip_end
+    jr rp_cmp_end
 
 rp_other_cmp                            ; another row (CF: a further one)
     ld a,0
@@ -671,15 +677,19 @@ rp_flx
     inc a                               ; 2: the road and a margin
 rp_flx2
     inc a
+    ld b,a
+    ld a,(rp_zlo7+1)
+    add a,(hl)
+    ld c,a
+    ld a,b
     or a
     jr z,rp_put_cmp                     ; (0: all of it anyway)
-    ld ixh,a                            ; another row's flag ...
     ld a,l
     cp GRASS_ROW
-    ld a,ixl
+    ld a,c
     jr nc,$+4
     and #7F                             ; (past the stripes: GRASS_PAIR's)
-    ld ixl,a                            ; (bit 7 is not the band's)
+    ld c,a                              ; (bit 7 is not the band's)
     push hl
     exx
     dec hl
@@ -697,11 +707,11 @@ rp_zo
     jr nc,$+4
     and #7F
     pop hl
-    xor ixl
+    xor c
     add a,a
     sbc a,a
     cpl
-    and ixh
+    and b
     jr rp_put_cmp
 
 ;; ---------------------------------------------------------------------------

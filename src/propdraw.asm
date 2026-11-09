@@ -94,7 +94,7 @@ pdc_next
     ld a,(prp_hleft)
     or a
     jr nz,pdc_group
-    jp pd_column
+    jr pd_column
 pdc_lcut                                ; A = its x, left of the screen
     add a,c
     ld ixl,a                            ; (the x past it)

@@ -51,7 +51,7 @@ st5
     ld hl,#00FE                         ; the list's end
     push hl
     ld l,#CD                            ; group 0
-    jp st5_grp
+    jr st5_grp
 
 ;; the loop: L = a group's lane, SP = the list
 st5_grp
@@ -87,7 +87,7 @@ st5_sp
 st5_fend                                ; the far groups done: the rest, with
     ld a,l                              ; no band 2
     cp #CD+NFAR
-    jp c,st5_grp
+    jr c,st5_grp
     ld a,st5_movedn-st5_mvj-2
     ld (st5_mvj+1),a
     ld a,#C2                            ; JP NZ,st5_grp
@@ -95,7 +95,7 @@ st5_fend                                ; the far groups done: the rest, with
     ld (st5_end),a
     ld (st5_end+1),hl
     ld l,#CD+NFAR
-    jp st5_grp
+    jr st5_grp
 st5_back
     ld a,ixl
     ld l,a

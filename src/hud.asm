@@ -369,33 +369,67 @@ hud_msg_next
     ld (hl),1
     ret
 
-;; draw_cell - (hud_msg) small glyph A at DE, a character row's first line:
-;; its lines #800 apart, in one row. Destroys AF, BC, DE, HL.
-draw_cell
-    ld l,a                      ; 24 bytes a glyph
+;; draw_small - small glyph A (0-9 the digits, then gen/gfx.asm's) at B = x
+;; bytes - 64 or more - C = y.
+draw_small
+    ASSERT TOTAL_VAL_X >= 64
+    push af
+    push bc
+    ld l,c
     ld h,0
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    ld b,h
-    ld c,l
-    add hl,hl
-    add hl,bc
-    ld bc,small_digits
-    add hl,bc
-    ld bc,SMALL_H*256+#FF       ; (C: LDI's count, never down to 0)
+    call line_addr
+    pop bc
+    ld a,b
+    add a,l
+    ld e,a
+    adc a,h
+    sub e
+    ld d,a                      ; DE = where it goes
+    pop af
+
+;; draw_cell - (hud_msg) small glyph A at DE, its bytes in one page on each
+;; line: its lines #800 apart, on to the next character row past a row's last
+;; line - a line at a time from small_rows, as small_digits says. Destroys AF,
+;; BC, DE, HL.
+draw_cell
+    add a,a
+    add a,a
+    add a,a
+    ld c,a
+    ld b,hi(small_digits)       ; BC = the glyph's lines
+    ld h,hi(small_rows)
 draw_cell_line
-    ldi
-    ldi
-    ldi
+    ld a,(bc)
+    ld l,a
+    ld a,(hl)
+    ld (de),a
+    inc l
+    inc e
+    ld a,(hl)
+    ld (de),a
+    inc l
+    inc e
+    ld a,(hl)
+    ld (de),a
+    dec e                       ; (no carry: see above, and the cells end at
+    dec e                       ; MSG_X + 39 in a row starting at #x40)
+    inc c
+    ld a,c
+    and SMALL_H-1
+    ret z
     ld a,d                      ; the next line
     add a,8
     ld d,a
-    dec e                       ; (no carry: the cells end at MSG_X + 39
-    dec e                       ; in a row starting at #x40)
-    dec e
-    djnz draw_cell_line
-    ret
+    jp p,draw_cell_line
+    sub #40                     ; the next row: 8 lines on is #4000 on
+    ld d,a
+    ld a,e
+    add a,96
+    ld e,a
+    jr nc,draw_cell_line
+    inc d
+    jr draw_cell_line
+    ASSERT SMALL_H == 8
     ASSERT MSG_Y % 8 == 0 && SMALL_W == 3
 
 ;; ---------------------------------------------------------------------------
@@ -424,26 +458,6 @@ draw_big
     ld a,blit_down-blit_twice-2
     ld (blit_twice+1),a
     ret
-
-;; ---------------------------------------------------------------------------
-;; draw_small - small glyph A (0-9 the digits, then gen/gfx.asm's) at B = x
-;; bytes, C = y.
-;; ---------------------------------------------------------------------------
-draw_small
-    ld l,a                      ; 24 bytes a digit
-    ld h,0
-    add hl,hl
-    add hl,hl
-    add hl,hl                   ; *8
-    ld d,h
-    ld e,l
-    add hl,hl                   ; *16
-    add hl,de                   ; *24
-    ld de,small_digits
-    add hl,de
-    ld d,SMALL_W
-    ld e,SMALL_H
-    jp blit
 
 ;; ---------------------------------------------------------------------------
 ;; gauge_update - move a gauge one segment towards its value (all of it if

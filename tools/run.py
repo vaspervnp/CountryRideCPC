@@ -99,12 +99,14 @@ def trace(c, n):
 
 class Game:
     """The game booted from the disc, with car CAR (env, 0-3: the loader's
-    screen picks it by its number) - scene.py set to it too."""
+    screen picks it by its number) - scene.py set to it too - and the
+    difficulty LEVEL (env, E, M or H: its key there; M if none)."""
 
     def __init__(self, car=None):
         CPC = load_emulator().CPC
         self.sym = symbols()
         self.car = int(os.environ.get("CAR", "0")) if car is None else car
+        self.level = os.environ.get("LEVEL", "M").lower()
         import scene
         scene.set_car(self.car)
         self.c = CPC()
@@ -125,7 +127,7 @@ class Game:
                 if w == magic:
                     phase = 1
                 elif i % 100 == 50:
-                    self.c.type_text(str(self.car + 1))
+                    self.c.type_text(self.level + str(self.car + 1))
             elif phase == 1 and not w >> 8:
                 phase = 2
             elif phase == 2:
@@ -137,6 +139,8 @@ class Game:
             raise SystemExit("the game never drew a picture (PC #%04X)"
                              % self.c.pc)
         assert self.game_byte("CAR_ID") == self.car, (self.game_byte("CAR_ID"), self.car)
+        assert self.game_byte("COLL_DIFF", 1) == 32 * "emh".index(self.level), \
+            (self.game_byte("COLL_DIFF", 1), self.level)
 
     def byte(self, name, off=0):
         return self.c.read_ram(self.sym[name] + off, 1)[0]

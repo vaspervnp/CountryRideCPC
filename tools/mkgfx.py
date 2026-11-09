@@ -109,14 +109,26 @@ def gfx():
         defb_rows(emit, rows[::2])
     emit("")
 
+    # (a line's three bytes are many glyphs': each different one is kept once)
+    small = {}
+    glyphs = [[small.setdefault(tuple(r), 3 * len(small)) for r in encode_rows(S.small_glyph(ch))]
+              for ch in S.MSG_GLYPHS]
+    assert len(S.MSG_GLYPHS) == 32 and all(len(g) == 8 for g in glyphs) and len(small) <= 85
     emit(";; small glyphs, 3 bytes x 8 lines: the digits 0-9, then the space")
-    emit(";; and the letters of the messages (scene.py MSG_GLYPHS)")
+    emit(";; and the letters of the messages (scene.py MSG_GLYPHS). small_rows")
+    emit(";; holds the %d different lines (of %d), small_digits for each glyph the"
+         % (len(small), 8 * len(glyphs)))
+    emit(";; low byte of each of its 8: both in a page, so 8 x a glyph is its place")
     emit("SMALL_W EQU 3")
     emit("SMALL_H EQU 8")
+    emit("small_rows")
+    defb_rows(emit, list(small))
+    emit("    ASSERT hi(small_rows) == hi($-1)")
+    emit("    ALIGN 256")
     emit("small_digits")
-    for ch in S.MSG_GLYPHS:
+    for ch, g in zip(S.MSG_GLYPHS, glyphs):
         emit("; %s" % ch)
-        defb_rows(emit, encode_rows(S.small_glyph(ch)))
+        emit("    defb " + ",".join("lo(small_rows+%d)" % i for i in g))
     emit("")
 
     # the messages: MSG_W glyph numbers each, centred
@@ -291,14 +303,16 @@ def horizon(top):
                      for r in range(nrows)])
     emit(";; the panorama, lines %d..%d: for each of the %d words across, its"
          % (y0, G.BLOCK_BOTTOM - 1, S.PANO_WORDS))
-    emit(";; %d character rows' addresses in pano_rows - each row its two bytes on"
+    emit(";; %d character rows' numbers in pano_rows - each row its two bytes on"
          % nrows)
     emit(";; each of its 8 lines, top to bottom, %d different ones of %d"
          % (len(rows), nrows * S.PANO_WORDS))
+    assert len(rows) <= 256
     emit("PANO_COL_ROWS EQU %d" % nrows)
     emit("pano_cols")
     for p in ptrs:
-        emit("    defw " + ",".join("pano_rows+%d" % (16 * i) for i in p))
+        emit("    defb " + ",".join("%d" % i for i in p))
+    emit("    ALIGN 256                   ; (ring_col: 16 x a number is its place)")
     emit("pano_rows")
     defb_rows(emit, sorted(rows, key=rows.get))
     emit("")

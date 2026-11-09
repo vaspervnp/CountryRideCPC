@@ -370,7 +370,7 @@ cj_go
     ret nz
     ld a,(rd_n2)
     or a
-    jp z,lane_pre
+    jr z,lane_pre
     ld a,(pre_g)
     or a
     jr nz,cache_drop                    ; (a job moves the sums as they are)
@@ -426,7 +426,7 @@ lane_pre
 lp_none
     ld a,(pre_g)
     or a
-    jp nz,cache_drop
+    jr nz,cache_drop
     ret                                 ; (Z: no work)
 
 ;; ---------------------------------------------------------------------------

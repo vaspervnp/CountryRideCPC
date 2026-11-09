@@ -35,12 +35,6 @@ tr_sp
 ;; line's second word, the call's on its first). tr_stx: BC = #800 + dx.
 ;; Destroys BC, F.
 ;; ---------------------------------------------------------------------------
-tr_stm4
-    ld bc,#0800-4
-    jr tr_stx
-tr_stm3
-    ld bc,#0800-3
-    jr tr_stx
 tr_stm2
     ld bc,#0800-2
     jr tr_stx
@@ -49,15 +43,6 @@ tr_stm1
     jr tr_stx
 tr_st1
     ld bc,#0800+1
-    jr tr_stx
-tr_st2
-    ld bc,#0800+2
-    jr tr_stx
-tr_st3
-    ld bc,#0800+3
-    jr tr_stx
-tr_st4
-    ld bc,#0800+4
     jr tr_stx
 tr_st0
     ld bc,#0800

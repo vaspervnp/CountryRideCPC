@@ -13,6 +13,11 @@ It is the title screen too: COUNTRY RIDE above the cars, twice as wide
 and high as the small font, yellow to orange to red down its lines; and
 the credits at the bottom.
 
+Under the cars the loader prints the difficulties itself, once loaded,
+where "loading" was: each its key and its word, the one picked flashing
+(DIFFS: in the small font, as characters 240 on, which it reads from this
+screen's hidden bytes - the loader's program has no room for them).
+
 The side views are pictures of the cars the models are after (PHOTOS,
 below; a car without one would show its model's render, tools/cars3d.py
 SIDE=True: assets/cars/side_<car>.png), brought to this screen's own pens
@@ -95,6 +100,9 @@ TITLE_PENS = "YYYYOOOOORRRRR"             # its 14 lines' pens, top down
 LOADING = "LOADING"
 KEYS = "1-4 OR ARROWS, THEN FIRE"
 CREDITS = "REVIVE8BIT - 2026 - VASPER"
+DIFFS = ["EASY", "MEDIUM", "HARD"]            # (each its first letter's key)
+DIFF_Y = 176                                  # (as "loading": graphics y 47)
+DIFF_GAP = 3                                  # spaces between them
 
 # This screen's own pens: letter, firmware colour. The cars' and the
 # screen's colours (pink: the red paint's highlights; pastel cyan: the
@@ -375,12 +383,65 @@ def screen():
     return scr
 
 
+def advance(s):
+    """Pixels from s's first letter to what follows it (text(): a pixel
+    apart)."""
+    return sum(len(SMALL[SMALL_NAMES.get(ch, ch)][0]) + 1 for ch in s)
+
+
+def diffs():
+    """The difficulties' line: each one's key, a space and its word,
+    DIFF_GAP spaces apart, centred: (key's x, word's x, word) each, in
+    pixels."""
+    gap = " " * DIFF_GAP
+    x = (W - advance(gap.join(w[0] + " " + w for w in DIFFS)) + 1) // 2
+    out = []
+    for w in DIFFS:
+        out.append((x, x + advance(w[0] + " "), w))
+        x += advance(w[0] + " " + w + gap)
+    return out
+
+
+def diffs_drawn(scr, picked):
+    """What the loader prints: the keys in KEYS's pen, the words in the
+    credits' (S), the one picked in LIT's."""
+    for i, (x, xw, w) in enumerate(diffs()):
+        stamp(scr, x, DIFF_Y, text(w[0], PEN["KEYS"], shadow=False))
+        stamp(scr, xw, DIFF_Y, text(w, PEN["LIT"] if i == picked else PEN["S"],
+                                    shadow=False))
+
+
+def hidden_bytes():
+    """What the loader reads from this screen's hidden bytes (48 at the end
+    of each 2K block, #x7D0 on): letters 1-10's 7 lines (SYMBOL: a bit a
+    pixel, the leftmost the top bit), 6 in the first block and the rest in
+    the second; in the third, the keys and the words, each the letters' count
+    then each one's number and pixel: {offset: bytes}."""
+    letters = "".join(dict.fromkeys("".join(DIFFS)))
+    assert len(letters) <= 10
+    glyphs = bytearray()
+    for ch in letters:
+        g = SMALL[SMALL_NAMES.get(ch, ch)]
+        assert len(g) == 7 and len(g[0]) <= 8
+        glyphs += bytes(sum(0x80 >> i for i, c in enumerate(r) if c == "#") for r in g)
+    words = bytearray()
+    for x, xw, w in diffs():
+        words += bytes([1, letters.index(w[0]) + 1, x, len(w)])
+        for ch in w:
+            words += bytes([letters.index(ch) + 1, xw])
+            xw += advance(ch)
+    assert len(words) <= 48
+    return {0x7D0: glyphs[:42], 0xFD0: glyphs[42:], 0x17D0: words}
+
+
 def to_bytes(scr):
     mem = bytearray(0x4000)
     for y in range(H):
         a = (y & 7) * 0x800 + (y >> 3) * 80
         for b in range(80):
             mem[a + b] = m0_byte(scr[y][2 * b], scr[y][2 * b + 1])
+    for a, data in hidden_bytes().items():
+        mem[a:a + len(data)] = data
     return mem
 
 
@@ -391,6 +452,8 @@ def png(scr, path, lit=0, ready=True, sx=4, sy=2):
     ink = [c for _, c in PENS]
     ink[PEN["LOADING"]] = HIDDEN if ready else 26
     ink[PEN["KEYS"]] = 26 if ready else HIDDEN
+    if ready:
+        diffs_drawn(scr, 1)
     im = Image.new("RGB", (W * sx, H * sy))
     px = im.load()
     for y in range(H * sy):

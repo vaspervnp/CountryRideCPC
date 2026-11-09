@@ -30,7 +30,8 @@ car_offc    defb 0          ; car_off this picture (car_lines), for
                             ; traffic_draw
 coll        defb 0          ; what our car touched this picture (traffic_draw,
                             ; bush_one): bit 7 a car, bit 6 a bush, bit 0
-                            ; it was right of ours (steer)
+                            ; it was right of ours, bits 1-3 how far a car's
+                            ; middle was off ours, bytes / 2 (steer)
 main_cfg    defb RAM_C1     ; the RAM configuration the main code is in
                             ; while it waits for a flip (cache_job)
 front_buf   defb 0          ; buffer being shown (0/1)
@@ -60,7 +61,6 @@ road_curve  defb 0          ; ... the level the road is drawn with
 road_buf    defb 0          ; buffer road_project/road_draw work on
 
 ;; --- road_draw state ---------------------------------------------------------
-line_ptr    defw 0          ; next line list entry
 rd_save_sp  defw 0
 rp_dirty    defb 0          ; a bush may have covered the far road (bush.asm)
 rp_dlo      defb 0          ; ... and the lines it stood on, from
@@ -111,7 +111,7 @@ isr_out
 isr_sp
     ld sp,0                     ; (self-modified)
     ei
-    reti
+    ret
 
     defs 40,0
 isr_stack
@@ -518,16 +518,16 @@ rp_flag2_set
 rp_seg_in
     ld hl,rp_seg_out
     ld a,(rp_lo_c)
-    ld ixh,1
+    ld ixl,1
     jr rp_seg_set
 rp_seg_out
     ld hl,rp_skip_rest0                 ; (not again: rp_skip_r 0)
     xor a
-    ld ixh,3
+    ld ixl,3
 rp_seg_set
     ld (rp_skip_rest+1),hl
     ld (rp_skip_r+1),a
-    ld a,ixh
+    ld a,ixl
     ld (rp_skip_s3+1),a                 ; 1 or 3 ...
     inc a
     srl a
@@ -661,14 +661,14 @@ line_done_shadow_a
     ld a,ixl
     ld (de),a                           ; put back what the exit patch hid
 line_done_a
-    ld sp,(line_ptr)
-    pop hl                              ; where SP starts on the screen
+    ld sp,0                             ; the next entry (self-modified; each
+    pop hl                              ; band has its own: to_band_a, _b)
     pop de                              ; template
     ei                                  ; one instruction's chance for an
-    ld (line_ptr),sp                    ; interrupt: its return address then
+    ld (line_done_a+1),sp               ; interrupt: its return address then
     di                                  ; lands on the template just read
     bit 5,d
-    jp nz,to_band_b                     ; a band B template, in bank 5
+    jr nz,to_band_b                     ; a band B template, in bank 5
 line_go_a
     ex de,hl
     bit 0,l
@@ -726,6 +726,42 @@ line_patch
     ld h,hi(rgrass)
     jp (hl)
 
+;; only the road, cut short at the left: A = right grass entry, DE = screen,
+;; SP at the template's IX
+line_road_patch
+    pop ix                              ; the byte the patch hides
+    pop hl
+    ld (hl),#E9                         ; JP (HL)
+    ex de,hl                            ; DE = patch address, HL = screen
+    sub PAIRS
+    add a,a
+    jr nc,line_road_patch_go            ; the core reaches the right edge
+    add a,l
+    ld l,a
+    jr c,line_road_patch_go
+    dec h
+line_road_patch_go
+    ld sp,hl
+    exx
+    ex af,af'
+    jp (iy)
+
+;; --- switching band: registers, and the bank the cores are in -----------------
+;; DE = template, HL = screen, SP = the next entry. (BC of the other set is the
+;; cores' to load, a pair at a time; this set's stays the grass.)
+to_band_b
+    ld (line_done_b+1),sp
+    exx
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    ld hl,line_done_shadow_b
+    ld de,ROAD1_PAIR
+    exx
+    ld sp,kerb1_word
+    pop af
+    ex af,af'
+    jr line_go_b
+
 ;; --- band B -------------------------------------------------------------------
 line_done_shadow_b
     exx
@@ -733,14 +769,14 @@ line_done_shadow_b
     ld a,ixl
     ld (de),a
 line_done_b
-    ld sp,(line_ptr)
+    ld sp,0                             ; (self-modified)
     pop hl
     pop de
     ei
-    ld (line_ptr),sp
+    ld (line_done_b+1),sp
     di
     bit 5,d
-    jp z,to_band_a
+    jr z,to_band_a
 line_go_b
     ex de,hl
     bit 0,l
@@ -782,52 +818,17 @@ line_road_b
     ex af,af'
     jp (iy)
 
-;; only the road, cut short at the left: A = right grass entry, DE = screen,
-;; SP at the template's IX
-line_road_patch
-    pop ix                              ; the byte the patch hides
-    pop hl
-    ld (hl),#E9                         ; JP (HL)
-    ex de,hl                            ; DE = patch address, HL = screen
-    sub PAIRS
-    add a,a
-    jr nc,line_road_patch_go            ; the core reaches the right edge
-    add a,l
-    ld l,a
-    jr c,line_road_patch_go
-    dec h
-line_road_patch_go
-    ld sp,hl
-    exx
-    ex af,af'
-    jp (iy)
-
-;; --- switching band: registers, and the bank the cores are in -----------------
-;; DE = template, HL = screen.
-to_band_b
-    ld bc,#7F00+RAM_C5
-    out (c),c
-    exx
-    ld hl,line_done_shadow_b
-    ld de,ROAD1_PAIR
-    exx
-    ld sp,kerb1_word
-    pop af
-    ex af,af'
-    ld bc,(rd_grass)                    ; the grass goes on as it was
-    jp line_go_b
-
 to_band_a
+    ld (line_done_a+1),sp
+    exx
     ld bc,#7F00+RAM_C4
     out (c),c
-    exx
     ld hl,line_done_shadow_a
     ld de,ROAD0_PAIR
     exx
     ld sp,kerb0_word
     pop af
     ex af,af'
-    ld bc,(rd_grass)
 tb_jp
     jp tb_stripe                        ; (self-modified: line_go_a past the
                                         ; grass's stripes)
@@ -963,7 +964,7 @@ line_rmarg_a
     jr nz,line_rmarg_p
     ld ix,lgrassa+PAIRS
     ld l,a
-    jp line_margin_right
+    jr line_margin_right
 line_rmarg_sb
     bit 1,l
     jp nz,line_done_b
@@ -975,10 +976,10 @@ line_rmarg_b
     jr nz,line_rmarg_p
     ld ix,lgrassb+PAIRS
     ld l,a
-    jp line_margin_right
+    jr line_margin_right
 line_rmarg_p                            ; the core hangs off the left
     pop ix
-    jp line_margin_patch
+    jr line_margin_patch
 
 ;; sky_stay - (cache_steps, here for room) the flip is not to turn the sky
 ;; after all: the next picture has the road moved sideways to draw.
@@ -1151,7 +1152,7 @@ rd_start
     ld hl,rd_gb1
     ld de,list1
 rd_start_go
-    ld (line_ptr),de
+    ld (line_done_a+1),de
     ld a,(rd_grass0)
     ld (hl),a                           ; the bottom line's green, noted
     ld e,a
@@ -1171,7 +1172,7 @@ tb_stripe
     ld c,a
     ld b,a
     ld (rd_grass),bc
-    ld ix,(line_ptr)
+    ld ix,(line_done_a+1)
     ld sp,(rd_gbp)
     push ix
     ld (rd_gbp),sp
@@ -1189,7 +1190,7 @@ tm_mid
     ld hl,line_go_a
     ld (tb_jp+1),hl                     ; no more stripes
     ld de,(rd_mid_t)
-    ld ix,(line_ptr)
+    ld ix,(line_done_a+1)
     ld (ix-2),e
     ld (ix-1),d
     ld hl,0
@@ -1205,6 +1206,7 @@ tm_mid
 tm_mid_go
     bit 5,d                             ; (a near row's: band B's may be)
     jp z,line_go_a
+    ld sp,ix
     jp to_band_b
 
 ;; (render_end) the end of the buffer's grass changes, and back

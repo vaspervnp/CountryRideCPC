@@ -53,106 +53,92 @@ big_glyphs
     defb #80,#C0,#C0,#40
 
 ;; small glyphs, 3 bytes x 8 lines: the digits 0-9, then the space
-;; and the letters of the messages (scene.py MSG_GLYPHS)
+;; and the letters of the messages (scene.py MSG_GLYPHS). small_rows
+;; holds the 67 different lines (of 256), small_digits for each glyph the
+;; low byte of each of its 8: both in a page, so 8 x a glyph is its place
 SMALL_W EQU 3
 SMALL_H EQU 8
+small_rows
+    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#94,#68,#40,#C0,#00,#C0,#94
+    defb #C0,#C0,#3C,#40,#C0,#94,#40,#C0,#3C,#68,#C0,#80,#00,#C0,#80,#94
+    defb #40,#C0,#68,#40,#94,#80,#C0,#68,#40,#C0,#3C,#3C,#C0,#80,#00,#40
+    defb #80,#14,#C0,#C0,#94,#40,#C0,#14,#C0,#3C,#68,#40,#C0,#68,#C0,#94
+    defb #28,#C0,#68,#28,#C0,#28,#28,#C0,#80,#28,#40,#C0,#28,#C0,#C0,#80
+    defb #C0,#28,#00,#40,#68,#94,#40,#68,#00,#C0,#28,#C0,#C0,#28,#14,#C0
+    defb #80,#14,#40,#C0,#40,#C0,#94,#3C,#40,#C0,#14,#40,#C0,#C0,#C0,#94
+    defb #94,#C0,#94,#14,#40,#C0,#40,#40,#3C,#3C,#40,#28,#14,#40,#80,#C0
+    defb #40,#28,#00,#C0,#80,#C0,#C0,#28,#C0,#40,#28,#3C,#C0,#C0,#00,#40
+    defb #68,#94,#C0,#94,#3C,#C0,#C0,#28,#40,#68,#C0,#68,#3C,#94,#28,#28
+    defb #68,#28,#28,#28,#28,#28,#80,#28,#28,#C0,#28,#80,#C0,#80,#3C,#94
+    defb #40,#3C,#14,#40,#28,#3C,#40,#28,#94,#C0,#68,#00,#40,#3C,#3C,#68
+    defb #80,#28,#00,#94,#94,#80,#68,#40,#68
+    ASSERT hi(small_rows) == hi($-1)
+    ALIGN 256
 small_digits
 ; 0
-    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#28,#94,#40,#28,#94,#40,#28
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+9),lo(small_rows+12)
 ; 1
-    defb #94,#C0,#C0,#3C,#40,#C0,#94,#40,#C0,#94,#40,#C0,#94,#40,#C0,#94
-    defb #40,#C0,#3C,#68,#C0,#80,#00,#C0
+    defb lo(small_rows+15),lo(small_rows+18),lo(small_rows+21),lo(small_rows+21),lo(small_rows+21),lo(small_rows+21),lo(small_rows+24),lo(small_rows+27)
 ; 2
-    defb #94,#68,#C0,#68,#14,#C0,#80,#94,#40,#C0,#68,#40,#94,#80,#C0,#68
-    defb #40,#C0,#3C,#3C,#C0,#80,#00,#40
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+30),lo(small_rows+33),lo(small_rows+36),lo(small_rows+39),lo(small_rows+42),lo(small_rows+45)
 ; 3
-    defb #3C,#68,#C0,#80,#14,#C0,#C0,#94,#40,#94,#68,#40,#C0,#14,#C0,#C0
-    defb #94,#40,#3C,#68,#40,#80,#00,#C0
+    defb lo(small_rows+24),lo(small_rows+48),lo(small_rows+51),lo(small_rows+9),lo(small_rows+54),lo(small_rows+51),lo(small_rows+57),lo(small_rows+27)
 ; 4
-    defb #C0,#68,#C0,#94,#28,#C0,#68,#28,#C0,#28,#28,#C0,#3C,#3C,#C0,#80
-    defb #28,#40,#C0,#28,#C0,#C0,#80,#C0
+    defb lo(small_rows+60),lo(small_rows+63),lo(small_rows+66),lo(small_rows+69),lo(small_rows+42),lo(small_rows+72),lo(small_rows+75),lo(small_rows+78)
 ; 5
-    defb #3C,#3C,#C0,#28,#00,#40,#3C,#68,#C0,#80,#14,#C0,#C0,#94,#40,#68
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+42),lo(small_rows+81),lo(small_rows+24),lo(small_rows+48),lo(small_rows+51),lo(small_rows+84),lo(small_rows+9),lo(small_rows+12)
 ; 6
-    defb #94,#68,#C0,#68,#00,#C0,#28,#C0,#C0,#3C,#68,#C0,#28,#14,#C0,#28
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+0),lo(small_rows+87),lo(small_rows+90),lo(small_rows+24),lo(small_rows+93),lo(small_rows+6),lo(small_rows+9),lo(small_rows+12)
 ; 7
-    defb #3C,#3C,#C0,#80,#14,#40,#C0,#68,#40,#C0,#28,#C0,#94,#80,#C0,#94
-    defb #40,#C0,#94,#40,#C0,#C0,#40,#C0
+    defb lo(small_rows+42),lo(small_rows+96),lo(small_rows+33),lo(small_rows+75),lo(small_rows+36),lo(small_rows+21),lo(small_rows+21),lo(small_rows+99)
 ; 8
-    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#94,#68,#40,#68,#14,#C0,#28
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+6),lo(small_rows+9),lo(small_rows+3),lo(small_rows+6),lo(small_rows+9),lo(small_rows+12)
 ; 9
-    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#94,#3C,#40,#C0,#14,#40,#C0
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+6),lo(small_rows+102),lo(small_rows+105),lo(small_rows+51),lo(small_rows+9),lo(small_rows+12)
 ;  
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+    defb lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108)
 ; !
-    defb #C0,#68,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0
-    defb #80,#C0,#C0,#68,#C0,#C0,#80,#C0
+    defb lo(small_rows+60),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+78),lo(small_rows+60),lo(small_rows+78)
 ; "
-    defb #94,#94,#C0,#94,#14,#40,#C0,#40,#40,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+    defb lo(small_rows+111),lo(small_rows+114),lo(small_rows+117),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108)
 ; '
-    defb #C0,#68,#C0,#C0,#28,#C0,#C0,#80,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0
+    defb lo(small_rows+60),lo(small_rows+75),lo(small_rows+78),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108),lo(small_rows+108)
 ; A
-    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#3C,#3C,#40,#28,#14,#40,#28
-    defb #94,#40,#28,#94,#40,#80,#C0,#40
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+6),lo(small_rows+120),lo(small_rows+123),lo(small_rows+6),lo(small_rows+6),lo(small_rows+126)
 ; D
-    defb #3C,#68,#C0,#28,#14,#C0,#28,#94,#40,#28,#94,#40,#28,#94,#40,#28
-    defb #94,#40,#3C,#68,#40,#80,#00,#C0
+    defb lo(small_rows+24),lo(small_rows+93),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+57),lo(small_rows+27)
 ; E
-    defb #3C,#3C,#C0,#28,#00,#40,#28,#C0,#C0,#3C,#68,#C0,#28,#00,#C0,#28
-    defb #C0,#C0,#3C,#3C,#C0,#80,#00,#40
+    defb lo(small_rows+42),lo(small_rows+81),lo(small_rows+90),lo(small_rows+24),lo(small_rows+129),lo(small_rows+90),lo(small_rows+42),lo(small_rows+45)
 ; F
-    defb #3C,#3C,#C0,#28,#00,#40,#28,#C0,#C0,#3C,#68,#C0,#28,#00,#C0,#28
-    defb #C0,#C0,#28,#C0,#C0,#80,#C0,#C0
+    defb lo(small_rows+42),lo(small_rows+81),lo(small_rows+90),lo(small_rows+24),lo(small_rows+129),lo(small_rows+90),lo(small_rows+90),lo(small_rows+132)
 ; G
-    defb #94,#68,#C0,#68,#14,#C0,#28,#C0,#40,#28,#3C,#C0,#28,#94,#40,#28
-    defb #94,#40,#94,#3C,#40,#C0,#00,#40
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+135),lo(small_rows+138),lo(small_rows+6),lo(small_rows+6),lo(small_rows+102),lo(small_rows+141)
 ; H
-    defb #68,#94,#C0,#28,#94,#40,#28,#94,#40,#3C,#3C,#40,#28,#14,#40,#28
-    defb #94,#40,#28,#94,#40,#80,#C0,#40
+    defb lo(small_rows+144),lo(small_rows+6),lo(small_rows+6),lo(small_rows+120),lo(small_rows+123),lo(small_rows+6),lo(small_rows+6),lo(small_rows+126)
 ; I
-    defb #94,#3C,#C0,#C0,#28,#40,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0
-    defb #28,#C0,#94,#3C,#C0,#C0,#00,#40
+    defb lo(small_rows+147),lo(small_rows+150),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+147),lo(small_rows+141)
 ; M
-    defb #68,#C0,#68,#3C,#94,#28,#28,#68,#28,#28,#28,#28,#28,#80,#28,#28
-    defb #C0,#28,#28,#C0,#28,#80,#C0,#80
+    defb lo(small_rows+153),lo(small_rows+156),lo(small_rows+159),lo(small_rows+162),lo(small_rows+165),lo(small_rows+168),lo(small_rows+168),lo(small_rows+171)
 ; N
-    defb #68,#94,#C0,#3C,#94,#40,#3C,#14,#40,#28,#3C,#40,#28,#3C,#40,#28
-    defb #94,#40,#28,#94,#40,#80,#C0,#40
+    defb lo(small_rows+144),lo(small_rows+174),lo(small_rows+177),lo(small_rows+180),lo(small_rows+180),lo(small_rows+6),lo(small_rows+6),lo(small_rows+126)
 ; O
-    defb #94,#68,#C0,#68,#14,#C0,#28,#94,#40,#28,#94,#40,#28,#94,#40,#28
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+0),lo(small_rows+3),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+9),lo(small_rows+12)
 ; P
-    defb #3C,#68,#C0,#28,#14,#C0,#28,#94,#40,#3C,#68,#40,#28,#00,#C0,#28
-    defb #C0,#C0,#28,#C0,#C0,#80,#C0,#C0
+    defb lo(small_rows+24),lo(small_rows+93),lo(small_rows+6),lo(small_rows+57),lo(small_rows+129),lo(small_rows+90),lo(small_rows+90),lo(small_rows+132)
 ; R
-    defb #3C,#68,#C0,#28,#14,#C0,#28,#94,#40,#3C,#68,#40,#28,#28,#C0,#28
-    defb #94,#C0,#28,#94,#40,#80,#C0,#40
+    defb lo(small_rows+24),lo(small_rows+93),lo(small_rows+6),lo(small_rows+57),lo(small_rows+69),lo(small_rows+183),lo(small_rows+6),lo(small_rows+126)
 ; S
-    defb #94,#3C,#C0,#68,#00,#40,#28,#C0,#C0,#94,#68,#C0,#C0,#14,#C0,#C0
-    defb #94,#40,#3C,#68,#40,#80,#00,#C0
+    defb lo(small_rows+147),lo(small_rows+186),lo(small_rows+90),lo(small_rows+0),lo(small_rows+54),lo(small_rows+51),lo(small_rows+57),lo(small_rows+27)
 ; T
-    defb #3C,#3C,#68,#80,#28,#00,#C0,#28,#C0,#C0,#28,#C0,#C0,#28,#C0,#C0
-    defb #28,#C0,#C0,#28,#C0,#C0,#80,#C0
+    defb lo(small_rows+189),lo(small_rows+192),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+78)
 ; U
-    defb #68,#94,#C0,#28,#94,#40,#28,#94,#40,#28,#94,#40,#28,#94,#40,#28
-    defb #94,#40,#94,#68,#40,#C0,#00,#C0
+    defb lo(small_rows+144),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+6),lo(small_rows+9),lo(small_rows+12)
 ; V
-    defb #68,#C0,#68,#28,#C0,#28,#28,#C0,#28,#28,#C0,#28,#94,#94,#80,#94
-    defb #14,#40,#C0,#68,#40,#C0,#80,#C0
+    defb lo(small_rows+153),lo(small_rows+168),lo(small_rows+168),lo(small_rows+168),lo(small_rows+195),lo(small_rows+114),lo(small_rows+33),lo(small_rows+78)
 ; X
-    defb #68,#C0,#68,#28,#C0,#28,#94,#94,#80,#C0,#68,#40,#94,#94,#C0,#68
-    defb #40,#68,#28,#C0,#28,#80,#C0,#80
+    defb lo(small_rows+153),lo(small_rows+168),lo(small_rows+195),lo(small_rows+33),lo(small_rows+111),lo(small_rows+198),lo(small_rows+168),lo(small_rows+171)
 ; Y
-    defb #68,#C0,#68,#28,#C0,#28,#94,#94,#80,#C0,#68,#40,#C0,#28,#C0,#C0
-    defb #28,#C0,#C0,#28,#C0,#C0,#80,#C0
+    defb lo(small_rows+153),lo(small_rows+168),lo(small_rows+195),lo(small_rows+33),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+78)
 
 ;; the HUD's messages (scene.py MESSAGES), MSG_W glyphs each
 MSG_W EQU 15
@@ -403,106 +389,107 @@ stage_hw
     defb #44,#40,#5F,#40,#56,#54,#40,#44   ; STORM
 
 ;; the panorama, lines 148..179: for each of the 96 words across, its
-;; 4 character rows' addresses in pano_rows - each row its two bytes on
+;; 4 character rows' numbers in pano_rows - each row its two bytes on
 ;; each of its 8 lines, top to bottom, 150 different ones of 384
 PANO_COL_ROWS EQU 4
 pano_cols
-    defw pano_rows+0,pano_rows+16,pano_rows+32,pano_rows+48
-    defw pano_rows+0,pano_rows+16,pano_rows+64,pano_rows+80
-    defw pano_rows+0,pano_rows+16,pano_rows+96,pano_rows+112
-    defw pano_rows+0,pano_rows+16,pano_rows+128,pano_rows+144
-    defw pano_rows+0,pano_rows+16,pano_rows+160,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+192,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+208,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+224,pano_rows+176
-    defw pano_rows+0,pano_rows+240,pano_rows+256,pano_rows+176
-    defw pano_rows+0,pano_rows+272,pano_rows+288,pano_rows+176
-    defw pano_rows+0,pano_rows+304,pano_rows+320,pano_rows+176
-    defw pano_rows+0,pano_rows+336,pano_rows+352,pano_rows+176
-    defw pano_rows+0,pano_rows+368,pano_rows+384,pano_rows+400
-    defw pano_rows+0,pano_rows+416,pano_rows+432,pano_rows+448
-    defw pano_rows+0,pano_rows+464,pano_rows+480,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+432,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+512,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+528,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+544,pano_rows+560
-    defw pano_rows+0,pano_rows+16,pano_rows+576,pano_rows+592
-    defw pano_rows+0,pano_rows+608,pano_rows+624,pano_rows+640
-    defw pano_rows+0,pano_rows+656,pano_rows+672,pano_rows+688
-    defw pano_rows+0,pano_rows+16,pano_rows+704,pano_rows+720
-    defw pano_rows+0,pano_rows+16,pano_rows+736,pano_rows+752
-    defw pano_rows+0,pano_rows+16,pano_rows+768,pano_rows+784
-    defw pano_rows+0,pano_rows+16,pano_rows+800,pano_rows+816
-    defw pano_rows+0,pano_rows+16,pano_rows+832,pano_rows+848
-    defw pano_rows+0,pano_rows+16,pano_rows+864,pano_rows+816
-    defw pano_rows+0,pano_rows+16,pano_rows+880,pano_rows+896
-    defw pano_rows+0,pano_rows+16,pano_rows+912,pano_rows+928
-    defw pano_rows+0,pano_rows+16,pano_rows+944,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+960,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+976,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+96,pano_rows+992
-    defw pano_rows+0,pano_rows+16,pano_rows+160,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1008,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1024,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1040,pano_rows+176
-    defw pano_rows+0,pano_rows+240,pano_rows+1056,pano_rows+176
-    defw pano_rows+0,pano_rows+1072,pano_rows+848,pano_rows+176
-    defw pano_rows+0,pano_rows+1088,pano_rows+1104,pano_rows+176
-    defw pano_rows+0,pano_rows+1120,pano_rows+1136,pano_rows+176
-    defw pano_rows+1152,pano_rows+1168,pano_rows+1184,pano_rows+176
-    defw pano_rows+1200,pano_rows+1216,pano_rows+1104,pano_rows+176
-    defw pano_rows+1232,pano_rows+1248,pano_rows+1264,pano_rows+176
-    defw pano_rows+0,pano_rows+1280,pano_rows+1296,pano_rows+1312
-    defw pano_rows+0,pano_rows+464,pano_rows+480,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1328,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1344,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1360,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1376,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1392,pano_rows+1408
-    defw pano_rows+0,pano_rows+16,pano_rows+1424,pano_rows+1440
-    defw pano_rows+0,pano_rows+16,pano_rows+1456,pano_rows+1472
-    defw pano_rows+0,pano_rows+16,pano_rows+1488,pano_rows+1504
-    defw pano_rows+0,pano_rows+16,pano_rows+1520,pano_rows+1536
-    defw pano_rows+0,pano_rows+16,pano_rows+1552,pano_rows+1568
-    defw pano_rows+0,pano_rows+16,pano_rows+1584,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1600,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1616,pano_rows+176
-    defw pano_rows+0,pano_rows+240,pano_rows+1632,pano_rows+1648
-    defw pano_rows+0,pano_rows+1664,pano_rows+1680,pano_rows+176
-    defw pano_rows+0,pano_rows+1696,pano_rows+1712,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+576,pano_rows+1728
-    defw pano_rows+0,pano_rows+16,pano_rows+1744,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1760,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1776,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1792,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+1808,pano_rows+1408
-    defw pano_rows+0,pano_rows+16,pano_rows+1824,pano_rows+1840
-    defw pano_rows+0,pano_rows+16,pano_rows+1856,pano_rows+1872
-    defw pano_rows+0,pano_rows+16,pano_rows+1888,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1904,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1920,pano_rows+176
-    defw pano_rows+0,pano_rows+16,pano_rows+1936,pano_rows+176
-    defw pano_rows+0,pano_rows+1952,pano_rows+1968,pano_rows+176
-    defw pano_rows+0,pano_rows+1664,pano_rows+1680,pano_rows+176
-    defw pano_rows+0,pano_rows+1984,pano_rows+2000,pano_rows+176
-    defw pano_rows+0,pano_rows+2016,pano_rows+2032,pano_rows+176
-    defw pano_rows+0,pano_rows+2048,pano_rows+1680,pano_rows+176
-    defw pano_rows+0,pano_rows+416,pano_rows+2064,pano_rows+896
-    defw pano_rows+0,pano_rows+464,pano_rows+2080,pano_rows+2096
-    defw pano_rows+0,pano_rows+608,pano_rows+2112,pano_rows+496
-    defw pano_rows+0,pano_rows+2128,pano_rows+2144,pano_rows+496
-    defw pano_rows+0,pano_rows+2160,pano_rows+2176,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+2192,pano_rows+496
-    defw pano_rows+0,pano_rows+16,pano_rows+768,pano_rows+2208
-    defw pano_rows+0,pano_rows+16,pano_rows+1520,pano_rows+2224
-    defw pano_rows+0,pano_rows+16,pano_rows+1824,pano_rows+2240
-    defw pano_rows+0,pano_rows+16,pano_rows+2256,pano_rows+2272
-    defw pano_rows+0,pano_rows+16,pano_rows+2288,pano_rows+672
-    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2320
-    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2336
-    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2352
-    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2368
-    defw pano_rows+0,pano_rows+16,pano_rows+2304,pano_rows+2384
+    defb 0,1,2,3
+    defb 0,1,4,5
+    defb 0,1,6,7
+    defb 0,1,8,9
+    defb 0,1,10,11
+    defb 0,1,12,11
+    defb 0,1,13,11
+    defb 0,1,14,11
+    defb 0,15,16,11
+    defb 0,17,18,11
+    defb 0,19,20,11
+    defb 0,21,22,11
+    defb 0,23,24,25
+    defb 0,26,27,28
+    defb 0,29,30,31
+    defb 0,1,27,31
+    defb 0,1,32,31
+    defb 0,1,33,31
+    defb 0,1,34,35
+    defb 0,1,36,37
+    defb 0,38,39,40
+    defb 0,41,42,43
+    defb 0,1,44,45
+    defb 0,1,46,47
+    defb 0,1,48,49
+    defb 0,1,50,51
+    defb 0,1,52,53
+    defb 0,1,54,51
+    defb 0,1,55,56
+    defb 0,1,57,58
+    defb 0,1,59,31
+    defb 0,1,60,31
+    defb 0,1,61,31
+    defb 0,1,6,62
+    defb 0,1,10,11
+    defb 0,1,63,11
+    defb 0,1,64,11
+    defb 0,1,65,11
+    defb 0,15,66,11
+    defb 0,67,53,11
+    defb 0,68,69,11
+    defb 0,70,71,11
+    defb 72,73,74,11
+    defb 75,76,69,11
+    defb 77,78,79,11
+    defb 0,80,81,82
+    defb 0,29,30,31
+    defb 0,1,83,31
+    defb 0,1,84,31
+    defb 0,1,85,31
+    defb 0,1,86,31
+    defb 0,1,87,88
+    defb 0,1,89,90
+    defb 0,1,91,92
+    defb 0,1,93,94
+    defb 0,1,95,96
+    defb 0,1,97,98
+    defb 0,1,99,11
+    defb 0,1,100,11
+    defb 0,1,101,11
+    defb 0,15,102,103
+    defb 0,104,105,11
+    defb 0,106,107,11
+    defb 0,1,36,108
+    defb 0,1,109,31
+    defb 0,1,110,31
+    defb 0,1,111,31
+    defb 0,1,112,31
+    defb 0,1,113,88
+    defb 0,1,114,115
+    defb 0,1,116,117
+    defb 0,1,118,11
+    defb 0,1,119,11
+    defb 0,1,120,11
+    defb 0,1,121,11
+    defb 0,122,123,11
+    defb 0,104,105,11
+    defb 0,124,125,11
+    defb 0,126,127,11
+    defb 0,128,105,11
+    defb 0,26,129,56
+    defb 0,29,130,131
+    defb 0,38,132,31
+    defb 0,133,134,31
+    defb 0,135,136,31
+    defb 0,1,137,31
+    defb 0,1,48,138
+    defb 0,1,95,139
+    defb 0,1,114,140
+    defb 0,1,141,142
+    defb 0,1,143,42
+    defb 0,1,144,145
+    defb 0,1,144,146
+    defb 0,1,144,147
+    defb 0,1,144,148
+    defb 0,1,144,149
+    ALIGN 256                   ; (ring_col: 16 x a number is its place)
 pano_rows
     defb #CC,#CC,#CC,#CC,#CC,#64,#CC,#CC,#64,#64,#98,#CC,#64,#64,#98,#98
     defb #30,#30,#98,#98,#30,#30,#98,#30,#30,#30,#30,#30,#30,#B0,#30,#30

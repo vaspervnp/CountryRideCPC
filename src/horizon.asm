@@ -159,27 +159,32 @@ ring_col_sky
     ld l,a
     ld h,0
     add hl,hl
-    add hl,hl
-    add hl,hl                   ; * 8
+    add hl,hl                   ; * 4
     ASSERT PANO_COL_ROWS == 4 && PANO_COL_ROWS == (BLOCK_BOTTOM-PANO_Y0)/8
     ld bc,pano_cols
     add hl,bc
     ld ixl,PANO_COL_ROWS
-ring_col_pano                   ; (HL: the row's address in pano_cols, DE
-    ld c,(hl)                   ; the screen)
-    inc hl
-    ld b,(hl)
+ring_col_pano                   ; (HL: the row's number in pano_cols, DE
+    ld a,(hl)                   ; the screen)
     inc hl
     ld (ring_col_next+1),hl
-    ld h,b
-    ld l,c
+    rlca
+    rlca
+    rlca
+    rlca
+    ld c,a
+    and #F0
+    ld l,a
+    xor c
+    add a,hi(pano_rows)
+    ld h,a                      ; HL = pano_rows + 16 x its number
     ld sp,hl
     ex de,hl
     ld de,#800
     RING_ROW
     ex de,hl
 ring_col_next
-    ld hl,0                     ; (self-modified: the next row's address)
+    ld hl,0                     ; (self-modified: the next row's number's)
     dec ixl
     jr nz,ring_col_pano
     ex de,hl
