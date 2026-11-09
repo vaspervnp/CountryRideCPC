@@ -1,6 +1,8 @@
 # Country Ride
 
-A racing game for the Amstrad CPC 6128, written in Z80 assembly.
+A racing game for the Amstrad CPC 6128, written in Z80 assembly. The manual,
+for playing it, is in [English](docs/manual-en.md) and
+[Greek](docs/manual-el.md), and as PDFs beside them.
 
 ![The road on the flat](docs/screen-flat.png)
 
@@ -66,6 +68,7 @@ types do differently; it has not been tried on real hardware yet.
 | `make gen` | regenerates `src/gen/*.asm` from `tools/` and `assets/` |
 | `make check` | boots the disc in an emulator, measures the frame rate, and compares the screen with the Python model |
 | `make shots` | boots the disc and writes the screenshots in `docs/` |
+| `make manual` | writes the manuals' PDFs from `docs/manual-*.md` (needs fpdf2 and the Noto fonts) |
 | `make mockup` | writes `build/mockup.png`, the screen as worked out in Python |
 | `make clean` | empties `build/` |
 
@@ -625,7 +628,11 @@ its place `a` move as far as its core's edge does (its shift and its
 share of `road_x` stay: they go by its depth), its tables are copied
 (`LANE_COPY`), its templates made afresh (`lanes5.asm`, `lanes.asm`), and
 both buffers draw its rows whole next (`lane_ghi`, `lane_glo`;
-`rp_lane_whole`, and every far line if it has far rows). The rows past
+`rp_lane_whole`, and every far line if it has far rows). With the road
+two widths, a hill that moves can also take a line from one side of the
+change's reach to the other - a nearer row is then the narrower, or a further
+one far narrower than a margin allows for - so those lines are drawn whole
+too (`rp_lane_hill`; only the demo, the race has no hills there). The rows past
 `lane_z` at the start (the furthest five) change at once; the rest follow
 over ~950 units, a few groups a picture near the car at speed. Meanwhile
 no step is worked out ahead - one is dropped first (`lane_pre`) - so steps
@@ -792,12 +799,15 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
 - **Its indicators.** Steered left or right with its place on the road
   (`car_x`) a pair or more that way since the last picture, it blinks on
   that side till 12 pictures after (`CAR_SIGNAL_T`), lit as the traffic's
-  (`TR_BLINK`): one yellow pixel, the outermost of its lights on that side
-  - per car their colour and the lines they are on, level, uphill and
-  downhill (`scene.CAR_LIGHTS`, `car_blinker`) - not in a bump or a crash,
-  up in the air or spun. `car_blink` is in bank 6 (`src/signal.asm`, with
-  every car's 36 bytes of places, `car_blinks`: buffer 0 addresses, bit 14
-  a byte's right pixel), called through `car_blink_go` in fragment 1 with
+  (`TR_BLINK`): a byte on two lines, 4 pixels (one pixel till 2026-11-09,
+  which hardly showed), at the outermost of its lights on that side, in
+  yellow - in white on the yellow car, where yellow would not show
+  (`scene.car_lit`, `car_lits`) - per car their colour and the lines they
+  are on, level, uphill and downhill (`scene.CAR_LIGHTS`, `car_blinker`:
+  both lines in a character row) - not in a bump or a crash, up in the air
+  or spun. `car_blink` is in bank 6 (`src/signal.asm`, with every car's 36
+  bytes of places, `car_blinks`: buffer 0 addresses), called through
+  `car_blink_go` in fragment 1 with
   what it needs of bank 7's in registers; ~0.05 ms.
 
 ### Bushes
@@ -954,11 +964,14 @@ looks like, and `src/traffic.asm` has to match it.
   (1.3 s; `tp_lanes`). Its place is then its lane's and that share of the
   way to the other's (`to_way`: one 8 x 8 multiplication, ~0.1 ms, only
   while it changes). Meanwhile - and moving over where the lanes change -
-  it blinks its indicator on that side: one pixel in yellow, the outermost
-  of its tail lights' lowest line (`scene.traffic_blinker`, in
-  `tr_sinfo`; the furthest size, without lights, its lowest line's in
-  paint), lit 4 pictures in 8 (`TR_BLINK`, a bit of `frames_drawn`), ~3
-  times a second, drawn after its pieces (`to_blink`, `to_bl`: ~0.05 ms).
+  it blinks its indicator on that side: a byte in yellow - in white if its
+  tail is yellow - 4 pixels on two lines at the four nearest sizes, 2 on
+  one at the others (`scene.TRAFFIC_BLINK_LINES`; one pixel till
+  2026-11-09), at the outermost of its tail lights' lowest line
+  (`scene.traffic_blinker`, in `tr_sinfo`; the furthest sizes, without
+  lights, its lowest line's in paint), lit 4 pictures in 8 (`TR_BLINK`, a
+  bit of `frames_drawn`), ~3 times a second, drawn after its pieces
+  (`to_blink`, `to_bl`: ~0.05 ms).
   The two cars stay 160 units apart, so they never meet.
 - **Projection.** As a bush's: its row from its depth, its size from its
   row, its line from *h / r*, and it is drawn only whole - on the screen,
@@ -1275,6 +1288,20 @@ pictures of a buffer - road_draw ~22 ms and road_project ~9 ms. Also:
 `rp_lane_whole` passes over the nearer lines eight at a time (1.45 ms on a
 picture the lanes change on, now 0.2).
 
+With the indicators two to four pixels and `rp_lane_hill` (2026-11-09): the
+same 24 races, 39.2 ms at worst, none past the flip and none over 39.5 ms;
+the demo 38.6 ms (26.7-28.3 ms on average); crashes at the top speed 38.1 ms
+at worst, every picture as `scene.py` draws it; the traffic, the indicators,
+the road, the HUD and the screen as `scene.py` has them, for all four cars.
+That corrects the entry above: the traffic's check of the demo did differ
+then, in six pictures - far lines with a byte of the old kerb, the hill moving
+while the lanes changed. The build between the two had one late picture in
+these races, 40.1 ms, on a dip on two lanes with both late guards already
+taken (bush erase 2.4 ms, project 10.2, road 19.7, the near car 2.4, bushes
+1.2, the car 1.7) and no car of the traffic signalling: the player's
+indicator takes as long as it did. It no longer comes up, but only because
+the races take other paths: such a picture can still happen.
+
 With the stages' traffic, M and FASTEST TIME! (2026-11-03): races along
 four routes in the four cars, the clock kept and not, 37.6-38.7 ms at
 worst, none past the flip (the build before, the same races: 37.7-39.7
@@ -1516,12 +1543,13 @@ tools/
   mkbush.py     the bushes along the track, their sprites (as code and as
                 data), each car as code (CARn.BIN), what is left of the
                 traffic's code, the props' sprites, and tables -> src/gen/
+  mkmanual.py   the manuals' PDFs, from docs/manual-*.md
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts, the cars', the traffic's and the trees' renders; the
                 select screen's pictures of the cars (assets/cars/photo_*)
 disc/           BASIC loader: the car picked as the game loads
-docs/           screenshots
+docs/           screenshots, the manuals (manual-en, manual-el: .md and .pdf)
 ```
 
 ## Next

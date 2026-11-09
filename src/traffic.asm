@@ -1156,7 +1156,7 @@ to_note
     ld (to_note+1),hl
 
     ; changing lanes, its indicator on the side it goes to lit every other
-    ; TR_BLINK pictures: its pixel drawn after its pieces (to_bl)
+    ; TR_BLINK pictures: its bytes drawn after its pieces (to_bl)
     xor a
     ld (to_bl+1),a
     ld a,(ix+TR_SHIFT)
@@ -1214,22 +1214,32 @@ to_near_size
     add a,(ix+TR_BOT)
     call tr_piece                       ; (B: lines on from its top)
 to_bl
-    ld a,0                              ; (self-modified: the indicator's byte's
-    or a                                ; other pixel kept - 0: none lit)
+    ld a,0                              ; (self-modified: the indicator's
+    or a                                ; lines - 0: none lit)
     ret z
 to_bl_at
     ld hl,0                             ; (self-modified: its byte)
-    and (hl)
-to_bl_px
-    or 0                                ; (self-modified: its pixel lit)
-    ld (hl),a
+to_bl_lit
+    ld c,0                              ; (self-modified: lit in this)
+    ld (hl),c
+    dec a
+    ret z
+to_bl_at2
+    ld hl,0                             ; (self-modified: on the line below)
+    ld (hl),c
     ret
 
 ;; to_blink - car IX changing lanes, its lines and its left found, its
-;; indicator lit this picture: its pixel's byte on the side it goes to
-;; (to_dir) - its size's and its bottom's place (tr_sinfo), mirrored on
-;; the right - for to_bl. Destroys AF, BC, DE, HL.
+;; indicator lit this picture: its bytes on the side it goes to (to_dir) -
+;; its size's and its bottom's place (tr_sinfo), mirrored on the right - and
+;; its colour, white on a bottom in yellow, for to_bl. Destroys AF, BC, DE, HL.
 to_blink
+    ld a,(ix+TR_PB)
+    cp TR_LIT
+    ld a,TR_LIT
+    jr nz,$+4
+    ld a,TR_LIT_Y
+    ld (to_bl_lit+1),a
     ld hl,(to_size)
     ld c,(hl)                           ; C = its width
     ld de,TR_SINFO_BLINK
@@ -1240,24 +1250,42 @@ to_blink
     add hl,de
     ld a,(to_line)
     add a,(hl)
+    ld b,a                              ; (bit 7: on two lines)
     add a,a
     ld e,a
     ld d,hi(bush_ltab)                  ; DE = its line's entry
     inc hl
     ld a,(to_dir)
     or a
-    ld a,(hl)                           ; A = its pixel from the left: on the
+    ld a,(hl)                           ; A = its byte from the left: on the
     jp m,to_bl_side                     ; left
-    sla c
-    dec c
-    sub c
-    neg                                 ; on the right: 2 x width - 1 - it
+    cpl
+    add a,c                             ; on the right: width - 1 - it
 to_bl_side
-    ld c,a                              ; C = its pixel
-    srl a
     ld hl,to_left
-    add a,(hl)                          ; + its left: its byte
+    add a,(hl)
+    ld c,a                              ; C = its byte in the line
     ex de,hl
+    call to_bl_line
+    ld (to_bl_at+1),hl
+    ex de,hl
+    ld a,1
+    bit 7,b
+    jr z,to_bl_one
+    inc l
+    inc l
+    call to_bl_line
+    ld (to_bl_at2+1),hl
+    ld a,2
+to_bl_one
+    ld (to_bl+1),a
+    ret
+;; HL = a line's entry (bush_ltab), C = a byte in it: DE = the entry, HL = the
+;; byte in the buffer drawn. Destroys AF.
+to_bl_line
+    ld e,l
+    ld d,h
+    ld a,c
     add a,(hl)
     inc l
     ld h,(hl)
@@ -1266,17 +1294,8 @@ to_bl_side
     inc h
     ld a,(road_buf)
     or a
-    jr z,$+4
+    ret z
     res 7,h                             ; (buffer 1's)
-    ld (to_bl_at+1),hl
-    ld hl,#55*256+TR_LIT_L              ; (the left pixel: the right one kept)
-    bit 0,c
-    jr z,$+5
-    ld hl,#AA*256+TR_LIT_R
-    ld a,l
-    ld (to_bl_px+1),a
-    ld a,h
-    ld (to_bl+1),a
     ret
 
 to_dir      defb 0                      ; the way to the lane it changes to

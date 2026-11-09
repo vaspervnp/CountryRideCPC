@@ -9,22 +9,22 @@ TR_ZNEARSIZE EQU 120   ; nearer than this, a car is at a near size
 
 ;; per size: its width (bytes), its lines, its top's lines, its first
 ;; piece's record (tr_pieces); then its left indicator with each bottom
-;; (BOTTOMS): its line from its top, its pixel from its left
-;; (scene.traffic_blinker)
+;; (BOTTOMS): its top line from its top (bit 7: on two lines, else on
+;; one), its byte from its left (scene.traffic_blinker)
 tr_sinfo
-    defb 14,22,9,0, 16,2,13,2   ; size 0: 28 x 22 pixels
-    defb 12,19,8,15, 14,2,11,2   ; size 1: 24 x 19 pixels
-    defb 10,16,7,30, 12,2,10,2   ; size 2: 20 x 16 pixels
-    defb 10,13,6,45, 8,2,8,2   ; size 3: 20 x 13 pixels
-    defb 8,12,5,50, 7,2,7,2   ; size 4: 16 x 12 pixels
-    defb 6,9,4,55, 5,2,5,2   ; size 5: 12 x 9 pixels
+    defb 14,22,9,0, 143,1,140,1   ; size 0: 28 x 22 pixels
+    defb 12,19,8,15, 141,1,138,1   ; size 1: 24 x 19 pixels
+    defb 10,16,7,30, 139,1,137,1   ; size 2: 20 x 16 pixels
+    defb 10,13,6,45, 135,1,135,1   ; size 3: 20 x 13 pixels
+    defb 8,12,5,50, 7,1,7,1   ; size 4: 16 x 12 pixels
+    defb 6,9,4,55, 5,1,5,1   ; size 5: 12 x 9 pixels
     defb 4,7,3,60, 4,0,4,0   ; size 6: 8 x 7 pixels
     defb 4,5,2,65, 3,0,3,0   ; size 7: 8 x 5 pixels
 TR_SINFO_LEN EQU 8
 TR_SINFO_BLINK EQU 4
 TR_BLINK    EQU 4   ; frames_drawn's bit: an indicator lit
-TR_LIT_L    EQU #22   ; its pixel lit: the left one of a byte
-TR_LIT_R    EQU #11   ; the right one
+TR_LIT      EQU #33   ; its byte lit
+TR_LIT_Y    EQU #3C   ; ... on a car that is yellow there
 
 ;; per piece: its code, its RAM configuration (0: any), the lines before
 ;; its first (from its top), where its first line's run ends (bytes from

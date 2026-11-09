@@ -202,6 +202,154 @@ rp_part_k1
     ret
 
 ;; ---------------------------------------------------------------------------
+;; rp_lane_hill - (rp_lane_whole) the hill moved with the lanes changing: the
+;; road is one width on the rows past the reach of the change, another on the
+;; rest, so a nearer row may be the narrower and a further one much narrower
+;; than a margin allows for. The lines that have gone from one side of the
+;; reach to the other are drawn whole: those from the first line past the
+;; reach of then, on the table of then, to the first past now's on now's.
+;; Destroys AF, BC, DE, HL.
+;; ---------------------------------------------------------------------------
+rp_lane_hill
+    ld hl,(rp_vars)
+    ld a,(rp_old_level)
+    cp (hl)
+    ret z                               ; the same hill
+    inc a
+    ret z                               ; (#FF: none then, all of it whole)
+    ld a,(road_buf)
+    add a,lo(lane_ghi)
+    ld l,a
+    ld h,hi(lane_ghi)
+    ld b,(hl)                           ; B = 1 + the last group since then
+    inc l
+    inc l
+    ld e,(hl)                           ; E = the first
+    ld h,hi(rr_gfirst)
+    ld c,255                            ; C = the reach now: past every row ...
+    ld a,(lane_h)
+    sub 2                               ; (0: none, 1: no group has them yet)
+    cp NGROUPS-1
+    jr c,rlh_under
+    inc b
+    dec b
+    ret z                               ; one width, then and now
+    jr rlh_then
+rlh_under
+    add a,lo(rr_gfirst)+1               ; ... or the next group's first row
+    ld l,a
+    ld c,(hl)
+rlh_then
+    ld d,c                              ; D = the reach then: now's ...
+    inc b
+    dec b
+    jr z,rlh_lines
+    ld a,e                              ; ... or that first group's first row
+    add a,lo(rr_gfirst)
+    ld l,a
+    ld d,(hl)
+rlh_lines
+    push de
+    ld hl,(rp_vars)
+    ld a,(hl)
+    call rlh_first
+    pop de
+    ld c,d
+    ld d,a
+    push de
+    ld a,(rp_old_level)
+    call rlh_first
+    pop de
+    cp d
+    jr c,rlh_lo
+    ld b,a
+    ld a,d
+    ld d,b
+rlh_lo
+    ld e,a                              ; E = the first of the lines,
+    ld a,(rp_count)                     ; D = the one after the last
+    cp d
+    jr nc,$+3
+    ld d,a
+    ld a,d
+    sub e
+    ret c
+    ret z
+    ld b,a
+    ld l,e
+    ld h,0
+    add hl,hl
+    add hl,hl
+    ld de,(rp_slot)
+    add hl,de
+    ld de,4
+rlh_mark
+    ld a,(hl)
+    and #FC
+    ld (hl),a
+    add hl,de
+    djnz rlh_mark
+    ret
+
+;; rlh_first - A = a hill level, C = a row: A = the first line of its line ->
+;; row table to show a further one (ROAD_LINES: none). Looked for from the
+;; line that is on a flat road, or the last that shows the road if that is
+;; lower: the hill has moved the row h / r lines from it, a few. Destroys B,
+;; DE, HL.
+rlh_first
+    ld e,a
+    ld d,0
+    ld hl,level_ground
+    add hl,de
+    ld b,(hl)
+    inc b
+    ex de,hl
+    add hl,hl
+    ld de,level_addr
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    ld a,b
+    cp c
+    jr nc,$+3
+    ld a,c
+    ld b,a
+    ld a,ROAD_LINES
+    sub b
+    jr nc,$+3
+    xor a
+    ld b,a                              ; B = the line
+    ld l,a
+    ld h,0
+    add hl,de
+    ld a,(hl)
+    cp c
+    jr c,rlh_down
+rlh_up                                  ; not further: on up the table
+    inc hl
+    inc b
+    ld a,b
+    cp ROAD_LINES
+    jr nc,rlh_found
+    ld a,(hl)
+    cp c
+    jr nc,rlh_up
+rlh_found
+    ld a,b
+    ret
+rlh_down                                ; further: the one before it isn't?
+    ld a,b
+    or a
+    ret z
+    dec hl
+    ld a,(hl)
+    cp c
+    jr nc,rlh_found
+    dec b
+    jr rlh_down
+
+;; ---------------------------------------------------------------------------
 ;; rp_lane_whole - (rp_done) the lines that show rows of the groups whose
 ;; lanes changed since this buffer was last drawn (lane_ghi, lane_glo:
 ;; lanes5.asm) drawn whole - their road is narrower or wider: flag 0. A far
@@ -210,6 +358,7 @@ rp_part_k1
 ;; BC, DE, HL, IXL.
 ;; ---------------------------------------------------------------------------
 rp_lane_whole
+    call rp_lane_hill
     ld a,(road_buf)
     add a,lo(lane_ghi)
     ld l,a

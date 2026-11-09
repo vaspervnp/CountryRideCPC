@@ -1,9 +1,10 @@
 ;; ===========================================================================
 ;; signal.asm - the player's car's indicators (bank 6, RAM_C6: called through
 ;; car_blink_go). Moving over to another lane, it blinks the one on that
-;; side as the traffic does (traffic.asm to_blink): one pixel in yellow over
-;; its lights (car_blinks: tools/mkbush.py, scene.car_blinker), lit every
-;; other TR_BLINK pictures.
+;; side as the traffic does (traffic.asm to_blink): a byte on two lines, 4
+;; pixels, in yellow - the yellow car's in white (car_lits) - over its lights
+;; (car_blinks: tools/mkbush.py, scene.car_blinker), lit every other TR_BLINK
+;; pictures.
 ;; ===========================================================================
 
 CAR_SIGNAL_T EQU 12                     ; pictures it blinks after it last
@@ -14,7 +15,7 @@ CAR_SIGNAL_T EQU 12                     ; pictures it blinks after it last
 ;; car_off, L = car_view, H = car_vfull, IXL = car_id (bank 7's). Steered
 ;; left or right (car_view 1, 2) and its place on the road (car_x) a pair
 ;; or more that way from the last picture's, the car blinks on that side
-;; till CAR_SIGNAL_T pictures after: its indicator's pixel into the buffer
+;; till CAR_SIGNAL_T pictures after: its indicator's bytes into the buffer
 ;; (road_buf) when lit - not in a bump or a crash (coll_t), up in the air
 ;; (car_up) or spun. tools/run.py tells from cb_t, cb_side, frames_drawn,
 ;; car_up and car_vfull whether it drew it. Destroys everything.
@@ -81,8 +82,8 @@ cb_side
     ld h,a
     ld e,(hl)
     inc hl
-    ld d,(hl)                           ; DE = its byte in buffer 0, + #4000
-    ld a,c                              ; for a right pixel
+    ld d,(hl)                           ; DE = its byte in buffer 0, on its
+    ld a,c                              ; top line
     add a,a
     ld l,a
     add a,a
@@ -93,18 +94,19 @@ cb_side
     or a
     jr z,$+4
     res 7,h                             ; (buffer 1: #8000 lower)
-    bit 6,h
-    res 6,h
-    ld a,(hl)
-    jr nz,cb_right
-    and #55
-    or TR_LIT_L
-    jr cb_put
-cb_right
-    and #AA
-    or TR_LIT_R
-cb_put
+    ld a,b
+    add a,lo(car_lits)
+    ld e,a
+    adc a,hi(car_lits)
+    sub e
+    ld d,a
+    ld a,(de)                           ; A = the car's colour for it
     ld (hl),a
+    ld b,a
+    ld a,h
+    add a,8                             ; (the next line: scene.car_blinker
+    ld h,a                              ; has them in a character row)
+    ld (hl),b
     ret
 cb_off
     xor a

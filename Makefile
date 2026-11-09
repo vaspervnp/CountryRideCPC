@@ -3,6 +3,7 @@
 #   make          build/countryride.dsk  (RUN"COUNTRY on a 6128)
 #   make gen      regenerate src/gen/*.asm from tools/ and assets/ (python3)
 #   make shots    boot the disc in the emulator and take docs/ screenshots
+#   make manual   the manuals' PDFs, from docs/manual-*.md
 #   make check    boot it, run it, compare the road with the Python model
 #   make mockup   build/mockup.png, the picture worked out in Python
 #   make clean
@@ -18,7 +19,7 @@ DSK    := $(BUILD)/countryride.dsk
 
 SRC := $(wildcard src/*.asm) $(wildcard src/gen/*.asm) src/gen/select.scr
 
-.PHONY: all gen shots check mockup clean
+.PHONY: all gen shots manual check mockup clean
 
 all: $(DSK)
 
@@ -41,6 +42,9 @@ gen:
 
 shots: $(DSK)
 	$(PYTHON) tools/run.py shots
+
+manual:
+	$(PYTHON) tools/mkmanual.py
 
 check: $(DSK)
 	$(PYTHON) tools/run.py check

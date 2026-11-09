@@ -406,15 +406,19 @@ def main():
     emit("")
     emit(";; per size: its width (bytes), its lines, its top's lines, its first")
     emit(";; piece's record (tr_pieces); then its left indicator with each bottom")
-    emit(";; (BOTTOMS): its line from its top, its pixel from its left")
-    emit(";; (scene.traffic_blinker)")
+    emit(";; (BOTTOMS): its top line from its top (bit 7: on two lines, else on")
+    emit(";; one), its byte from its left (scene.traffic_blinker)")
     emit("tr_sinfo")
     index = {p[0]: i for i, p in enumerate(ps)}
     for k, s in enumerate(TRAFFIC_ART):
         top = s["tops"][T.TOPS[0]]
         bottom = next(iter(s["bottoms"].values()))
         first = index["tr_s%d_%s" % (k, T.TOPS[0])]
-        blink = [v for b in range(len(T.BOTTOMS)) for v in S.traffic_blinker(k, b)]
+        blink = []
+        for b in range(len(T.BOTTOMS)):
+            line, byte, n = S.traffic_blinker(k, b)
+            assert n in (1, 2) and line < 128
+            blink += [line | (128 if n == 2 else 0), byte]
         emit("    defb %d,%d,%d,%d, %s   ; size %d: %d x %d pixels" % (
             len(top[0]) // 2, len(top) + len(bottom), s["split"], first * 5,
             ",".join(map(str, blink)), k, len(top[0]), len(top) + len(bottom)))
@@ -423,8 +427,9 @@ def main():
     emit("TR_BLINK    EQU %d   ; frames_drawn's bit: an indicator lit" % S.TRAFFIC_BLINK)
     assert S.TRAFFIC_BLINK & (S.TRAFFIC_BLINK - 1) == 0
     lit = G.PEN[S.CAR_PEN[S.TRAFFIC_LIT]]
-    emit("TR_LIT_L    EQU #%02X   ; its pixel lit: the left one of a byte" % G.m0_left(lit))
-    emit("TR_LIT_R    EQU #%02X   ; the right one" % G.m0_right(lit))
+    emit("TR_LIT      EQU #%02X   ; its byte lit" % G.m0_solid(lit))
+    emit("TR_LIT_Y    EQU #%02X   ; ... on a car that is yellow there" %
+         G.m0_solid(G.PEN[S.CAR_PEN[S.TRAFFIC_LIT_YELLOW]]))
     emit("")
     emit(";; per piece: its code, its RAM configuration (0: any), the lines before")
     emit(";; its first (from its top), where its first line's run ends (bytes from")

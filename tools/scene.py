@@ -786,25 +786,51 @@ TRAFFIC_COLOURS = [("RED",), ("ORANGE",), ("YELLOW",), ("WHITE",), ("BLUE",), ("
 assert len(TRAFFIC_COLOURS) == 16
 
 
-# Changing lanes, a car blinks its indicator on the side it goes to: one
-# pixel in yellow, lit TRAFFIC_BLINK pictures in every 2 x TRAFFIC_BLINK
+# Changing lanes, a car blinks its indicator on the side it goes to: a byte
+# in yellow - 2 pixels, on TRAFFIC_BLINK_LINES lines at its size (4 pixels on
+# two; one pixel till 2026-11-09, which hardly showed) - or in white on a car
+# that is yellow there - lit TRAFFIC_BLINK pictures in every 2 x TRAFFIC_BLINK
 # (src/traffic.asm tr_lit: a bit of frames_drawn) - ~3 times a second.
 TRAFFIC_BLINK = 4
+TRAFFIC_BLINK_LINES = [2, 2, 2, 2, 1, 1, 1, 1]
 TRAFFIC_LIT = "Y"                   # (CAR_PEN: YELLOW)
+TRAFFIC_LIT_YELLOW = "W"            # (... WHITE)
+
+
+def blink_block(rows, j, i, lines, letters, mirror=False, can=lambda t: True):
+    """An indicator's place in a car's art `rows`, from a light at line j,
+    pixel i: (its top line, its byte) - the byte i is in, on `lines` lines:
+    with two, j and the one above or below it, whichever shows more of its
+    lights (`letters`), all of it in the sprite's runs, as a picture's own
+    drawing has to take it away (and in its mirror, if `mirror`), and `can`
+    the top line."""
+    b = i // 2
+
+    def inside(t):
+        bytes_ = (b, len(rows[0]) // 2 - 1 - b) if mirror else (b,)
+        return t >= 0 and t + lines <= len(rows) and can(t) and all(
+            rows[q][2 * c] != "." and rows[q][2 * c + 1] != "."
+            for q in range(t, t + lines) for c in bytes_)
+
+    def lights(t):
+        return sum(c in letters for q in range(t, t + lines) for c in rows[q][2 * b:2 * b + 2])
+    return max((t for t in ((j - 1, j) if lines == 2 else (j,)) if inside(t)), key=lights), b
 
 
 def traffic_blinker(size, bottom):
-    """A size's left indicator with a bottom (TRAFFIC_BOTTOMS's): (its line
-    from the car's top, its pixel from its left) - the outermost of its
-    lights' lowest line, or with none (the furthest size) of its lowest line
-    in paint. The right one is its mirror."""
+    """A size's left indicator with a bottom (TRAFFIC_BOTTOMS's): (its top
+    line from the car's top, its byte from its left, its lines) - at the
+    outermost of its lights' lowest line, or with none (the furthest size)
+    of its lowest line in paint. The right one is its mirror."""
     rows, _ = traffic_rows(size, TRAFFIC_TOPS[0], TRAFFIC_BOTTOMS[bottom])
     half = len(rows[0]) // 2
+    n = TRAFFIC_BLINK_LINES[size]
     for j in range(len(rows) - 1, -1, -1):
         lights = [i for i, c in enumerate(rows[j][:half]) if c in "RO"]
         if lights:
-            return j, min(lights)
-    return max(j for j, row in enumerate(rows) if row[0] == TRAFFIC_PAINT), 0
+            return blink_block(rows, j, min(lights), n, "RO", True) + (n,)
+    j = max(j for j, row in enumerate(rows) if row[0] == TRAFFIC_PAINT)
+    return blink_block(rows, j, 0, n, TRAFFIC_PAINT, True) + (n,)
 
 
 def traffic_size(r):
@@ -929,10 +955,13 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
             assert -128 < d < 128
             place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
             if way[2:] and way[2]:
-                j, i = traffic_blinker(size, bottom)
+                t, b, n = traffic_blinker(size, bottom)
                 if d >= 0:
-                    i = 2 * wb - 1 - i
-                art = art[:j] + [art[j][:i] + TRAFFIC_LIT + art[j][i + 1:]] + art[j + 1:]
+                    b = wb - 1 - b
+                assert t >= split                   # (in its bottom's colour)
+                lit = TRAFFIC_LIT_YELLOW if TRAFFIC_COLOURS[cbot] == ("YELLOW",) else TRAFFIC_LIT
+                art = [row[:2 * b] + 2 * lit + row[2 * b + 2:] if t <= q < t + n
+                       else row for q, row in enumerate(art)]
         left = traffic_centre(curve, r, x) + place
         rt = rows[y0 - ROAD_Y]                  # the row its top line shows,
         for q in (rt, r) if lane < 4 else (r,):  # then its own
@@ -1079,24 +1108,32 @@ def car_runs(view=0):
 SHADOW_W, SHADOW_IN, SHADOW_H = 22, 4, 3     # (bush.asm car_shadow, bytes)
 
 # Moving over to another lane, the car blinks its indicator on that side as
-# the traffic does (TRAFFIC_BLINK, TRAFFIC_LIT; src/signal.asm): one pixel,
-# the outermost of its lights on that side - per car the lights' letters,
-# and the lines they are on on the level, uphill and downhill (the red
-# cars' paint is R, the yellow one's shading O; the white one's lower
-# lights are either since 2026-11-07, 20% narrower).
+# the traffic does (TRAFFIC_BLINK, TRAFFIC_LIT; src/signal.asm): CAR_BLINK_LINES
+# lines of a byte (4 pixels), at the outermost of its lights on that side, in
+# white on the yellow car (car_lit) - per car the lights' letters, and the
+# lines they are on on the level, uphill and downhill (the red cars' paint is
+# R, the yellow one's shading O; the white one's lower lights are either since
+# 2026-11-07, 20% narrower).
 CAR_LIGHTS = {
     "player": ("O", ((11, 14), (13, 16), (11, 13))),
     "ferrari": ("O", ((11, 14), (13, 16), (11, 13))),
     "lotus": ("R", ((11, 14), (13, 16), (10, 12))),
     "bmw": ("OR", ((15, 17), (12, 20), (8, 15))),
 }
+CAR_BLINK_LINES = 2
+
+
+def car_lit(car_id):
+    """The letter a car's indicator is lit in."""
+    return TRAFFIC_LIT_YELLOW if CARS[car_id] == "lotus" else TRAFFIC_LIT
 
 
 def car_blinker(view, car_id=None):
     """The car's (the picked one's, or car_id's) indicators seen as car_view
-    `view` (0-8): ((line, pixel) of the left one, of the right one) in its
-    art - the outermost of its lights' pixels either side of its middle,
-    the lowest of those on the left, the highest on the right."""
+    `view` (0-8): ((top line, byte) of the left one, of the right one) in
+    its art - at the outermost of its lights' pixels either side of its
+    middle, the lowest of those on the left, the highest on the right; both
+    lines in a character row, #800 apart (signal.asm)."""
     car = CARS[CAR_ID if car_id is None else car_id]
     letters, groups = CAR_LIGHTS[car]
     r0, r1 = groups[view // 3]
@@ -1106,7 +1143,9 @@ def car_blinker(view, car_id=None):
     px = [(j, i) for j in range(r0, r1 + 1) for i, c in enumerate(art[j]) if c in letters]
     left = min((t for t in px if t[1] < mid), key=lambda t: (t[1], -t[0]))
     right = max((t for t in px if t[1] > mid), key=lambda t: (t[1], t[0]))
-    return left, right
+    can = lambda t: (CAR_Y + t) % 8 + CAR_BLINK_LINES <= 8
+    return tuple(blink_block(art, j, i, CAR_BLINK_LINES, letters, False, can)
+                 for j, i in (left, right))
 
 
 def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
@@ -1126,8 +1165,10 @@ def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
             if c != ".":
                 lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
     if blink:
-        j, i = car_blinker(view)[blink - 1]
-        lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[TRAFFIC_LIT]]
+        t, b = car_blinker(view)[blink - 1]
+        for j in range(t, t + CAR_BLINK_LINES):
+            for i in (2 * b, 2 * b + 1):
+                lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[car_lit(CAR_ID)]]
 
 
 # ---------------------------------------------------------------------------
