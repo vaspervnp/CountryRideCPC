@@ -19,7 +19,7 @@ DSK    := $(BUILD)/countryride.dsk
 
 SRC := $(wildcard src/*.asm) $(wildcard src/gen/*.asm) src/gen/select.scr
 
-.PHONY: all gen shots manual check mockup clean
+.PHONY: all gen shots manual itch check mockup clean
 
 all: $(DSK)
 
@@ -45,6 +45,9 @@ shots: $(DSK)
 
 manual:
 	$(PYTHON) tools/mkmanual.py
+
+itch:
+	$(PYTHON) tools/mkitch.py
 
 check: $(DSK)
 	$(PYTHON) tools/run.py check

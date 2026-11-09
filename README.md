@@ -69,6 +69,7 @@ types do differently; it has not been tried on real hardware yet.
 | `make check` | boots the disc in an emulator, measures the frame rate, and compares the screen with the Python model |
 | `make shots` | boots the disc and writes the screenshots in `docs/` |
 | `make manual` | writes the manuals' PDFs from `docs/manual-*.md` (needs fpdf2 and the Noto fonts) |
+| `make itch` | writes the itch.io page's banner and background in `assets/itch/`, from the Python model |
 | `make mockup` | writes `build/mockup.png`, the screen as worked out in Python |
 | `make clean` | empties `build/` |
 
@@ -1637,7 +1638,8 @@ tools/
   run.py        emulator harness: check, shots, watch
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts, the cars', the traffic's and the trees' renders; the
-                select screen's pictures of the cars (assets/cars/photo_*)
+                select screen's pictures of the cars (assets/cars/photo_*);
+                the itch.io page's banner and background (assets/itch)
 disc/           BASIC loader: the car and the difficulty picked as the game
                 loads
 docs/           screenshots, the manuals (manual-en, manual-el: .md and .pdf)
