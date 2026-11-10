@@ -432,19 +432,24 @@ row count and R5 lines.
 
 `disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, puts the select
 screen at `&C000` (the title and the cars, `tools/mkselect.py`, "LOADING" in
-pen 14), then each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and `GAME.BIN` at
-`&4000` with its bank (4-7) switched in there, `SOUND.BIN` at `&98C0` and
-`RACE.BIN` at `&A0C0` - every file packed (below). Then it inks "LOADING"
+pen 14), then the cars' turning (The cars turning, below): `SPINA.BIN` to
+`SPIND.BIN` into banks 4-7 and `SPINE.BIN` into base memory, each at `&4000`
+with its memory switched in there, and `SPIN.BIN` at `&9C00`
+(`SPIN_CODE`), which it calls: the cars turn. Then it inks "LOADING"
 out and the keys' line in,
 draws the picked car's frame in pen 13 (flashing, `INK 13,24,15`; the
 others' in pen 2) with `DRAWR`, and prints the difficulties where "LOADING"
 was: the small font's letters as characters 240-249 (`SYMBOL`), with `TAG`
 at the graphics cursor, a letter at a time, each key in pen 15, each word in
 pen 3 (the credits' sky blue) and the one picked in 13. When the car is
-picked it puts its `CARn.BIN` at `&1900` (`CAR_BLOB`), POKEs the
-difficulty into it (`&1906`, `CAR_DIFF`: its first record's byte, 32 a
-step, which `boot_car` puts in `coll_diff`), and puts `BOOT.BIN` at
-`&4000` and calls it.
+picked it stops the turning (`CALL &9C03`), inks the keys' line out, and
+loads the game over it: each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and
+`GAME.BIN` at `&4000` with its bank (4-7) switched in there, `SOUND.BIN` at
+`&98C0` and `RACE.BIN` at `&A0C0` - every file packed (below) - while the
+screen stays, the picked car's frame flashing; then it puts its `CARn.BIN`
+at `&1900` (`CAR_BLOB`), POKEs the difficulty into it (`&1906`,
+`CAR_DIFF`: its first record's byte, 32 a step, which `boot_car` puts in
+`coll_diff`), and puts `BOOT.BIN` at `&4000` and calls it.
 
 Since 2026-11-10 every file but the loader is on the disc packed (ZX0, by
 rasm's own cruncher: `LZX0`). `src/main.asm` writes the files as they go in
@@ -461,9 +466,12 @@ sound and the race - at `&C000`, once the screen is black, and calls
 `&A605` (`src/discmap.asm`). 119,230 bytes go on the disc as 42,999 (36%):
 the screen 22%, the banks 22-31%, the game 59%, `BOOT.BIN` 45%, the cars
 about 41%, the sound and the race 82-88%. The disc has 51K on it, not 128K,
-and from `RUN"COUNTRY` the select screen is ready in 16.5 s, not 21.0, and
-the race shows 5.4 s after the car is picked, not 6.6 (the emulator; each
-file still costs 1-2 s to find, however small).
+and from `RUN"COUNTRY` the select screen was ready in 16.5 s, not 21.0, and
+the race showed 5.4 s after the car was picked, not 6.6 (the emulator; each
+file still costs 1-2 s to find, however small). Since 2026-11-10 the cars
+turn on it: 72,078 bytes more go on the disc as 46,876 (65%), the select
+screen and the cars turning there in 21 s, the race 19.5 s after the car is
+picked.
 
 It has no room for more. BASIC loads nothing under `HIMEM` ("Memory full"),
 so `HIMEM` stays under `CAR_BLOB`, the lowest file; and its first file takes
@@ -474,6 +482,55 @@ so `HIMEM` stays under `CAR_BLOB`, the lowest file; and its first file takes
 letters (7 lines each) and the words (each letter's number and pixel) are
 in the select screen's hidden bytes, the last 48 of its first three 2K
 blocks, read with `PEEK`: 4473 free then, 4419 with the files unpacked.
+
+### The cars turning
+
+While the player picks a car, the four cars turn round on the select screen,
+each in its panel between its name and its bars, all four together: a view
+every 15 degrees, a turn in 3 seconds (`src/spin.asm`, since 2026-11-10).
+Each car's 24 views are its model (`tools/cars3d.py`'s, photoreal) rendered
+by `tools/spin3d.py` - seen from its side by a camera 5 degrees above, the
+sun with the camera, 14 mode 0 pixels a metre (its side about 64 pixels, as
+the pictures were), heights times 0.8 - and brought to the screen's own pens
+as `mkselect.py` brings its pictures (`dither.py`, black outlines), in
+`assets/cars/spin_<car>.png`. `tools/mkspin.py` makes from them what is
+played: what each view changes on the screen (`src/gen/select.scr` with the
+views on it), a stream of tokens for the player, and before them a stream
+per car that puts its view 0 over its side picture. They are played there
+too and checked against the views, byte for byte, through two turns.
+
+The player is a page of code that the tokens jump into (each token the low
+byte of where it jumps, in `IX`): n bytes as they are into a chain of `LDI`
+(n from its end), n times the byte in `A` into a chain of `LD (DE),A : INC E`
+(the runs cut before `E` wraps), the byte for `A`, an address, the end - no
+loop, no count: 5 microseconds a byte as it is, 3 a run's byte. The streams
+are 72,078 bytes (about 720 a car's view: as it turns, most of a car
+changes), in five areas - banks 4-7 and base memory at `#4000`, each
+switched in there while one of its streams plays - each as much as packs into
+what the loader can load at `PACK_LOW`. They take the memory the game's
+files take, so the game is loaded once the car is picked (The loader).
+
+It runs from the interrupt itself, BASIC's menu going on above it: the 6128
+firmware's interrupt entry in RAM (`#B941`, where `#0038` jumps from RAM
+and from the lower ROM alike) jumps to it first, its first three bytes
+done after it, until it is stopped. The firmware's frame flyback events come
+too late for it whenever BASIC keeps the firmware busy (the flashing ink,
+the keyboard), and `#0038` alone is passed by while the lower ROM is in.
+The interrupt in the VSYNC counts the frames, and a view is played in two
+halves timed to the beam from the VSYNC's end (line 248 of the frame, the
+screen's lines at 0-199), the interrupts off: the top cars from 8.9 ms on
+(the beam past their area, lines 31-66, at 8.4 ms), done by 19.2 ms, long
+before the beam is back at them; then, from the next VSYNC's end, the bottom
+cars at once, done by 10.3 ms (the beam at their area, line 110, at 11.1
+ms) - and a wait so that it ends at 10.35 ms whatever they took. That last
+matters: the interrupts held off are taken late, which moves the gate
+array's count, and its interrupt at the VSYNC only comes if none came in
+the 32 lines before it; ending there, the next ones come at lines 97, 149
+and 201, and the VSYNC's at 242 does. `mkspin.py` works the times out from
+what each stream takes, microsecond by microsecond. So all four show in the
+same frame, and no car is ever seen half drawn (checked in the emulator:
+each panel shows only the 24 views, through two turns). Every fourth view
+stays a frame more: 24 views in 150 frames.
 
 ### Memory
 
@@ -1586,6 +1643,7 @@ src/            the game
   discmap.asm   ... where it puts them, and the packed ones
   pack.asm      the disc: each file packed (ZX0), the select screen and the
                 unpacker (SELECT.BIN)
+  spin.asm      the cars turning on the select screen (SPIN.BIN)
   dzx0.asm      the unpacker (rasm's dzx0_standard)
   hw.asm        ports, CRTC values, memory map
   boot.asm      takes the machine over, puts the picked car's code in
@@ -1646,6 +1704,9 @@ tools/
   mkselect.py   the title and the screen the car is picked on, the cars
                 from their pictures
                 -> src/gen/select.scr
+  spin3d.py     the four cars turning, every 15 degrees (Blender)
+  mkspin.py     ... in the select screen's pens (assets/cars/spin_*), and
+                what the turning plays -> src/gen/spin.asm, spin0-4.bin
   traffic3d.py  the traffic's tops and tails at eight sizes (Blender)
                 -> assets/traffic/
   mktraffic.py  the traffic's art as the game's pens -> tools/trafficart.py

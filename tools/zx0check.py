@@ -22,8 +22,13 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 # unpacker for the banks (they unpack in #4000-#7FFF), the place it unpacks
 # to for the sound and the race (the race's: the sound, already there), the
 # memory's end for the car's file and BOOT.BIN (the screen black by then);
-# SELECT.BIN, at #4000, its unpacker and code first (here only its data)
+# SELECT.BIN, at #4000, its unpacker and code first (here only its data); the
+# turning's streams (into banks 4-7 and #4000) and code (unpacked at
+# SPIN_CODE, past it) as the banks
 FITS = [("select", "#4000", "#8000"),
+        ("spina", "PACK_LOW", "UNPACK"), ("spinb", "PACK_LOW", "UNPACK"),
+        ("spinc", "PACK_LOW", "UNPACK"), ("spind", "PACK_LOW", "UNPACK"),
+        ("spine", "PACK_LOW", "UNPACK"), ("spin", "PACK_LOW", "SPIN_CODE"),
         ("roada", "PACK_LOW", "UNPACK"), ("roadb", "PACK_LOW", "UNPACK"),
         ("roadc", "PACK_LOW", "UNPACK"), ("game", "PACK_LOW", "UNPACK"),
         ("sound", "PACK_LOW", "SOUND_BLOB"), ("race", "PACK_LOW", "SOUND_BLOB"),

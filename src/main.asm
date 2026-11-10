@@ -21,6 +21,8 @@
 ;;                              tells the sound: the same
 ;;   SELECT.BIN (#C000)         the screen the car is picked on (and the
 ;;                              unpacker: pack.asm)
+;;   SPIN.BIN   (#9C00)         the cars turning on it while one is picked
+;;   SPINA-E.BIN banks 4-7, #4000  what they play (gone once one is picked)
 ;;
 ;; Build: make (see Makefile). README.md describes the memory plan.
 ;; ===========================================================================
@@ -209,6 +211,49 @@ race_end
     ORG #C000
     INCBIN "gen/select.scr"
     SAVE "build/select.raw",#C000,#4000
+
+;; ---------------------------------------------------------------------------
+;; the cars turning on the select screen while one is picked (SPIN.BIN:
+;; spin.asm at SPIN_CODE) and their streams (SPINA-E.BIN: tools/mkspin.py's
+;; five areas, banks 4-7 and base memory at #4000), all of it gone once the
+;; car is picked: the game's files are loaded over them
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG SPIN_CODE
+    INCLUDE "spin.asm"
+spin_end
+    ASSERT spin_end <= UNPACK
+    SAVE "build/spin.raw",SPIN_CODE,spin_end-SPIN_CODE
+
+    BANK
+    ORG #4000
+    INCBIN "gen/spin0.bin"
+spina_end
+    SAVE "build/spina.raw",#4000,spina_end-#4000
+
+    BANK
+    ORG #4000
+    INCBIN "gen/spin1.bin"
+spinb_end
+    SAVE "build/spinb.raw",#4000,spinb_end-#4000
+
+    BANK
+    ORG #4000
+    INCBIN "gen/spin2.bin"
+spinc_end
+    SAVE "build/spinc.raw",#4000,spinc_end-#4000
+
+    BANK
+    ORG #4000
+    INCBIN "gen/spin3.bin"
+spind_end
+    SAVE "build/spind.raw",#4000,spind_end-#4000
+
+    BANK
+    ORG #4000
+    INCBIN "gen/spin4.bin"
+spine_end
+    SAVE "build/spine.raw",#4000,spine_end-#4000
 
     ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
     ASSERT TR_TOPS == 1 && TR_BOTTOMS == 2              ; (traffic.asm: tp_new)

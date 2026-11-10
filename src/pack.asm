@@ -57,6 +57,90 @@ select_pk_end
     SAVE "build/select.pk",select_pk,select_pk_end-select_pk
 
 ;; ---------------------------------------------------------------------------
+;; SPINA.BIN: the turning's streams, area 0 (bank 4 at #4000)
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spina_pk
+    defw #4000
+    LZX0
+    INCBIN "../build/spina.raw"
+    LZCLOSE
+spina_pk_end
+    SAVE "SPINA.BIN",spina_pk,spina_pk_end-spina_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spina.pk",spina_pk,spina_pk_end-spina_pk
+
+;; ---------------------------------------------------------------------------
+;; SPINB.BIN: the turning's streams, area 1 (bank 5 at #4000)
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spinb_pk
+    defw #4000
+    LZX0
+    INCBIN "../build/spinb.raw"
+    LZCLOSE
+spinb_pk_end
+    SAVE "SPINB.BIN",spinb_pk,spinb_pk_end-spinb_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spinb.pk",spinb_pk,spinb_pk_end-spinb_pk
+
+;; ---------------------------------------------------------------------------
+;; SPINC.BIN: the turning's streams, area 2 (bank 6 at #4000)
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spinc_pk
+    defw #4000
+    LZX0
+    INCBIN "../build/spinc.raw"
+    LZCLOSE
+spinc_pk_end
+    SAVE "SPINC.BIN",spinc_pk,spinc_pk_end-spinc_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spinc.pk",spinc_pk,spinc_pk_end-spinc_pk
+
+;; ---------------------------------------------------------------------------
+;; SPIND.BIN: the turning's streams, area 3 (bank 7 at #4000)
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spind_pk
+    defw #4000
+    LZX0
+    INCBIN "../build/spind.raw"
+    LZCLOSE
+spind_pk_end
+    SAVE "SPIND.BIN",spind_pk,spind_pk_end-spind_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spind.pk",spind_pk,spind_pk_end-spind_pk
+
+;; ---------------------------------------------------------------------------
+;; SPINE.BIN: the turning's streams, area 4 (base memory at #4000)
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spine_pk
+    defw #4000
+    LZX0
+    INCBIN "../build/spine.raw"
+    LZCLOSE
+spine_pk_end
+    SAVE "SPINE.BIN",spine_pk,spine_pk_end-spine_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spine.pk",spine_pk,spine_pk_end-spine_pk
+
+;; ---------------------------------------------------------------------------
+;; SPIN.BIN: the turning's code (spin.asm), at SPIN_CODE
+;; ---------------------------------------------------------------------------
+    BANK
+    ORG PACK_LOW
+spin_pk
+    defw SPIN_CODE
+    LZX0
+    INCBIN "../build/spin.raw"
+    LZCLOSE
+spin_pk_end
+    SAVE "SPIN.BIN",spin_pk,spin_pk_end-spin_pk,DSK,"build/countryride.dsk"
+    SAVE "build/spin.pk",spin_pk,spin_pk_end-spin_pk
+
+;; ---------------------------------------------------------------------------
 ;; ROADA.BIN: bank 4 (the loader switches it in at #4000)
 ;; ---------------------------------------------------------------------------
     BANK

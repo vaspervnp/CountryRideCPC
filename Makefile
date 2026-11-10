@@ -37,6 +37,7 @@ gen:
 	$(PYTHON) tools/mkroad.py
 	$(PYTHON) tools/mkcars.py
 	$(PYTHON) tools/mkselect.py
+	$(PYTHON) tools/mkspin.py
 	$(PYTHON) tools/mktraffic.py
 	$(PYTHON) tools/mktrafcode.py
 	$(PYTHON) tools/mkprops.py

@@ -25,3 +25,9 @@ PACK_HIGH   EQU #C000
 UNPACK      EQU #A600
 UNPACK_LOW  EQU UNPACK                  ; (disc/country.bas: CALL &A600)
 UNPACK_HIGH EQU UNPACK+5                ; (... CALL &A605)
+
+;; SPIN.BIN: the cars turning on the select screen (spin.asm), loaded after
+;; the turning's streams (SPINA-E.BIN, into banks 4-7 and #4000) and before
+;; the menu; past what PACK_LOW's files take, before UNPACK; the game's files
+;; go over it (and over the streams) once the car is picked and it is stopped
+SPIN_CODE   EQU #9C00
