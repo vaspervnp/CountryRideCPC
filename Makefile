@@ -41,6 +41,7 @@ gen:
 	$(PYTHON) tools/mktraffic.py
 	$(PYTHON) tools/mktrafcode.py
 	$(PYTHON) tools/mkprops.py
+	$(PYTHON) tools/mkdrive.py
 	$(PYTHON) tools/mkbush.py
 	$(PYTHON) tools/mksound.py
 

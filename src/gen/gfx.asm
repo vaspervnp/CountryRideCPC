@@ -3,7 +3,11 @@
 ;; it is copied to the screen, never masked.
 
 ;; big glyphs, 4 bytes x 18 lines, each line twice: 9 lines kept;
-;; 0-9 then N (gear neutral)
+;; 0-9 then L (LOW gear) - H (HIGH) apart, at the end (big_high:
+;; eleven here keep small_rows in its page, and the panorama's page
+;; as it was)
+GLYPH_LOW EQU 10
+GLYPH_HIGH EQU 11
 BIG_W EQU 4
 BIG_H EQU 18
 big_glyphs
@@ -47,10 +51,10 @@ big_glyphs
     defb #94,#3C,#68,#C0,#68,#00,#14,#C0,#28,#C0,#94,#40,#28,#C0,#94,#40
     defb #94,#3C,#3C,#40,#C0,#00,#14,#40,#C0,#C0,#68,#40,#94,#3C,#80,#C0
     defb #C0,#00,#40,#C0
-; N
-    defb #68,#C0,#94,#C0,#3C,#C0,#94,#40,#28,#68,#94,#40,#28,#28,#94,#40
-    defb #28,#94,#94,#40,#28,#94,#14,#40,#28,#C0,#3C,#40,#28,#C0,#94,#40
-    defb #80,#C0,#C0,#40
+; L
+    defb #68,#C0,#C0,#C0,#28,#C0,#C0,#C0,#28,#C0,#C0,#C0,#28,#C0,#C0,#C0
+    defb #28,#C0,#C0,#C0,#28,#C0,#C0,#C0,#28,#C0,#C0,#C0,#3C,#3C,#3C,#C0
+    defb #80,#00,#00,#40
 
 ;; small glyphs, 3 bytes x 8 lines: the digits 0-9, then the space
 ;; and the letters of the messages (scene.py MSG_GLYPHS). small_rows
@@ -139,7 +143,6 @@ small_digits
     defb lo(small_rows+153),lo(small_rows+168),lo(small_rows+195),lo(small_rows+33),lo(small_rows+111),lo(small_rows+198),lo(small_rows+168),lo(small_rows+171)
 ; Y
     defb lo(small_rows+153),lo(small_rows+168),lo(small_rows+195),lo(small_rows+33),lo(small_rows+75),lo(small_rows+75),lo(small_rows+75),lo(small_rows+78)
-
 ;; the HUD's messages (scene.py MESSAGES), MSG_W glyphs each
 MSG_W EQU 15
 MSG_X EQU 25
@@ -642,3 +645,8 @@ pano_rows
     defb #F0,#F0,#F0,#70,#BA,#30,#BA,#30,#BA,#30,#BA,#30,#BA,#30,#BA,#30
     defb #F0,#F0,#B0,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
 
+;; the big glyph H (GLYPH_HIGH: draw_big - apart from big_glyphs)
+big_high
+    defb #68,#C0,#94,#C0,#28,#C0,#94,#40,#28,#C0,#94,#40,#3C,#3C,#3C,#40
+    defb #28,#00,#14,#40,#28,#C0,#94,#40,#28,#C0,#94,#40,#28,#C0,#94,#40
+    defb #80,#C0,#C0,#40

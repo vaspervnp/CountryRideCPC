@@ -13,8 +13,10 @@ rear face laid out on the frame's grid - and renders each car seen from
 behind, on the level, going uphill (its nose up PITCH degrees) and
 downhill, each straight and turning left by car3d.YAW degrees, to
 OUT_DIR/<car>_<flat|up|down>_<0|left>.png. Turning right is the left view
-mirrored. CARS (default all four) picks which; PHOTO (default) renders them
-photorealistic. SPIN renders the crash's view instead (spin_render).
+mirrored. CARS (default all four) picks which, TURNS (default both) the
+straight ("0") or the turning ("left") views, YAW (default car3d's) the
+turn; PHOTO (default) renders them photorealistic. SPIN renders the crash's
+view instead (spin_render).
 """
 
 import importlib.util
@@ -34,7 +36,9 @@ CARS = globals().get("CARS", ("player", "ferrari", "lotus", "bmw"))
 PHOTO = globals().get("PHOTO", True)       # photorealistic (else car3d's toon)
 PITCH = globals().get("PITCH", 8.0)        # degrees, going uphill (nose up),
                                            # before the squash
-YAW = c3.YAW
+YAW = globals().get("YAW", c3.YAW)         # degrees, turning (car3d's)
+TURNS = globals().get("TURNS", ("0", "left"))   # the views rendered: "left"
+                                                # alone for the turning ones
 
 c3.PAL["PASTEL"] = (128, 128, 255)          # the white car's flanks
 col, zl, LZ, CX, Z0 = c3.col, c3.zl, c3.LZ, c3.CX, c3.Z0
@@ -576,6 +580,8 @@ def render():
             ground.parent = root
         for vname, pitch in VIEWS:
             for yname, yaw in (("0", 0.0), ("left", YAW)):
+                if yname not in TURNS:
+                    continue
                 place(car, pitch, yaw)
                 if ground:
                     place(ground, pitch, 0.0)

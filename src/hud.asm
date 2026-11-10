@@ -15,7 +15,8 @@
 
 ;; --- the values the game sets ------------------------------------------------
 time_left   defb START_TIME     ; seconds, two big digits
-gear        defb 0              ; 0 = N, 1..6 (the start's count: 3..1)
+gear        defb GLYPH_LOW      ; its big glyph: GLYPH_LOW (L), GLYPH_HIGH
+                                ; (H) or the start's count, 3..1
 speed_level defb 0              ; gauge segments lit, 0..GAUGE_SEGS
 cp_level    defb 0              ; ... on the way to the next checkpoint
 total_time  defb 0,0,0,0,0      ; m, s tens, s units, cs tens, cs units
@@ -170,7 +171,7 @@ hud_time_hi
     ld c,TIME_VAL_Y
     jp draw_big
 
-    ; --- gear: N or 1-6 ---
+    ; --- gear: L or H (the count: 3-1) ---
 hud_gear
     ld hl,shown_gear
     call buf_entry
@@ -181,10 +182,6 @@ hud_gear
     ret c
     ld a,(hv_gear)
     ld (hl),a
-    or a
-    jr nz,hud_gear_digit
-    ld a,10                     ; glyph 10 is N
-hud_gear_digit
     ld b,GEAR_X
     ld c,GEAR_Y
     jp draw_big
@@ -437,6 +434,9 @@ draw_cell_line
 ;; each drawn twice (blit_twice).
 ;; ---------------------------------------------------------------------------
 draw_big
+    cp GLYPH_HIGH                       ; (H: apart, gen/gfx.asm)
+    ld hl,big_high
+    jr z,draw_big_at
     ld l,a                      ; 36 bytes a glyph
     ld h,0
     add hl,hl
@@ -449,6 +449,7 @@ draw_big
     add hl,de                   ; *36
     ld de,big_glyphs
     add hl,de
+draw_big_at
     ld d,BIG_W
     ld e,BIG_H
     xor a

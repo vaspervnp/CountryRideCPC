@@ -30,7 +30,8 @@ PAL = dict(BLACK=(0, 0, 0), NAVY=(0, 0, 128), WHITE=(255, 255, 255),
            GREY=(128, 128, 128), RED=(255, 0, 0), ORANGE=(255, 128, 0),
            YELLOW=(255, 255, 0), SKY=(0, 128, 255), CAR_DARK=(128, 0, 0))
 
-YAW = globals().get("YAW", 10.0)          # degrees, turning left
+YAW = globals().get("YAW", 6.0)           # degrees, turning left (10 till
+                                           # 2026-11-10: too much, the user said)
 ELEV = globals().get("ELEV", 3.0)         # degrees: the camera above the rear's foot
 DIST = globals().get("DIST", 12.0)         # metres behind the rear face
 SQUASH = 0.46                              # heights x this: the game's car is low

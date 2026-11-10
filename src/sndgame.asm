@@ -5,20 +5,23 @@
 ;; extras: in page 1's HUD eighth rows (hw.asm SND_M0..) and a hidden line
 ;; of page 0 (SND_P10).
 ;;
-;; The engine is a note on channel C: its pitch from the gear the speed is
-;; in (as the HUD's) and how far up it the revs are - up through a gear,
-;; down at the next one's start, as a gearbox has it - every other picture
-;; a little lower (a hum); on the grass a rumble with it, and in a curve
-;; that carries the car out hard (push_v) the tyres' squeal.
+;; The engine is a note on channel C: its pitch from the revs - the speed
+;; in the gear picked, LOW's half as many again as HIGH's at a speed (as Out
+;; Run's ratios), so it drops changing up - every other picture a little
+;; lower (a hum); on the grass a rumble with it, and in a curve that carries
+;; the car out hard (push_v) the tyres' squeal.
 ;; ===========================================================================
 
 ENG_IDLE    EQU 962             ; the engine's period standing still (65 Hz)
+ENG_LOW     EQU 15              ; ... less the speed x this / 32 in LOW
+ENG_HIGH    EQU 10              ; ... in HIGH: 340-360 Hz at their tops
+ENG_MIN     EQU 170             ; ... no shorter (LOW over its top, slowing)
 ENG_VOL     EQU 9
 ENG_GRASS   EQU 12              ; its noise's period on the grass
 SQUEAL_N    EQU 2               ; ... in a hard curve,
 SQUEAL_V    EQU #0050           ; ... the curve's push from this on (8.8
                                 ; pairs a picture)
-    ASSERT 6*GEAR_STEP > SPEED_MAX
+    ASSERT SPEED_MAX*ENG_LOW < 65536
 
 ;; ---------------------------------------------------------------------------
     REC_BEGIN SND_M0
@@ -220,60 +223,33 @@ sh_music    defb 0                      ; snd_music when it stopped
 ;; ---------------------------------------------------------------------------
     REC_BEGIN SND_P10
 
-;; eng_period - HL = the engine's period: its gear's at the gear's start
-;; (eng_gears), less how far up the gear the speed is times its slope
+;; eng_period - HL = the engine's period: ENG_IDLE less the speed x the
+;; gear's ENG_LOW or ENG_HIGH / 32, ENG_MIN at the shortest
 eng_period
-    ld hl,(speed)
-    ld de,GEAR_STEP
-    ld bc,eng_gears-3
-ep_gear
-    inc bc
-    inc bc
-    inc bc
+    ld de,(speed)
+    ld a,(drive_gear)
     or a
-    sbc hl,de
-    jr nc,ep_gear
-    add hl,de                           ; HL = how far up the gear
-    ex de,hl
-    ld a,(bc)                           ; x its slope (eighths)
+    ld a,ENG_HIGH
+    jr nz,$+4
+    ld a,ENG_LOW
     ld hl,0
-ep_slope
+ep_mul
     add hl,de
     dec a
-    jr nz,ep_slope
+    jr nz,ep_mul
+    ld b,5
+ep_div
     srl h
     rr l
-    srl h
-    rr l
-    srl h
-    rr l
+    djnz ep_div
     ex de,hl
-    inc bc
-    ld a,(bc)
-    ld l,a
-    inc bc
-    ld a,(bc)
-    ld h,a
+    ld hl,ENG_IDLE-ENG_MIN
     or a
     sbc hl,de
+    jr nc,$+5
+    ld hl,0
+    ld de,ENG_MIN
+    add hl,de
     ret
-
-;; per gear: its slope - the period's fall a speed unit, in eighths - and
-;; its period at its start: 65 Hz up to 132, then 95-165, 125-192, 155-238,
-;; 185-268 and 215-332 Hz - higher and higher, so the faster the car the
-;; faster it sounds (till 2026-11-05 65-115 ... 140-204)
-eng_gears
-    defb 14
-    defw ENG_IDLE
-    defb 8
-    defw 658
-    defb 5
-    defw 500
-    defb 4
-    defw 403
-    defb 3
-    defw 338
-    defb 3
-    defw 291
 
     REC_END SND_P10,SND_PIECE

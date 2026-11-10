@@ -561,7 +561,7 @@ def cmd_check():
         vals = dict(time_left=g.game_byte("SHOWN_TIME_HI", buf) * 10
                     + g.game_byte("SHOWN_TIME", buf),
                     speed_level=g.game_byte("SHOWN_SPEED", buf),
-                    gear="N" if gear == 0 else str(gear),
+                    gear={10: "L", 11: "H"}.get(gear, str(gear)),
                     total_centis=tt[0] * 6000 + (tt[1] * 10 + tt[2]) * 100
                     + tt[3] * 10 + tt[4],
                     progress=g.game_byte("SHOWN_CP", buf),

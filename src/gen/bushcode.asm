@@ -1070,14 +1070,13 @@ car_code1
     ld de,#0000
     ld sp,hl
     ei
-    ld bc,#7E3F
+    ld bc,#3F3F
     di
     push bc
-    ld hl,#3F3F
-    push hl
-    push hl
-    ld bc,#3FBD
     push bc
+    push bc
+    ld hl,#3FFC
+    push hl
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -1090,248 +1089,211 @@ car_code1
     push de
     ld hl,#0080
     push hl
-    ld hl,#4A85
+    ld hl,#4A6F
     push hl
-    ld hl,#BDFC
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC5E
-    di
-    push hl
-    ld hl,#0500
-    push hl
-    push de
-    push de
-    ld hl,#1F2F
-    push hl
-    ld hl,#3FFC
-    push hl
-    ld hl,#080C
+    ld hl,#080A
     add hl,sp
     ld sp,hl
     ei
     ld hl,#FC0F
     di
     push hl
-    ld hl,#2F00
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#1F2F
+    push hl
+    ld hl,#080A
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#FC0F
+    di
+    push hl
+    ld hl,#0500
     push hl
     push de
     push de
     ld hl,#0F2F
     push hl
-    ld hl,#3FED
+    ld hl,#BDFC
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#0F0F
+    ld hl,#5E0F
     di
     push hl
     ld hl,#2F3F
     push hl
-    ld h,#3F
-    push hl
-    push hl
+    push bc
+    push bc
     ld hl,#0F2F
-    push hl
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F0F
-    di
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    ld bc,#CFCF
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F3F
-    di
-    push hl
-    ld bc,#3F3F
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#1F2F
-    push hl
-    ld hl,#8FCF
     push hl
     ld hl,#EDFC
     push hl
-    ld hl,#0810
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#4F0F
+    ld hl,#5E0F
+    di
+    push hl
+    ld h,#0F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#8FED
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#5E2F
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#3F1F
+    push hl
+    ld hl,#9FED
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#8F0F
     di
     push hl
     ld hl,#2F3F
     push hl
     push bc
     push bc
-    ld hl,#3F1F
+    push bc
+    ld hl,#0F0F
     push hl
-    ld hl,#0F8F
+    ld hl,#4F3F
     push hl
-    ld l,#3F
-    push hl
-    ld hl,#BDFC
-    push hl
-    ld hl,#C872
+    ld hl,#C86E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC5E
-    di
-    push hl
-    push bc
-    ld hl,#1500
-    push hl
-    push de
-    push de
-    ld hl,#002A
-    push hl
-    push bc
-    jp #6600
-    defs 1   ; (another car's is longer)
-    ASSERT $ <= #6000
-    ORG #6600
-    ld hl,#0F3F
-    push hl
-    ld hl,#BDFC
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC5E
-    di
-    push hl
-    ld hl,#4F0F
-    push hl
     ld hl,#2F3F
-    push hl
-    push bc
-    push bc
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F8F
-    push hl
-    ld l,#3F
-    push hl
-    ld hl,#BDFC
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC7E
     di
     push hl
     ld hl,#3F00
     push hl
     push de
-    push bc
     push de
-    ld hl,#002A
-    push hl
+    push de
     push bc
-    ld hl,#0F3F
+    ld hl,#1F6F
     push hl
-    ld hl,#BDFC
-    push hl
-    ld hl,#0812
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC5E
+    ld hl,#CF0F
     di
-    push hl
-    ld hl,#0F0F
-    push hl
-    ld bc,#0F2F
-    push bc
-    ld bc,#2D3C
-    push bc
-    ld bc,#3C3E
-    push bc
-    ld bc,#1F0F
-    push bc
     push hl
     ld hl,#2F3F
     push hl
-    ld hl,#BDFC
+    push bc
+    push bc
+    push bc
+    ld hl,#0F0F
     push hl
-    ld hl,#0812
+    jp #6600
+    ASSERT $ <= #6000
+    ORG #6600
+    ld hl,#4F3F
+    push hl
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC5E
+    ld hl,#1500
     di
     push hl
+    push de
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    push bc
+    ld h,#1F
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
     ld hl,#0F0F
+    di
     push hl
-    ld l,#2F
     push hl
-    ld hl,#2D3C
+    ld bc,#0A3C
+    push bc
+    ld b,#3C
+    push bc
+    ld bc,#3F0F
+    push bc
     push hl
-    ld hl,#3C3E
+    ld l,#3F
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    push hl
+    ld hl,#0A3C
+    push hl
+    ld h,#3C
     push hl
     push bc
     ld b,#0F
     push bc
+    ld hl,#0F3F
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    ld hl,#3F3F
+    push hl
+    push hl
+    ld hl,#1F0F
+    push hl
+    push bc
+    ld hl,#0F3F
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
     ld hl,#2F3F
     push hl
-    ld hl,#A8FC
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC5E
-    di
-    push hl
-    push bc
-    ld hl,#0F2F
-    push hl
-    ld hl,#3F3F
-    push hl
-    push hl
-    push bc
-    push bc
-    ld h,#2F
-    push hl
-    ld hl,#A8FC
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#FC5E
-    di
-    push hl
-    push bc
-    ld hl,#3F3F
-    push hl
     push de
     push de
-    ld l,#1F
+    ld h,#2A
     push hl
     push bc
-    ld bc,#2F2A
+    ld c,#BD
     push bc
     ld hl,#080E
     add hl,sp
@@ -1343,30 +1305,29 @@ car_code1
     push de
     push de
     push de
-    ld hl,#002A
+    push de
+    ld hl,#1500
     push hl
-    ld bc,#1500
+    ld bc,#00A8
     push bc
-    push hl
     ld hl,#C86E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5400
+    nop
     di
-    push hl
     push de
     push de
     push de
     push de
     push de
-    ld bc,#00A8
+    push de
     push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5400
+    ld hl,#FC00
     di
     push hl
     push de
@@ -1376,7 +1337,7 @@ car_code1
     push de
     push bc
     jp bush_spr_done
-    defs 27   ; (another car's is longer)
+    defs 116   ; (another car's is longer)
 prop_dir
     defw prop_palm0,prop_palm1,prop_palm2,prop_palm3,prop_palm4,prop_palm5,prop_palm6,prop_palm7
     defw prop_stump0,prop_stump1,prop_stump2,prop_stump3,prop_stump4,prop_stump5,prop_stump6,prop_stump7

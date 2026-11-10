@@ -77,6 +77,11 @@ car_xf      defb 0              ; car_x's fraction of a pair (steer)
 steer_s     defw 0              ; the wheel, -127 (right) to 127 (left)
 push_v      defw 0              ; a curve carrying the car out: pairs a
                                 ; picture, 8.8, signed
+off_cls     defb 0              ; 0 the car on the road, 1 on the sand, 2
+                                ; on the grass past it (speed_player)
+acc_frac    defb 0              ; the speed's sixteenths (speed_acc)
+drive_gear  defb 0              ; 0 LOW, 1 HIGH (speed_player: the player's
+                                ; up and down; the demo's: by its speed)
 coll_t      defb 0              ; pictures left of a bump or a crash
 coll_kind   defb 0              ; 0 a bump (or none), 1 a crash, 2 after
                                 ; it: back to the road's middle
@@ -94,9 +99,6 @@ SPEED_MAX   EQU #09D8           ; 9.8 depth units per VSYNC: a kerb stripe
                                 ; and the gap after it (64) in ~3.3
                                 ; pictures (#0690 till 2026-11-07: every
                                 ; speed is 1.5 times since)
-SPEED_ACC   EQU 8               ; per VSYNC, 8.8 - full speed in ~6.3 s
-SPEED_BRK   EQU 18
-GEAR_STEP   EQU SPEED_MAX/6+1   ; speed per gear
 MAX_STEPS   EQU 4               ; 50 Hz steps caught up per picture at most
 HEAD_STEP   EQU 128             ; curve level x depth units for the sky to
                                 ; turn a word: at the strongest level and
@@ -416,22 +418,23 @@ cache_steps_gate
 ;; steer - where the car is on the road (car_x) and where the road is to go
 ;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
-;; The player, as Out Run (SMS: L264D) does it. Left or right turns the
-;; wheel (steer_s) towards 127 or -127, neither brings it back to 0,
-;; STEER_RAMP a picture at most: 0.2 s to the full lock, 0.4 s from one to
-;; the other.
+;; The player, as Out Run (SMS: L264D) does it (tools/outrun.py; the
+;; numbers gen/drive.asm's). Left or right turns the wheel (steer_s)
+;; towards 127 or -127, neither brings it back to 0, WHEEL_RAMP a picture
+;; at most: 0.17 s to the full lock.
 ;; The wheel moves the car - left: car_x up, the road under it going right
-;; - its turn x the car's k / 64 / 256 pairs a picture (0.62-0.87 at the
-;; full lock): all of it from STEER_SPEED on, as much less as the car is
-;; slower below it, none standing still. Turning, the car goes a gauge
-;; segment slower at the most (STEER_LOSS). And a curve carries the car out of
-;; it - out of a right curve the car goes left, the road right: push_v
-;; goes towards the curve level L x (1 + L / 14) x the speed / 16 x the
-;; car's m / 65536 pairs a picture, STEER_RAMP at most. On a level 7 curve
-;; at full speed that is 1.24 pairs a picture for the first car, 2.5 times
-;; its full lock: it has to slow down (Out Run's common sharp curves carry
-;; its car out 71-75% of its full lock). Both moves add up in car_x and its
-;; fraction car_xf. The car moves on the screen at once, and the road
+;; - its turn x the car's k / 64 / 256 pairs a picture (0.8-1.06 at the
+;; full lock, the first car's 0.88: 55% of Out Run's): all of it from STEER_SPEED on
+;; (128 km/h) or off the road, on the road as much less as the car is
+;; slower below it, none standing still; in a curve of level 5-7 from 147
+;; km/h on less, by the level and the speed (sharp_tab: a third less at
+;; level 7 at the top). And a curve carries the car out of it - out of a
+;; right curve the car goes left, the road right: push_v goes towards the
+;; speed x the car's m x the level's k / 8192 pairs a picture, PUSH_RAMP a
+;; picture at most (push_levels: Out Run's pull for a bend of radius 45 x
+;; 7 / L), as hard as Out Run's though the wheel is 55% its: at the top
+;; speed the first car holds levels 1-2 at the full lock, 4 below ~180
+;; km/h, 7 below ~95. Both moves add up in car_x and its fraction car_xf. The car moves on the screen at once, and the road
 ;; follows it as fast as its steps can (steer_x = car_x): the car is drawn
 ;; road_x - car_x pairs right of the middle (car_lines), CAR_LEAD at most.
 ;; The car is seen turning while left or right is held (not both).
@@ -453,13 +456,8 @@ HILL_PITCH  EQU 20              ; the hill, either way, from which the car
                                 ; is seen uphill or downhill (car_lines)
 CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
                                 ; screen, road_x - car_x
-STEER_RAMP  EQU 28              ; the most the wheel's turn and the push
-                                ; (8.8 pairs a picture) move a picture: Out
-                                ; Run's 64 and 5 a step, ~10.9 steps a second
-STEER_SPEED EQU #0600           ; slower, the wheel moves the car less
-STEER_LOSS  EQU SPEED_MAX/GAUGE_SEGS ; the top speed lost turning: a segment
-CAR_STEER_K EQU 85              ; (the first car's; car_setup: each its own)
-CAR_PUSH_M  EQU 64
+CAR_STEER_K EQU 103             ; (the first car's; car_setup: each its own)
+CAR_PUSH_M  EQU 99
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
                                 ; its base line on the car's lower half...
 HIT_TRIM    EQU 2               ; ... the two overlapping, this many bytes in
@@ -530,21 +528,14 @@ steer_both
     xor a
 steer_keys
     ld (car_view),a
-    ld a,l                      ; turning (the wheel to go to a full lock):
-    or a                        ; the top speed on the road a gauge segment
-    push hl                     ; lower (speed_player's - it slows down to
-    ld hl,(demo_max+1)          ; it as on the grass)
-    ld de,-STEER_LOSS
-    jr z,$+3
-    add hl,de
-    ld (sp_max+1),hl
-    pop hl
     ld de,(steer_s)
+    ld c,WHEEL_RAMP
     call ramp
     ld (steer_s),hl
 
     ; HL = the wheel's move: |turn| x k / 64 - k the car's, from
-    ; STEER_SPEED on; slower, k x speed / STEER_SPEED
+    ; STEER_SPEED on or off the road; slower on it, k x speed / STEER_SPEED;
+    ; in a sharp curve from SHARP_S16 on, the turn less sharp_tab's cut
     ld a,l
     or a
     jr z,steer_moved            ; (HL 0)
@@ -552,9 +543,45 @@ steer_keys
     neg
     ld c,a                      ; C = |turn|
     ld de,(speed)
+    ld a,(off_cls)
+    or a
+    jr nz,steer_fast
+    ld a,e
+    cp lo(STEER_SPEED)
     ld a,d
-    cp hi(STEER_SPEED)
+    sbc a,hi(STEER_SPEED)
     jr c,steer_slow
+steer_fast
+    ld a,(road_curve)           ; E = the curve level's cut
+    or a
+    jp p,$+5
+    neg
+    add a,lo(sharp_tab)
+    ld l,a
+    ld h,hi(sharp_tab)
+    ld a,(hl)
+    or a
+    jr z,steer_whole
+    ld b,a
+    ex de,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld a,h                      ; speed / 16
+    sub SHARP_S16
+    jr c,steer_whole
+    ld h,a
+    ld e,b
+    call mul8
+    ld e,h                      ; E = the cut, 256ths
+    ld h,c
+    call mul8
+    ld a,c
+    sub h
+    ld c,a                      ; C = the turn less it
+    jr steer_k
+steer_whole
     ld a,c
     cp 127
 steer_full
@@ -564,18 +591,17 @@ steer_k
     ld e,CAR_STEER_K            ; (car_setup: the car's)
     jr steer_mul
 steer_slow
-    ASSERT STEER_SPEED == #0600
     srl d
     rr e
     srl d
     rr e
     srl d
     rr e
-    ld h,e                      ; speed / 8 (below #600: under 192)
-    ld e,170
+    ld h,e                      ; speed / 8
+    ld e,SLOW_F
     call mul8
-    add hl,hl                   ; H = speed / 6, nearly (below #600: 253
-    ld a,(steer_k+1)            ; at most)
+    add hl,hl                   ; H = speed x 256 / STEER_SPEED
+    ld a,(steer_k+1)
     ld e,a
     call mul8
     ld e,h
@@ -590,9 +616,8 @@ steer_sign
 steer_moved
     push hl
 
-    ; HL = the push asked: |level| (1 + |level| / 14) x (speed / 16 x m) /
-    ; 256, outwards - m the car's; a sharper curve's more, by up to half at
-    ; the sharpest (push_levels: twice that factor)
+    ; HL = the push asked: the level's k (push_levels) x (speed / 16 x m /
+    ; 2) / 256, outwards - m the car's
     ld hl,(speed)
     add hl,hl
     add hl,hl
@@ -611,7 +636,7 @@ steer_m
     ld c,a
     jp p,$+5
     neg
-    add a,lo(push_levels-1)     ; (race.asm)
+    add a,lo(push_levels-1)     ; (gen/drive.asm)
     ld l,a
     ld h,hi(push_levels)
     ld b,(hl)
@@ -627,6 +652,7 @@ steer_pmul
     call nz,neg_hl
 steer_pushed
     ld de,(push_v)
+    ld c,PUSH_RAMP
     call ramp
     ld (push_v),hl
     pop de
@@ -651,7 +677,7 @@ steer_pushed
     ret
 
 ;; ramp - HL = where to go, DE = where it is now: HL = moved towards it,
-;; STEER_RAMP at most. Destroys AF.
+;; C (1-127) at most. Destroys AF.
 ramp
     or a
     sbc hl,de
@@ -660,21 +686,25 @@ ramp
     ld a,h
     or a
     jr nz,ramp_up
-    ld a,l
-    cp STEER_RAMP+1
-    jr c,ramp_add
+    ld a,c
+    cp l
+    jr nc,ramp_add
 ramp_up
-    ld hl,STEER_RAMP
+    ld l,c
+    ld h,0
     jr ramp_add
 ramp_neg
     ld a,h
     inc a
     jr nz,ramp_down
     ld a,l
-    cp -STEER_RAMP
-    jr nc,ramp_add
+    add a,c
+    jr c,ramp_add
 ramp_down
-    ld hl,-STEER_RAMP
+    xor a
+    sub c
+    ld l,a
+    ld h,#FF
 ramp_add
     add hl,de
     ret
@@ -952,8 +982,8 @@ set_palette_loop
     ret
 
 ;; ---------------------------------------------------------------------------
-;; demo_gauges - the speed gauge and the gear, from the speed (the count's
-;; digit in the gear's place), and in the race the checkpoint gauge, from
+;; demo_gauges - the speed gauge, from the speed, and the gear, L or H (the
+;; count's digit in its place), and in the race the checkpoint gauge, from
 ;; how far on the car is: only the HUD shows them, so they are worked out
 ;; when it takes its copy.
 ;; ---------------------------------------------------------------------------
@@ -975,23 +1005,8 @@ demo_seg_done
     ld a,GAUGE_SEGS
 demo_seg_ok
     ld (speed_level),a
-    ld hl,(speed)
-    ld a,h
-    or l
-    ld b,0
-    jr z,demo_gear_done         ; standing still: neutral
-    ld de,GEAR_STEP
-demo_gear
-    inc b
-    or a
-    sbc hl,de
-    jr nc,demo_gear
-demo_gear_done
-    ld a,b
-    cp 7
-    jr c,demo_gear_ok
-    ld a,6
-demo_gear_ok
+    ld a,(drive_gear)           ; L or H
+    add a,GLYPH_LOW
     ld (gear),a
     ld a,(count_gear)
     or a
@@ -1023,6 +1038,148 @@ demo_cp_set
 
 
 ;; ---------------------------------------------------------------------------
+;; speed_player - (demo_step, once the player has pressed faster or slower)
+;; one VSYNC of the player's speed, as Out Run's engine (SMS: L2F6B,
+;; tools/outrun.py): the gear first - down (KEY_HIGH) HIGH, over up
+;; (KEY_LOW) LOW, else as it was; then faster held, speed_acc (the car's
+;; acc_tab for the gear); slower, SPEED_BRK down (both: slower); neither,
+;; SPEED_COAST down. No faster than sp_caps says for the gear: on the road,
+;; LOW's top or HIGH's; off it - a wheel off it, car_x OFFROAD_X (5 a lane)
+;; or more either way - on the sand, SAND_W pairs, and on the grass past it
+;; what Out Run's pedal gives there: over it, SPEED_DRAG a VSYNC slower (so
+;; also changing down to LOW above its top). off_cls: where (steer). The
+;; caps and acc_tab are the car's (car_setup, CARn.BIN). Goes on with
+;; demo_speed_set, HL = the speed.
+;; ---------------------------------------------------------------------------
+speed_player
+    ld a,(keys_now)             ; the gear
+    ld hl,drive_gear
+    rla
+    jr nc,sp_not_high
+    ld (hl),1                   ; HIGH
+    jr sp_geared
+sp_not_high
+    rla
+    jr nc,sp_geared
+    ld (hl),0                   ; LOW
+sp_geared
+    ld hl,(speed)
+    ld a,(coll_kind)            ; a crash: to a standstill (coll_start)
+    or a
+    ld de,-CRASH_BRK
+    jr nz,sp_less
+    ld a,(keys_now)
+    ld de,-SPEED_BRK
+    bit 3,a
+    jr nz,sp_less               ; slower
+    ld de,-SPEED_COAST
+    bit 2,a
+    jr z,sp_less                ; neither
+    call speed_acc              ; faster
+    jr sp_top
+sp_less
+    add hl,de
+    jr c,sp_top
+    ld hl,0                     ; standing still
+sp_top                          ; HL = the speed asked: no more than the most
+    ld b,0                      ; here (B: off_cls)
+    ld a,(car_x)
+sp_off
+    add a,OFFROAD_X-1           ; (self-modified: the lanes' - road15.asm
+    cp 2*OFFROAD_X-1            ; lane_road) CF: on the road
+    jr c,sp_cls
+    inc b
+    ld a,(car_x)                ; C = |car_x|
+    or a
+    jp p,$+5
+    neg
+    ld c,a
+    ld a,(sp_off+1)
+    add a,SAND_W+1              ; (OFFROAD_X + SAND_W: the grass)
+    cp c
+    jr z,sp_on_grass
+    jr nc,sp_cls
+sp_on_grass
+    inc b
+sp_cls
+    ld a,b
+    ld (off_cls),a
+    add a,a
+    ld c,a
+    ld a,(drive_gear)
+    add a,c
+    add a,a                     ; (off_cls x 2 + the gear) x 2
+    push hl
+    ld hl,sp_caps
+    add a,l
+    ld l,a
+    jr nc,$+3
+    inc h
+    ld e,(hl)
+    inc hl
+    ld d,(hl)                   ; DE = the most
+    pop hl
+    or a
+    sbc hl,de
+    add hl,de
+    jp c,demo_speed_set         ; under it
+    ld hl,(speed)               ; else down to it: at once if the speed was
+    ld bc,-SPEED_DRAG           ; not over it, else SPEED_DRAG a VSYNC
+    add hl,bc
+    or a
+    sbc hl,de
+    add hl,de
+    jp nc,demo_speed_set        ; still over it
+    ex de,hl
+    jp demo_speed_set
+
+;; per car (car_setup): the most it goes in LOW and in HIGH on the road, on
+;; the sand, on the grass (gen/drive.asm car_stats)
+sp_caps     defs 12,0
+
+;; speed_acc - HL = the speed: HL = a VSYNC faster, accelerating - acc_tab
+;; at speed / 64 for the gear (drive_gear), sixteenths of a unit, the rest
+;; kept in acc_frac. Destroys AF, DE.
+speed_acc
+    push hl
+    ld a,l
+    rlca
+    rlca
+    and 3
+    ld l,a
+    ld a,h
+    add a,a
+    add a,a
+    or l
+    ld l,a
+    ld a,(drive_gear)
+    or a
+    ld a,l
+    jr z,$+4
+    add a,ACC_N                 ; (HIGH's after LOW's)
+    ld l,a
+    ld h,0
+    ld de,acc_tab               ; (gen/drive.asm)
+    add hl,de
+    ld a,(hl)
+    ld hl,acc_frac
+    add a,(hl)
+    ld e,a
+    rra
+    srl a
+    srl a
+    srl a
+    ld d,a                      ; D = whole units, E's low four bits the rest
+    ld a,e
+    and 15
+    ld (hl),a
+    ld e,d
+    ld d,0
+    pop hl
+    add hl,de
+    ret
+
+;; ---------------------------------------------------------------------------
 ;; demo_step - one VSYNC of the drive: the speed - the demo's, the player's
 ;; in the race (player.asm), braking to a standstill before it and after it
 ;; - the camera, the sky's turn, the race's rules.
@@ -1043,7 +1200,9 @@ demo_step
 demo_mode
     or a
     jr z,demo_cycle
-    ld de,(speed)               ; to the start: braking
+    xor a                       ; to the start: braking, in LOW to drive off
+    ld (drive_gear),a
+    ld de,(speed)
     jr demo_brake
 demo_tools
     and #0C
@@ -1064,15 +1223,23 @@ demo_phase_wrap
 demo_phase_ok
     ld (speed_phase),hl
     ld de,(speed)
-    ld bc,800                   ; 16 s in: brake
+    ld bc,800                   ; 16 s in: lifting off
     or a
     sbc hl,bc
-    jr nc,demo_brake
-demo_acc
-    ld hl,SPEED_ACC             ; (car_setup: the car's)
-    add hl,de
+    ex de,hl
+    ld bc,SPEED_COAST
+    jr nc,demo_less
+    ld a,l                      ; the gear: HIGH from SHIFT_SPEED on (Out
+    sub lo(SHIFT_SPEED)         ; Run's demo's drive)
+    ld a,h
+    sbc a,hi(SHIFT_SPEED)
+    ld a,0
+    jr c,$+3
+    inc a
+    ld (drive_gear),a
+    call speed_acc              ; (the car's, as the player's)
 demo_max
-    ld bc,SPEED_MAX
+    ld bc,SPEED_MAX             ; (car_setup: the car's)
     or a
     sbc hl,bc
     jr c,demo_acc_ok
@@ -1083,6 +1250,7 @@ demo_acc_ok
 demo_brake
     ex de,hl
     ld bc,SPEED_BRK
+demo_less
     or a
     sbc hl,bc
     jr nc,demo_speed_set

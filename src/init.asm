@@ -27,36 +27,29 @@ gi_end
     ASSERT gi_end <= prop_spr
 
 ;; ---------------------------------------------------------------------------
-;; car_setup - the car picked (car_id: CARn.BIN) as fast, as quick and as
-;; steerable as it is: its car_stats put into the code that drives it -
-;; speed_player's top speed, grass top speed and acceleration, the demo's
-;; (it drives the same car), steer's steering and curve push factors.
-;; Destroys AF, BC, DE, HL.
+;; car_setup - the car picked (car_id: CARn.BIN) as fast and as steerable
+;; as it is (its acceleration: CARn.BIN's acc_tab): its car_stats put into
+;; the code that drives it - speed_player's most in each gear on the road,
+;; the sand and the grass (sp_caps), the demo's top (it drives the same
+;; car), steer's steering and curve push factors. Destroys AF, BC, DE, HL.
 ;; ---------------------------------------------------------------------------
 car_setup
     ld a,(car_id)
-    ld l,a
+    add a,a
+    ld c,a
     add a,a
     add a,a
-    add a,l                             ; CAR_STATS_LEN bytes a car
+    add a,a
+    sub c                               ; CAR_STATS_LEN bytes a car
     ld l,a
     ld h,0
-    ld de,car_stats
+    ld de,car_stats                     ; (gen/drive.asm)
     add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)                           ; DE = the top speed
-    inc hl
-    ld (sp_max+1),de
+    ld de,sp_caps
+    ld bc,12
+    ldir
+    ld de,(sp_caps+2)                   ; (HIGH's top on the road)
     ld (demo_max+1),de
-    srl d
-    rr e
-    ld (sp_grass+1),de                  ; (on the grass: half)
-    ld e,(hl)
-    inc hl
-    ld d,0
-    ld (sp_acc+1),de
-    ld (demo_acc+1),de
     ld a,(hl)
     inc hl
     ld (steer_k+1),a
@@ -69,7 +62,7 @@ car_setup
     call shr6
     ld (steer_full+1),hl
     ret
-    ASSERT CAR_STATS_LEN == 5
+    ASSERT CAR_STATS_LEN == 14
 
 ;; ---------------------------------------------------------------------------
 ;; draw_screen - A = buffer: everything but the road, the whole HUD included

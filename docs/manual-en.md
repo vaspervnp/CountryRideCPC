@@ -51,10 +51,10 @@ The four cars drive differently. The bars on the screen rate each one out of fiv
 | **TOURING** | White estate with a spoiler over its rear window | 3 | 5 | 4 |
 
 - **Speed** is the car's top speed.
-- **Accel** is how quickly it gets there, from about 5 to 8 seconds.
+- **Accel** is how quickly it gets there: two thirds of its top speed in about 6 to 8 seconds, the last of it slowly, as an engine near its top.
 - **Grip** is how quickly you can steer it across the road, and how little a curve carries it outwards.
 
-At full speed the two red cars have to slow down for the sharpest curves. The other two can hold them.
+The cars drive like the one in Out Run, the ROSSO GT so, but steer a little over half as fast. At full speed you can hold only the gentlest curves: let go of the pedal before the others, and brake for the sharp ones.
 
 ## Controls
 
@@ -62,12 +62,14 @@ At full speed the two red cars have to slow down for the sharpest curves. The ot
 |---|---|---|
 | Steer left | Cursor left, **O** | Left |
 | Steer right | Cursor right, **P** | Right |
-| Faster | Cursor up, **Q**, **space** | Up or fire |
-| Slower | Cursor down, **A** | Down |
+| Pedal | **Space** | Fire |
+| Brake | **Z** | Second fire |
+| LOW gear | Cursor up, **Q** | Up |
+| HIGH gear | Cursor down, **A** | Down |
 | Pause, and go on | **ESC** | |
 | Music off, or on again | **M** | |
 
-The gears change by themselves. With neither Faster nor Slower held, the car slowly loses speed.
+You change gear yourself, as in Out Run. You start in LOW, which pulls hard but goes no faster than two thirds of your top speed. HIGH reaches the top speed but pulls weakly from low down: change up at about half of your top speed. Change down again after a crash or a big bump. With neither the pedal nor the brake held, the car loses about a sixth of its top speed a second; the brake stops it from full speed in under two seconds.
 
 ## The screen
 
@@ -76,7 +78,7 @@ The gears change by themselves. With neither Faster nor Slower held, the car slo
 | On the screen | What it tells you |
 |---|---|
 | **TIME** | The seconds you have left. At 0 the race is over. |
-| **SPEED** | A gauge of 8 segments, with your gear under it: N, then 1 to 6. |
+| **SPEED** | A gauge of 8 segments, with your gear under it: L (LOW) or H (HIGH). |
 | **TOTAL TIME** | How long you have been racing since GO!. |
 | **CHECKPOINT** | A gauge of 8 segments that fills on the way to the end of the stage. |
 
@@ -101,7 +103,7 @@ Under the gear is a line of messages:
 
 ### The start
 
-While the demo drives, press fire or any of the Faster keys. **GET READY** shows, the road flattens out and straightens, and the car brakes to a standstill in the third lane from the left. After the count of 3, 2, 1 comes **GO!**, and you drive off from a standstill.
+While the demo drives, press fire or space. **GET READY** shows, the road flattens out and straightens, and the car brakes to a standstill in the third lane from the left. After the count of 3, 2, 1 comes **GO!**, and you drive off from a standstill.
 
 ### The clock
 
@@ -160,7 +162,7 @@ Each stage has its own road and colours, and each next stage has more traffic. T
 
 ### Curves
 
-A curve carries the car towards its outside unless you steer against it. The sharper the curve and the faster you go, the harder it pulls. Steering also costs you up to one segment of the speed gauge.
+A curve carries the car towards its outside unless you steer against it. The sharper the curve and the faster you go, the harder it pulls, and in the sharpest curves at high speed the car also steers less. At full speed all but the gentlest curves pull harder than you can steer: let go of the pedal for a moment, or brake, before you run wide.
 
 | Sign | What it tells you |
 |---|---|
@@ -173,7 +175,7 @@ The road has four, three or two lanes, and it is narrower with fewer. Where the 
 
 ### The grass
 
-With a wheel on the grass the car goes no faster than half its top speed. With fewer lanes the grass begins nearer the middle of the road.
+With a wheel on the grass the car goes no faster than three quarters of its top speed, and half a lane further out no faster than two fifths of it. With fewer lanes the grass begins nearer the middle of the road.
 
 ### Traffic
 
@@ -189,10 +191,11 @@ Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds
 
 ## Tips
 
-- Keep Faster held. Letting go loses speed, and speed is time.
+- Keep the pedal down. Letting go loses speed, and speed is time.
+- Change up to HIGH at about half speed, and back down to LOW when you have slowed right down.
 - Watch for the yellow boards, and start steering as the curve starts.
-- Steer only when you need to: every turn costs a segment of the gauge.
-- Stay off the grass. It halves your speed, and it is where the crashes are.
+- Lift off before a sharp curve rather than run wide onto the grass: it costs you less.
+- Stay off the grass. It slows you down hard, and it is where the crashes are.
 - Move out early when a car is ahead. Do not pass on the side its indicator is flashing.
 - When the two stage names appear, get to that side of the road in good time.
 - After hitting a car off its side, steer against the shove to stay off the grass.

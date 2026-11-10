@@ -1,5 +1,5 @@
 ;; ===========================================================================
-;; player.asm - the keys and the player's speed, in page 1 at #7600 (the
+;; player.asm - the keys, in page 1 at #7600 (the
 ;; seventh 2K block's gap, which mkbush.py leaves free), seen at #4000 with
 ;; RAM_C1 - as it is while steer and demo_step run.
 ;; ===========================================================================
@@ -8,15 +8,22 @@
 
 ;; ---------------------------------------------------------------------------
 ;; read_keys - A: bit 0 = left held (cursor left, O, joystick left), bit 1 =
-;; right (cursor right, P, joystick right), bit 2 = faster (cursor up, Q,
-;; space, joystick up or fire), bit 3 = slower (cursor down, A, joystick
-;; down), bit 4 = the music on or off (M: KEY_MUSIC), bit 5 = the pause
-;; (ESC: KEY_PAUSE). The keyboard is read through the PSG's port (register
-;; 14), the PPI's port A turned round for it - with interrupts off: the
-;; interrupt writes the PSG too (sound.asm). Destroys BC, DE.
+;; right (cursor right, P, joystick right), bit 2 = faster: the pedal (space,
+;; joystick fire), bit 3 = slower: the brake (Z, joystick fire 2), bit 4 =
+;; the music on or off (M: KEY_MUSIC), bit 5 = the pause (ESC: KEY_PAUSE),
+;; bit 6 = LOW gear (cursor up, Q, joystick up), bit 7 = HIGH (cursor down,
+;; A, joystick down) - as OutrunOutrunCPC has them (since 2026-11-11; till
+;; then up was faster and down slower). The keyboard is read through the
+;; PSG's port (register 14), the PPI's port A turned round for it - with
+;; interrupts off: the interrupt writes the PSG too (sound.asm). Destroys
+;; BC, DE.
 ;; ---------------------------------------------------------------------------
+KEY_FASTER  EQU 4
+KEY_SLOWER  EQU 8
 KEY_MUSIC   EQU 16
 KEY_PAUSE   EQU 32
+KEY_LOW     EQU 64
+KEY_HIGH    EQU 128
 read_keys
     di
     ld bc,#F40E                 ; PSG register 14
@@ -32,13 +39,13 @@ read_keys
     call rk_row
     rra
     jr nc,$+4
-    set 2,d
+    set 6,d
     rra
     jr nc,$+4
     set 1,d
     rra
     jr nc,$+4
-    set 3,d
+    set 7,d
     ld a,#41                    ; row 1: cursor left (bit 0)
     call rk_row
     and 1
@@ -63,42 +70,39 @@ read_keys
     rla
     jr nc,$+4
     set 2,d
-    ld a,#48                    ; row 8: Q (bit 3), A (bit 5), ESC (bit 2)
-    call rk_row
+    ld a,#48                    ; row 8: Z (bit 7), A (bit 5), Q (bit 3), ESC
+    call rk_row                 ; (bit 2)
     ld e,a
-    and 8
-    jr z,$+4
-    set 2,d
-    ld a,e
-    and #20
-    jr z,$+4
+    rla
+    jr nc,$+4
     set 3,d
-    ld a,e
-    and 4
+    bit 5,e
+    jr z,$+4
+    set 7,d
+    bit 3,e
+    jr z,$+4
+    set 6,d
+    bit 2,e
     jr z,$+4
     set 5,d
     ld a,#49                    ; row 9: joystick up, down, left, right
-    call rk_row                 ; (bits 0-3), fire 2 and 1 (4, 5)
+    call rk_row                 ; (bits 0-3), fire and fire 2 (4, 5)
     ld e,a
-    and #31
-    jr z,$+4
-    set 2,d
-    ld a,e
-    and 2
-    jr z,$+4
-    set 3,d
-    ld a,e
-    and #0C
+    and #3C                     ; left, right, the fires: bits 0-3
     rrca
     rrca
     or d
     ld d,a
+    ld a,e
+    and 3                       ; up, down: bits 6, 7
+    rrca
+    rrca
+    or d
     ld bc,#F782                 ; port A out again
     out (c),c
     ld bc,#F600
     out (c),c
     ei
-    ld a,d
     ret
 rk_row                          ; A = #40 + row: its keys, 1 = held
     ld b,#F6
@@ -108,67 +112,10 @@ rk_row                          ; A = #40 + row: its keys, 1 = held
     cpl
     ret
 
-;; ---------------------------------------------------------------------------
-;; speed_player - (demo_step, once the player has pressed faster or slower)
-;; one VSYNC of the player's speed: SPEED_ACC up while faster is held,
-;; SPEED_BRK down while slower is (both: slower), SPEED_COAST down with
-;; neither. On the grass - a wheel off the road, car_x OFFROAD_X (5 a lane)
-;; or more either way - the car goes no faster than SPEED_GRASS: over it, it slows
-;; down by SPEED_DRAG a VSYNC. Goes on with demo_speed_set, HL = the speed.
-;; The top speeds and the acceleration are the car's (car_setup); turning,
-;; the top speed on the road is a gauge segment lower (steer: sp_max).
-;; ---------------------------------------------------------------------------
-SPEED_COAST EQU 3
-SPEED_GRASS EQU SPEED_MAX/2
-SPEED_DRAG  EQU 18
-OFFROAD_X   EQU 20
-
-speed_player
-    ld hl,(speed)
-    ld a,(coll_kind)            ; a crash: to a standstill (game.asm
-    or a                        ; coll_start)
-    ld de,-CRASH_BRK
-    jr nz,sp_less
-    ld a,(keys_now)
-    ld de,-SPEED_BRK
-    bit 3,a
-    jr nz,sp_less               ; slower
-sp_acc
-    ld de,SPEED_ACC             ; (car_setup: the car's)
-    bit 2,a
-    jr nz,sp_more               ; faster
-    ld de,-SPEED_COAST
-sp_less
-    add hl,de
-    jr c,sp_top
-    ld hl,0                     ; standing still
-    jr sp_top
-sp_more
-    add hl,de
-sp_top                          ; HL = the speed asked: no more than the top
-sp_max
-    ld de,SPEED_MAX             ; (car_setup: the car's)
-    ld a,(car_x)
-sp_off
-    add a,OFFROAD_X-1           ; (self-modified: the lanes' - cache.asm
-    cp 2*OFFROAD_X-1            ; lane_road) CF: on the road
-    jr c,sp_top_de
-sp_grass
-    ld de,SPEED_GRASS
-sp_top_de
-    or a
-    sbc hl,de
-    add hl,de
-    jp c,demo_speed_set         ; under it
-    ld hl,(speed)               ; else down to it: at once on the road (the
-    ld bc,-SPEED_DRAG           ; speed was not over SPEED_MAX), SPEED_DRAG
-    add hl,bc                   ; a VSYNC on the grass
-    or a
-    sbc hl,de
-    add hl,de
-    jp nc,demo_speed_set        ; still over it
-    ex de,hl
-    jp demo_speed_set
+OFFROAD_X   EQU 20              ; car_x from which a wheel is off a 4-lane
+                                ; road, either way: 5 a lane (game.asm
+                                ; speed_player, sndgame.asm; road15.asm
+                                ; lane_road)
 
 keys_now    defb 0              ; read_keys at the last picture (steer)
 

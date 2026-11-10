@@ -741,7 +741,8 @@ def blink_table(car_id):
 def cars_asm(pieces, ends, codes, traffic):
     """gen/cars.asm: per car, CARn.BIN - a magic word, then records (defw
     dest, length, then the bytes) up to a 0: the difficulty (game.asm
-    coll_diff: the loader's, CAR_DIFF), car_views, car_id, its code,
+    coll_diff: the loader's, CAR_DIFF), car_views, car_id, its
+    acceleration (acc_tab), its code,
     then the traffic's pieces in the hidden lines (the same in each; their
     labels are car 0's). codes: per car_view, its code's address (the same
     for every car)."""
@@ -749,7 +750,8 @@ def cars_asm(pieces, ends, codes, traffic):
              ";; CAR0.BIN-CAR3.BIN, one a car: what boot.asm copies over the first",
              ";; car's when the loader has loaded it at CAR_BLOB - the difficulty",
              ";; picked (the loader POKEs it at CAR_DIFF), car_views (where",
-             ";; each view's first line's run ends, and its code), car_id, and its code",
+             ";; each view's first line's run ends, and its code), car_id, its",
+             ";; acceleration (acc_tab: tools/mkdrive.py) and its code",
              ";; in the same places (mkbush.py: the most any car needs) - the views on",
              ";; hills where only CARn.BIN puts them. Records: defw dest, length, then",
              ";; the bytes; a dest of #FFFF ends them (#0000 is one).", ""]
@@ -763,6 +765,9 @@ def cars_asm(pieces, ends, codes, traffic):
                   "    defw car_views,%d" % (4 * len(codes))]
         lines += ["    defw #%04X,%s" % (e, c) for e, c in zip(ends[n], codes)]
         lines += ["    defw car_id,1", "    defb %d" % n]
+        lines += ["    defw acc_tab,2*ACC_N              ; (its acceleration: gen/drive.asm)"]
+        acc = S.car_acc(n)
+        lines += ["    defb " + ",".join(str(v) for v in acc[i:i + 16]) for i in range(0, len(acc), 16)]
         tr = [(a, d, c if n == 0 else [t for t in c if t.startswith(" ")])
               for a, d, c in traffic]
         for j, (addr, dest, code) in enumerate(ps + tr):
@@ -1094,7 +1099,8 @@ def main():
     # car elsewhere, has them drawn whole (car_lines) - all of them, for
     # any car
     emit("CAR_Y         EQU %d   ; the car's top line" % S.CAR_Y)
-    emit("CAR_HALF      EQU %d   ; its half width, bytes" % (S.CAR_W // 4))
+    emit("CAR_HALF      EQU %d   ; its half width for the collisions, bytes"
+         % S.HIT_HALF)
     emit("CAR_TOP       EQU %d   ; its lines from there, drawn whole when it changes"
          % S.CAR_H)
     emit("CAR_HILL_ORG  EQU #%04X ; the views on hills from here (CARn.BIN)" % CAR_HILL_ORG)
@@ -1111,17 +1117,6 @@ def main():
         lv = v % 3 if v < S.SPIN_VIEW else 1 + v - S.SPIN_VIEW     # (spun:
         emit("    defw #%04X,car_code%d" % (ends[0][lv], lv))      # turning)
     emit("car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)")
-    emit(";; per car: its top speed, its acceleration (both 8.8 depth units a")
-    emit(";; VSYNC), its steering's and the curves' factors (steer: k, m)")
-    emit(";; (scene.py CAR_LEVELS; car_setup)")
-    emit("car_stats")
-    for c, (sp_, ac, gr) in enumerate(S.CAR_LEVELS):
-        drift = S.car_push_m(c)
-        steer_ = S.car_steer_k(c)
-        emit("    defw #%04X   ; %s: speed %d, acceleration %d, grip %d"
-             % (S.TOP_SPEED[sp_], S.CARS[c], sp_, ac, gr))
-        emit("    defb %d,%d,%d" % (S.ACCEL[ac], steer_, drift))
-    emit("CAR_STATS_LEN EQU 5   ; bytes a car")
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")
     emit("bush_cxs")

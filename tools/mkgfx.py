@@ -96,9 +96,13 @@ def gfx():
     emit = lines.append
 
     # big glyphs: 4 bytes x 18 lines
-    names = [str(d) for d in range(10)] + ["N"]
+    names = [str(d) for d in range(10)] + ["L"]
     emit(";; big glyphs, 4 bytes x 18 lines, each line twice: 9 lines kept;")
-    emit(";; 0-9 then N (gear neutral)")
+    emit(";; 0-9 then L (LOW gear) - H (HIGH) apart, at the end (big_high:")
+    emit(";; eleven here keep small_rows in its page, and the panorama's page")
+    emit(";; as it was)")
+    emit("GLYPH_LOW EQU 10")
+    emit("GLYPH_HIGH EQU 11")
     emit("BIG_W EQU 4")
     emit("BIG_H EQU 18")
     emit("big_glyphs")
@@ -129,7 +133,6 @@ def gfx():
     for ch, g in zip(S.MSG_GLYPHS, glyphs):
         emit("; %s" % ch)
         emit("    defb " + ",".join("lo(small_rows+%d)" % i for i in g))
-    emit("")
 
     # the messages: MSG_W glyph numbers each, centred
     emit(";; the HUD's messages (scene.py MESSAGES), MSG_W glyphs each")
@@ -276,6 +279,10 @@ def gfx():
     emit("")
 
     lines += horizon(top)
+    emit(";; the big glyph H (GLYPH_HIGH: draw_big - apart from big_glyphs)")
+    emit("big_high")
+    rows = encode_rows(S.big_glyph("H"))
+    defb_rows(emit, rows[::2])
     return lines
 
 

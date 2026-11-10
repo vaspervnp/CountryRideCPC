@@ -31,6 +31,7 @@
     INCLUDE "discmap.asm"
     INCLUDE "gen/consts.asm"
     INCLUDE "gen/roadconsts.asm"
+    INCLUDE "gen/driveq.asm"                ; (tools/mkdrive.py)
     INCLUDE "cachemac.asm"
 
 
@@ -141,6 +142,7 @@ bush_recs1  defb lo(bush_recs1+1)
     INCLUDE "horizon.asm"
     INCLUDE "screen.asm"
     INCLUDE "course.asm"
+    INCLUDE "gen/drive.asm"                 ; (tools/mkdrive.py)
 game_bank_end
     ASSERT game_bank_end <= CURVE_RING && HILL_RING+64 <= CAR_HILL_ORG
     ORG CURVE_RING                          ; (run once, before the rings are

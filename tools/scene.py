@@ -1007,6 +1007,7 @@ def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0, lanes=None):
 # ---------------------------------------------------------------------------
 
 from carsart import GAME_ART, GAME_GROUND  # noqa: E402
+import outrun as OR  # noqa: E402
 
 CARS = ["player", "ferrari", "lotus", "bmw"]    # car_id 0-3
 CAR_GROUND = SCR_H - 15         # the line its wheels stand on, on the level
@@ -1027,36 +1028,77 @@ CAR_VIEWS = 11                  # car_view: on the level, uphill, downhill;
                                 # then spun in a crash, left and right (a
                                 # wider box, as much more either side)
 SPIN_VIEW = 9
+HIT_HALF = 9                    # bytes either side of the car's middle it
+                                # touches a car or a bush in (game.asm
+                                # CAR_HALF): its box's when it turned 10
+                                # degrees, as the bumps were tuned (till
+                                # 2026-11-10; at 6 the box is 7)
 SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_off)
                                 # from the middle, else turning (car_lines):
                                 # the screen's edges
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
-# what the game makes of them (mkbush.py: car_stats): the top speed (8.8
-# depth units a VSYNC; 5 is the most the pictures keep up with), the speed
-# gained a VSYNC, and the steering's and the curves' factors (game.asm
-# steer): k, the full lock moving the car 127 x k / 64 / 256 pairs a
-# picture (GRIP's 1/2 or 2/3, times the car's STEER_MORE), and m, a curve
-# of level L at speed s (8.8) carrying it out L (1 + L / 14) x s / 16 x m /
-# 65536 pairs a picture (the first car 1.24 on a level 7 curve at full
-# speed, more than its full lock: slower there; more grip, less). Since
-# 2026-11-05 m is 115% of what it was; since 2026-11-06 the cars steer
-# 25-30% more than GRIP's k (the third and the fourth were 40% and 35%
-# for a while: too quick). Since 2026-11-07 every speed is SPEED_UP times
-# what it was - the top speeds and the acceleration (and in the game the
-# brakes, the traffic's, ...) - and m that much less, so a curve pushes as
-# hard at a share of the top speed as it did.
+# what the game makes of them (mkbush.py: car_stats, CARn.BIN's acc_tab):
+# Out Run's driving (tools/outrun.py), the first car's its own and the
+# others as far from it as their bars. The top speed (8.8 depth units a
+# VSYNC; 5 is the most the pictures keep up with; the first car's,
+# SPEED_TOP, is Out Run's 293 km/h); the speed gained a VSYNC, sixteenths,
+# by speed / 64 (acc_tab: Out Run's engine with its gear changed at its
+# best, scaled to the car's top, each acceleration bar from 4 15% quicker
+# or slower; since 2026-11-11 a table a gear, LOW and HIGH, the player
+# changing them); and the steering's and the curves' factors (game.asm steer):
+# k, the full lock moving the car 127 x k / 64 / 256 pairs a picture (half
+# Out Run's 18 units a loop: 0.8 - STEER_SCALE), and m, a curve of level L at speed s
+# carrying it out s x m x push_levels[L] / 8192 pairs a picture (Out
+# Run's v k(r) / 220 a loop) - each grip bar from 3 10% more k and 10%
+# less m. (Till 2026-11-10 the cars drove by the user's own figures: a
+# straight acceleration, GRIP's k and m, STEER_MORE, a gauge segment lost
+# turning - git log.)
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 SPEED_UP = 1.5
 TOP_SPEED = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 0x05B0, 4: 0x0620, 5: 0x0690}.items()}
-ACCEL = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 4, 4: 5, 5: 6}.items()}
-GRIP = {2: (65, 89), 3: (65, 74), 4: (86, 63), 5: (86, 55)}
-def car_push_m(car_id):
-    return int(GRIP[CAR_LEVELS[car_id][2]][1] / SPEED_UP + 0.5)
-STEER_MORE = [1.30, 1.25, 1.30, 1.25]   # per car, its k times this
+SPEED_TOP = TOP_SPEED[5]        # Out Run's 293 km/h
+ACC_BAND = 64                   # acc_tab: speed / this
+ACC_N = 40                      # ... entries (SPEED_TOP / 64 + 1)
+ACC_BAR = 0.15                  # an acceleration bar: this much quicker
+GRIP_BAR = 0.10                 # a grip bar: this much more steering, less pull
+STEER_SCALE = 0.55              # the steering, of Out Run's (the user, on
+                                # 2026-11-10: half - the curves pull as hard;
+                                # 2026-11-11: 10% more)
+STEER_K0 = round(18 * OR.LOOP_TO_PIC * 256 * 64 / 127 * STEER_SCALE)  # the
+                                # first car's k
+PUSH_M0 = round(OR.V_TOP / SPEED_TOP / 220 * OR.LOOP_TO_PIC * 256 * 8192)
+STEER_SPEED = round(128 * SPEED_TOP / OR.V_TOP)         # Out Run: v 128
+SHARP_S16 = round(147 * SPEED_TOP / OR.V_TOP / 16)      # ... v 147, / 16
+SAND_W = round(OR.SAND_W * OR.UNIT)                     # pairs of sand
+SHIFT_SPEED = round(OR.ENGINE_SHIFT * SPEED_TOP / OR.V_TOP)  # the demo's
+                                # drive: HIGH from here on, LOW under it
+
+
+def car_acc(car_id):
+    """CARn.BIN's acc_tab: sixteenths of a speed unit a VSYNC by speed / 64,
+    in LOW, then in HIGH."""
+    sp, ac, gr = CAR_LEVELS[car_id]
+    return [v for gear in (0, 1) for v in
+            OR.acc_table(TOP_SPEED[sp], 1 + ACC_BAR * (ac - 4), ACC_N, ACC_BAND, gear)]
+
+
+def car_caps(car_id):
+    """The most the car goes, LOW then HIGH: on the road, on the sand, on
+    the grass (Out Run's, of its top: outrun.CAPS)."""
+    top = TOP_SPEED[CAR_LEVELS[car_id][0]]
+    return [round(top * v / OR.V_TOP) for k in ("road", "sand", "grass") for v in OR.CAPS[k]]
+
+
 def car_steer_k(car_id):
-    return int(GRIP[CAR_LEVELS[car_id][2]][0] * STEER_MORE[car_id] + 0.5)
-assert all(k < 256 and m < 256 for k, m in GRIP.values())
-assert all(car_steer_k(c) < 256 for c in range(len(CAR_LEVELS)))
+    return round(STEER_K0 * (1 + GRIP_BAR * (CAR_LEVELS[car_id][2] - 3)))
+
+
+def car_push_m(car_id):
+    return round(PUSH_M0 * (1 - GRIP_BAR * (CAR_LEVELS[car_id][2] - 3)))
+
+
+assert all(car_steer_k(c) < 256 and car_push_m(c) < 256 for c in range(len(CAR_LEVELS)))
+assert all(v < ACC_N * ACC_BAND for v in TOP_SPEED.values())    # (acc_tab)
 assert all(v < 0x1000 for v in TOP_SPEED.values())    # (speed / 16: a byte)
 assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
 

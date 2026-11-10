@@ -105,7 +105,7 @@ bush_reach
     ASSERT hi(bush_reach) == hi($-1)
 BUSH_COUNT    EQU 38
 CAR_Y         EQU 235   ; the car's top line
-CAR_HALF      EQU 9   ; its half width, bytes
+CAR_HALF      EQU 9   ; its half width for the collisions, bytes
 CAR_TOP       EQU 26   ; its lines from there, drawn whole when it changes
 CAR_HILL_ORG  EQU #F100 ; the views on hills from here (CARn.BIN)
 SPIN_VIEW     EQU 9   ; car_view: spun left in a crash, then right
@@ -128,19 +128,6 @@ car_views
     defw #83F3,car_code1
     defw #83F5,car_code2
 car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)
-;; per car: its top speed, its acceleration (both 8.8 depth units a
-;; VSYNC), its steering's and the curves' factors (steer: k, m)
-;; (scene.py CAR_LEVELS; car_setup)
-car_stats
-    defw #09D8   ; player: speed 5, acceleration 4, grip 3
-    defb 8,85,49
-    defw #09D8   ; ferrari: speed 5, acceleration 5, grip 2
-    defb 9,81,59
-    defw #0930   ; lotus: speed 4, acceleration 3, grip 5
-    defb 6,112,37
-    defw #0888   ; bmw: speed 3, acceleration 5, grip 4
-    defb 9,108,42
-CAR_STATS_LEN EQU 5   ; bytes a car
 
 ;; per curve level 0..CURVE_K: its centre table
 bush_cxs
