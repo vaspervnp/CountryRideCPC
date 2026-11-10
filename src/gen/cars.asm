@@ -3929,7 +3929,7 @@ car0_p34_end
     defw #FFFF
 car0_blob_end
     ASSERT car0_blob_end <= FRAG7   ; (in place before boot_car)
-    SAVE "CAR0.BIN",CAR_BLOB,car0_blob_end-CAR_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/car0.raw",CAR_BLOB,car0_blob_end-CAR_BLOB
 
     BANK
     ORG CAR_BLOB
@@ -7855,7 +7855,7 @@ car1_p34_end
     defw #FFFF
 car1_blob_end
     ASSERT car1_blob_end <= FRAG7   ; (in place before boot_car)
-    SAVE "CAR1.BIN",CAR_BLOB,car1_blob_end-CAR_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/car1.raw",CAR_BLOB,car1_blob_end-CAR_BLOB
 
     BANK
     ORG CAR_BLOB
@@ -11702,7 +11702,7 @@ car2_p33_end
     defw #FFFF
 car2_blob_end
     ASSERT car2_blob_end <= FRAG7   ; (in place before boot_car)
-    SAVE "CAR2.BIN",CAR_BLOB,car2_blob_end-CAR_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/car2.raw",CAR_BLOB,car2_blob_end-CAR_BLOB
 
     BANK
     ORG CAR_BLOB
@@ -16032,5 +16032,5 @@ car3_p35_end
     defw #FFFF
 car3_blob_end
     ASSERT car3_blob_end <= FRAG7   ; (in place before boot_car)
-    SAVE "CAR3.BIN",CAR_BLOB,car3_blob_end-CAR_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/car3.raw",CAR_BLOB,car3_blob_end-CAR_BLOB
 

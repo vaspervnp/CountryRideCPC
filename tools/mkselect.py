@@ -24,7 +24,7 @@ SIDE=True: assets/cars/side_<car>.png), brought to this screen's own pens
 as the race's views are to the game's (tools/dither.py: each cell's mean
 colour over the panel's grey, graded, a checkerboard where two
 neighbouring pens mix nearer), lone cells dropped, outlined in black.
-Writes src/gen/select.scr (the screen's 16K, SELECT.SCR) and
+Writes src/gen/select.scr (the screen's 16K: SELECT.BIN, packed, src/pack.asm) and
 build/select.png (how it looks, the first car picked), and puts its pens
 in the loader's DATA line.
 """

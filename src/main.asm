@@ -2,8 +2,9 @@
 ;; COUNTRY RIDE - Amstrad CPC 6128
 ;;
 ;; main.asm - the whole build. rasm assembles four memory spaces at once, so
-;; every label is visible everywhere, and writes the four files the BASIC
-;; loader loads:
+;; every label is visible everywhere, and writes the files the BASIC loader
+;; loads - as they are in memory, build/<name>.raw, which pack.asm packs
+;; onto the disc (the loader unpacks each where it goes):
 ;;
 ;;   ROADA.BIN  bank 4 (#4000)  road templates and cores for stripe band A
 ;;   ROADB.BIN  bank 5 (#4000)  road cores and templates for stripe band B
@@ -18,12 +19,14 @@
 ;;   SOUND.BIN  (#98C0)         the sound, for BOOT.BIN to put in place
 ;;   RACE.BIN   (#A0C0)         the pause, the best times, what the game
 ;;                              tells the sound: the same
-;;   SELECT.SCR (#C000)         the screen the car is picked on
+;;   SELECT.BIN (#C000)         the screen the car is picked on (and the
+;;                              unpacker: pack.asm)
 ;;
 ;; Build: make (see Makefile). README.md describes the memory plan.
 ;; ===========================================================================
 
     INCLUDE "hw.asm"
+    INCLUDE "discmap.asm"
     INCLUDE "gen/consts.asm"
     INCLUDE "gen/roadconsts.asm"
     INCLUDE "cachemac.asm"
@@ -67,7 +70,7 @@ roada_start
     INCLUDE "gen/trafcode_4.asm"        ; (traffic sprite pieces: room)
 roada_end
     ASSERT roada_end <= STAGE_A
-    SAVE "ROADA.BIN",#4000,roada_end-#4000,DSK,"build/countryride.dsk"
+    SAVE "build/roada.raw",#4000,roada_end-#4000
 
 ;; ---------------------------------------------------------------------------
 ;; bank 5: band B - the cores in #4000-#5FFF, the cache set at #6000, the
@@ -86,7 +89,7 @@ roadb_start
     INCLUDE "cache5b.asm"
 roadb_end
     ASSERT roadb_end <= SB                  ; (cache5.asm)
-    SAVE "ROADB.BIN",#4000,roadb_end-#4000,DSK,"build/countryride.dsk"
+    SAVE "build/roadb.raw",#4000,roadb_end-#4000
 
 ;; ---------------------------------------------------------------------------
 ;; bank 6: road rows and hill tables; the traffic (its code, its tables
@@ -106,7 +109,7 @@ roadc_start
     INCLUDE "gen/trafcode_6.asm"
 roadc_end
     ASSERT roadc_end <= #8000
-    SAVE "ROADC.BIN",#4000,roadc_end-#4000,DSK,"build/countryride.dsk"
+    SAVE "build/roadc.raw",#4000,roadc_end-#4000
 
 ;; ---------------------------------------------------------------------------
 ;; bank 7: the game
@@ -143,7 +146,7 @@ game_bank_end
 init_end
     ASSERT init_end <= CAR_HILL_ORG         ; (the rest: the car's views on
                                             ; hills, CARn.BIN)
-    SAVE "GAME.BIN",#C000,init_end-#C000,DSK,"build/countryride.dsk"
+    SAVE "build/game.raw",#C000,init_end-#C000
 
 ;; ---------------------------------------------------------------------------
 ;; base memory: boot and the common fragments
@@ -159,18 +162,14 @@ init_end
     INCLUDE "gen/bushcode.asm"
     INCLUDE "player.asm"
     ASSERT FRAG_ST1+FRAG_LEN <= #4600
-    SAVE "BOOT.BIN",#4000,#4000,DSK,"build/countryride.dsk"
+    SAVE "build/boot.raw",#4000,#4000
 
 ;; ---------------------------------------------------------------------------
 ;; the cars: each one's own code and car_views (CARn.BIN, which the loader
-;; loads at CAR_BLOB for the car picked and boot.asm puts in place), and the
-;; screen the car is picked on (SELECT.SCR, tools/mkselect.py)
+;; unpacks at CAR_BLOB for the car picked and boot.asm puts in place), and the
+;; screen the car is picked on (SELECT.BIN, tools/mkselect.py); CAR_BLOB,
+;; SOUND_BLOB and RACE_BLOB in discmap.asm
 ;; ---------------------------------------------------------------------------
-CAR_BLOB    EQU #1900                   ; (past the loader's program, its
-                                        ; MEMORY above: disc/country.bas;
-                                        ; the hidden lines of buffer 1's block 3
-                                        ; are below it too: boot_car puts code
-                                        ; there)
 CAR_MAGIC   EQU #5243                   ; "CR"
 CAR_DIFF    EQU CAR_BLOB+6              ; the difficulty picked, 0, 1 or 2 x
                                         ; DIFF_ROWS (game.asm): its record's
@@ -179,12 +178,9 @@ CAR_DIFF    EQU CAR_BLOB+6              ; the difficulty picked, 0, 1 or 2 x
     INCLUDE "gen/cars.asm"
 
 ;; ---------------------------------------------------------------------------
-;; the sound (SOUND.BIN, which the loader loads at SOUND_BLOB and boot.asm
+;; the sound (SOUND.BIN, which the loader unpacks at SOUND_BLOB and boot.asm
 ;; puts in place, after the car's records: records too)
 ;; ---------------------------------------------------------------------------
-SOUND_BLOB  EQU #98C0                   ; buffer 0's lines 179 on in its fourth
-                                        ; 2K block: past the car's records'
-                                        ; hidden lines, before fragment 11
     BANK
     ORG SOUND_BLOB
     defw CAR_MAGIC
@@ -193,13 +189,11 @@ SOUND_BLOB  EQU #98C0                   ; buffer 0's lines 179 on in its fourth
     defw #FFFF
 sound_end
     ASSERT sound_end <= FRAG8+3*#800       ; (fragment 11's place)
-    SAVE "SOUND.BIN",SOUND_BLOB,sound_end-SOUND_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/sound.raw",SOUND_BLOB,sound_end-SOUND_BLOB
 
 ;; ---------------------------------------------------------------------------
 ;; the race's extras (RACE.BIN: the same)
 ;; ---------------------------------------------------------------------------
-RACE_BLOB   EQU #A0C0                   ; buffer 0's lines 180 on in its fifth
-                                        ; 2K block: the same
     BANK
     ORG RACE_BLOB
     defw CAR_MAGIC
@@ -209,12 +203,12 @@ RACE_BLOB   EQU #A0C0                   ; buffer 0's lines 180 on in its fifth
     defw #FFFF
 race_end
     ASSERT race_end <= FRAG8+4*#800        ; (fragment 12's place)
-    SAVE "RACE.BIN",RACE_BLOB,race_end-RACE_BLOB,DSK,"build/countryride.dsk"
+    SAVE "build/race.raw",RACE_BLOB,race_end-RACE_BLOB
 
     BANK
     ORG #C000
     INCBIN "gen/select.scr"
-    SAVE "SELECT.SCR",#C000,#4000,DSK,"build/countryride.dsk"
+    SAVE "build/select.raw",#C000,#4000
 
     ASSERT hi(tr_pauses) == hi(tr_pauses+STAGES-1)  ; (traffic.asm)
     ASSERT TR_TOPS == 1 && TR_BOTTOMS == 2              ; (traffic.asm: tp_new)

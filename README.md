@@ -26,8 +26,9 @@ You need:
 
 - [rasm](https://github.com/EdouardBERGE/rasm), the assembler;
 - [iDSK](https://github.com/cpcsdk/idsk), to put the BASIC loader on the disc;
-- `python3`, but only to regenerate the sources in `src/gen/` (which are
-  committed), and Pillow for the pictures.
+- `python3`, to check the packed files on the disc (`tools/zx0check.py`) and
+  to regenerate the sources in `src/gen/` (which are committed), and Pillow
+  for the pictures.
 
 Then run:
 
@@ -429,20 +430,40 @@ row count and R5 lines.
 
 ### The loader
 
-`disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, loads `SELECT.SCR`
-at `&C000` (the title and the cars, `tools/mkselect.py`, "LOADING" in pen
-14), then each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and `GAME.BIN` at
+`disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, puts the select
+screen at `&C000` (the title and the cars, `tools/mkselect.py`, "LOADING" in
+pen 14), then each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and `GAME.BIN` at
 `&4000` with its bank (4-7) switched in there, `SOUND.BIN` at `&98C0` and
-`RACE.BIN` at `&A0C0`. Then it inks "LOADING" out and the keys' line in,
+`RACE.BIN` at `&A0C0` - every file packed (below). Then it inks "LOADING"
+out and the keys' line in,
 draws the picked car's frame in pen 13 (flashing, `INK 13,24,15`; the
 others' in pen 2) with `DRAWR`, and prints the difficulties where "LOADING"
 was: the small font's letters as characters 240-249 (`SYMBOL`), with `TAG`
 at the graphics cursor, a letter at a time, each key in pen 15, each word in
 pen 3 (the credits' sky blue) and the one picked in 13. When the car is
-picked it loads its `CARn.BIN` at `&1900` (`CAR_BLOB`), POKEs the
+picked it puts its `CARn.BIN` at `&1900` (`CAR_BLOB`), POKEs the
 difficulty into it (`&1906`, `CAR_DIFF`: its first record's byte, 32 a
-step, which `boot_car` puts in `coll_diff`), and loads `BOOT.BIN` at
+step, which `boot_car` puts in `coll_diff`), and puts `BOOT.BIN` at
 `&4000` and calls it.
+
+Since 2026-11-10 every file but the loader is on the disc packed (ZX0, by
+rasm's own cruncher: `LZX0`). `src/main.asm` writes the files as they go in
+memory, `build/<name>.raw`; `src/pack.asm` packs each behind the word where
+it goes and writes the disc; `tools/zx0check.py` unpacks each again (a ZX0
+decoder after the format's reference one) and checks it byte for byte, and
+that it fits where it is loaded - in `make`. `SELECT.BIN`, loaded at `&4000`
+and called, copies the unpacker (`src/dzx0.asm`, rasm's `dzx0_standard`: 68
+bytes, the main registers and the stack only, so the firmware's interrupts
+run on) to `&A600` - past `RACE.BIN`'s place, before the 6128's characters
+240-255 - and unpacks the screen. Then the loader loads each file at `&8000`
+and calls `&A600`, or - the car's and `BOOT.BIN`, which would reach the
+sound and the race - at `&C000`, once the screen is black, and calls
+`&A605` (`src/discmap.asm`). 119,230 bytes go on the disc as 42,999 (36%):
+the screen 22%, the banks 22-31%, the game 59%, `BOOT.BIN` 45%, the cars
+about 41%, the sound and the race 82-88%. The disc has 51K on it, not 128K,
+and from `RUN"COUNTRY` the select screen is ready in 16.5 s, not 21.0, and
+the race shows 5.4 s after the car is picked, not 6.6 (the emulator; each
+file still costs 1-2 s to find, however small).
 
 It has no room for more. BASIC loads nothing under `HIMEM` ("Memory full"),
 so `HIMEM` stays under `CAR_BLOB`, the lowest file; and its first file takes
@@ -451,8 +472,8 @@ so `HIMEM` stays under `CAR_BLOB`, the lowest file; and its first file takes
 60 to spare), 2843 with the difficulties written as the other lines were -
 "Memory full". So the loader's notes are here, not in `REM`s, and the
 letters (7 lines each) and the words (each letter's number and pixel) are
-in `SELECT.SCR`'s hidden bytes, the last 48 of its first three 2K blocks,
-read with `PEEK`: 4473 free now.
+in the select screen's hidden bytes, the last 48 of its first three 2K
+blocks, read with `PEEK`: 4473 free then, 4419 with the files unpacked.
 
 ### Memory
 
@@ -507,7 +528,7 @@ first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
 
-The sound (`SOUND.BIN`, records like a car's file, loaded at `#98C0` - in
+The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
 place after them) is where nothing else goes: what the interrupt runs and
 reads in the road parts' lines 173-178, both buffers' (eleven of their
@@ -521,7 +542,7 @@ nothing draws until the first picture (and, after them, TOTAL TIME's `'`
 and `"` from `RACE.BIN`).
 `boot_blob` (`src/boot.asm`) copies both files' records. `RACE.BIN` (the
 pause and the best times, and the start of a race, which bank 7 had no
-room left for: `src/race.asm`) is records too, loaded at `#A0C0` and put
+room left for: `src/race.asm`) is records too, unpacked at `#A0C0` and put
 in place after the sound: in buffer 1's hidden lines 164 and 172 (which
 the traffic's code leaves), 167, and 178 - `stage_id` among them, where
 the traffic's code (RAM C6) reads it too. It has the sound's main-loop
@@ -540,7 +561,7 @@ of the props' sprites as data - the
 seventh block's first half, at `#7600`, the keys and the player's speed
 (`src/player.asm`), and the last block's first half, at `#7E00`, the part
 of the road cache's work that runs with RAM C1.
-`BOOT.BIN` is loaded at `#4000`, so it carries that code where it runs, and
+`BOOT.BIN` is unpacked at `#4000`, so it carries that code where it runs, and
 the fragments, which it copies out, two to a block where the HUDs go later.
 
 ### The road
@@ -1561,7 +1582,11 @@ three.
 
 ```
 src/            the game
-  main.asm      the build: banks, files on the disc
+  main.asm      the build: banks, the files the loader puts in memory
+  discmap.asm   ... where it puts them, and the packed ones
+  pack.asm      the disc: each file packed (ZX0), the select screen and the
+                unpacker (SELECT.BIN)
+  dzx0.asm      the unpacker (rasm's dzx0_standard)
   hw.asm        ports, CRTC values, memory map
   boot.asm      takes the machine over, puts the picked car's code in
                 place, copies the common fragments
@@ -1636,6 +1661,7 @@ tools/
                 traffic's code, the props' sprites, and tables -> src/gen/
   mkmanual.py   the manuals' PDFs, from docs/manual-*.md
   run.py        emulator harness: check, shots, watch
+  zx0check.py   unpacks the disc's packed files again and checks them
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts, the cars', the traffic's and the trees' renders; the
                 select screen's pictures of the cars (assets/cars/photo_*);

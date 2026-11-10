@@ -8,7 +8,8 @@
 #   make mockup   build/mockup.png, the picture worked out in Python
 #   make clean
 #
-# Needs rasm and iDSK. The generated sources are committed, so python3 is only
+# Needs rasm and iDSK, and python3 (the loader's line ends, the packed files'
+# check). The generated sources are committed, so the rest of tools/ is only
 # needed when the art or the road shape changes; Pillow for the pictures.
 
 RASM   ?= rasm
@@ -26,6 +27,8 @@ all: $(DSK)
 $(DSK): $(SRC) disc/country.bas | $(BUILD)
 	rm -f $@
 	$(RASM) src/main.asm -o $(BUILD)/countryride -s -sa -os $(BUILD)/countryride.sym
+	$(RASM) src/pack.asm -o $(BUILD)/pack
+	$(PYTHON) tools/zx0check.py
 	$(PYTHON) -c "import sys; open(sys.argv[2],'wb').write(open(sys.argv[1],'rb').read().replace(b'\n', b'\r\n'))" disc/country.bas $(BUILD)/country.bas
 	$(IDSK) $@ -i $(BUILD)/country.bas -t 0 -f > /dev/null
 

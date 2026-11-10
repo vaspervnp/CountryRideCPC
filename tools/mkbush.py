@@ -791,8 +791,8 @@ def cars_asm(pieces, ends, codes, traffic):
                                    "    ORG %s_ph+%s_end-%s" % (p, p, p)]
         lines += ["    defw #FFFF", "car%d_blob_end" % n,
                   "    ASSERT car%d_blob_end <= FRAG7   ; (in place before boot_car)" % n,
-                  '    SAVE "CAR%d.BIN",CAR_BLOB,car%d_blob_end-CAR_BLOB,DSK,'
-                  '"build/countryride.dsk"' % (n, n), ""]
+                  '    SAVE "build/car%d.raw",CAR_BLOB,car%d_blob_end-CAR_BLOB'
+                  % (n, n), ""]
     return lines
 
 

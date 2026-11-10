@@ -23,7 +23,7 @@ Insert the disc and type:
 RUN"COUNTRY
 ```
 
-Then press RETURN. The title screen with the four cars appears while the game loads, which takes less than half a minute. When a flashing frame appears around the first car, you can pick yours.
+Then press RETURN. The title screen with the four cars appears while the game loads, which takes under 20 seconds. When a flashing frame appears around the first car, you can pick yours.
 
 ## Picking a car and the difficulty
 
