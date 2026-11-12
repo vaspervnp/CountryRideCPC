@@ -23,7 +23,7 @@ Insert the disc and type:
 RUN"COUNTRY
 ```
 
-Then press RETURN. The title screen with the four cars appears, and after about 20 seconds they start turning round. When a flashing frame appears around the first car, you can pick yours. Once you have, the game loads, which takes about 20 seconds more.
+Then press RETURN. First the REVIVE8BIT screen appears for 10 seconds (press SPACE to skip it). Then the title screen with the four cars appears, and after about 20 seconds they start turning round. When a flashing frame appears around the first car, you can pick yours. Once you have, the game loads, which takes about 20 seconds more.
 
 ## Picking a car and the difficulty
 

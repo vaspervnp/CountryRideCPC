@@ -25,7 +25,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 # SELECT.BIN, at #4000, its unpacker and code first (here only its data); the
 # turning's streams (into banks 4-7 and #4000) and code (unpacked at
 # SPIN_CODE, past it) as the banks
-FITS = [("select", "#4000", "#8000"),
+FITS = [("revive", "#4000", "#8000"), ("select", "#4000", "#8000"),
         ("spina", "PACK_LOW", "UNPACK"), ("spinb", "PACK_LOW", "UNPACK"),
         ("spinc", "PACK_LOW", "UNPACK"), ("spind", "PACK_LOW", "UNPACK"),
         ("spine", "PACK_LOW", "UNPACK"), ("spin", "PACK_LOW", "SPIN_CODE"),
@@ -37,6 +37,9 @@ FITS = [("select", "#4000", "#8000"),
         ("car0", "PACK_HIGH", "#10000"), ("car1", "PACK_HIGH", "#10000"),
         ("car2", "PACK_HIGH", "#10000"), ("car3", "PACK_HIGH", "#10000"),
         ("boot", "PACK_HIGH", "#10000")]
+
+# the files not made by main.asm: where their bytes are
+RAW = {"revive": ("assets", "revive8b.scr")}
 
 
 def discmap():
@@ -104,7 +107,7 @@ def unzx0(data):
 
 def check(name, at, end):
     pk = open(os.path.join(ROOT, "build", name + ".pk"), "rb").read()
-    raw = open(os.path.join(ROOT, "build", name + ".raw"), "rb").read()
+    raw = open(os.path.join(ROOT, *RAW.get(name, ("build", name + ".raw"))), "rb").read()
     out, n = unzx0(pk[2:])
     if out != raw or n != len(pk) - 2:
         raise SystemExit("%s: unpacks to %d bytes (read %d of %d), not its %d"

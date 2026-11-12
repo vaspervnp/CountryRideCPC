@@ -4,7 +4,9 @@
 ;; pack.asm - the disc. Each file main.asm makes (build/<name>.raw) packed
 ;; (ZX0: rasm's LZX0) behind the word where it goes; SELECT.BIN the select
 ;; screen packed so, after the code that puts the unpacker (dzx0.asm) at
-;; UNPACK and unpacks the screen. The loader (disc/country.bas) loads each
+;; UNPACK and unpacks the screen; REVIVE.BIN, the first, REVIVE8BIT's screen
+;; (assets/revive8b.scr) so, after the code that shows it. The loader
+;; (disc/country.bas) loads each
 ;; file at PACK_LOW or PACK_HIGH and CALLs UNPACK_LOW or UNPACK_HIGH
 ;; (discmap.asm; README.md: The loader). Each one is saved too as
 ;; build/<name>.pk, which tools/zx0check.py unpacks and checks against its
@@ -16,6 +18,81 @@
 
     INCLUDE "discmap.asm"
     INCLUDE "dzx0.asm"
+
+;; ---------------------------------------------------------------------------
+;; REVIVE.BIN, loaded at #4000 and CALLed first (the screen black, its border
+;; too): REVIVE8BIT's screen (assets/revive8b.scr) unpacked at #C000, in its
+;; inks, for 10 seconds or till Space is pressed - counted once it is up, as
+;; the firmware's time stands still while the disc is read - then black
+;; again, Space let go and no key left for the select screen (KM FLUSH)
+;; ---------------------------------------------------------------------------
+KL_TIME_PLEASE  EQU #BD0D               ; DEHL: the time, 1/300 s
+KM_TEST_KEY     EQU #BB1E               ; A: a key; NZ: it is down
+KM_FLUSH        EQU #BD3D               ; (664/6128)
+SCR_SET_INK     EQU #BC32               ; A: a pen, B and C: its colours
+REVIVE_TICKS    EQU 3000                ; 10 s
+REVIVE_KEY      EQU 47                  ; Space
+
+    BANK
+    ORG #4000
+revive_bin
+    ld hl,revive_pk
+    call unpack_revive
+    ld hl,revive_inks
+    call revive_ink
+    call KL_TIME_PLEASE
+    ld (revive_t0+1),hl
+revive_wait
+    ld a,REVIVE_KEY
+    call KM_TEST_KEY
+    jr nz,revive_up
+    call KL_TIME_PLEASE
+revive_t0
+    ld de,0
+    or a
+    sbc hl,de                           ; (the time since, mod 65536)
+    ld de,-REVIVE_TICKS
+    add hl,de
+    jr nc,revive_wait
+revive_up
+    ld a,REVIVE_KEY
+    call KM_TEST_KEY
+    jr nz,revive_up                     ; (till it is let go)
+    call KM_FLUSH
+    ld hl,revive_black
+revive_ink                              ; HL = 16 colours: the pens'
+    xor a
+ri_pen
+    push af
+    push hl
+    ld b,(hl)
+    ld c,b
+    call SCR_SET_INK
+    pop hl
+    pop af
+    inc hl
+    inc a
+    cp 16
+    jr c,ri_pen
+    ret
+unpack_revive                           ; HL = the screen, packed, behind
+    ld e,(hl)                           ; where it goes
+    inc hl
+    ld d,(hl)
+    inc hl
+    dzx0_standard
+revive_inks                             ; assets/revive8b.txt
+    defb 0,13,26,15,25,10,3,1,11,23,6,24,20,16,12,4
+revive_black
+    defs 16,0
+revive_pk
+    defw #C000
+    LZX0
+    INCBIN "../assets/revive8b.scr"
+    LZCLOSE
+revive_pk_end
+    SAVE "REVIVE.BIN",revive_bin,revive_pk_end-revive_bin,DSK,"build/countryride.dsk"
+    SAVE "build/revive.pk",revive_pk,revive_pk_end-revive_pk
 
 ;; ---------------------------------------------------------------------------
 ;; SELECT.BIN, loaded at #4000 and CALLed: the unpacker put in place, then

@@ -24,7 +24,7 @@ SRC := $(wildcard src/*.asm) $(wildcard src/gen/*.asm) src/gen/select.scr
 
 all: $(DSK)
 
-$(DSK): $(SRC) disc/country.bas | $(BUILD)
+$(DSK): $(SRC) assets/revive8b.scr disc/country.bas | $(BUILD)
 	rm -f $@
 	$(RASM) src/main.asm -o $(BUILD)/countryride -s -sa -os $(BUILD)/countryride.sym
 	$(RASM) src/pack.asm -o $(BUILD)/pack

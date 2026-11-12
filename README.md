@@ -439,7 +439,18 @@ row count and R5 lines.
 
 ### The loader
 
-`disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, puts the select
+`disc/country.bas` (`RUN"COUNTRY`) sets `MEMORY &18FF`, then shows
+REVIVE8BIT's screen first, as the author's other games do (since
+2026-11-12): `REVIVE.BIN` (`src/pack.asm`), loaded at `&4000` and called,
+unpacks `assets/revive8b.scr` at `&C000` with its own copy of the
+unpacker, puts its inks up (`assets/revive8b.txt`, by `SCR SET INK`) and
+holds it for 10 seconds or until Space is pressed - counted by the
+firmware's time once the screen is up, as the time stands still while the
+disc is read - then waits for Space to be let go, empties the key buffer
+(`KM FLUSH`: no key left over for the select screen) and inks it black
+again (8.3K on the disc, 50%; ~11.5 s from the screen up to the next one,
+2 s or so with Space). The tests press Space as soon as it is all there
+(`tools/run.py` `skip_splash`). Then it puts the select
 screen at `&C000` (the title and the cars, `tools/mkselect.py`, "LOADING" in
 pen 14), then the cars' turning (The cars turning, below): `SPINA.BIN` to
 `SPIND.BIN` into banks 4-7 and `SPINE.BIN` into base memory, each at `&4000`
@@ -1756,7 +1767,7 @@ src/            the game
   main.asm      the build: banks, the files the loader puts in memory
   discmap.asm   ... where it puts them, and the packed ones
   pack.asm      the disc: each file packed (ZX0), the select screen and the
-                unpacker (SELECT.BIN)
+                unpacker (SELECT.BIN), REVIVE8BIT's screen first (REVIVE.BIN)
   spin.asm      the cars turning on the select screen (SPIN.BIN)
   dzx0.asm      the unpacker (rasm's dzx0_standard)
   hw.asm        ports, CRTC values, memory map
@@ -1846,7 +1857,8 @@ tools/
   emu/          the emulator debug library and the CRTC patch
 assets/         fonts, the cars', the traffic's and the trees' renders; the
                 select screen's pictures of the cars (assets/cars/photo_*);
-                the itch.io page's banner and background (assets/itch)
+                the itch.io page's banner and background (assets/itch);
+                REVIVE8BIT's screen and its inks (revive8b.scr, .txt)
 disc/           BASIC loader: the car and the difficulty picked as the game
                 loads
 docs/           screenshots, the manuals (manual-en, manual-el: .md and .pdf)

@@ -97,6 +97,20 @@ def trace(c, n):
     return list(buf)
 
 
+def skip_splash(c):
+    """After RUN"COUNTRY: once REVIVE8BIT's screen is up (all of it at
+    #C000), Space, as a player would - not 10 s more (src/pack.asm
+    REVIVE.BIN)."""
+    import cpc
+    splash = open(os.path.join(ROOT, "assets", "revive8b.scr"), "rb").read()
+    for _ in range(1500):
+        c.run_frames(1)
+        if c.read_ram(0xC000, 0x4000) == splash:
+            c.tap_key(cpc.KEY_SPACE, 3, 4)
+            return
+    raise SystemExit("REVIVE8BIT's screen never came up (PC #%04X)" % c.pc)
+
+
 class Game:
     """The game booted from the disc, with car CAR (env, 0-3: the loader's
     screen picks it by its number) - scene.py set to it too - and the
@@ -115,6 +129,7 @@ class Game:
         blob, magic = self.sym["CAR_BLOB"], self.sym["CAR_MAGIC"]
         self.c.write_ram(blob, bytes(2))
         self.c.type_text('RUN"COUNTRY\n')
+        skip_splash(self.c)
         # load; the car's number now and then until the loader has loaded
         # its CARn.BIN (the magic word at CAR_BLOB), BOOT.BIN has taken it
         # (its high byte 0) and the game has drawn its first pictures (the
@@ -203,6 +218,7 @@ def cmd_shots():
     c.run_frames(150)
     c.insert_disc(DSK)
     c.type_text('RUN"COUNTRY\n')
+    skip_splash(c)
     c.run_frames(1400)                          # (all loaded by then)
     for _ in range(2):
         c.tap_key("p", 10, 20)
