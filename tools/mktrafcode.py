@@ -64,9 +64,11 @@ TR_ZFAR = 640                   # src/traffic.asm TR_ZAWAY: no car further
 # (src/gen/trafleft.py)
 # mkbush.py lays the same way in the fragments' free runs, then - in every
 # CARn.BIN - in the road parts' hidden lines.
-REGIONS = [("6", "RAM_C6", "#8000", 5430),     # bank 6, after the traffic's code
+REGIONS = [("6", "RAM_C6", "#8000", 3595),     # bank 6, after the traffic's code
                                                 # (all of it, since the hill
-                                                # tables are shared: mkroad.py)
+                                                # tables are shared: mkroad.py;
+                                                # 2026-11-12: what the build
+                                                # has, the sides' tables in)
            ("f4", "RAM_C6", "FRAG4+FRAG_LEN", 21),      # fragment 4's end
            ("4", "RAM_C4", "STAGE_A", 170)]     # bank 4, after the lanes'
                                                 # tables (main.asm)
@@ -103,7 +105,7 @@ REGIONS[1:1] = [("rh%d" % n, "RAM_C6", end, free, "rowhole%d" % n)
 HOOKS = [n for n, end, free in holes()]
 
 
-STEP_DX = range(-4, 5)          # tr_st<dx> (trafglue.asm)
+STEP_DX = range(-2, 2)          # tr_st<dx> (trafglue.asm: tr_stm2..tr_st1)
 
 # instruction: (bytes, time in NOPs) - the step's call with its routine
 COST = {"ld ix": (4, 4), "ld sp,hl": (1, 2), "call tr_st": (3, 19), "call tr_stx": (3, 16),
@@ -215,28 +217,35 @@ def time_of(code):
 
 def groups():
     """The pieces in groups that may share their last lines - per size, a
-    near one's tops and its bottoms, a further one's whole cars: (its name,
-    its pieces (label, size index, kind, the line it is drawn from - from the
-    car's top -, its lines [(line, first byte, bytes)]), its split - a whole
-    car's: None else)."""
-    out = []
+    near one's tops and its bottoms, a further one's whole cars; the near
+    sizes from behind, then those with sides seen from them (seen right of
+    the middle of the screen, then left: tools/mktraffic.py SIDES), then the
+    further ones: (its name, its pieces (label, size index, kind, the line
+    it is drawn from - from the car's top -, its lines [(line, first byte -
+    from the car's left -, bytes)]), its split - a whole car's: None else)."""
+    near, sides, far = [], [], []
     for k, s in enumerate(TRAFFIC_ART):
         if s["whole"]:
             b = next(iter(s["bottoms"].values()))
-            out.append(("tr_s%d_cars" % k, [(t, 0, s["tops"][t] + b) for t in T.TOPS],
+            far.append(("tr_s%d_cars" % k, k, 0, [(t, 0, s["tops"][t] + b) for t in T.TOPS],
                         s["split"]))
             continue
-        out.append(("tr_s%d_tops" % k, [(t, 0, s["tops"][t]) for t in T.TOPS], None))
-        out.append(("tr_s%d_bottoms" % k,
-                    [(b, s["split"], s["bottoms"][b]) for b in T.BOTTOMS], None))
+        near.append(("tr_s%d_tops" % k, k, 0, [(t, 0, s["tops"][t]) for t in T.TOPS], None))
+        near.append(("tr_s%d_bottoms" % k, k, 0,
+                     [(b, s["split"], s["bottoms"][b]) for b in T.BOTTOMS], None))
+        for i, v in enumerate(s.get("sides", [])):
+            n = "tr_s%d%s" % (k, "rl"[i])
+            sides.append((n + "_tops", k, v["x0"] // 2,
+                          [(t, 0, v["tops"][t]) for t in T.TOPS], None))
+            sides.append((n + "_bottoms", k, v["x0"] // 2,
+                          [(b, s["split"], v["bottoms"][b]) for b in T.BOTTOMS], None))
     res = []
-    for name, g, split in out:
-        k = int(name[4:name.index("_", 4)])
+    for name, k, x0, g, split in near + sides + far:
         ms = []
         for kind, line0, rows in g:
             skip, runs = piece_runs(rows)
-            ms.append(("tr_s%d_%s" % (k, kind), k, kind, line0,
-                       [(line0 + skip + i, a, d) for i, (a, d) in enumerate(runs)]))
+            ms.append(("%s_%s" % (name[:name.rindex("_")], kind), k, kind, line0,
+                       [(line0 + skip + i, x0 + a, d) for i, (a, d) in enumerate(runs)]))
         res.append((name, ms, split))
     return res
 
@@ -404,26 +413,42 @@ def main():
                if S.bush_row(z))
     emit("TR_ZNEARSIZE EQU %d   ; nearer than this, a car is at a near size" % znear)
     emit("")
-    emit(";; per size: its width (bytes), its lines, its top's lines, its first")
-    emit(";; piece's record (tr_pieces); then its left indicator with each bottom")
-    emit(";; (BOTTOMS): its top line from its top (bit 7: on two lines, else on")
-    emit(";; one), its byte from its left (scene.traffic_blinker)")
+    emit(";; per size: its width (bytes), its lines, its top's lines; then how it")
+    emit(";; is seen - from behind, from right of the middle of the screen (its left")
+    emit(";; flank in view), from left of it (scene.traffic_view; the sizes without")
+    emit(";; sides: from behind thrice) - TR_VIEW_LEN each: its box's left from the")
+    emit(";; car's (signed) and its width (bytes), its first piece's record")
+    emit(";; (tr_pieces), and with each bottom (BOTTOMS) its indicators: their top")
+    emit(";; line from its top (bit 7: on two lines, else on one), the left one's")
+    emit(";; byte from the car's left, the right one's (scene.traffic_blinker)")
     emit("tr_sinfo")
     index = {p[0]: i for i, p in enumerate(ps)}
     for k, s in enumerate(TRAFFIC_ART):
         top = s["tops"][T.TOPS[0]]
         bottom = next(iter(s["bottoms"].values()))
-        first = index["tr_s%d_%s" % (k, T.TOPS[0])]
-        blink = []
-        for b in range(len(T.BOTTOMS)):
-            line, byte, n = S.traffic_blinker(k, b)
-            assert n in (1, 2) and line < 128
-            blink += [line | (128 if n == 2 else 0), byte]
-        emit("    defb %d,%d,%d,%d, %s   ; size %d: %d x %d pixels" % (
-            len(top[0]) // 2, len(top) + len(bottom), s["split"], first * 5,
-            ",".join(map(str, blink)), k, len(top[0]), len(top) + len(bottom)))
-    emit("TR_SINFO_LEN EQU %d" % (4 + 2 * len(T.BOTTOMS)))
-    emit("TR_SINFO_BLINK EQU 4")
+        views = []
+        for v in range(3 if "sides" in s else 1):
+            vx, vw = S.traffic_vbox(k, v)
+            label = "tr_s%d%s_%s" % (k, " rl"[v].strip(), T.TOPS[0])
+            vals = [vx & 0xFF, vw, index[label] * 5]
+            for b in range(len(T.BOTTOMS)):
+                (tl, bl), (tr, br), n = S.traffic_blinker(k, b, v)
+                assert n in (1, 2) and tl == tr < 128, (k, b, v)
+                vals += [tl | (128 if n == 2 else 0), (bl + vx) & 0xFF, (br + vx) & 0xFF]
+            views.append(vals)
+        while len(views) < 3:
+            views.append(views[0])
+        emit("    defb %d,%d,%d   ; size %d: %d x %d pixels" % (
+            len(top[0]) // 2, len(top) + len(bottom), s["split"], k, len(top[0]),
+            len(top) + len(bottom)))
+        for v, vals in zip(("behind", "right", "left"), views):
+            emit("    defb %s   ; (%s)" % (",".join(map(str, vals)), v))
+    vlen = 3 + 3 * len(T.BOTTOMS)
+    emit("TR_SINFO_LEN EQU %d" % (3 + 3 * vlen))
+    emit("TR_SINFO_VIEW EQU 3   ; its views")
+    emit("TR_VIEW_LEN EQU %d" % vlen)
+    emit("TR_VIEW_BLINK EQU 3   ; a view's indicators")
+    assert (len(TRAFFIC_ART) - 1) * (3 + 3 * vlen) < 255
     emit("TR_BLINK    EQU %d   ; frames_drawn's bit: an indicator lit" % S.TRAFFIC_BLINK)
     assert S.TRAFFIC_BLINK & (S.TRAFFIC_BLINK - 1) == 0
     lit = G.PEN[S.CAR_PEN[S.TRAFFIC_LIT]]
@@ -438,15 +463,18 @@ def main():
     emit("tr_pieces")
     for p in ps:
         emit("    defw %s" % p[0])
-        emit("    defb %s,%d,%d   ; %d bytes, %d us" % (cfg_of[p[0]], p[3], p[4], p[5], p[6]))
+        emit("    defb %s,%d,%d   ; %d bytes, %d us" % (cfg_of[p[0]], p[3], p[4] & 0xFF, p[5], p[6]))
     emit("TR_PIECE_LEN EQU 5")
+    far = min(i for i, p in enumerate(ps) if TRAFFIC_ART[p[1]]["whole"])
+    assert all(TRAFFIC_ART[p[1]]["whole"] for p in ps[far:])
+    emit("TR_FAR_PIECE EQU %d   ; the further sizes' pieces' records from here" % (far * 5))
     emit("TR_TOPS     EQU %d   ; a near size's tops, then its bottoms" % len(T.TOPS))
     emit("TR_BOTTOMS  EQU %d" % len(T.BOTTOMS))
     assert len(ps) * 5 < 256
     emit("")
     emit("tr_rsize    ; per row: the size a car on it is drawn at - its record in")
     emit("            ; tr_sinfo (#FF: none)")
-    vals = [0xFF if v is None else (4 + 2 * len(T.BOTTOMS)) * v for v in rsize]
+    vals = [0xFF if v is None else (3 + 3 * vlen) * v for v in rsize]
     for j in range(0, len(vals), 16):
         emit("    defb " + ",".join("#%02X" % v for v in vals[j:j + 16]))
     lats = [(4, 0, "the inner right lane of four"), (4, 1, "the outer right lane of four"),

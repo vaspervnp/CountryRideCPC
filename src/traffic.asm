@@ -622,11 +622,11 @@ tla_more
     ld a,(lane_now)
     ret
 
-;; to_fit - C = a row, B = a car's left (from the middle of the screen):
-;; B kept on the road there - its left from the centre no more than the
-;; road's reach less the car's width, nor less than minus the reach - as
-;; wide as the row's lanes are (to_lrow). HL = its size's record. Destroys
-;; AF, C, DE.
+;; to_fit - C = a row, B = a car's view's box's left (from the middle of
+;; the screen): B kept on the road there - its left from the centre no more
+;; than the road's reach less the box's width (to_fw), nor less than minus
+;; the reach - as wide as the row's lanes are (to_lrow). Destroys AF, C, DE,
+;; HL.
 to_fit
     call tr_centre
     ld e,a                              ; E = the centre there
@@ -648,8 +648,8 @@ to_reach
     ld a,b
     sub e
     ld b,a                              ; B = its left from the centre there
-    ld hl,(to_size)
-    add a,(hl)
+to_fw
+    add a,0                             ; (self-modified: its view's width)
     sub c                               ; its right past the reach, by A?
     jr z,to_in_r
     jp m,to_in_r
@@ -1037,6 +1037,33 @@ to_near
     ld b,a                              ; B = its left
     ld a,c
     ld (to_own+1),a
+    ; how it is seen (scene.traffic_view), on its lane's place: all of it
+    ; right of the middle of the screen, from the right of it - its left
+    ; flank in view -, all of it left, from the left; else from behind. It
+    ; is its view's box that is kept on the road and on the screen. (A size
+    ; with no sides has its view from behind thrice: tr_sinfo.)
+    ld hl,(to_size)
+    ld de,TR_SINFO_VIEW+TR_VIEW_LEN     ; (from the right)
+    ld a,b
+    or a
+    jp p,to_vset
+    add a,(hl)                          ; its right from the middle
+    ld e,TR_SINFO_VIEW                  ; (from behind)
+    jr z,to_vleft
+    jp p,to_vset
+to_vleft
+    ld e,TR_SINFO_VIEW+2*TR_VIEW_LEN    ; (from the left)
+to_vset
+    add hl,de
+    ld (to_view),hl
+    ld a,(hl)                           ; its box's left from the car's
+    ld (to_vx+1),a
+    add a,b
+    ld b,a                              ; B = its box's left
+    inc hl
+    ld a,(hl)                           ; and its width
+    ld (to_fw+1),a
+    ld (to_fw2+1),a
     ; ... but on the road on its top line's row - narrower and bent more
     ; than its own - and then on its own row's (a narrow road bent hard:
     ; its lower lines bend less and are not that much wider): to_fit. On
@@ -1098,13 +1125,18 @@ to_fits
     xor #80                             ; (+ 128: unsigned)
     cp 128-SCR_BYTES/2
     ret c                               ; out to the left
-    add a,(hl)
+to_fw2
+    add a,0                             ; (self-modified: its view's width)
     ret c
     cp 128+SCR_BYTES/2+1
     ret nc                              ; out to the right
     ld a,b
+to_vx
+    sub 0                               ; (self-modified: its view's box's
+    ld b,a                              ; left from the car's) B = its left
     add a,SCR_BYTES/2
     ld (to_left),a
+    ld hl,(to_size)                     ; (its width)
 
     ; touching our car: its base line in the car's lower half, and the two
     ; overlapping, HIT_TRIM bytes in from either's side (coll)
@@ -1179,14 +1211,16 @@ to_unlit
     inc hl
     inc hl
     ld b,(hl)                           ; B = its top's lines
+    ld hl,(to_view)
     inc hl
-    ld a,(hl)                           ; its first piece's record
+    inc hl
+    ld a,(hl)                           ; its view's first piece's record
     ld d,(ix+TR_PT)
     ld e,d
     ld c,(ix+TR_PT+1)
     ld iyh,c
     ld iyl,c                            ; DE, IY = its top's paint
-    cp TR_NEAR*(TR_TOPS+TR_BOTTOMS)*TR_PIECE_LEN
+    cp TR_FAR_PIECE
     jr c,to_near_size
     add a,(ix+TR_TOP)                   ; a further size: one piece
     ld c,a
@@ -1235,7 +1269,7 @@ to_bl_at2
 
 ;; to_blink - car IX changing lanes, its lines and its left found, its
 ;; indicator lit this picture: its bytes on the side it goes to (to_dir) -
-;; its size's and its bottom's place (tr_sinfo), mirrored on the right - and
+;; its view's and its bottom's place (tr_sinfo), on the left or right - and
 ;; its colour, white on a bottom in yellow, for to_bl. Destroys AF, BC, DE, HL.
 to_blink
     ld a,(ix+TR_PB)
@@ -1244,13 +1278,12 @@ to_blink
     jr nz,$+4
     ld a,TR_LIT_Y
     ld (to_bl_lit+1),a
-    ld hl,(to_size)
-    ld c,(hl)                           ; C = its width
-    ld de,TR_SINFO_BLINK
+    ld hl,(to_view)
+    ld de,TR_VIEW_BLINK
     ld a,(ix+TR_BOT)
     cp (TR_TOPS+1)*TR_PIECE_LEN
     jr c,$+4
-    ld e,TR_SINFO_BLINK+2               ; (its second bottom's)
+    ld e,TR_VIEW_BLINK+3                ; (its second bottom's)
     add hl,de
     ld a,(to_line)
     add a,(hl)
@@ -1261,11 +1294,10 @@ to_blink
     inc hl
     ld a,(to_dir)
     or a
-    ld a,(hl)                           ; A = its byte from the left: on the
-    jp m,to_bl_side                     ; left
-    cpl
-    add a,c                             ; on the right: width - 1 - it
+    jp m,to_bl_side                     ; (on the left)
+    inc hl                              ; (on the right: the next)
 to_bl_side
+    ld a,(hl)                           ; A = its byte from the car's left
     ld hl,to_left
     add a,(hl)
     ld c,a                              ; C = its byte in the line
@@ -1304,6 +1336,7 @@ to_bl_line
 
 to_dir      defb 0                      ; the way to the lane it changes to
 to_size     defw 0                      ; the car's size's record
+to_view     defw 0                      ; ... its view's (TR_SINFO_VIEW on)
 to_lines                                ; its lines, from ROAD_AREA_Y:
 to_line     defb 0                      ; its top
             defb 0                      ; its base

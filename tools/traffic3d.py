@@ -16,7 +16,13 @@ player's) it renders the combinations that hold every top and every bottom
 sizes past the NEAR nearest, each top on FAR_BOTTOM, whole - in three
 passes: the car (photorealistic, its paint grey), its paint (white on
 black) and its top (white on black), to OUT_DIR/s<i>_<top>_<bottom>_<pass>.png.
-SIZES picks which scales (default all).
+SIZES picks which scales (default all). With YAW (degrees) each car is
+turned that much, nose left, about its rear face's middle (the rear
+face staying where it is: not the rear axle, as the player's car turns) -
+seen from a camera off
+to its right, its left flank in view, as a near car right of the middle of
+the screen is (since 2026-11-12) - to OUT_DIR/s<i>_<top>_<bottom>_<pass>_yaw.png;
+COMBOS ([(top, bottom)]) then picks which of the near sizes' pieces.
 """
 
 import importlib.util
@@ -40,6 +46,8 @@ SAMPLES = globals().get("SAMPLES", 32)
 TOPS = ["closed", "open"]
 BOTTOMS = ["sport", "saloon", "gt"]
 FAR_BOTTOM = "saloon"                       # the further sizes' (one piece)
+YAW = globals().get("YAW", 0.0)             # degrees, nose left (0: straight)
+COMBOS = globals().get("COMBOS", None)      # the near pieces rendered (None: all)
 
 col, zl, LZ, CX, Z0 = c3.col, c3.zl, c3.LZ, c3.CX, c3.Z0
 Shape, loft, strip, stations, panel, box = c3.Shape, c3.loft, c3.strip, c3.stations, c3.panel, c3.box
@@ -239,6 +247,8 @@ def render():
     os.makedirs(OUT_DIR, exist_ok=True)
     near = [(TOPS[0], BOTTOMS[0])] + [(t, BOTTOMS[0]) for t in TOPS[1:]] \
         + [(TOPS[0], b) for b in BOTTOMS[1:]]
+    if COMBOS:
+        near = [c for c in near if c in COMBOS]
     for si in SIZES:
         for top, bottom in near if si < NEAR else [(t, FAR_BOTTOM) for t in TOPS]:
             for pas in ("car", "paint", "top"):
@@ -247,6 +257,8 @@ def render():
                 bpy.context.collection.objects.link(root)
                 root.scale = (SCALES[si], SCALES[si], c3.SQUASH * SCALES[si])
                 car.parent = root
+                if YAW:
+                    car.rotation_euler = (0, 0, math.radians(YAW))
                 c3.camera()
                 cs.photo_setup((math.radians(45), 0, 0))
                 sc = bpy.context.scene
@@ -263,7 +275,8 @@ def render():
                     for ob in list(bpy.data.objects):
                         if ob.type == "LIGHT":
                             bpy.data.objects.remove(ob)
-                p = os.path.join(OUT_DIR, "s%d_%s_%s_%s.png" % (si, top, bottom, pas))
+                p = os.path.join(OUT_DIR, "s%d_%s_%s_%s%s.png" % (si, top, bottom, pas,
+                                                                  "_yaw" if YAW else ""))
                 sc.render.filepath = p
                 bpy.ops.render.render(write_still=True)
                 paths.append(p)

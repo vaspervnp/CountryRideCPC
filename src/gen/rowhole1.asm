@@ -2,5 +2,48 @@
 ;; Traffic sprite pieces, region rh1 (RAM_C6).
 
 trafcode_rh1
+tr_s0l_closed_c1
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st0
+    push iy
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    push iy
+    ld sp,hl
+    ld bc,#0802
+    call tr_stx
+    push de
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    push de
+    ld sp,hl
+    call tr_st0
+    ld bc,#FC7C
+    push bc
+    push iy
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    push iy
+    ld sp,hl
+    call tr_st0
+    jp tr_s0l_closed_c2
 trafcode_rh1_end
     ASSERT trafcode_rh1_end <= rr_tlo+256

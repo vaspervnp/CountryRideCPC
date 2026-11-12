@@ -548,22 +548,24 @@ class Runs:
     """Code in free runs, one after the other, on from one to the next with
     a JP (as FragCode). pieces: (address, lines) per run used."""
 
-    def __init__(self, runs):
+    def __init__(self, runs, what="the cars' views on hills"):
         self.runs = runs
         self.cur, self.used = 0, 0
         self.pieces = []
+        self.what = what
 
     def code(self, label, code):
         if self.runs[self.cur][1] - self.used < 8:
             self.cur, self.used = self.cur + 1, 0
         lines = [label]
         start = self.runs[self.cur][0] + self.used
-        for text, step in code:
+        for i, (text, step) in enumerate(code):
             n = SIZE[kind(text)]
             if self.runs[self.cur][1] - self.used < n + 3 and not (
-                    text == "jp bush_spr_done" and self.runs[self.cur][1] - self.used >= n):
+                    i == len(code) - 1 and text.startswith("jp ")
+                    and self.runs[self.cur][1] - self.used >= n):
                 if self.cur + 1 >= len(self.runs):
-                    raise SystemExit("bushes: no room left for the cars' views on hills")
+                    raise SystemExit("bushes: no room left for " + self.what)
                 lines.append("    jp #%04X" % self.runs[self.cur + 1][0])
                 self.pieces.append((start, lines))
                 self.cur, self.used = self.cur + 1, 0
@@ -571,6 +573,92 @@ class Runs:
             lines.append("    " + text)
             self.used += n
         self.pieces.append((start, lines))
+
+
+# The views rolling over (scene.ROLL_VIEW on: jump.asm) - each car's own,
+# ~3.7K - go mostly where only bank 5 is (RAM_C5), so ROADB.BIN is a file a
+# car (ROADB0-3.BIN, the loader loads the picked one's: gen/roadbn.asm makes
+# each of the bank's file, main.asm's build/roadb.raw, and the car's
+# build/roll5_<n>.raw, gen/roll5.asm): under each of bank 5's per group arrays
+# (lanes5.asm's tables are under the first three), and past the bank's code -
+# never written there (scratchpad b5free.py). What does not fit there goes
+# in the hidden lines the views on hills leave in pages 0 and 2 (mapped
+# whatever the configuration: CARn.BIN). Each view is entered there first
+# (car_views): RAM_C5, then on into bank 5; and it ends there (roll_done):
+# RAM_C1 again, for bush_spr_done.
+ROLL5_TAIL = 0x7D00             # (main.asm: roadb_end no further, SB on)
+ROLL5_END = 0x7FCD
+ROLL_STUB = 8                   # an entry's bytes: ld bc / out (c),c / jp
+
+
+def roll5_runs():
+    """Bank 5's room for the views rolling over: (start, length) runs."""
+    import re
+    ra = {}
+    for line in open(os.path.join(ROOT, "src", "gen", "roadconsts.asm")):
+        m = re.match(r"RA_(\w+)\s+EQU\s+#([0-9A-F]+)", line)
+        if m:
+            ra[m.group(1)] = int(m.group(2), 16)
+    under = ("P2L", "P2H", "P4L")       # (mkroad.py: lane_hs, lane_dl, lane_dh)
+    runs = [(a & 0xFF00, a & 0xFF) for n, a in sorted(ra.items(), key=lambda t: t[1])
+            if n not in under]
+    assert all(0x6000 <= a and a + ln <= ROLL5_TAIL for a, ln in runs)
+    return runs + [(ROLL5_TAIL, ROLL5_END - ROLL5_TAIL)]
+
+
+def roll_place(allroll, hill_left):
+    """Each car's views rolling over: its entries and roll_done first in the
+    first hidden run left (the same places for every car), then the views,
+    in bank 5's room and then on in the hidden runs. Returns per car its
+    pieces in bank 5 and in the hidden lines (CARn.BIN), the entries'
+    addresses, the bytes each car uses in bank 5 and in the hidden lines,
+    and the hidden runs left after the car that uses the most of them."""
+    common = [(a, ln) for a, ln in hill_left
+              if (a < 0x4000 or 0x8000 <= a < 0xC000) and ln >= 8]
+    nstub = (1 + S.ROLL_FRAMES) * ROLL_STUB
+    a0, ln0 = next((a, ln) for a, ln in common if ln >= nstub)
+    i0 = common.index((a0, ln0))
+    done = a0
+    entries = [a0 + ROLL_STUB * (1 + k) for k in range(S.ROLL_FRAMES)]
+    after = [(a0 + nstub, ln0 - nstub)] + common[i0 + 1:]
+    b5 = roll5_runs()
+    body_runs = b5 + after
+    p5, ph, used, finals = [], [], [], []
+    for n, codes in enumerate(allroll):
+        r = Runs(body_runs, "the views rolling over")
+        starts = []
+        for k, (code, us) in enumerate(codes):
+            code = [(t.replace("jp bush_spr_done", "jp car%d_roll_done" % n), st)
+                    for t, st in code]
+            at = len(r.pieces)
+            r.code("car%d_roll%d" % (n, k), code)
+            starts.append(r.pieces[at][0])
+        stub = ["car%d_roll_done                  ; (RAM_C1 again, for bush.asm)" % n,
+                "    ld bc,#7F00+RAM_C1", "    out (c),c", "    jp bush_spr_done"]
+        for k, a in enumerate(starts):
+            stub += ["car%d_roll%d_go" % (n, k), "    ld bc,#7F00+RAM_C5", "    out (c),c",
+                     "    jp #%04X" % a]
+        stub += ["    ASSERT car%d_roll%d_go+%d == #%04X"
+                 % (n, S.ROLL_FRAMES - 1, ROLL_STUB, a0 + nstub)]
+        mine5 = [(a, "#%04X" % a, lines) for a, lines in r.pieces if 0x4000 <= a < 0x8000]
+        mineh = [(a0, "#%04X" % a0, stub)] + [(a, "#%04X" % a, lines) for a, lines in r.pieces
+                                             if not 0x4000 <= a < 0x8000]
+        p5.append(mine5)
+        ph.append(mineh)
+        n5 = sum(ln for a, ln in body_runs[:min(r.cur, len(b5))])
+        if r.cur < len(b5):
+            n5 += r.used
+        nh = nstub + sum(ln for a, ln in body_runs[len(b5):r.cur]) + (
+            r.used if r.cur >= len(b5) else 0)
+        used.append((n5, nh))
+        finals.append(r)
+    r = max(finals, key=lambda f: (f.cur, f.used))
+    if r.cur < len(b5):
+        left = after
+    else:
+        a, ln = body_runs[r.cur]
+        left = [(a + r.used, ln - r.used)] + body_runs[r.cur + 1:]
+    return p5, ph, entries, used, left
 
 
 def runs_slots(allcars, views):
@@ -801,6 +889,63 @@ def cars_asm(pieces, ends, codes, traffic):
     return lines
 
 
+def roll5_asm(roll5):
+    """gen/roll5.asm: per car, its views rolling over's code in bank 5's
+    room (build/roll5_<n>.raw: tools/mkbush.py roll_place, gen/roadbn.asm)."""
+    runs = roll5_runs()
+    lines = [";; Generated by tools/mkbush.py - do not edit.",
+             ";; Each car's views rolling over, in bank 5's room (tools/mkbush.py",
+             ";; roll_place): what ROADB0.BIN-ROADB3.BIN have of their own there",
+             ";; (gen/roadbn.asm puts each together with main.asm's bank 5).", "",
+             "    ASSERT ROLL5_TAIL == #%04X && roadb_end <= ROLL5_TAIL && SB >= #%04X"
+             % (ROLL5_TAIL, ROLL5_END),
+             "    ASSERT hi(lane_hs) == hi(RA_P2L) && hi(lane_dl) == hi(RA_P2H)",
+             "    ASSERT hi(lane_dh) == hi(RA_P4L) && rd_s5_4 >= #%04X"
+             % max(a + ln for a, ln in runs[:-1])]
+    for n, ps in enumerate(roll5):
+        lines += ["", "    BANK"]
+        for a, dest, code in ps:
+            room = next(ln for b, ln in runs if b <= a < b + ln) - (
+                a - next(b for b, ln in runs if b <= a < b + ln))
+            lines += ["    ORG #%04X" % a] + code + ["    ASSERT $ <= #%04X" % (a + room)]
+        lines.append('    SAVE "build/roll5_%d.raw",#4000,#4000' % n)
+    return lines
+
+
+def roadbn_asm(ncars):
+    """gen/roadbn.asm (src/pack.asm): ROADB0.BIN-ROADB3.BIN, bank 5 - main.asm's
+    build/roadb.raw but in the room for the views rolling over, the car's
+    build/roll5_<n>.raw there; and each as it is (build/roadb<n>.raw, which
+    tools/zx0check.py checks the packed one against)."""
+    runs = roll5_runs()
+    segs, at = [], 0x4000
+    for a, ln in runs:
+        if a > at:
+            segs.append(("roadb", at, a - at))
+        segs.append(("roll", a, ln))
+        at = a + ln
+
+    def incbins(n):
+        return ['    INCBIN "../../build/%s.raw",#%04X,#%04X'
+                % ("roadb" if f == "roadb" else "roll5_%d" % n, a - 0x4000, ln)
+                for f, a, ln in segs]
+    lines = [";; Generated by tools/mkbush.py - do not edit.",
+             ";; ROADB0.BIN-ROADB3.BIN (src/pack.asm): bank 5, a file a car - its",
+             ";; views rolling over in the bank's room for them (tools/mkbush.py",
+             ";; roll_place). The loader loads the picked car's."]
+    for n in range(ncars):
+        lines += ["", "    BANK", "    ORG #4000", "roadb%d_raw" % n] + incbins(n) + [
+            "roadb%d_raw_end" % n,
+            '    SAVE "build/roadb%d.raw",#4000,roadb%d_raw_end-#4000' % (n, n),
+            "", "    BANK", "    ORG PACK_LOW", "roadb%d_pk" % n, "    defw #4000", "    LZX0"]
+        lines += incbins(n) + [
+            "    LZCLOSE", "roadb%d_pk_end" % n,
+            '    SAVE "ROADB%d.BIN",roadb%d_pk,roadb%d_pk_end-roadb%d_pk,DSK,'
+            '"build/countryride.dsk"' % (n, n, n, n),
+            '    SAVE "build/roadb%d.pk",roadb%d_pk,roadb%d_pk_end-roadb%d_pk' % (n, n, n, n)]
+    return lines
+
+
 def main():
     nspr = len(G.BUSH_H)
     assert nspr <= 16                   # the directory's columns
@@ -813,20 +958,25 @@ def main():
     # fragments if page 1 has no room for all)
     # every car's views (the first's is BOOT.BIN's), and where each view's
     # first line's run ends in buffer 0
-    allcars, ends = [], []
+    allcars, allroll, ends = [], [], []
+    rolls = range(S.ROLL_VIEW, S.ROLL_VIEW + S.ROLL_FRAMES)
     for c in range(len(S.CARS)):
         S.set_car(c)
         allcars.append([car_code(S.car_runs(v), S.CAR_Y, S.CAR_X // 2)
                         for v in range(S.CAR_VIEWS)])
+        allroll.append([car_code(S.car_runs(v), S.CAR_Y + S.view_y(v), S.CAR_X // 2)
+                        for v in rolls])
         e = []
-        for v in range(S.CAR_VIEWS):
+        for v in list(range(S.CAR_VIEWS)) + list(rolls):
             y, (a0, d0) = next((y, r) for y, r in enumerate(S.car_runs(v)) if r[1])
-            e.append(line_addr(S.CAR_Y + y) + S.CAR_X // 2 + a0 + len(d0))
+            e.append(line_addr(S.CAR_Y + S.view_y(v) + y) + S.CAR_X // 2 + a0 + len(d0))
         ends.append(e)
     S.set_car(0)
     # the views on hills: CARn.BIN only (above), the first car's too
     assert bush_top() >= SOUND_LINES[1], bush_top()
     hill_pieces, hill_starts, hill_used, hill_left = runs_slots(allcars, range(3, S.CAR_VIEWS))
+    # rolling over: bank 5 (ROADBn.BIN) and the hidden lines (CARn.BIN)
+    roll5, roll_hidden, roll_entries, roll_used, hill_left = roll_place(allroll, hill_left)
 
     def build(ks):
         ch = Chunks()
@@ -967,8 +1117,9 @@ def main():
         r[1] -= len(data)
     traf_hidden = [(r[0], "#%04X" % r[0], r[2]) for r in hidden if r[2]]
     traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden))
-    pieces = [a + b + c for a, b, c in zip(pieces, p2, hill_pieces)]
-    view_code = ["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
+    pieces = [a + b + c + d for a, b, c, d in zip(pieces, p2, hill_pieces, roll_hidden)]
+    view_code = (["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
+                 + ["#%04X" % a for a in roll_entries])
 
     lines = [";; Generated by tools/mkbush.py - do not edit.",
              ";; The bush sprites as code (see mkbush.py), and what else does not fit",
@@ -1107,15 +1258,22 @@ def main():
     emit("SPIN_VIEW     EQU %d   ; car_view: spun left in a crash, then right" % S.SPIN_VIEW)
     emit("SPIN_OFF      EQU %d  ; ... seen so at most this far from the middle"
          % S.SPIN_OFF)
+    emit("ROLL_VIEW     EQU %d   ; car_view: rolling over, %d frames (jump.asm)"
+         % (S.ROLL_VIEW, S.ROLL_FRAMES))
+    emit("ROLL_FRAMES   EQU %d" % S.ROLL_FRAMES)
+    emit("ROLL_ABOVE    EQU %d    ; ... its lines this far above CAR_Y at most"
+         % S.ROLL_ABOVE)
     emit(";; per car_view (on the level, uphill, downhill; each straight, turning")
-    emit(";; left, turning right; spun left, right): where its first line's run")
-    emit(";; ends in buffer 0, and its code - the first car's; boot.asm copies the")
-    emit(";; picked one's over it (CARn.BIN, which alone has the views on hills and")
-    emit(";; spun: here the level's, and turning)")
+    emit(";; left, turning right; spun left, right; rolling over): where its first")
+    emit(";; line's run ends in buffer 0, and its code - the first car's; boot.asm")
+    emit(";; copies the picked one's over it (CARn.BIN, which alone has the views")
+    emit(";; on hills, spun and rolling: here the level's, and turning, and")
+    emit(";; straight)")
     emit("car_views")
-    for v in range(S.CAR_VIEWS):
-        lv = v % 3 if v < S.SPIN_VIEW else 1 + v - S.SPIN_VIEW     # (spun:
-        emit("    defw #%04X,car_code%d" % (ends[0][lv], lv))      # turning)
+    for v in range(S.ROLL_VIEW + S.ROLL_FRAMES):
+        lv = (v % 3 if v < S.SPIN_VIEW else 1 + v - S.SPIN_VIEW if v < S.ROLL_VIEW
+              else 0)                           # (spun: turning; rolling: straight)
+        emit("    defw #%04X,car_code%d" % (ends[0][lv], lv))
     emit("car_id        defb 0   ; the car picked, 0-3 (CARn.BIN; tools/run.py)")
     emit("")
     emit(";; per curve level 0..CURVE_K: its centre table")
@@ -1179,11 +1337,18 @@ def main():
     open(os.path.join(ROOT, "src", "gen", "blinks.asm"), "w").write("\n".join(blinks) + "\n")
     open(os.path.join(ROOT, "src", "gen", "cars.asm"), "w").write(
         "\n".join(cars_asm(pieces, ends, view_code, traf_hidden)) + "\n")
+    open(os.path.join(ROOT, "src", "gen", "roll5.asm"), "w").write(
+        "\n".join(roll5_asm(roll5)) + "\n")
+    open(os.path.join(ROOT, "src", "gen", "roadbn.asm"), "w").write(
+        "\n".join(roadbn_asm(len(roll5))) + "\n")
     print("bushes: %d on the track, %d sprites, code for %d (%d bytes left in page 1);"
           " %d bytes of fragments %d-%d left, and %d where the car turning right is"
           % (len(S.BUSHES), nspr, len(codes), ch.free(),
              sp.free(), FRAG_FIRST, FRAG_FIRST + FRAG_COUNT - 1, fc.spare))
     print("  the cars' views on hills: %d of %d bytes" % (hill_used, sum(ln for a, ln in HILL_RUNS)))
+    print("  rolling over: bank 5 %s of %d bytes, the hidden lines %s"
+          % ("/".join(str(a) for a, b in roll_used), sum(ln for a, ln in roll5_runs()),
+             "/".join(str(b) for a, b in roll_used)))
     print("  the traffic's pieces in the fragments: %d bytes, %d left there; in the "
           "hidden lines (CARn.BIN): %d bytes, %d left there"
           % (traf_used, sum(r[1] for r in runs), traf_hidden_used, sum(r[1] for r in hidden)))

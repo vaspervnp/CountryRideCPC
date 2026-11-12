@@ -187,7 +187,7 @@ A car with a flashing indicator is moving over to the next lane on that side. Yo
 
 ### Bushes, trees and signs
 
-Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds the car spins out of your control and comes to a standstill. It is then brought back to the middle of the road, and you drive off from a standstill. Hit one at four fifths of your top speed or more, and the car is thrown up into the air as well.
+Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds the car spins out of your control and comes to a standstill. It is then brought back to the middle of the road, and you drive off from a standstill. Hit one at three quarters of your top speed or more, and the car is thrown up into the air and rolls over before it comes down.
 
 ## Tips
 

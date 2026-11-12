@@ -447,7 +447,13 @@ bush_latR1   ; lateral class 1, right, per row: bytes from the road's centre (si
     defb #2F,#30,#31,#32,#33,#34,#35,#36,#37,#38,#39,#3A,#3B,#3C,#3D,#3E
     defb #3F,#40,#41,#42,#43,#44,#45,#46,#47,#48,#49,#49,#4A,#4B,#4C,#4D
     defb #4E,#4F,#50,#51,#52
-    defs 43,0
+    defs 31,0
+tr_s1_closed
+    ld ix,#C0C0
+    ld sp,hl
+    call tr_st1
+    ld b,e
+    jp tr_s1_closed_c1
 bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#FA,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F1
     defb #F0,#EF,#EE,#ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E5,#E4,#E3,#E2,#E1
@@ -455,7 +461,31 @@ bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (sig
     defb #D1,#D0,#CF,#CE,#CD,#CC,#CB,#CA,#C9,#C8,#C7,#C6,#C5,#C4,#C3,#C2
     defb #C1,#C0,#BF,#BE,#BD,#BC,#BB,#BA,#B9,#B8,#B7,#B7,#B6,#B5,#B4,#B3
     defb #B2,#B1,#B0,#AF,#AE
-    defs 43,0
+tr_s1_closed_c1
+    ld c,#C0
+    push bc
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    push iy
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st0
+    push iy
+    push ix
+    jp tr_s1_closed_c2
+    defs 1,0
 bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#04,#05,#07,#08,#09,#0A,#0B,#0C,#0D,#0E,#0F,#10,#12
     defb #13,#14,#15,#16,#17,#18,#19,#1A,#1C,#1D,#1E,#1F,#20,#21,#22,#23
@@ -463,9 +493,141 @@ bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (si
     defb #36,#37,#38,#39,#3A,#3C,#3D,#3E,#3F,#40,#41,#42,#43,#44,#45,#47
     defb #48,#49,#4A,#4B,#4C,#4D,#4E,#4F,#51,#52,#53,#54,#55,#56,#57,#58
     defb #59,#5A,#5C,#5D,#5E
+tr_s1_closed_c2
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st1
+    push iy
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st1
+    push de
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    ld c,e
+    ld b,#C0
+    jp tr_s1_closed_c3
     ASSERT $ <= #A000
     ORG #A540,FRAG_ST12
-    defs 192,0
+tr_s1_closed_c3
+    push bc
+    push de
+    ld sp,hl
+    push iy
+    push iy
+    push iy
+    push iy
+    push iy
+    push iy
+    jp tr_done
+tr_s2_closed
+    ld ix,#C0C0
+    ld sp,hl
+    call tr_st1
+    push ix
+    push ix
+    ld sp,hl
+    call tr_st0
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    ld c,iyl
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st1
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    push iy
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st1
+    push iy
+    ld b,iyl
+    ld c,#C0
+    push bc
+    ld c,iyl
+    ld b,#C0
+    push bc
+    push iy
+    ld sp,hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    jp tr_done
+tr_s6_closed
+    ld ix,#C0C0
+    ld sp,hl
+    ld bc,#0801
+    add hl,bc
+    bit 6,h
+    call nz,tr_next_row
+    push ix
+    ld sp,hl
+    call tr_st0
+    ld b,iyl
+    ld c,#C0
+    push bc
+    ld c,iyl
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    push de
+    push de
+    ld de,(tr_cw2)
+    ld iy,(tr_cw2+2)
+    ld sp,hl
+    call tr_st0
+    push iy
+    push iy
+    ld sp,hl
+    call tr_st0
+    push de
+    push de
+    ld sp,hl
+    call tr_st0
+    push ix
+    push ix
+    ld sp,hl
+    ld bc,#D4C0
+    push bc
+    ld bc,#C0E8
+    push bc
+    jp tr_done
+tr_s7_closed
+    ld sp,hl
+    jp tr_s7_closed_c4
+    defs 1,0
 bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F0,#EE
     defb #ED,#EC,#EB,#EA,#E9,#E8,#E7,#E6,#E4,#E3,#E2,#E1,#E0,#DF,#DE,#DD
@@ -473,7 +635,27 @@ bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (sig
     defb #CA,#C9,#C8,#C7,#C6,#C4,#C3,#C2,#C1,#C0,#BF,#BE,#BD,#BC,#BB,#B9
     defb #B8,#B7,#B6,#B5,#B4,#B3,#B2,#B1,#AF,#AE,#AD,#AC,#AB,#AA,#A9,#A8
     defb #A7,#A6,#A4,#A3,#A2
-    defs 43,0
+tr_s7_closed_c4
+    ld bc,#0800
+    add hl,bc
+    bit 6,h
+    call nz,tr_next_row
+    ld bc,#C0C0
+    push bc
+    ld sp,hl
+    ld bc,#0801
+    add hl,bc
+    bit 6,h
+    call nz,tr_next_row
+    push iy
+    ld de,(tr_cw2)
+    ld iy,(tr_cw2+2)
+    ld sp,hl
+    call tr_st0
+    push de
+    push de
+    ld sp,hl
+    jp tr_s7_closed_c5
 bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#04,#05,#06,#07,#09,#0A,#0B,#0C,#0E,#0F,#10,#12,#13,#14
     defb #15,#17,#18,#19,#1B,#1C,#1D,#1E,#20,#21,#22,#23,#25,#26,#27,#29
@@ -481,7 +663,15 @@ bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (si
     defb #3E,#40,#41,#42,#43,#45,#46,#47,#49,#4A,#4B,#4C,#4E,#4F,#50,#51
     defb #53,#54,#55,#57,#58,#59,#5A,#5C,#5D,#5E,#60,#61,#62,#63,#65,#66
     defb #67,#68,#6A,#6B,#6C
-    defs 43,0
+tr_s7_closed_c5
+    call tr_stm1
+    push iy
+    push iy
+    ld sp,hl
+    ld bc,#C0C0
+    push bc
+    jp tr_done
+    defs 28,0
 bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FC,#FB,#FA,#F9,#F7,#F6,#F5,#F4,#F2,#F1,#F0,#EE,#ED,#EC
     defb #EB,#E9,#E8,#E7,#E5,#E4,#E3,#E2,#E0,#DF,#DE,#DD,#DB,#DA,#D9,#D7

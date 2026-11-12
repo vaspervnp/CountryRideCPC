@@ -454,8 +454,9 @@ STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
 STEP_LATE   EQU 8               ; ... and no road_x step
 HILL_PITCH  EQU 20              ; the hill, either way, from which the car
                                 ; is seen uphill or downhill (car_lines)
-CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
-                                ; screen, road_x - car_x
+CAR_LEAD    EQU 8               ; pairs it may be from the middle of the
+                                ; screen, road_x - car_x (16 till 2026-11-12:
+                                ; the user wanted it nearer the middle)
 CAR_STEER_K EQU 103             ; (the first car's; car_setup: each its own)
 CAR_PUSH_M  EQU 99
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with

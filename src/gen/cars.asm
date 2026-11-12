@@ -16,7 +16,7 @@ car0_blob
 car0_diff
     defb DIFF_ROWS                   ; (MEDIUM: the loader's, CAR_DIFF)
     ASSERT car0_diff == CAR_DIFF
-    defw car_views,44
+    defw car_views,68
     defw #83F5,car_code0
     defw #83F3,car_code1
     defw #83F5,car_code2
@@ -28,6 +28,12 @@ car0_diff
     defw #8BF3,#F793
     defw #83F5,#F9B1
     defw #83F5,#FC7F
+    defw #8B8F,#8008
+    defw #AB31,#8010
+    defw #B334,#8018
+    defw #B32E,#8020
+    defw #AB33,#8028
+    defw #8B93,#8030
     defw car_id,1
     defb 0
     defw acc_tab,2*ACC_N              ; (its acceleration: gen/drive.asm)
@@ -3634,6 +3640,89 @@ car0_view10
     jp bush_spr_done
 car0_p26_end
     ORG car0_p26_ph+car0_p26_end-car0_p26
+    defw #8000,car0_p27_end-car0_p27
+car0_p27_ph
+    ORG #8000,car0_p27_ph
+car0_p27
+car0_roll_done                  ; (RAM_C1 again, for bush.asm)
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    jp bush_spr_done
+car0_roll0_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6500
+car0_roll1_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #67A4
+car0_roll2_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6A62
+car0_roll3_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6D49
+car0_roll4_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #702F
+car0_roll5_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #7DC6
+    ASSERT car0_roll5_go+8 == #8038
+car0_p27_end
+    ORG car0_p27_ph+car0_p27_end-car0_p27
+    defw #8038,car0_p28_end-car0_p28
+car0_p28_ph
+    ORG #8038,car0_p28_ph
+car0_p28
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push iy
+    push bc
+    ld hl,#C867
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push iy
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#002F
+    push hl
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#0803
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    jp car0_roll_done
+car0_p28_end
+    ORG car0_p28_ph+car0_p28_end-car0_p28
 car0_pad
     IF car0_pad+5 <= #3060
     defw car0_pad+4,#3060-car0_pad-4
@@ -3646,10 +3735,10 @@ car0_pad
     ENDIF
 car0_traffic
     ASSERT car0_traffic >= #3060   ; (read before they go there)
-    defw #A800,car0_p27_end-car0_p27
-car0_p27_ph
-    ORG #A800,car0_p27_ph
-car0_p27
+    defw #A800,car0_p29_end-car0_p29
+car0_p29_ph
+    ORG #A800,car0_p29_ph
+car0_p29
 prop_dead4   ; dead, size 4: 13 lines
     defb #02,#05,#05,#0D,#12,#FC,#02,#92,#FC,#01,#91,#FC,#02,#11,#FC,#91
     defb #FC,#01,#92,#FC,#01,#A1,#FC,#FC,#01,#A2,#FC,#FC
@@ -3661,12 +3750,12 @@ prop_limit4   ; limit, size 4: 13 lines
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
 prop_palm2   ; palm, size 2: 13 lines
     defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car0_p27_end
-    ORG car0_p27_ph+car0_p27_end-car0_p27
-    defw #B000,car0_p28_end-car0_p28
-car0_p28_ph
-    ORG #B000,car0_p28_ph
-car0_p28
+car0_p29_end
+    ORG car0_p29_ph+car0_p29_end-car0_p29
+    defw #B000,car0_p30_end-car0_p30
+car0_p30_ph
+    ORG #B000,car0_p30_ph
+car0_p30
 prop_curve3   ; curve, size 3: 8 lines
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
@@ -3682,12 +3771,12 @@ prop_palm1   ; palm, size 1: 10 lines
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
 prop_dead1   ; dead, size 1: 6 lines
     defb #01,#03,#06,#06,#11,#FC
-car0_p28_end
-    ORG car0_p28_ph+car0_p28_end-car0_p28
-    defw #B800,car0_p29_end-car0_p29
-car0_p29_ph
-    ORG #B800,car0_p29_ph
-car0_p29
+car0_p30_end
+    ORG car0_p30_ph+car0_p30_end-car0_p30
+    defw #B800,car0_p31_end-car0_p31
+car0_p31_ph
+    ORG #B800,car0_p31_ph
+car0_p31
 prop_stump2   ; stump, size 2: 7 lines
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
 prop_curve1   ; curve, size 1: 5 lines
@@ -3708,30 +3797,30 @@ prop_limit1   ; limit, size 1: 6 lines
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
 prop_dead2   ; dead, size 2: 8 lines
     defb #02,#04,#08,#08,#12,#FC
-car0_p29_end
-    ORG car0_p29_ph+car0_p29_end-car0_p29
-    defw #0000,car0_p30_end-car0_p30
-car0_p30_ph
-    ORG #0000,car0_p30_ph
-car0_p30
+car0_p31_end
+    ORG car0_p31_ph+car0_p31_end-car0_p31
+    defw #0000,car0_p32_end-car0_p32
+car0_p32_ph
+    ORG #0000,car0_p32_ph
+car0_p32
 prop_curve_r5   ; curve_r, size 5: 13 lines
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
 prop_stump3   ; stump, size 3: 9 lines
     defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
     defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
-car0_p30_end
-    ORG car0_p30_ph+car0_p30_end-car0_p30
-    defw #2800,car0_p31_end-car0_p31
-car0_p31_ph
-    ORG #2800,car0_p31_ph
-car0_p31
+car0_p32_end
+    ORG car0_p32_ph+car0_p32_end-car0_p32
+    defw #2800,car0_p33_end-car0_p33
+car0_p33_ph
+    ORG #2800,car0_p33_ph
+car0_p33
 prop_limit2   ; limit, size 2: 8 lines
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
 prop_dead3   ; dead, size 3: 10 lines
     defb #02,#04,#0A,#0A,#12,#FC
-car0_p31_end
-    ORG car0_p31_ph+car0_p31_end-car0_p31
+car0_p33_end
+    ORG car0_p33_ph+car0_p33_end-car0_p33
     defw #FFFF
 car0_blob_end
     ASSERT car0_blob_end <= FRAG7   ; (in place before boot_car)
@@ -3745,7 +3834,7 @@ car1_blob
 car1_diff
     defb DIFF_ROWS                   ; (MEDIUM: the loader's, CAR_DIFF)
     ASSERT car1_diff == CAR_DIFF
-    defw car_views,44
+    defw car_views,68
     defw #83F5,car_code0
     defw #83F3,car_code1
     defw #83F5,car_code2
@@ -3757,6 +3846,12 @@ car1_diff
     defw #8BF3,#F793
     defw #83F5,#F9B1
     defw #83F5,#FC7F
+    defw #8B8F,#8008
+    defw #AB31,#8010
+    defw #B334,#8018
+    defw #B32E,#8020
+    defw #AB33,#8028
+    defw #8B93,#8030
     defw car_id,1
     defb 1
     defw acc_tab,2*ACC_N              ; (its acceleration: gen/drive.asm)
@@ -7377,6 +7472,41 @@ car1_view10
     jp bush_spr_done
 car1_p26_end
     ORG car1_p26_ph+car1_p26_end-car1_p26
+    defw #8000,car1_p27_end-car1_p27
+car1_p27_ph
+    ORG #8000,car1_p27_ph
+car1_p27
+car1_roll_done                  ; (RAM_C1 again, for bush.asm)
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    jp bush_spr_done
+car1_roll0_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6500
+car1_roll1_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #67A4
+car1_roll2_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6A3E
+car1_roll3_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6D00
+car1_roll4_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6F95
+car1_roll5_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #7D39
+    ASSERT car1_roll5_go+8 == #8038
+car1_p27_end
+    ORG car1_p27_ph+car1_p27_end-car1_p27
 car1_pad
     IF car1_pad+5 <= #3060
     defw car1_pad+4,#3060-car1_pad-4
@@ -7389,10 +7519,10 @@ car1_pad
     ENDIF
 car1_traffic
     ASSERT car1_traffic >= #3060   ; (read before they go there)
-    defw #A800,car1_p27_end-car1_p27
-car1_p27_ph
-    ORG #A800,car1_p27_ph
-car1_p27
+    defw #A800,car1_p28_end-car1_p28
+car1_p28_ph
+    ORG #A800,car1_p28_ph
+car1_p28
     defb #02,#05,#05,#0D,#12,#FC,#02,#92,#FC,#01,#91,#FC,#02,#11,#FC,#91
     defb #FC,#01,#92,#FC,#01,#A1,#FC,#FC,#01,#A2,#FC,#FC
     defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
@@ -7400,12 +7530,12 @@ car1_p27
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car1_p27_end
-    ORG car1_p27_ph+car1_p27_end-car1_p27
-    defw #B000,car1_p28_end-car1_p28
-car1_p28_ph
-    ORG #B000,car1_p28_ph
-car1_p28
+car1_p28_end
+    ORG car1_p28_ph+car1_p28_end-car1_p28
+    defw #B000,car1_p29_end-car1_p29
+car1_p29_ph
+    ORG #B000,car1_p29_ph
+car1_p29
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
@@ -7415,12 +7545,12 @@ car1_p28
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #01,#03,#06,#06,#11,#FC
-car1_p28_end
-    ORG car1_p28_ph+car1_p28_end-car1_p28
-    defw #B800,car1_p29_end-car1_p29
-car1_p29_ph
-    ORG #B800,car1_p29_ph
-car1_p29
+car1_p29_end
+    ORG car1_p29_ph+car1_p29_end-car1_p29
+    defw #B800,car1_p30_end-car1_p30
+car1_p30_ph
+    ORG #B800,car1_p30_ph
+car1_p30
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
@@ -7431,26 +7561,26 @@ car1_p29
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #02,#04,#08,#08,#12,#FC
-car1_p29_end
-    ORG car1_p29_ph+car1_p29_end-car1_p29
-    defw #0000,car1_p30_end-car1_p30
-car1_p30_ph
-    ORG #0000,car1_p30_ph
-car1_p30
+car1_p30_end
+    ORG car1_p30_ph+car1_p30_end-car1_p30
+    defw #0000,car1_p31_end-car1_p31
+car1_p31_ph
+    ORG #0000,car1_p31_ph
+car1_p31
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
     defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
     defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
-car1_p30_end
-    ORG car1_p30_ph+car1_p30_end-car1_p30
-    defw #2800,car1_p31_end-car1_p31
-car1_p31_ph
-    ORG #2800,car1_p31_ph
-car1_p31
-    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
-    defb #02,#04,#0A,#0A,#12,#FC
 car1_p31_end
     ORG car1_p31_ph+car1_p31_end-car1_p31
+    defw #2800,car1_p32_end-car1_p32
+car1_p32_ph
+    ORG #2800,car1_p32_ph
+car1_p32
+    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+    defb #02,#04,#0A,#0A,#12,#FC
+car1_p32_end
+    ORG car1_p32_ph+car1_p32_end-car1_p32
     defw #FFFF
 car1_blob_end
     ASSERT car1_blob_end <= FRAG7   ; (in place before boot_car)
@@ -7464,7 +7594,7 @@ car2_blob
 car2_diff
     defb DIFF_ROWS                   ; (MEDIUM: the loader's, CAR_DIFF)
     ASSERT car2_diff == CAR_DIFF
-    defw car_views,44
+    defw car_views,68
     defw #83F5,car_code0
     defw #83F3,car_code1
     defw #83F5,car_code2
@@ -7476,6 +7606,12 @@ car2_diff
     defw #93F5,#F793
     defw #83F3,#F9B1
     defw #83F5,#FC7F
+    defw #8B8F,#8008
+    defw #B332,#8010
+    defw #B333,#8018
+    defw #B32F,#8020
+    defw #B334,#8028
+    defw #8B93,#8030
     defw car_id,1
     defb 2
     defw acc_tab,2*ACC_N              ; (its acceleration: gen/drive.asm)
@@ -11142,6 +11278,86 @@ car2_view10
     jp bush_spr_done
 car2_p27_end
     ORG car2_p27_ph+car2_p27_end-car2_p27
+    defw #8000,car2_p28_end-car2_p28
+car2_p28_ph
+    ORG #8000,car2_p28_ph
+car2_p28
+car2_roll_done                  ; (RAM_C1 again, for bush.asm)
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    jp bush_spr_done
+car2_roll0_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6500
+car2_roll1_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #67C0
+car2_roll2_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6A6D
+car2_roll3_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6D4C
+car2_roll4_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #702B
+car2_roll5_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #7DAD
+    ASSERT car2_roll5_go+8 == #8038
+car2_p28_end
+    ORG car2_p28_ph+car2_p28_end-car2_p28
+    defw #8038,car2_p29_end-car2_p29
+car2_p29_ph
+    ORG #8038,car2_p29_ph
+car2_p29
+    ld hl,#8ACF
+    push hl
+    ld hl,#0807
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#009F
+    push hl
+    ld hl,#339B
+    push hl
+    ld hl,#C864
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#379B
+    push hl
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#00CF
+    push hl
+    ld hl,#0803
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    jp car2_roll_done
+car2_p29_end
+    ORG car2_p29_ph+car2_p29_end-car2_p29
 car2_pad
     IF car2_pad+5 <= #3060
     defw car2_pad+4,#3060-car2_pad-4
@@ -11154,10 +11370,10 @@ car2_pad
     ENDIF
 car2_traffic
     ASSERT car2_traffic >= #3060   ; (read before they go there)
-    defw #A800,car2_p28_end-car2_p28
-car2_p28_ph
-    ORG #A800,car2_p28_ph
-car2_p28
+    defw #A800,car2_p30_end-car2_p30
+car2_p30_ph
+    ORG #A800,car2_p30_ph
+car2_p30
     defb #02,#05,#05,#0D,#12,#FC,#02,#92,#FC,#01,#91,#FC,#02,#11,#FC,#91
     defb #FC,#01,#92,#FC,#01,#A1,#FC,#FC,#01,#A2,#FC,#FC
     defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
@@ -11165,12 +11381,12 @@ car2_p28
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car2_p28_end
-    ORG car2_p28_ph+car2_p28_end-car2_p28
-    defw #B000,car2_p29_end-car2_p29
-car2_p29_ph
-    ORG #B000,car2_p29_ph
-car2_p29
+car2_p30_end
+    ORG car2_p30_ph+car2_p30_end-car2_p30
+    defw #B000,car2_p31_end-car2_p31
+car2_p31_ph
+    ORG #B000,car2_p31_ph
+car2_p31
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
@@ -11180,12 +11396,12 @@ car2_p29
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #01,#03,#06,#06,#11,#FC
-car2_p29_end
-    ORG car2_p29_ph+car2_p29_end-car2_p29
-    defw #B800,car2_p30_end-car2_p30
-car2_p30_ph
-    ORG #B800,car2_p30_ph
-car2_p30
+car2_p31_end
+    ORG car2_p31_ph+car2_p31_end-car2_p31
+    defw #B800,car2_p32_end-car2_p32
+car2_p32_ph
+    ORG #B800,car2_p32_ph
+car2_p32
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
@@ -11196,26 +11412,26 @@ car2_p30
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #02,#04,#08,#08,#12,#FC
-car2_p30_end
-    ORG car2_p30_ph+car2_p30_end-car2_p30
-    defw #0000,car2_p31_end-car2_p31
-car2_p31_ph
-    ORG #0000,car2_p31_ph
-car2_p31
+car2_p32_end
+    ORG car2_p32_ph+car2_p32_end-car2_p32
+    defw #0000,car2_p33_end-car2_p33
+car2_p33_ph
+    ORG #0000,car2_p33_ph
+car2_p33
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
     defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
     defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
-car2_p31_end
-    ORG car2_p31_ph+car2_p31_end-car2_p31
-    defw #2800,car2_p32_end-car2_p32
-car2_p32_ph
-    ORG #2800,car2_p32_ph
-car2_p32
+car2_p33_end
+    ORG car2_p33_ph+car2_p33_end-car2_p33
+    defw #2800,car2_p34_end-car2_p34
+car2_p34_ph
+    ORG #2800,car2_p34_ph
+car2_p34
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
     defb #02,#04,#0A,#0A,#12,#FC
-car2_p32_end
-    ORG car2_p32_ph+car2_p32_end-car2_p32
+car2_p34_end
+    ORG car2_p34_ph+car2_p34_end-car2_p34
     defw #FFFF
 car2_blob_end
     ASSERT car2_blob_end <= FRAG7   ; (in place before boot_car)
@@ -11229,7 +11445,7 @@ car3_blob
 car3_diff
     defb DIFF_ROWS                   ; (MEDIUM: the loader's, CAR_DIFF)
     ASSERT car3_diff == CAR_DIFF
-    defw car_views,44
+    defw car_views,68
     defw #AB94,car_code0
     defw #AB96,car_code1
     defw #AB94,car_code2
@@ -11241,6 +11457,12 @@ car3_diff
     defw #A394,#F793
     defw #AB98,#F9B1
     defw #AB96,#FC7F
+    defw #8391,#8008
+    defw #BB31,#8010
+    defw #AB33,#8018
+    defw #AB2F,#8020
+    defw #BB35,#8028
+    defw #8393,#8030
     defw car_id,1
     defb 3
     defw acc_tab,2*ACC_N              ; (its acceleration: gen/drive.asm)
@@ -15396,6 +15618,151 @@ car3_view10
     jp bush_spr_done
 car3_p29_end
     ORG car3_p29_ph+car3_p29_end-car3_p29
+    defw #8000,car3_p30_end-car3_p30
+car3_p30_ph
+    ORG #8000,car3_p30_ph
+car3_p30
+car3_roll_done                  ; (RAM_C1 again, for bush.asm)
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    jp bush_spr_done
+car3_roll0_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6500
+car3_roll1_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #67B3
+car3_roll2_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6A81
+car3_roll3_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #6D7D
+car3_roll4_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #7075
+car3_roll5_go
+    ld bc,#7F00+RAM_C5
+    out (c),c
+    jp #7E09
+    ASSERT car3_roll5_go+8 == #8038
+car3_p30_end
+    ORG car3_p30_ph+car3_p30_end-car3_p30
+    defw #8038,car3_p31_end-car3_p31
+car3_p31_ph
+    ORG #8038,car3_p31_ph
+car3_p31
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#0020
+    push hl
+    push bc
+    push bc
+    ld hl,#3C30
+    push hl
+    ld hl,#080B
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#0038
+    push hl
+    push bc
+    push bc
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#0080
+    push hl
+    push iy
+    ld hl,#3C34
+    push hl
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#603C
+    push hl
+    ld h,#68
+    push hl
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#80C0
+    push hl
+    ld hl,#1A30
+    push hl
+    ld hl,#C867
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#809E
+    push hl
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#2034
+    push hl
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#0030
+    push hl
+    ld hl,#0804
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    jp #8800
+car3_p31_end
+    ORG car3_p31_ph+car3_p31_end-car3_p31
+    defw #8800,car3_p32_end-car3_p32
+car3_p32_ph
+    ORG #8800,car3_p32_ph
+car3_p32
+    di
+    push de
+    push de
+    jp car3_roll_done
+car3_p32_end
+    ORG car3_p32_ph+car3_p32_end-car3_p32
 car3_pad
     IF car3_pad+5 <= #3060
     defw car3_pad+4,#3060-car3_pad-4
@@ -15408,10 +15775,10 @@ car3_pad
     ENDIF
 car3_traffic
     ASSERT car3_traffic >= #3060   ; (read before they go there)
-    defw #A800,car3_p30_end-car3_p30
-car3_p30_ph
-    ORG #A800,car3_p30_ph
-car3_p30
+    defw #A800,car3_p33_end-car3_p33
+car3_p33_ph
+    ORG #A800,car3_p33_ph
+car3_p33
     defb #02,#05,#05,#0D,#12,#FC,#02,#92,#FC,#01,#91,#FC,#02,#11,#FC,#91
     defb #FC,#01,#92,#FC,#01,#A1,#FC,#FC,#01,#A2,#FC,#FC
     defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
@@ -15419,12 +15786,12 @@ car3_p30
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car3_p30_end
-    ORG car3_p30_ph+car3_p30_end-car3_p30
-    defw #B000,car3_p31_end-car3_p31
-car3_p31_ph
-    ORG #B000,car3_p31_ph
-car3_p31
+car3_p33_end
+    ORG car3_p33_ph+car3_p33_end-car3_p33
+    defw #B000,car3_p34_end-car3_p34
+car3_p34_ph
+    ORG #B000,car3_p34_ph
+car3_p34
     defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #11,#00,#01,#A0,#00,#00
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
@@ -15434,12 +15801,12 @@ car3_p31
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
     defb #01,#03,#06,#06,#11,#FC
-car3_p31_end
-    ORG car3_p31_ph+car3_p31_end-car3_p31
-    defw #B800,car3_p32_end-car3_p32
-car3_p32_ph
-    ORG #B800,car3_p32_ph
-car3_p32
+car3_p34_end
+    ORG car3_p34_ph+car3_p34_end-car3_p34
+    defw #B800,car3_p35_end-car3_p35
+car3_p35_ph
+    ORG #B800,car3_p35_ph
+car3_p35
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
@@ -15450,26 +15817,26 @@ car3_p32
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
     defb #02,#04,#08,#08,#12,#FC
-car3_p32_end
-    ORG car3_p32_ph+car3_p32_end-car3_p32
-    defw #0000,car3_p33_end-car3_p33
-car3_p33_ph
-    ORG #0000,car3_p33_ph
-car3_p33
+car3_p35_end
+    ORG car3_p35_ph+car3_p35_end-car3_p35
+    defw #0000,car3_p36_end-car3_p36
+car3_p36_ph
+    ORG #0000,car3_p36_ph
+car3_p36
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
     defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
     defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
-car3_p33_end
-    ORG car3_p33_ph+car3_p33_end-car3_p33
-    defw #2800,car3_p34_end-car3_p34
-car3_p34_ph
-    ORG #2800,car3_p34_ph
-car3_p34
+car3_p36_end
+    ORG car3_p36_ph+car3_p36_end-car3_p36
+    defw #2800,car3_p37_end-car3_p37
+car3_p37_ph
+    ORG #2800,car3_p37_ph
+car3_p37
     defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
     defb #02,#04,#0A,#0A,#12,#FC
-car3_p34_end
-    ORG car3_p34_ph+car3_p34_end-car3_p34
+car3_p37_end
+    ORG car3_p37_ph+car3_p37_end-car3_p37
     defw #FFFF
 car3_blob_end
     ASSERT car3_blob_end <= FRAG7   ; (in place before boot_car)

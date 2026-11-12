@@ -799,7 +799,7 @@ car_lines_off
     ld (car_vfull),a
 car_lines_seen
     call car_air                ; (in the air, all it needs: jump.asm)
-    ret nz
+    jr nz,car_roll              ; (... and perhaps rolling over)
     ld hl,drawn_off
     call buf_entry
     ld a,(hl)
@@ -827,6 +827,31 @@ car_lines_one
     ld (hl),a
     add hl,de
     djnz car_lines_one
+    ret
+
+;; ---------------------------------------------------------------------------
+;; car_roll - (car_lines) the car up in the air: its first 2 ROLL_FRAMES
+;; pictures (jump_t, which car_jump has moved on: 2 the first) it rolls
+;; over, a frame each two - rolled right, as it was shoved (coll_v
+;; negative), frame 0 on; rolled left, frame ROLL_FRAMES - 1 back: the
+;; same frames the other way round. Destroys AF, C.
+;; ---------------------------------------------------------------------------
+car_roll
+    ld a,(jump_t)
+    sub 2
+    cp 2*ROLL_FRAMES
+    ret nc                              ; (past it: upright, and spinning)
+    srl a                               ; the frame, rolled right
+    ld c,a
+    ld a,(coll_v+1)
+    rla
+    ld a,c
+    jr c,car_roll_set                   ; (shoved right)
+    cpl
+    add a,ROLL_FRAMES                   ; (... left: ROLL_FRAMES - 1 - it)
+car_roll_set
+    add a,ROLL_VIEW
+    ld (car_vfull),a
     ret
 
 ;; ---------------------------------------------------------------------------

@@ -741,8 +741,67 @@ def spin_render():
     return paths
 
 
+# ---------------------------------------------------------------------------
+# Rolling over, for a crash at speed (since 2026-11-12; sprites only so far:
+# tools/mkroll.py): the car on the level rolled about its long axis through
+# its middle - right, clockwise as the camera sees it - ROLL_FIRST degrees
+# and then every ROLL_STEP, ROLL_FRAMES views (none upright: that is the
+# straight view), the same camera, scale and light as the other views, in a
+# frame ROLL_LINES high round the same middle, its middle there, to
+# OUT_DIR/<car>_roll<k>.png. Rolling left is these mirrored. ROLL_KS picks
+# which (default all).
+# ---------------------------------------------------------------------------
+ROLL_FRAMES = 6
+ROLL_FIRST = 30.0
+ROLL_STEP = 60.0
+ROLL_LINES = 64
+ROLL_KS = globals().get("ROLL_KS", range(ROLL_FRAMES))
+
+
+def roll_render():
+    paths = []
+    os.makedirs(OUT_DIR, exist_ok=True)
+    sc = bpy.context.scene
+    for name in CARS:
+        clear()
+        car = MODELS[name]()
+        root = bpy.data.objects.new("Squash", None)
+        bpy.context.collection.objects.link(root)
+        root.scale = (1, 1, c3.SQUASH)
+        car.parent = root
+        cam = c3.camera()
+        sc.render.resolution_y = ROLL_LINES * c3.CELL_PX[1]   # (the scale as it was)
+        if PHOTO:
+            photoreal(PAINT[name])
+            photo_setup((math.radians(45), 0, 0))
+        else:
+            c3.setup()
+        ground = bpy.data.objects.get("ground")
+        if ground:                                  # (in the air)
+            bpy.data.objects.remove(ground)
+        bpy.context.view_layer.update()
+        inv = car.matrix_world.inverted()
+        pts = [inv @ (ob.matrix_world @ Vector(c)) for ob in car.children_recursive
+               if ob.type == "MESH" for c in ob.bound_box]
+        mid = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, car["length"] / 2,
+                      (min(p.z for p in pts) + max(p.z for p in pts)) / 2))
+        px_m = c3.CAR_CELLS * c3.CELL_PX[0] / 2.0
+        zf = (cam.location.z + cam.data.shift_y * sc.render.resolution_x / px_m) / c3.SQUASH
+        for k in ROLL_KS:
+            e = Euler((0, math.radians(ROLL_FIRST + k * ROLL_STEP), 0), "XYZ")
+            car.rotation_euler = e
+            car.location = Vector((0, mid.y, zf)) - e.to_matrix() @ mid
+            path = os.path.join(OUT_DIR, "%s_roll%d.png" % (name, k))
+            sc.render.filepath = path
+            bpy.ops.render.render(write_still=True)
+            paths.append(path)
+    return paths
+
+
 if globals().get("RUN", False):
     result = dict(paths=render())
+if globals().get("ROLL", False):
+    result = dict(paths=roll_render())
 if globals().get("SPIN", False):
     result = dict(paths=spin_render())
 if globals().get("SIDE", False):
