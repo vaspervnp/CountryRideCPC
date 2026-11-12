@@ -64,6 +64,8 @@ drawn_x     defb 0,0            ; ... and road_x
 curve_wait  defb 0              ; pictures before the curve level may move
 sky_turns   defb 0              ; not 0: the sky turns at this flip
 steer_x     defb 0              ; where the player wants road_x
+steer_way   defb 0              ; ... going that way: 1 left, negative right,
+                                ; 0 hardly moving (steer; cp_pend)
 car_x       defb 0              ; where the road is from the car, as road_x
                                 ; (road_x itself: the car in the middle)
 car_off     defb 0              ; the car's pairs right of the middle on the
@@ -663,6 +665,12 @@ steer_pushed
     ld a,(coll_t)
     or a
     call nz,coll_step
+    push hl                     ; where the road is going, half a pair a
+    ld de,128                   ; picture or more: steer_way 1 (left,
+    add hl,de                   ; steer_x up) or negative (right), else 0
+    ld a,h                      ; (cp_pend: whole steps that way)
+    ld (steer_way),a
+    pop hl
     ld a,(car_xf)
     add a,l
     ld (car_xf),a
@@ -957,6 +965,8 @@ steer_demo_x
     ld a,(road_x)               ; (the car in the middle, for when the
     ld (car_x),a                ; player takes over)
 steer_look                      ; the car turns the way the road is to go
+    xor a                       ; (steps no further than steer_x: cp_pend)
+    ld (steer_way),a
     ld a,(road_x)
     ld b,a
     ld a,(steer_x)

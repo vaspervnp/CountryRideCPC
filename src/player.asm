@@ -134,6 +134,20 @@ keys_now    defb 0              ; read_keys at the last picture (steer)
 ;; ---------------------------------------------------------------------------
 cp_turn
     ld e,a
+    ld a,(steer_way)            ; changing lanes (since 2026-11-12): the
+    or a                        ; step first - unless a level is under way,
+    jr z,cp_turn_lv             ; or the road is two levels or more behind
+    ld a,(pre_k)                ; the curve
+    or a
+    jr nz,cp_turn_lv
+    ld a,(curve)
+    ld hl,road_curve
+    sub (hl)
+    jp p,$+5
+    neg
+    cp 2
+    jr c,cp_turn_hill
+cp_turn_lv
     ld a,(rp_cmp)               ; a hill holds the level back?
     or a
     jr nz,cp_turn_hill
@@ -161,14 +175,35 @@ cp_turn_hill                    ; ... and a step is wanted: CF
 
 ;; ---------------------------------------------------------------------------
 ;; cp_pend - (cache_pre, cp_turn) A = the step road_x is to take towards
-;; steer_x: NZ - Z if none. step_even - A = how far road_x is to go: the
-;; step that takes it there, or as far as a step goes (STEP_MAX pairs either
-;; way) - an even number of pairs, road_x being even: none for a pair.
-;; Destroys B.
+;; steer_x: NZ - Z if none. While steer_x is going one way (steer_way), a
+;; whole step that way, as far as ROAD_X_MAX lets it, even before steer_x
+;; is there: worked out ahead, it goes once steer_x is (cache_ready) -
+;; else a lane change took half its steps as two pairs, when the work
+;; costs the same (since 2026-11-12: a lane change 20% quicker, the user's;
+;; the road no further for it). step_even - A = how far road_x is to go:
+;; the step that takes it there, or as far as a step goes (STEP_MAX pairs
+;; either way) - an even number of pairs, road_x being even: none for a
+;; pair. Destroys B.
 ;; ---------------------------------------------------------------------------
 STEP_MAX    EQU 4               ; pairs a step worked out ahead takes at most
                                 ; (one made there and then: two, cache_steps)
 cp_pend
+    ld a,(steer_way)
+    or a
+    jr z,cp_pend_to
+    ld b,STEP_MAX
+    jp p,$+5
+    ld b,-STEP_MAX
+    ld a,(road_x)
+    add a,b
+    jp p,$+5
+    neg
+    cp ROAD_X_MAX+1
+    ld a,b
+    jr nc,cp_pend_to
+    or a
+    ret
+cp_pend_to
     ld a,(road_x)
     ld b,a
     ld a,(steer_x)

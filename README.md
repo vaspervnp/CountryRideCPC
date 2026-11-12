@@ -853,7 +853,19 @@ picture on average with the wheel held either way (steps of 2 and 4
 pairs), and goes on ~6 pairs once the wheel is let go (scratchpad
 measurements: `CAR_LEAD` 4 gives 0.25 and 5, 16 gives 0.30 and 7). Till
 then the car moved across the screen at once, `road_x` - `car_x` pairs
-right of the middle (16 at most, 8 that day), the road following it. The road moves under it in perspective: `road_x` is how many
+right of the middle (16 at most, 8 that day), the road following it.
+
+A lane change (12 pairs) takes 1.25 s on average, 0.85 on a straight
+(since 2026-11-12, the user's: 20% quicker - 1.52 s before). What it waits
+for is the steps worked out ahead (`cache_pre`), in the time each picture
+leaves before the flip: a step costs as much as two pairs as four, and on
+a curve a new curve level dropped the step under way. So while `steer_x`
+is going one way, half a pair a picture or more (`steer_way`), `cp_pend`
+works out a whole step that way - it goes once `steer_x` is there, the road
+no further for it - and `cp_turn` puts the step first, unless a level is
+under way or the road is two levels behind the curve (it is 0.25 levels
+behind on average, 0.22 before). Of what did not help: the wheel 20%
+quicker 4%, the lead 12 pairs 2% more, two steps a level none. The road moves under it in perspective: `road_x` is how many
 pairs (4 pixels) right of the middle the road is on the bottom row, and a row of half-width *h* bytes moves `road_x`
 × 10*h*/256 bytes - the far road hardly moves, and the road turns about the
 horizon. `road_project` takes its templates from a set in each bank, the
