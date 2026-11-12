@@ -31,7 +31,8 @@ gi_end
 ;; as it is (its acceleration: CARn.BIN's acc_tab): its car_stats put into
 ;; the code that drives it - speed_player's most in each gear on the road,
 ;; the sand and the grass (sp_caps), the demo's top (it drives the same
-;; car), steer's steering and curve push factors. Destroys AF, BC, DE, HL.
+;; car), steer's steering and curve push factors, the speed a crash throws
+;; it up from (jump.asm jump_min). Destroys AF, BC, DE, HL.
 ;; ---------------------------------------------------------------------------
 car_setup
     ld a,(car_id)
@@ -61,6 +62,17 @@ car_setup
     call mul8
     call shr6
     ld (steer_full+1),hl
+    ld hl,(demo_max+1)                  ; a crash at 3/4 of its top or faster:
+    ld d,h                              ; thrown up, rolling over (jump.asm)
+    ld e,l
+    srl d
+    rr e
+    srl d
+    rr e
+    or a
+    sbc hl,de
+    call neg_hl
+    ld (jump_min+1),hl
     ret
     ASSERT CAR_STATS_LEN == 14
 

@@ -146,7 +146,7 @@ and one for its tail, out of fourteen: hundreds of different cars.
 Fire pressed while the demo drives, GET READY: the road ahead flattens
 out and straightens, the car brakes to a standstill in the third lane from
 the left, the count goes 3, 2, 1 in the gear's place, and GO! - the player
-drives, from a standstill. TIME starts at 53 seconds and counts down; TOTAL
+drives, from a standstill. TIME starts at 64 seconds and counts down; TOTAL
 TIME counts up. (Since 2026-11-07 every speed is half as much again as it
 was, and the times three quarters - the races take about three quarters
 of the time, as the bumps and the crashes take as long as they did: TIME
@@ -192,8 +192,9 @@ autopilot; a slower car has more about it: 1.2 to 2 for the TOURING),
 below).
 
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
-37 more seconds (EXTENDED TIME), 1 fewer at each next one, down to 27, and
-never over 99; then the next stage's number shows, and its colours are
+44 more seconds (EXTENDED TIME), 1 fewer at each next one, down to 32, and
+never over 99 (20% more since 2026-11-12, when a car hit at speed became a
+crash: 53 at the start, 37 down to 27); then the next stage's number shows, and its colours are
 there at once. Past the fifth, FINISH: the car brakes to a standstill on
 the straight that follows, and TOTAL TIME is the race's - FASTEST TIME!
 once it stands, if no race has been faster (the best times, below). At
@@ -451,7 +452,8 @@ was: the small font's letters as characters 240-249 (`SYMBOL`), with `TAG`
 at the graphics cursor, a letter at a time, each key in pen 15, each word in
 pen 3 (the credits' sky blue) and the one picked in 13. When the car is
 picked it stops the turning (`CALL &9C03`), inks the keys' line out, and
-loads the game over it: each of `ROADA.BIN`, `ROADB.BIN`, `ROADC.BIN` and
+loads the game over it: each of `ROADA.BIN`, `ROADBn.BIN` (the picked
+car's: bank 5 with its views rolling over, below), `ROADC.BIN` and
 `GAME.BIN` at `&4000` with its bank (4-7) switched in there, `SOUND.BIN` at
 `&98C0` and `RACE.BIN` at `&A0C0` - every file packed (below) - while the
 screen stays, the picked car's frame flashing; then it puts its `CARn.BIN`
@@ -592,6 +594,19 @@ room elsewhere. BOOT.BIN
 first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
+
+Each car's six views rolling over (since 2026-11-12, 3.25-3.47K a car) are
+most of them in bank 5, which the car's code runs with only there (`RAM_C5`):
+under each of its per group arrays but the first three (205 bytes each,
+under the other 13), and past the bank's code (`ROLL5_TAIL`, `#7D00`, to
+`SB`) - 3382 bytes nothing writes in a race. So bank 5's file is a car's
+too: `ROADB0.BIN`-`ROADB3.BIN`, each main.asm's bank 5 (`build/roadb.raw`)
+with that car's views in that room (`build/roll5_<n>.raw`, `gen/roll5.asm`)
+- `gen/roadbn.asm` in `src/pack.asm` puts each together, with `INCBIN`s
+of each in turn. What does not fit there (up to 142 bytes) goes in the
+hidden lines the views on hills leave in pages 0 and 2, with each view's
+way in (`RAM_C5`, then into bank 5) and `roll_done` (`RAM_C1` again, for
+`bush_spr_done`): `CARn.BIN`'s records (`tools/mkbush.py` `roll_place`).
 
 The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
@@ -827,12 +842,18 @@ middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8.
   speed 2.72 pairs a picture, 170% of Out Run's full lock (310% of ours). The push comes and
   goes, 0.21 pairs a picture each picture at most (Out Run: 5 units a loop).
 
-The two moves add up in `car_x` and its fraction `car_xf`
-(`steer` in `src/game.asm`). The car moves across the screen at once, and
-the road - the camera - follows
-it as fast as its steps go: the car is drawn `road_x` - `car_x` pairs right
-of the middle of the screen, 16 at most (`CAR_LEAD`; the road at most 16
-pairs behind). The road moves under it in perspective: `road_x` is how many
+The two moves add up in `steer_x`, where the road - the camera - is to
+go, and its fraction `car_xf` (`steer` in `src/game.asm`), at most 8 pairs
+from where the road is (`CAR_LEAD`), and the road follows as fast as its
+steps go. The car is always in the middle of the screen, the world moving
+under it (since 2026-11-12, the user's wish): it is where the road is,
+`car_x` = `road_x`, for the sand and the grass, the forks and the rumble,
+and it hits what it is drawn over. The road goes across 0.27 pairs a
+picture on average with the wheel held either way (steps of 2 and 4
+pairs), and goes on ~6 pairs once the wheel is let go (scratchpad
+measurements: `CAR_LEAD` 4 gives 0.25 and 5, 16 gives 0.30 and 7). Till
+then the car moved across the screen at once, `road_x` - `car_x` pairs
+right of the middle (16 at most, 8 that day), the road following it. The road moves under it in perspective: `road_x` is how many
 pairs (4 pixels) right of the middle the road is on the bottom row, and a row of half-width *h* bytes moves `road_x`
 × 10*h*/256 bytes - the far road hardly moves, and the road turns about the
 horizon. `road_project` takes its templates from a set in each bank, the
@@ -1176,13 +1197,15 @@ looks like, and `src/traffic.asm` has to match it.
   car is drawn that time; from 10, 6.7 ms, only a car at a near size: the
   nearer one, if it is at one, and neither if not (`tr_dropped`). A far car
   blinks; a near one never.
-- **Memory.** The pieces (2.4K) go where there is room in a RAM configuration
-  they can run in: bank 6 after the traffic's code and in the row tables'
-  pages past their rows (`src/gen/rowhole*.asm`), bank 4's last free bytes,
-  fragment 4, the fragments' free runs and, in every `CARn.BIN`, the road
-  parts' hidden lines - buffer 1's blocks 4-6 too, which boot has read by
-  the time it copies these there - all in bank 6 since 2026-11-05 (3.1K
-  of it left, and the row tables' holes). `src/trafglue.asm` (fragment 3) switches
+- **Memory.** The pieces (4.9K with the side views) go where there is room
+  in a RAM configuration they can run in: bank 6 after the traffic's code
+  (3.4K: all it has left - the figure is `REGIONS`' in
+  `tools/mktrafcode.py`, to be set again whenever bank 6's code grows) and
+  in the row tables' pages past their rows (`src/gen/rowhole*.asm`), bank
+  4's last free bytes, fragment 4, then (465 bytes) the fragments' free
+  runs and, in every `CARn.BIN`, the road parts' hidden lines - buffer 1's
+  blocks 4-6 too, which boot has read by the time it copies these there.
+  `src/trafglue.asm` (fragment 3) switches
   to a piece's bank and back. Banks 4 and 5 look free past their code in
   the binary but are not: they hold the cache's sets and the staging sets.
 
@@ -1225,24 +1248,45 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   picture not enough to hold it. HARD is slower still and throws it
   further (no more than 2 pairs a picture: the crash's 1.9 is what the
   road's steps have been measured with).
+- **A car at 3/4 of the top speed or faster: a crash too** (since
+  2026-11-12), as a bush's below - thrown up, rolling over.
 - **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
   it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
   of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
   VSYNC); then it is brought back to the middle of the road, 0.63 pairs a
-  picture (8 a step), and the player drives off again from a standstill.
+  picture (8 a step), and the player drives off again from a standstill:
+  there it waits till the car stands (since 2026-11-12: brought back
+  sooner, it drove off still rolling).
   The spin (`spin_views`) is a view each 2 pictures: turning, spun, spun,
   turning one way, then the other - first its nose swung towards the side
   that was hit, as the blow turns it. A spun view's box is wider (52 pixels, the white car's
   48; 60 and 64 till the cars were made narrower, 2026-11-07), so further than `SPIN_OFF` (16 pairs) from the middle it would run
   off the screen: there `car_lines` shows the car turning instead. Spun,
   the car is seen on the level whatever the slope.
-- **A bush at speed: thrown up.** At `JUMP_SPEED` (4/5 of the top speed)
-  or faster the crash throws the car up as it spins, a character row - 8
+- **A bush at speed: thrown up, rolling over.** At 3/4 of the car's top
+  speed or faster (`jump_min`, which `car_setup` works out from its top;
+  4/5 of the fastest's, `JUMP_SPEED`, till 2026-11-12) the crash throws
+  the car up, a character row - 8
   lines - at a time, as its views' code is made for its rows (`car_draw`
   starts it higher: `car_raise`): up to 5 rows, 40 lines (6, 48, until
   the car stood higher, 2026-11-05: a 6th row would reach the ground
   band), in 6 pictures,
   held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
+  rolling over on the way up and down, then spinning as the crash has it:
+  six frames (`tools/rollart.py`: rolled right 30, 90 ... 330 degrees, a
+  frame each 2 pictures, 12 pictures - `car_roll` in `src/bush.asm`, car_view
+  `ROLL_VIEW` on) the way it was shoved, rolling left the same frames
+  backwards (rolled left 30 degrees is rolled right 330). They are rendered
+  in Blender (`tools/cars3d.py`, `ROLL=True`) about the car's long axis
+  through its middle, squashed after as the other views, so on its side the
+  car is 31 lines, not 68; `tools/mkroll.py` brings them to the car's pens,
+  each line's run widened to whole pairs of bytes from any byte (not from
+  the car's pair grid) in the colours at its ends, not the asphalt's grey -
+  up in the air the grass can be under it. A frame's box is 32 pixels wide
+  and 31-32 lines, a character row higher than its render has it (so its
+  last line is the car's: it is only drawn up in the air) - `ROLL_ABOVE`, 6
+  lines over the car's top line, which `cj_mark` draws whole too and the
+  road's top keeps clear of; ~1.0 ms a frame, the spun views' 1.3-1.4 -
   its shadow on the road under it, three black lines, smaller the higher
   it is (40 pixels wide a row up, 24 five up: `SHADOW_W`, 26 bytes till
   2026-11-07, as the car narrower), and a thud as it comes down (`car_shadow`). Never higher than the
@@ -1723,7 +1767,7 @@ src/            the game
                 effects, the music on or off (RACE.BIN)
   race.asm      the pause, the best times, FASTEST TIME!, the start of a
                 race (RACE.BIN)
-  jump.asm      a crash at speed: the car thrown up (RACE.BIN)
+  jump.asm      a crash at speed: the car thrown up, rolling over (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -1741,11 +1785,12 @@ tools/
   car3d.py      the game's camera, curved shapes (lofts, arches,
                 fenders) for all the cars' models (Blender)
   cars3d.py     all four cars' models, rendered photorealistic in Blender:
-                nine views each from behind, one spun (SPIN), one from the
-                side -> assets/cars/
+                nine views each from behind, one spun (SPIN), six rolled
+                over (ROLL), one from the side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views in the game's pens, flat -> tools/carsart.py
+  mkroll.py     ... rolling over -> tools/rollart.py
   mkselect.py   the title and the screen the car is picked on, the cars
                 from their pictures
                 -> src/gen/select.scr
@@ -1784,9 +1829,6 @@ docs/           screenshots, the manuals (manual-en, manual-el: .md and .pdf)
 
 ## Next
 
-- a crash at full speed as the arcade's: the car flipping (it spins and
-  is thrown up now) - a flip's views would take 2-5K of code a car, where
-  ~600 bytes are left;
 - curves that come from the horizon (the whole road bends at one level
   now) - a level a row, which the cache, made a level at a time, does not
   allow;

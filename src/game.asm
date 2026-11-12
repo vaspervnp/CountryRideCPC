@@ -22,15 +22,17 @@ MODE_DEMO   EQU 0               ; the demo drives; fire starts a race
 MODE_READY  EQU 1               ; to a standstill at the start, the count
 MODE_RACE   EQU 2               ; the player races the clock
 MODE_OVER   EQU 3               ; time up: to a standstill, GAME OVER
-START_TIME  EQU 53              ; seconds on the clock at the start (the
+START_TIME  EQU 64              ; seconds on the clock at the start (the
                                 ; times 3/4 of what they were since the
                                 ; speeds are 1.5 times, 2026-11-07: the
-                                ; races take about 3/4 of the time)
+                                ; races take about 3/4 of the time; 20%
+                                ; more since 2026-11-12, a car hit at speed
+                                ; a crash: 53, 37, 27 before)
 START_X     EQU -6              ; road_x at the start: the car in the third
                                 ; lane from the left (lanes 12.5 pairs wide)
-EXT_FIRST   EQU 37              ; seconds the first checkpoint gives,
+EXT_FIRST   EQU 44              ; seconds the first checkpoint gives,
 EXT_DROP    EQU 1               ; ... each next one this many fewer,
-EXT_MIN     EQU 27              ; ... down to these
+EXT_MIN     EQU 32              ; ... down to these
 TIME_MAX    EQU 99
 COUNT_T     EQU 150             ; VSYNCs of the count, 3-2-1
 GO_T        EQU 50              ; ... GO! shown
@@ -52,8 +54,6 @@ stage       defb 0              ; the stage (0 ..; STAGES: the race finished)
 msg_next    defb 0              ; the message after this one (msg_t)
 cp_ext      defb EXT_FIRST      ; seconds the next checkpoint gives
 keys_was    defb 0              ; read_keys at the last picture (fire's press)
-car_free    defb 0              ; 1: the player steers, the car on the screen
-                                ; where car_x says (car_lines); 0: the middle
 
 ;; --- the car's state ----------------------------------------------------------
 speed       defw 0              ; depth units per VSYNC, 8.8
@@ -65,9 +65,9 @@ curve_wait  defb 0              ; pictures before the curve level may move
 sky_turns   defb 0              ; not 0: the sky turns at this flip
 steer_x     defb 0              ; where the player wants road_x
 car_x       defb 0              ; where the road is from the car, as road_x
-                                ; (the player's: road_x follows it)
+                                ; (road_x itself: the car in the middle)
 car_off     defb 0              ; the car's pairs right of the middle on the
-                                ; screen: road_x - car_x (car_lines)
+                                ; screen: 0 since 2026-11-12 (car_lines)
 drawn_off   defb 0,0            ; ... as each buffer last showed it
 car_view    defb 0              ; the car seen straight, turning left, right
 car_vfull   defb 0              ; ... and uphill (+3) or downhill (+6): the
@@ -434,9 +434,13 @@ cache_steps_gate
 ;; picture at most (push_levels: Out Run's pull for a bend of radius 45 x
 ;; 7 / L), as hard as Out Run's though the wheel is 55% its: at the top
 ;; speed the first car holds levels 1-2 at the full lock, 4 below ~180
-;; km/h, 7 below ~95. Both moves add up in car_x and its fraction car_xf. The car moves on the screen at once, and the road
-;; follows it as fast as its steps can (steer_x = car_x): the car is drawn
-;; road_x - car_x pairs right of the middle (car_lines), CAR_LEAD at most.
+;; km/h, 7 below ~95. Both moves add up in steer_x, where the road is to
+;; go, and its fraction car_xf, CAR_LEAD pairs at most from where it is; the
+;; road follows as fast as its steps can. The car is always in the middle
+;; of the screen (since 2026-11-12, the user's: the world moves under it -
+;; it was drawn road_x - car_x pairs right of the middle before, the road
+;; following it), so it is where the road is: car_x = road_x, for the sand
+;; and the grass, the forks, the rumble.
 ;; The car is seen turning while left or right is held (not both).
 ;;
 ;; Outside the race the demo steers: a new place every DEMO_HOLD pictures
@@ -454,8 +458,9 @@ STEPS_LATE  EQU 10              ; from this interrupt since the flip on, no
 STEP_LATE   EQU 8               ; ... and no road_x step
 HILL_PITCH  EQU 20              ; the hill, either way, from which the car
                                 ; is seen uphill or downhill (car_lines)
-CAR_LEAD    EQU 16              ; pairs it may be from the middle of the
-                                ; screen, road_x - car_x
+CAR_LEAD    EQU 8               ; pairs steer_x may be from road_x (the car
+                                ; was drawn that far from the middle of the
+                                ; screen till 2026-11-12, 16 before that day)
 CAR_STEER_K EQU 103             ; (the first car's; car_setup: each its own)
 CAR_PUSH_M  EQU 99
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
@@ -502,8 +507,6 @@ steer_tools
     or c
     ld (player),a
 steer_go
-    ld a,1
-    ld (car_free),a
     ld a,(coll_t)               ; a bump or a crash begins - not in one
     or a
     jr nz,steer_coll
@@ -663,17 +666,18 @@ steer_pushed
     ld a,(car_xf)
     add a,l
     ld (car_xf),a
-    ld a,(car_x)
+    ld a,(steer_x)
     adc a,h
-    ld hl,road_x                ; the car on, no further than CAR_LEAD from
-    sub (hl)                    ; where the road is nor ROAD_X_MAX from the
-    ld b,CAR_LEAD               ; middle; the road to follow it
-    call clamp_ab
-    add a,(hl)
+    ld hl,road_x                ; where the road is to go, no further than
+    sub (hl)                    ; CAR_LEAD from where it is nor ROAD_X_MAX
+    ld b,CAR_LEAD               ; from the middle - the road to follow it;
+    call clamp_ab               ; the car where the road is (in the middle
+    add a,(hl)                  ; of the screen: car_lines)
     ld b,ROAD_X_MAX
     call clamp_ab
-    ld (car_x),a
     ld (steer_x),a
+    ld a,(hl)
+    ld (car_x),a
     ret
 
 ;; ramp - HL = where to go, DE = where it is now: HL = moved towards it,
@@ -748,15 +752,22 @@ neg_hl
 ;; shoved away from it, meanwhile no other bump - hit square on, it loses
 ;; most of its speed and is hardly shoved, so that the one it hit goes on
 ;; ahead; off its side, it loses less and is thrown out (bump_tab: by the
-;; difficulty picked, coll_diff). A bush
+;; difficulty picked, coll_diff) - but at 3/4 of the car's top speed or
+;; faster, a crash as a bush's. A bush
 ;; (bit 6), off the road: a crash, CRASH_T pictures of the car shoved away
 ;; from it - across the road - out of control, slowing to a standstill
 ;; (speed_player); then back to the middle of the road, BACK_T pictures at
-;; most, and off again. Both wobble (coll_step). Keeps C.
+;; most, and off again once it stands. Both wobble (coll_step). Keeps C.
 ;; ---------------------------------------------------------------------------
 coll_start
     bit 6,b
-    jr z,coll_car
+    jr nz,coll_crash
+    ld hl,(speed)                       ; a car hit at 3/4 of the top speed
+    ld de,(jump_min+1)                  ; or faster (jump.asm): a crash too,
+    add hl,de                           ; thrown up rolling over (since
+    jr nc,coll_car                      ; 2026-11-12)
+    set 6,b
+coll_crash
     call jump_start                     ; (jump.asm: at speed, thrown up)
     ld hl,CRASH_V
     ld de,256+CRASH_T+BACK_T
@@ -887,13 +898,18 @@ coll_shove
 spin_views
     defb 2,SPIN_VIEW+1,SPIN_VIEW+1,2,1,SPIN_VIEW,SPIN_VIEW,1
 coll_back
-    ld a,(car_x)                        ; car_x towards 0
+    ld a,(steer_x)                      ; the road towards 0
     ld hl,BACK_V
     or a
     jp m,coll_view
     ld hl,-BACK_V
     jr nz,coll_view
-    ld (coll_kind),a                    ; there: off again
+    ld hl,(speed)                       ; there: off again, once it stands
+    ld a,h                              ; (the brakes on till then: it
+    or l                                ; stands well before BACK_T is up)
+    ld hl,0
+    jr nz,coll_view
+    ld (coll_kind),a
     ld (coll_t),a
     ld (car_xf),a
     ld l,a
@@ -941,8 +957,6 @@ steer_demo_x
     ld a,(road_x)               ; (the car in the middle, for when the
     ld (car_x),a                ; player takes over)
 steer_look                      ; the car turns the way the road is to go
-    xor a
-    ld (car_free),a
     ld a,(road_x)
     ld b,a
     ld a,(steer_x)

@@ -3,18 +3,24 @@
 ;; extras: line 174 of buffer 1, hw.asm JUMP_P0, and the free ends of
 ;; sndgame.asm's pieces).
 ;;
-;; A bush hit at JUMP_SPEED or faster: the car goes up and comes down as
-;; jump_rows has it, spinning as the crash has it, then bounces once - a
-;; character row (8 lines) at a time, as its views' code is made for the
-;; lines of its rows: car_draw starts it car_up rows higher (car_raise).
-;; Never higher than the road's top in the picture (car_jump): on a crest
-;; the ground behind it is not drawn again. In each buffer the car's lines
-;; where it was drawn last are drawn whole, so nothing of it stays behind
-;; (car_lines), a far line's too (jump_frame); where it is now the road is
-;; right as road_project has it, and the car is drawn over it.
+;; A bush hit at 3/4 of the car's top speed or faster (since 2026-11-12;
+;; 4/5 of the fastest's before): the car goes up and comes down as
+;; jump_rows has it, rolling over on the way up and down (bush.asm
+;; car_roll: ROLL_VIEW's frames), then spinning as the crash has it, and
+;; bounces once - a character row (8 lines) at a time, as its views' code
+;; is made for the lines of its rows: car_draw starts it car_up rows higher
+;; (car_raise). Never higher than the road's top in the picture (car_jump):
+;; on a crest the ground behind it is not drawn again. In each buffer the
+;; car's lines where it was drawn last - up to ROLL_ABOVE over its top
+;; line, where a frame rolling over reaches - are drawn whole, so nothing
+;; of it stays behind (car_lines), a far line's too (jump_frame); where it
+;; is now the road is right as road_project has it, and the car is drawn
+;; over it.
 ;; ===========================================================================
 
-JUMP_SPEED  EQU SPEED_MAX*4/5   ; a crash this fast or faster: thrown up
+JUMP_SPEED  EQU SPEED_MAX*3/4   ; a crash this fast or faster: thrown up (the
+                                ; first car's: car_setup puts each car's in
+                                ; jump_min, 3/4 of its top speed)
 
 ;; ---------------------------------------------------------------------------
     REC_BEGIN JUMP_P0
@@ -54,7 +60,7 @@ cj_air
     ld h,0
     ld de,hz_ground
     add hl,de
-    ld a,CAR_Y-ROAD_Y
+    ld a,CAR_Y-ROLL_ABOVE-ROAD_Y
     sub (hl)
     jr nc,$+3
     xor a
@@ -87,8 +93,9 @@ cj_done
 ;; ---------------------------------------------------------------------------
     REC_TAIL jump_m2,rec_SND_M2_end
 
-;; cj_mark - A = rows up: the car's lines there whole (their line list
-;; entries' flags off; the grass's middle line's, rp_grass, in rd_mid_t)
+;; cj_mark - A = rows up: the car's lines there whole, ROLL_ABOVE more over
+;; it (their line list entries' flags off; the grass's middle line's,
+;; rp_grass, in rd_mid_t)
 cj_mark
     ld hl,rd_mid_t
     res 0,(hl)
@@ -104,7 +111,7 @@ cj_mark
     ld hl,(rp_slot)
     add hl,de                           ; its last line's entry
     ld e,4
-    ld b,CAR_TOP
+    ld b,CAR_TOP+ROLL_ABOVE             ; (up to where rolling over reaches)
 cjm_line
     ld a,(hl)
     and #FC
@@ -135,11 +142,12 @@ jump_frame
 ;; ---------------------------------------------------------------------------
     REC_TAIL jump_m0,rec_SND_M0_end
 
-;; jump_start - (coll_start) a crash: at JUMP_SPEED or faster, the car
-;; thrown up. Keeps BC.
+;; jump_start - (coll_start) a crash: at jump_min or faster (3/4 of the
+;; car's top speed), the car thrown up. Keeps BC.
 jump_start
     ld hl,(speed)
-    ld de,-JUMP_SPEED
+jump_min
+    ld de,-JUMP_SPEED                   ; (car_setup: the car's)
     add hl,de
     ret nc
     ld a,1
@@ -173,7 +181,7 @@ jump_rows   defb 1,3,3,4,4,5,5,5,5,4,4,3,2,1,0,0,1,1,0,#FF
 jump_t      defb 0                      ; the jump's picture + 1 (0: none)
 car_up      defb 0                      ; the car's rows up this picture
 drawn_up    defb 0,0                    ; ... as each buffer last showed it
-    ASSERT CAR_Y-ROAD_Y >= 5*8          ; (on the level, the highest under the
-                                        ; road's top)
+    ASSERT CAR_Y-ROLL_ABOVE-ROAD_Y >= 5*8   ; (on the level, the highest
+                                        ; under the road's top, rolling over)
 
     REC_TAIL_END jump_p10,rec_SND_P10_end,SND_P10+SND_PIECE

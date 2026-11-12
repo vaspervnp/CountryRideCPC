@@ -155,18 +155,9 @@ roada_pk_end
     SAVE "build/roada.pk",roada_pk,roada_pk_end-roada_pk
 
 ;; ---------------------------------------------------------------------------
-;; ROADB.BIN: bank 5
+;; ROADB0.BIN-ROADB3.BIN: bank 5, with each car's views rolling over
 ;; ---------------------------------------------------------------------------
-    BANK
-    ORG PACK_LOW
-roadb_pk
-    defw #4000
-    LZX0
-    INCBIN "../build/roadb.raw"
-    LZCLOSE
-roadb_pk_end
-    SAVE "ROADB.BIN",roadb_pk,roadb_pk_end-roadb_pk,DSK,"build/countryride.dsk"
-    SAVE "build/roadb.pk",roadb_pk,roadb_pk_end-roadb_pk
+    INCLUDE "gen/roadbn.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; ROADC.BIN: bank 6

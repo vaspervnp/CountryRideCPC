@@ -817,20 +817,37 @@ def blink_block(rows, j, i, lines, letters, mirror=False, can=lambda t: True):
     return max((t for t in ((j - 1, j) if lines == 2 else (j,)) if inside(t)), key=lights), b
 
 
-def traffic_blinker(size, bottom):
-    """A size's left indicator with a bottom (TRAFFIC_BOTTOMS's): (its top
-    line from the car's top, its byte from its left, its lines) - at the
-    outermost of its lights' lowest line, or with none (the furthest size)
-    of its lowest line in paint. The right one is its mirror."""
-    rows, _ = traffic_rows(size, TRAFFIC_TOPS[0], TRAFFIC_BOTTOMS[bottom])
-    half = len(rows[0]) // 2
+def traffic_blinker(size, bottom, view=0):
+    """A size's indicators with a bottom (TRAFFIC_BOTTOMS's), seen from
+    behind (view 0) or from a side (traffic_view): ((its top line from the
+    car's top, its byte from the left of the view's box) on the left, the
+    same on the right, its lines) - at the outermost of its lights' lowest
+    line on that side, or with none (the furthest size) of its lowest line
+    in paint. From behind, the right one is the left one's mirror; from a
+    side, each side's own (the left and the right of its rear face: the
+    car's middle)."""
+    rows, _ = traffic_rows(size, TRAFFIC_TOPS[0], TRAFFIC_BOTTOMS[bottom], view)
     n = TRAFFIC_BLINK_LINES[size]
+    if view:
+        mid = len(TRAFFIC_ART[size]["tops"][TRAFFIC_TOPS[0]][0]) // 2 \
+            - TRAFFIC_ART[size]["sides"][view - 1]["x0"]
+        out = []
+        for side, pick in ((range(mid), min), (range(mid, len(rows[0])), max)):
+            j, i = next((j, pick(i for i in side if rows[j][i] in "RO"))
+                        for j in range(len(rows) - 1, -1, -1)
+                        if any(rows[j][i] in "RO" for i in side))
+            out.append(blink_block(rows, j, i, n, "RO"))
+        return out[0], out[1], n
+    half = len(rows[0]) // 2
     for j in range(len(rows) - 1, -1, -1):
         lights = [i for i, c in enumerate(rows[j][:half]) if c in "RO"]
         if lights:
-            return blink_block(rows, j, min(lights), n, "RO", True) + (n,)
-    j = max(j for j, row in enumerate(rows) if row[0] == TRAFFIC_PAINT)
-    return blink_block(rows, j, 0, n, TRAFFIC_PAINT, True) + (n,)
+            t, b = blink_block(rows, j, min(lights), n, "RO", True)
+            break
+    else:
+        j = max(j for j, row in enumerate(rows) if row[0] == TRAFFIC_PAINT)
+        t, b = blink_block(rows, j, 0, n, TRAFFIC_PAINT, True)
+    return (t, b), (t, len(rows[0]) // 2 - 1 - b), n
 
 
 def traffic_size(r):
@@ -905,12 +922,36 @@ def traffic_centre(k, r, x=0):
     return SCR_W // 4 + (s if k >= 0 else -s) + player_shift(k, x, r)
 
 
-def traffic_rows(size, top, bottom):
-    """A car's rows (letters, '.' none) and the line its bottom starts on."""
+def traffic_rows(size, top, bottom, view=0):
+    """A car's rows (letters, '.' none) and the line its bottom starts on -
+    seen from behind, or from a side (traffic_view: its box's, x0 pixels
+    from the car's left)."""
     a = TRAFFIC_ART[size]
     if a["whole"]:
         bottom = next(iter(a["bottoms"]))       # the further sizes' only one
-    return a["tops"][top] + a["bottoms"][bottom], a["split"]
+    v = a["sides"][view - 1] if view else a
+    return v["tops"][top] + v["bottoms"][bottom], a["split"]
+
+
+def traffic_view(size, left):
+    """How a car of a size is seen, its left `left` bytes from the middle of
+    the screen (on its lane, before it is kept on the road): 0 from behind,
+    1 from the right of it - all of it right of the middle, its left flank
+    in view -, 2 from its left (since 2026-11-12, the sizes with sides
+    alone: mktraffic.py SIDES, traffic3d.py YAW)."""
+    if "sides" not in TRAFFIC_ART[size]:
+        return 0
+    if left >= 0:
+        return 1
+    return 2 if left + traffic_width(size) <= 0 else 0
+
+
+def traffic_vbox(size, view):
+    """A view's box: (its left from the car's, its width), bytes."""
+    if not view:
+        return 0, traffic_width(size)
+    v = TRAFFIC_ART[size]["sides"][view - 1]
+    return v["x0"] // 2, len(v["tops"][TRAFFIC_TOPS[0]][0]) // 2
 
 
 def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
@@ -930,7 +971,9 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
     only on its own row's, for ours to go by in the next: its lines are
     drawn afresh whole then (to_whole) - also where the road widens from
     the horizon and it is not on the first row of the fewer lanes below
-    its top line's (to_wide)."""
+    its top line's (to_wide). A near car may be seen from a side
+    (traffic_view, on its lane's place): that view's box is what is kept on
+    the road and on the screen, and the left given is its box's."""
     rows = project(hill)
     far = next(r for r in rows if r)            # the furthest row in sight
     road_top = ROAD_Y + ground_lines(hill)
@@ -952,24 +995,29 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
             continue
         wb = traffic_width(size)
         place = traffic_place(r, wb, lane)
+        d = 0
         if way and way[1]:
             d = traffic_place(r, wb, way[0]) - place
             assert -128 < d < 128
             place += (abs(d) * way[1] >> 8) * (1 if d >= 0 else -1)
-            if way[2:] and way[2]:
-                t, b, n = traffic_blinker(size, bottom)
-                if d >= 0:
-                    b = wb - 1 - b
-                assert t >= split                   # (in its bottom's colour)
-                lit = TRAFFIC_LIT_YELLOW if TRAFFIC_COLOURS[cbot] == ("YELLOW",) else TRAFFIC_LIT
-                art = [row[:2 * b] + 2 * lit + row[2 * b + 2:] if t <= q < t + n
-                       else row for q, row in enumerate(art)]
         left = traffic_centre(curve, r, x) + place
+        # how it is seen: its view's box kept on the road and on the screen
+        view = traffic_view(size, left - SCR_W // 4)
+        vx, vw = traffic_vbox(size, view)
+        art = traffic_rows(size, TRAFFIC_TOPS[top], TRAFFIC_BOTTOMS[bottom], view)[0]
+        if way and way[1] and way[2:] and way[2]:
+            (tl, bl), (tr, br), n = traffic_blinker(size, bottom, view)
+            t, b = (tr, br) if d >= 0 else (tl, bl)
+            assert t >= split                       # (in its bottom's colour)
+            lit = TRAFFIC_LIT_YELLOW if TRAFFIC_COLOURS[cbot] == ("YELLOW",) else TRAFFIC_LIT
+            art = [row[:2 * b] + 2 * lit + row[2 * b + 2:] if t <= q < t + n
+                   else row for q, row in enumerate(art)]
+        left += vx
         rt = rows[y0 - ROAD_Y]                  # the row its top line shows,
         for q in (rt, r) if lane < 4 else (r,):  # then its own
             ct, edge = traffic_centre(curve, q, x), traffic_edge(q, row_lanes(q, lanes))
-            left = ct + max(min(left - ct, edge - wb), -edge)
-        if left < 0 or left + wb > SCR_W // 2:
+            left = ct + max(min(left - ct, edge - vw), -edge)
+        if left < 0 or left + vw > SCR_W // 2:
             continue
         out.append((zr, size, left, y0, art, split, ctop, cbot))
     out.sort(key=lambda t: -t[0])
@@ -1008,7 +1056,8 @@ def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0, lanes=None):
 # it out to whole pairs. Every car's views are over the same lines.
 # ---------------------------------------------------------------------------
 
-from carsart import GAME_ART, GAME_GROUND  # noqa: E402
+from carsart import GAME_ART, GAME_GROUND, GAME_R0  # noqa: E402
+from rollart import ROLL_ART, ROLL_TOP  # noqa: E402
 import outrun as OR  # noqa: E402
 
 CARS = ["player", "ferrari", "lotus", "bmw"]    # car_id 0-3
@@ -1030,6 +1079,14 @@ CAR_VIEWS = 11                  # car_view: on the level, uphill, downhill;
                                 # then spun in a crash, left and right (a
                                 # wider box, as much more either side)
 SPIN_VIEW = 9
+ROLL_VIEW = CAR_VIEWS           # then rolling over in a crash at speed, thrown
+ROLL_FRAMES = 6                 # up (jump.asm): rolled right 30, 90 ... 330
+                                # degrees (tools/rollart.py; rolling left: the
+                                # same backwards) - a box as tall as the
+                                # frame, its lines from view_y
+ROLL_LIFT = 8                   # ... a character row higher than its frame
+                                # has it, so that its last line is the car's
+                                # (in the air only: car_up a row or more)
 HIT_HALF = 9                    # bytes either side of the car's middle it
                                 # touches a car or a bush in (game.asm
                                 # CAR_HALF): its box's when it turned 10
@@ -1038,6 +1095,8 @@ HIT_HALF = 9                    # bytes either side of the car's middle it
 SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_off)
                                 # from the middle, else turning (car_lines):
                                 # the screen's edges
+CAR_OFF_MAX = 0                 # car_off at most: the car always in the middle
+                                # since 2026-11-12 (car_lines)
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
 # what the game makes of them (mkbush.py: car_stats, CARn.BIN's acc_tab):
 # Out Run's driving (tools/outrun.py), the first car's its own and the
@@ -1111,16 +1170,32 @@ def set_car(car_id):
     view's box is wider, its left edge view_x."""
     global CAR_ID, CAR_ARTS, CAR_W, CAR_X
     CAR_ID = car_id
-    CAR_ARTS = GAME_ART[CARS[car_id]]
+    CAR_ARTS = GAME_ART[CARS[car_id]] + ROLL_ART[CARS[car_id]]
     CAR_W = len(CAR_ARTS[0][0])
     CAR_X = (SCR_W - CAR_W) // 2
-    assert CAR_W % 4 == 0 and CAR_X % 2 == 0 and len(CAR_ARTS) == CAR_VIEWS
+    assert CAR_W % 4 == 0 and CAR_X % 2 == 0 and len(CAR_ARTS) == ROLL_VIEW + ROLL_FRAMES
     for v, a in enumerate(CAR_ARTS):
         assert all(len(r) == len(a[0]) for r in a)
         assert len(a[0]) == CAR_W if v < SPIN_VIEW else len(a[0]) % 4 == 0
+        assert view_y(v) >= -ROLL_ABOVE and view_y(v) + len(a) <= CAR_H
     for v in range(SPIN_VIEW, CAR_VIEWS):        # (on the screen)
         assert view_x(v) - 4 * SPIN_OFF >= 0
         assert view_x(v) + len(CAR_ARTS[v][0]) + 4 * SPIN_OFF <= SCR_W
+    for v in range(ROLL_VIEW, ROLL_VIEW + ROLL_FRAMES):     # (... rolling, as
+        assert view_x(v) - 4 * CAR_OFF_MAX >= 0             # far as car_lines
+        assert view_x(v) + len(CAR_ARTS[v][0]) + 4 * CAR_OFF_MAX <= SCR_W   # lets it go)
+
+
+def view_y(view):
+    """car_view's first line from the car's top line (CAR_Y), on the ground."""
+    if view < ROLL_VIEW:
+        return 0
+    return ROLL_TOP[CARS[CAR_ID]] - GAME_R0 - ROLL_LIFT
+
+
+ROLL_ABOVE = max(ROLL_LIFT + GAME_R0 - t for t in ROLL_TOP.values())   # lines a
+                                # rolling car reaches above CAR_Y at most
+                                # (jump.asm: its lines drawn whole)
 
 
 def view_x(view):
@@ -1142,7 +1217,8 @@ def car_runs(view=0):
             continue
         a = min(i for i, c in enumerate(row) if c != ".")
         b = max(i for i, c in enumerate(row) if c != ".") + 1
-        assert a % 4 == 0 and b % 4 == 0 and "." not in row[a:b]
+        assert (a % 4 == 0 and b % 4 == 0 if view < ROLL_VIEW      # (rolling: from
+                else a % 2 == 0 and (b - a) % 4 == 0) and "." not in row[a:b]   # any byte)
         pens = [PEN[CAR_PEN[c]] for c in row[a:b]]
         out.append(((view_x(view) - CAR_X + a) // 2,
                     [m0_byte(pens[i], pens[i + 1]) for i in range(0, len(pens), 2)]))
@@ -1207,7 +1283,8 @@ def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
     for j, row in enumerate(CAR_ARTS[view]):
         for i, c in enumerate(row):
             if c != ".":
-                lines[CAR_Y - 8 * up + j - y0][view_x(view) + 4 * off + i] = PEN[CAR_PEN[c]]
+                lines[CAR_Y + view_y(view) - 8 * up + j - y0][view_x(view) + 4 * off + i] = \
+                    PEN[CAR_PEN[c]]
     if blink:
         t, b = car_blinker(view)[blink - 1]
         for j in range(t, t + CAR_BLINK_LINES):

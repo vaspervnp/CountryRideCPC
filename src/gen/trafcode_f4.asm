@@ -2,5 +2,10 @@
 ;; Traffic sprite pieces, region f4 (RAM_C6).
 
 trafcode_f4
+tr_s5_closed_c7
+    ld sp,hl
+    push ix
+    push ix
+    jp tr_done
 trafcode_f4_end
     ASSERT trafcode_f4_end <= FRAG4+FRAG_LEN

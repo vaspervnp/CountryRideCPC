@@ -964,6 +964,8 @@ CARS_ART = {
 # side), every car's over the renders' lines 1-26: GAME_ART[car][car_view];
 # the wheels on the level stand on line GAME_GROUND of them.
 GAME_GROUND = 22
+GAME_R0 = 1   # (the renders' line their first is: tools/rollart.py's
+               # ROLL_TOP against it)
 GAME_ART = {
     "player": [
         [   # flat, straight

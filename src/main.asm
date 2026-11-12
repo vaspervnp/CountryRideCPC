@@ -7,7 +7,9 @@
 ;; onto the disc (the loader unpacks each where it goes):
 ;;
 ;;   ROADA.BIN  bank 4 (#4000)  road templates and cores for stripe band A
-;;   ROADB.BIN  bank 5 (#4000)  road cores and templates for stripe band B
+;;   ROADBn.BIN bank 5 (#4000)  road cores and templates for stripe band B,
+;;                              and car n's views rolling over (pack.asm
+;;                              puts the bank and each car's together)
 ;;   ROADC.BIN  bank 6 (#4000)  road rows and hill tables, the traffic
 ;;   GAME.BIN   bank 7 (#C000)  the game: main loop, HUD, graphics
 ;;   BOOT.BIN   base   (#4000)  takes the machine over, then the common
@@ -92,7 +94,12 @@ roadb_start
     INCLUDE "cache5b.asm"
 roadb_end
     ASSERT roadb_end <= SB                  ; (cache5.asm)
-    SAVE "build/roadb.raw",#4000,roadb_end-#4000
+ROLL5_TAIL  EQU #7D00                   ; past here, and under each per group
+                                        ; array (but the first three), the
+                                        ; views rolling over: each car's own
+                                        ; (gen/roll5.asm) - ROADB0-3.BIN,
+                                        ; gen/roadbn.asm in pack.asm
+    SAVE "build/roadb.raw",#4000,ROLL5_TAIL-#4000
 
 ;; ---------------------------------------------------------------------------
 ;; bank 6: road rows and hill tables; the traffic (its code, its tables
@@ -180,6 +187,8 @@ CAR_DIFF    EQU CAR_BLOB+6              ; the difficulty picked, 0, 1 or 2 x
                                         ; byte, the first - the loader POKEs it
                                         ; (disc/country.bas line 310)
     INCLUDE "gen/cars.asm"
+    INCLUDE "gen/roll5.asm"                 ; (their views rolling over, in
+                                            ; bank 5: ROADB0-3.BIN)
 
 ;; ---------------------------------------------------------------------------
 ;; the sound (SOUND.BIN, which the loader unpacks at SOUND_BLOB and boot.asm

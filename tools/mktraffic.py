@@ -50,6 +50,8 @@ NEAR = 3                                    # the nearest, in two pieces
 TOPS = ["closed"]                           # (and "open": traffic3d.py)
 BOTTOMS = ["sport", "saloon"]               # (and "gt")
 FAR_BOTTOM = "saloon"                       # the further ones' only bottom
+SIDES = 2                                   # the nearest seen from the side too
+                                            # (since 2026-11-12; traffic3d.py YAW)
 CELLS, CELL_PX = mkcar.CELLS, mkcar.CELL_PX
 
 # the pens for what is not paint: the cars' own, but black
@@ -66,14 +68,15 @@ PAINT = "K"
 NARROW_SIZE = {0: 0.78, 3: 0.82}
 
 
-def load(size, top, bottom):
+def load(size, top, bottom, yaw=False):
     """A render's cells: (alpha, paint, top, linear rgb sum of what is not
     paint), each summed over the cell's pixels - its passes squeezed across
     (mkcar.narrow, NARROW_SIZE: since 2026-11-07 the cars are 20% narrower
-    than their models)."""
+    than their models). yaw: the render turned YAW degrees (_yaw.png)."""
     k = NARROW_SIZE.get(size, mkcar.NARROW)
-    ims = {p: mkcar.narrow(Image.open(os.path.join(SRC, "s%d_%s_%s_%s.png"
-                                                   % (size, top, bottom, p)))
+    ims = {p: mkcar.narrow(Image.open(os.path.join(SRC, "s%d_%s_%s_%s%s.png"
+                                                   % (size, top, bottom, p,
+                                                      "_yaw" if yaw else "")))
                            .convert("RGBA"), k) for p in ("car", "paint", "top")}
     w, h = ims["car"].size
     assert (w, h) == (CELLS[0] * CELL_PX[0], CELLS[1] * CELL_PX[1])
@@ -95,10 +98,10 @@ def load(size, top, bottom):
     return out
 
 
-def art(size, top, bottom):
+def art(size, top, bottom, yaw=False):
     """Rows of letters ('.' clear, K paint) and the rows the top covers."""
     n = CELL_PX[0] * CELL_PX[1]
-    cells = load(size, top, bottom)
+    cells = load(size, top, bottom, yaw)
     colours, paint, mostly, toprows = [], [], [], set()
     for y, row in enumerate(cells):
         cr, pr, mr = [], [], []
@@ -144,9 +147,10 @@ def art(size, top, bottom):
     return rows, toprows
 
 
-def runs(rows):
+def runs(rows, right=False):
     """Each line's run widened to a whole number of pairs of bytes (four
-    pixels), from its first byte, over the asphalt's grey."""
+    pixels), from its first byte - or back from its last, `right` - over
+    the asphalt's grey."""
     out = []
     for r in rows:
         xs = [i for i, c in enumerate(r) if c != "."]
@@ -155,6 +159,9 @@ def runs(rows):
             continue
         a = xs[0] // 2 * 2
         b = a + (xs[-1] + 1 - a + 3) // 4 * 4
+        if right:
+            b = (xs[-1] + 2) // 2 * 2
+            a = b - (b - xs[0] + 3) // 4 * 4
         if b > len(r):
             a, b = a - (b - len(r)), len(r)
         out.append(r[:a] + r[a:b].replace(".", "G") + r[b:])
@@ -165,30 +172,59 @@ def size_art(size):
     """{"split": the top's lines, "tops": {kind: rows}, "bottoms": {...},
     "whole": drawn as one piece}, all cut to one box. The further sizes have
     the one bottom, FAR_BOTTOM: each top on it is a sprite of its own, the
-    line between them where its paint's colour changes."""
+    line between them where its paint's colour changes. The SIDES nearest
+    have "sides" too: seen from the right of the middle of the screen and
+    from its left (its left flank in view, then its right: the YAW renders
+    and them mirrored; their lines widened to pairs towards the flank),
+    [{"x0": the box's left from the car's - pixels, a
+    whole number of bytes -, "tops", "bottoms"}] - over the same lines as
+    the car from behind, the flank wider on its side alone (towards the
+    middle of the screen; the rear face where the car's is)."""
     bottoms_of = BOTTOMS if size < NEAR else [FAR_BOTTOM]
-    tops, bottoms, split = {}, {}, 0
+    views = (False, True) if size < SIDES else (False,)
     full = {}
-    for t in TOPS:
-        full[t, bottoms_of[0]] = art(size, t, bottoms_of[0])
-    for b in bottoms_of[1:]:
-        full[TOPS[0], b] = art(size, TOPS[0], b)
+    for yaw in views:
+        for t in TOPS:
+            full[yaw, t, bottoms_of[0]] = art(size, t, bottoms_of[0], yaw)
+        for b in bottoms_of[1:]:
+            full[yaw, TOPS[0], b] = art(size, TOPS[0], b, yaw)
     split = 1 + max(max(tr) for rows, tr in full.values() if tr)
-    for t in TOPS:
-        tops[t] = runs(full[t, bottoms_of[0]][0][:split])
-    for b in bottoms_of:
-        bottoms[b] = runs(full[TOPS[0], b][0][split:])
-    every = list(tops.values()) + list(bottoms.values())
-    used = [i for v in tops.values() for i, r in enumerate(v) if r.strip(".")]
+    pieces = {}
+    for yaw in views:
+        rows = {k[1:]: v[0] for k, v in full.items() if k[0] == yaw}
+        tops = {t: runs(rows[t, bottoms_of[0]][:split], yaw) for t in TOPS}
+        bottoms = {b: runs(rows[TOPS[0], b][split:], yaw) for b in bottoms_of}
+        pieces[yaw] = tops, bottoms
+    used = [i for tops, bottoms in pieces.values() for v in tops.values()
+            for i, r in enumerate(v) if r.strip(".")]
     first = min(used)
-    last = max(i for v in bottoms.values() for i, r in enumerate(v) if r.strip("."))
-    xs = [i for v in every for r in v for i, c in enumerate(r) if c != "."]
-    half = max(mkcar.MID - min(xs), max(xs) + 1 - mkcar.MID)
+    last = max(i for tops, bottoms in pieces.values() for v in bottoms.values()
+               for i, r in enumerate(v) if r.strip("."))
+
+    def xs(tops, bottoms):
+        return [i for v in list(tops.values()) + list(bottoms.values())
+                for r in v for i, c in enumerate(r) if c != "."]
+    x = xs(*pieces[False])
+    half = max(mkcar.MID - min(x), max(x) + 1 - mkcar.MID)
     half += half % 2
-    cut = slice(mkcar.MID - half, mkcar.MID + half)
-    return dict(split=split - first, whole=size >= NEAR,
-                tops={t: [r[cut] for r in v[first:]] for t, v in tops.items()},
-                bottoms={b: [r[cut] for r in v[:last + 1]] for b, v in bottoms.items()})
+
+    def cut(tops, bottoms, a, b):
+        return ({t: [r[a:b] for r in v[first:]] for t, v in tops.items()},
+                {k: [r[a:b] for r in v[:last + 1]] for k, v in bottoms.items()})
+    tops, bottoms = cut(*pieces[False], mkcar.MID - half, mkcar.MID + half)
+    out = dict(split=split - first, whole=size >= NEAR, tops=tops, bottoms=bottoms)
+    if True in pieces:
+        tops, bottoms = pieces[True]
+        x = xs(tops, bottoms)
+        a, b = min(x) // 2 * 2, (max(x) + 2) // 2 * 2
+        mirror = ({t: [r[::-1] for r in v] for t, v in tops.items()},
+                  {k: [r[::-1] for r in v] for k, v in bottoms.items()})
+        w = mkcar.CELLS[0]
+        out["sides"] = []
+        for (t, bt), (lo, hi) in (((tops, bottoms), (a, b)), (mirror, (w - b, w - a))):
+            ct, cb = cut(t, bt, lo, hi)
+            out["sides"].append(dict(x0=lo - (mkcar.MID - half), tops=ct, bottoms=cb))
+    return out
 
 
 # Colours a car's paint can take: a pen (or two in a checkerboard - a byte,
@@ -269,7 +305,10 @@ def main():
              "split: the lines of the top piece; tops[closed|open] and",
              "bottoms[sport|saloon|gt] (the further sizes, whole: saloon only, each",
              "top drawn on it as one sprite): rows of mode 0 pixels, letters as",
-             "tools/mktraffic.py LETTERS, '.' none, K the car's paint.", '"""', "",
+             "tools/mktraffic.py LETTERS, '.' none, K the car's paint. The SIDES",
+             "nearest have sides too: [seen right of the middle (its left flank),",
+             "left of it] each dict(x0 - its box's left from the car's, pixels -,",
+             "tops, bottoms), over the same lines.", '"""', "",
              "TRAFFIC_ART = ["]
     for si, s in enumerate(sizes):
         lines.append("    dict(split=%d, whole=%s, tops={" % (s["split"], s["whole"]))
@@ -282,7 +321,24 @@ def main():
             lines.append('        "%s": [' % b)
             lines += ['            "%s",' % r for r in s["bottoms"][b]]
             lines.append("        ],")
-        lines.append("    }),")
+        if "sides" not in s:
+            lines.append("    }),")
+        else:
+            lines.append("    }, sides=[")
+        for v in s.get("sides", []):
+            lines.append("        dict(x0=%d, tops={" % v["x0"])
+            for t in TOPS:
+                lines.append('            "%s": [' % t)
+                lines += ['                "%s",' % r for r in v["tops"][t]]
+                lines.append("            ],")
+            lines.append("        }, bottoms={")
+            for b in v["bottoms"]:
+                lines.append('            "%s": [' % b)
+                lines += ['                "%s",' % r for r in v["bottoms"][b]]
+                lines.append("            ],")
+            lines.append("        }),")
+        if "sides" in s:
+            lines.append("    ]),")
         print("size %d: %d x %d pixels, the top %d lines%s" % (
             si, len(s["tops"][TOPS[0]][0]),
             len(s["tops"][TOPS[0]]) + len(next(iter(s["bottoms"].values()))), s["split"],
@@ -291,6 +347,33 @@ def main():
     open(os.path.join(ROOT, "tools", "trafficart.py"), "w").write("\n".join(lines))
     os.makedirs(os.path.join(ROOT, "build"), exist_ok=True)
     sheet(sizes, os.path.join(ROOT, "build", "traffic-sheet.png"))
+    side_sheet(sizes, os.path.join(ROOT, "build", "traffic-sides.png"))
+
+
+def side_sheet(sizes, path, sx=4, sy=4):
+    """The sizes with sides: each bottom seen from the left of the middle,
+    from behind and from the right, in two colours."""
+    near = [s for s in sizes if "sides" in s]
+    cw = max(len(v["tops"][TOPS[0]][0]) for s in near for v in s["sides"]) + 6
+    h = max(len(s["tops"][TOPS[0]]) + len(next(iter(s["bottoms"].values()))) for s in near) + 4
+    rows = [(s, b, c) for s in near for b in BOTTOMS for c in (("RED",), ("WHITE",))]
+    im = Image.new("RGB", (3 * cw * 2 * sx + 16, len(rows) * h * sy + 8), pen_rgb(PEN["GREY"]))
+    dr = ImageDraw.Draw(im)
+    for i, (s, b, c) in enumerate(rows):
+        n = len(s["tops"][TOPS[0]])
+        views = [s["sides"][1], dict(x0=0, tops=s["tops"], bottoms=s["bottoms"]), s["sides"][0]]
+        for j, v in enumerate(views):
+            x0 = 8 + j * cw * 2 * sx + (v["x0"] + 6) * 2 * sx
+            y0 = 4 + i * h * sy
+            for y, line in enumerate(painted(v["tops"][TOPS[0]], c)
+                                     + painted(v["bottoms"][b], ("ORANGE",) if c == ("WHITE",)
+                                               else c, n)):
+                for x, p in enumerate(line):
+                    if p is not None:
+                        xx = x0 + x * 2 * sx
+                        dr.rectangle([xx, y0 + y * sy, xx + 2 * sx - 1, y0 + (y + 1) * sy - 1],
+                                     fill=pen_rgb(p))
+    im.save(path)
 
 
 if __name__ == "__main__":

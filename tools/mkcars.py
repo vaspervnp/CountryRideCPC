@@ -199,7 +199,9 @@ def game_art(cars, tops):
            "# and 9-10 (spun in a crash, left and right: a wider box, as wide either",
            "# side), every car's over the renders' lines %d-%d: GAME_ART[car][car_view];" % (r0, r1),
            "# the wheels on the level stand on line GAME_GROUND of them.",
-           "GAME_GROUND = %d" % ground, "GAME_ART = {"]
+           "GAME_GROUND = %d" % ground,
+           "GAME_R0 = %d   # (the renders' line their first is: tools/rollart.py's" % r0,
+           "               # ROLL_TOP against it)", "GAME_ART = {"]
     for name in CARS:
         a, w = cars[name], len(cars[name]["flat"]["straight"][0])
         out.append('    "%s": [' % name)
