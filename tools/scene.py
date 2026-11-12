@@ -1093,7 +1093,8 @@ HIT_HALF = 9                    # bytes either side of the car's middle it
 SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_off)
                                 # from the middle, else turning (car_lines):
                                 # the screen's edges
-CAR_OFF_MAX = 10                # car_off at most (game.asm CAR_LEAD + 2: car_lines)
+CAR_OFF_MAX = 0                 # car_off at most: the car always in the middle
+                                # since 2026-11-12 (car_lines)
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
 # what the game makes of them (mkbush.py: car_stats, CARn.BIN's acc_tab):
 # Out Run's driving (tools/outrun.py), the first car's its own and the

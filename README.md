@@ -146,7 +146,7 @@ and one for its tail, out of fourteen: hundreds of different cars.
 Fire pressed while the demo drives, GET READY: the road ahead flattens
 out and straightens, the car brakes to a standstill in the third lane from
 the left, the count goes 3, 2, 1 in the gear's place, and GO! - the player
-drives, from a standstill. TIME starts at 53 seconds and counts down; TOTAL
+drives, from a standstill. TIME starts at 64 seconds and counts down; TOTAL
 TIME counts up. (Since 2026-11-07 every speed is half as much again as it
 was, and the times three quarters - the races take about three quarters
 of the time, as the bumps and the crashes take as long as they did: TIME
@@ -192,8 +192,9 @@ autopilot; a slower car has more about it: 1.2 to 2 for the TOURING),
 below).
 
 The CHECKPOINT gauge fills on the way to each stage's end. There TIME gets
-37 more seconds (EXTENDED TIME), 1 fewer at each next one, down to 27, and
-never over 99; then the next stage's number shows, and its colours are
+44 more seconds (EXTENDED TIME), 1 fewer at each next one, down to 32, and
+never over 99 (20% more since 2026-11-12, when a car hit at speed became a
+crash: 53 at the start, 37 down to 27); then the next stage's number shows, and its colours are
 there at once. Past the fifth, FINISH: the car brakes to a standstill on
 the straight that follows, and TOTAL TIME is the race's - FASTEST TIME!
 once it stands, if no race has been faster (the best times, below). At
@@ -841,13 +842,18 @@ middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8.
   speed 2.72 pairs a picture, 170% of Out Run's full lock (310% of ours). The push comes and
   goes, 0.21 pairs a picture each picture at most (Out Run: 5 units a loop).
 
-The two moves add up in `car_x` and its fraction `car_xf`
-(`steer` in `src/game.asm`). The car moves across the screen at once, and
-the road - the camera - follows
-it as fast as its steps go: the car is drawn `road_x` - `car_x` pairs right
-of the middle of the screen, 8 at most (`CAR_LEAD`; the road at most 8
-pairs behind - 16 till 2026-11-12: nearer the middle now, the steering
-across 10% slower when the road's steps are held back). The road moves under it in perspective: `road_x` is how many
+The two moves add up in `steer_x`, where the road - the camera - is to
+go, and its fraction `car_xf` (`steer` in `src/game.asm`), at most 8 pairs
+from where the road is (`CAR_LEAD`), and the road follows as fast as its
+steps go. The car is always in the middle of the screen, the world moving
+under it (since 2026-11-12, the user's wish): it is where the road is,
+`car_x` = `road_x`, for the sand and the grass, the forks and the rumble,
+and it hits what it is drawn over. The road goes across 0.27 pairs a
+picture on average with the wheel held either way (steps of 2 and 4
+pairs), and goes on ~6 pairs once the wheel is let go (scratchpad
+measurements: `CAR_LEAD` 4 gives 0.25 and 5, 16 gives 0.30 and 7). Till
+then the car moved across the screen at once, `road_x` - `car_x` pairs
+right of the middle (16 at most, 8 that day), the road following it. The road moves under it in perspective: `road_x` is how many
 pairs (4 pixels) right of the middle the road is on the bottom row, and a row of half-width *h* bytes moves `road_x`
 × 10*h*/256 bytes - the far road hardly moves, and the road turns about the
 horizon. `road_project` takes its templates from a set in each bank, the
@@ -1216,11 +1222,15 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   picture not enough to hold it. HARD is slower still and throws it
   further (no more than 2 pairs a picture: the crash's 1.9 is what the
   road's steps have been measured with).
+- **A car at 3/4 of the top speed or faster: a crash too** (since
+  2026-11-12), as a bush's below - thrown up, rolling over.
 - **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
   it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
   of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
   VSYNC); then it is brought back to the middle of the road, 0.63 pairs a
-  picture (8 a step), and the player drives off again from a standstill.
+  picture (8 a step), and the player drives off again from a standstill:
+  there it waits till the car stands (since 2026-11-12: brought back
+  sooner, it drove off still rolling).
   The spin (`spin_views`) is a view each 2 pictures: turning, spun, spun,
   turning one way, then the other - first its nose swung towards the side
   that was hit, as the blow turns it. A spun view's box is wider (52 pixels, the white car's

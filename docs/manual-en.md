@@ -107,9 +107,9 @@ While the demo drives, press fire or space. **GET READY** shows, the road flatte
 
 ### The clock
 
-**TIME** starts at 53 seconds and counts down. **TOTAL TIME** counts up.
+**TIME** starts at 64 seconds and counts down. **TOTAL TIME** counts up.
 
-A race is five stages of about half a minute each. At the end of each of the first four, **EXTENDED TIME** adds to your **TIME**: 37 seconds at the first checkpoint, then 36, 35 and 34. **TIME** never goes above 99.
+A race is five stages of about half a minute each. At the end of each of the first four, **EXTENDED TIME** adds to your **TIME**: 44 seconds at the first checkpoint, then 43, 42 and 41. **TIME** never goes above 99.
 
 ### The forks
 
@@ -183,7 +183,7 @@ Up to two cars at a time drive ahead of you, slower than your car can go. They c
 
 A car with a flashing indicator is moving over to the next lane on that side. Your own car flashes too when you move across the road.
 
-**A bump.** Hit a car and for a second you are shoved away from it, wobbling, though you can go on steering. What it costs depends on the difficulty, and on MEDIUM and HARD on where you hit it. Square on, you lose most of your speed and hardly move sideways. Off its side, you lose less, but you are thrown across the road, and out onto the grass unless you steer against it.
+**A bump.** Hit a car and for a second you are shoved away from it, wobbling, though you can go on steering. What it costs depends on the difficulty, and on MEDIUM and HARD on where you hit it. Square on, you lose most of your speed and hardly move sideways. Off its side, you lose less, but you are thrown across the road, and out onto the grass unless you steer against it. Hit one at three quarters of your top speed or more, though, and it is a crash, as below: the car is thrown up and rolls over.
 
 ### Bushes, trees and signs
 

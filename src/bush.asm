@@ -743,8 +743,9 @@ bush_next_row
 
 ;; ---------------------------------------------------------------------------
 ;; car_lines - after road_project, before road_draw (road_frame): where the
-;; car is drawn - road_x - car_x pairs right of the middle (car_off), the
-;; demo's and the tools' in the middle. If this buffer last showed it
+;; car is drawn - in the middle of the screen (car_off 0; since 2026-11-12,
+;; the road moving under it: road_x - car_x pairs right of it before), and
+;; how it is seen. If this buffer last showed it
 ;; elsewhere or seen another way (car_vfull: car_view, and on a slope -
 ;; the hill at least HILL_PITCH either way - uphill or downhill; spun, the
 ;; same on a slope, or turning near the screen's edges), the lines at its top where the
@@ -774,16 +775,7 @@ car_lines_pitch
     jr nc,$+3
     add a,b
     ld (car_vfull),a
-    ld a,(car_free)             ; (the demo's, the tools': the middle)
-    or a
-    jr z,car_lines_off
-    ld a,(car_x)
-    ld b,a
-    ld a,(road_x)
-    sub b
-    ld b,CAR_LEAD+2             ; (road_x can have gone a step on)
-    call clamp_ab
-car_lines_off
+    xor a                       ; (always in the middle since 2026-11-12)
     ld (car_off),a
     ld (car_offc),a
     ld c,a
