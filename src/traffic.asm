@@ -240,6 +240,12 @@ tp_reach                                ; the road's reach on a row as its
 tp_lrow
     ld a,c
     ld (to_lrow+1),a
+    ld hl,(lane_now)                    ; L = lane_now, H = lane_next: more
+    ld a,l                              ; on the further rows - the first
+    cp h                                ; of lane_now's then narrower than
+    sbc a,a                             ; the ones before it (to_wide) - or
+    and c                               ; none (0)
+    ld (to_wide+1),a
     ld a,(lane_now)
     call tr_reach
     ld (to_rold+1),hl
@@ -669,6 +675,88 @@ to_in_l
     ld b,a                              ; B = its left
     ret
 
+;; to_run - after to_fit on row D (E the road's centre there, C its reach,
+;; B a car's left, on the road there; HL its size's record): Z if the car
+;; is on the road also on the last row before its own with that reach -
+;; asked only of a further size (one piece) TO_RUN_SLACK bytes or fewer
+;; from the road's edge on D: the reach the same, a nearer template
+;; group's centre may be a byte or two off there (road_x's share and the
+;; curve's shift, rounded each). HL its size's record again. Destroys AF,
+;; C, DE.
+TO_RUN_SLACK EQU 1
+to_run
+    ld a,e
+    add a,c
+    sub b
+    sub (hl)                            ; bytes to spare on the right
+    cp TO_RUN_SLACK+1
+    jr c,to_run_go
+    ld a,b
+    sub e
+    add a,c                             ; ... on the left
+    cp TO_RUN_SLACK+1
+    jr c,to_run_go
+    xor a
+    ret
+to_run_go
+    inc hl                              ; not at a near size (two pieces):
+    inc hl                              ; their rows' reach grows a byte a
+    inc hl                              ; row or two, as fast as the centre
+    ld a,(hl)                           ; moves (and the time goes to the
+    ld hl,(to_size)                     ; heavy pictures)
+    cp TR_NEAR*(TR_TOPS+TR_BOTTOMS)*TR_PIECE_LEN
+    jr nc,to_run_far
+    xor a
+    ret
+to_run_far
+    ld a,(to_own+1)
+    sub d
+    ret z                               ; (its own row)
+    ld e,a                              ; E = the rows on to its own
+    ld a,d
+    or lo(bush_rh)
+    ld l,a
+    ld h,hi(bush_rh)
+    ld a,(hl)
+    push af                             ; its template group's lane
+    ld a,(to_lrow+1)                    ; the table of D's lanes (to_fit)
+    ld l,a
+    ld a,d
+    cp l
+    ld hl,(to_rold+1)
+    jr nc,to_run_t
+    ld hl,(to_rnew+1)
+to_run_t
+    add a,l
+    ld l,a
+    adc a,h
+    sub l
+    ld h,a                              ; HL = D's reach's entry
+to_run_l
+    inc hl
+    ld a,(hl)
+    cp c
+    jr nz,to_run_e
+    inc d
+    dec e
+    jr nz,to_run_l
+to_run_e                                ; D = the last row with that reach
+    ld a,d
+    or lo(bush_rh)
+    ld l,a
+    ld h,hi(bush_rh)
+    pop af
+    cp (hl)
+    ld hl,(to_size)
+    ret z                               ; in the same group: the same centre
+    ld c,d
+    push bc
+    call to_fit
+    pop af
+    cp b                                ; (Z: on the road there)
+    ld b,a
+    ret
+
 ;; tr_reach - A = lanes: HL = how far either side of its centre a row's
 ;; road reaches with them (tr_edge<n>). Destroys F, DE.
 tr_reach
@@ -1069,8 +1157,15 @@ to_top
     pop af
     cp b                                ; on both? If not (three lanes or
     ld b,a                              ; two; a narrow road bent hard), its
-    ld a,0                              ; lines are drawn whole when it is
-    jr z,to_fits                        ; taken away (to_whole, rp_cars_whole)
+    jr nz,to_misfit                     ; lines are drawn whole when it is
+    ld a,(to_top+1)                     ; taken away (to_whole, rp_cars_whole)
+    ld d,a                              ; - all of them if it is off the
+    call to_run                         ; road a little lower (to_run)
+    ld a,0
+    jr z,to_fits
+    ld a,#80
+    jr to_fits
+to_misfit
     push bc                             ; - only those above its middle line
     ld de,(to_lines)                    ; if it is on that one's row's road
     ld a,e                              ; (the lines below are on rows nearer
@@ -1085,15 +1180,45 @@ to_top
     sub l
     ld h,a
     ld c,(hl)                           ; C = its row
+    ld a,c
+    ld (to_mrow+1),a
     call to_fit
     pop af
     cp b
     ld b,a
+    ld a,#80                            ; (all of them)
+    jr nz,to_fits
+to_mrow
+    ld d,0                              ; (self-modified: its middle line's
+    call to_run                         ; row) - and a little lower?
     ld a,#C0                            ; (its top half)
     jr z,to_fits
-    ld a,#80                            ; (all of them)
+    ld a,#80
 to_fits
     ld (to_whole+1),a
+    ; the road widening from the horizon (lane_next's more lanes on the
+    ; rows before to_lrow): its lines on the first rows of lane_now's,
+    ; below its top line's, are narrower than both its top's and its own's.
+    ; Not on the road on the first of them (to_lrow's), its lines are all
+    ; drawn whole when it is taken away.
+    ld a,(to_top+1)
+to_wide
+    cp 0                                ; (self-modified: to_lrow, 0 none -
+    jr nc,to_wide_ok                    ; tp_reach) its top line on it or past
+    ld a,(to_wide+1)
+    ld c,a                              ; C = that row
+    ld a,(to_own+1)
+    cp c
+    jr c,to_wide_ok                     ; its own row before it too
+    push bc
+    call to_fit
+    pop af
+    cp b
+    ld b,a
+    jr z,to_wide_ok
+    ld a,#80                            ; (all of them)
+    ld (to_whole+1),a
+to_wide_ok
     ld a,b
     xor #80                             ; (+ 128: unsigned)
     cp 128-SCR_BYTES/2

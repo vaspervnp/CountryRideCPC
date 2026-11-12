@@ -928,7 +928,9 @@ def traffic_items(hill, zcam, curve, cars, x=0, lanes=None):
     each as wide as its lanes are (`lanes`: row_lanes'): only the road is
     drawn afresh where it was (rp_force). In a lane of three or two (4-8)
     only on its own row's, for ours to go by in the next: its lines are
-    drawn afresh whole then (to_whole)."""
+    drawn afresh whole then (to_whole) - also where the road widens from
+    the horizon and it is not on the first row of the fewer lanes below
+    its top line's (to_wide)."""
     rows = project(hill)
     far = next(r for r in rows if r)            # the furthest row in sight
     road_top = ROAD_Y + ground_lines(hill)

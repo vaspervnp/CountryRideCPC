@@ -1132,7 +1132,31 @@ looks like, and `src/traffic.asm` has to match it.
   now bumps into ~6 cars a stage on two-lane stages (19 before), as on
   the others; on three lanes, going by from the middle lane, into fewer
   than half as many (0.9 a minute, 2.2 before; in its middle 2 bytes are
-  left - the rest are curves').
+  left - the rest are curves'). Where the road widens from the horizon
+  (the further groups have `lane_next`'s lanes, more: the rows before
+  `to_lrow`), the first rows of the fewer lanes are narrower than the
+  further ones above them, so neither its top line's row nor its own
+  tells: a car with its top line on the new lanes and its own row on the
+  old is tried on the first of those rows too (`to_wide`), and if it is
+  not on the road there, all its lines are drawn whole when it is taken
+  away (2026-11-12: a far car on two lanes widening to four, behind a
+  crest, left a byte of its paint on the grass). And the road's edge is
+  not straight from row to row either: road_x's share and the curve's
+  shift are worked out a template group at a time and rounded, so a
+  nearer group's centre can be a byte or two off while the reach is the
+  same - on the far rows it grows a byte only every few rows. A car at a
+  further size (one piece) a byte or less from the edge on the row it was
+  tried on (its top line's, or its middle line's when only the top half is
+  to go whole) is tried on the last row before its own with that reach
+  too, if that is in another group (`to_run`: ~0.03 ms a car, ~0.1 ms more
+  for the ~10% of them on two lanes tried, ~4% on three); not on the road
+  there, all its lines are drawn whole. The near sizes' rows widen as fast
+  as the centre moves. In the model (every hill, road_x every 4 and, on
+  the level, every curve level) the overhangs left unerased went from 107
+  in ~167000 cars to none on two lanes, from 25 in ~243000 to none on
+  three; on four, 5 in ~325000 are left (a curve's centre two bytes off,
+  the reach a byte more). Demo and race pictures: the worst as before
+  (37.4 and 37.3 ms), none late.
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two
