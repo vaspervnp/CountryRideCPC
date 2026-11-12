@@ -831,13 +831,36 @@ def traffic_blinker(size, bottom, view=0):
     if view:
         mid = len(TRAFFIC_ART[size]["tops"][TRAFFIC_TOPS[0]][0]) // 2 \
             - TRAFFIC_ART[size]["sides"][view - 1]["x0"]
+        sides = ((range(mid), min), (range(mid, len(rows[0])), max))
         out = []
-        for side, pick in ((range(mid), min), (range(mid, len(rows[0])), max)):
+        for side, pick in sides:
             j, i = next((j, pick(i for i in side if rows[j][i] in "RO"))
                         for j in range(len(rows) - 1, -1, -1)
                         if any(rows[j][i] in "RO" for i in side))
             out.append(blink_block(rows, j, i, n, "RO"))
-        return out[0], out[1], n
+        if out[0][0] == out[1][0]:
+            return out[0], out[1], n
+        # turned further (size 0 at 10 degrees), its two sides' lowest lights
+        # are not on the same lines - and the game has one top line for both:
+        # the lowest lines where both sides have lights, each side's outermost
+        # byte with them there on its rear face (not a lamp on the flank; all
+        # of it in the sprite's runs)
+        vx = traffic_vbox(size, view)[0]
+        rear = range(-vx, -vx + traffic_width(size))
+        for t in range(len(rows) - n, -1, -1):
+            got = []
+            for side, pick in sides:
+                bs = [b for b in {i // 2 for i in side} if b in rear
+                      and all(rows[q][2 * b] != "." and rows[q][2 * b + 1] != "."
+                              for q in range(t, t + n))
+                      and any(c in "RO" for q in range(t, t + n)
+                              for c in rows[q][2 * b:2 * b + 2])]
+                if not bs:
+                    break
+                got.append((t, pick(bs)))
+            else:
+                return got[0], got[1], n
+        raise AssertionError("no line with lights on both sides")
     half = len(rows[0]) // 2
     for j in range(len(rows) - 1, -1, -1):
         lights = [i for i, c in enumerate(rows[j][:half]) if c in "RO"]

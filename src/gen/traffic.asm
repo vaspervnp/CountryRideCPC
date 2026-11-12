@@ -18,8 +18,8 @@ TR_ZNEARSIZE EQU 120   ; nearer than this, a car is at a near size
 tr_sinfo
     defb 14,22,9   ; size 0: 28 x 22 pixels
     defb 0,14,0,143,1,12,140,1,12   ; (behind)
-    defb 254,16,45,143,1,12,140,1,12   ; (right)
-    defb 0,16,60,143,1,12,140,1,12   ; (left)
+    defb 252,18,45,143,1,12,141,1,12   ; (right)
+    defb 0,18,60,143,1,12,141,1,12   ; (left)
     defb 12,19,8   ; size 1: 24 x 19 pixels
     defb 0,12,15,141,1,10,138,1,10   ; (behind)
     defb 254,14,75,141,1,10,138,1,11   ; (right)
@@ -80,17 +80,17 @@ tr_pieces
     defw tr_s2_saloon
     defb RAM_C6,0,10   ; 160 bytes, 432 us
     defw tr_s0r_closed
-    defb RAM_C6,0,9   ; 162 bytes, 440 us
+    defb RAM_C6,0,8   ; 172 bytes, 462 us
     defw tr_s0r_sport
-    defb RAM_C6,0,14   ; 361 bytes, 872 us
+    defb RAM_C6,0,13   ; 349 bytes, 869 us
     defw tr_s0r_saloon
-    defb RAM_C6,0,14   ; 331 bytes, 842 us
+    defb RAM_C6,0,13   ; 321 bytes, 841 us
     defw tr_s0l_closed
-    defb RAM_C6,0,13   ; 165 bytes, 440 us
+    defb RAM_C6,0,14   ; 172 bytes, 462 us
     defw tr_s0l_sport
-    defb RAM_C6,0,16   ; 360 bytes, 871 us
+    defb RAM_C6,0,17   ; 349 bytes, 869 us
     defw tr_s0l_saloon
-    defb RAM_C6,0,16   ; 328 bytes, 839 us
+    defb RAM_C6,0,17   ; 320 bytes, 840 us
     defw tr_s1r_closed
     defb 0,0,8   ; 134 bytes, 368 us
     defw tr_s1r_sport
@@ -247,12 +247,12 @@ tr_colours
     defb #0F,#0F   ; RED
 
 ;; region 6: 3434 of 3435 bytes
-;; region rh1: 74 of 75 bytes
-;; region rh2: 174 of 175 bytes
-;; region rh3: 173 of 175 bytes
+;; region rh1: 75 of 75 bytes
+;; region rh2: 175 of 175 bytes
+;; region rh3: 175 of 175 bytes
 ;; region rh4: 174 of 175 bytes
 ;; region rh5: 175 of 175 bytes
-;; region rh6: 96 of 96 bytes
-;; region f4: 8 of 21 bytes
+;; region rh6: 95 of 96 bytes
+;; region f4: 5 of 21 bytes
 ;; region 4: 135 of 170 bytes
 ;; in the fragments: 465 bytes

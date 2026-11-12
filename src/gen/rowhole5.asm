@@ -3,8 +3,6 @@
 
 trafcode_rh5
 tr_s4_closed_c5
-    ld bc,#D4C0
-    push bc
     push ix
     push ix
     ld bc,#C0E8
@@ -98,6 +96,9 @@ tr_s5_closed
     ld sp,hl
     call tr_st0
     ld b,e
+    ld c,#C0
+    push bc
+    ld c,e
     jp tr_s5_closed_c6
 trafcode_rh5_end
     ASSERT trafcode_rh5_end <= rr_tlo2+256

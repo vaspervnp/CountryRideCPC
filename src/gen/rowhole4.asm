@@ -2,8 +2,7 @@
 ;; Traffic sprite pieces, region rh4 (RAM_C6).
 
 trafcode_rh4
-tr_s0r_closed_c4
-    call tr_stx
+tr_s0l_closed_c4
     push iy
     ld b,iyl
     ld c,#C0
@@ -13,8 +12,8 @@ tr_s0r_closed_c4
     ld b,#C0
     push bc
     push iy
-    push iy
     ld sp,hl
+    push de
     push de
     push de
     push de
@@ -102,6 +101,8 @@ tr_s4_closed
     push bc
     ld sp,hl
     call tr_stm2
+    ld bc,#D4C0
+    push bc
     jp tr_s4_closed_c5
 trafcode_rh4_end
     ASSERT trafcode_rh4_end <= rr_thi+256

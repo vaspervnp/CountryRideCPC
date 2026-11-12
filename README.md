@@ -1190,6 +1190,19 @@ looks like, and `src/traffic.asm` has to match it.
   three; on four, 5 in ~325000 are left (a curve's centre two bytes off,
   the reach a byte more). Demo and race pictures: the worst as before
   (37.4 and 37.3 ms), none late.
+- **Seen from the side.** The two nearest sizes are seen from behind
+  only when they are across the middle of the screen; all of a car right
+  of the middle shows its left flank, all of it left of the middle its
+  right one (`scene.traffic_view`, `tr_one`'s `to_view`), as the player's
+  car would see it. Their renders are turned about the middle of their
+  rear face, nose to the left (`traffic3d.YAW`, `_yaw.png`; the right
+  flank's art is the left's mirror): the nearest size 10 degrees (since
+  2026-11-12; 6 before), the next 6. The view's box is the car's plus the
+  flank - 4 bytes at the nearest, 2 at the next - and the pieces are
+  drawn there instead of the car's (`tr_sinfo`'s views). Turned 10
+  degrees, the nearest's two tail lamps no longer end on the same line:
+  its indicators go on the lowest lines with lights on both sides, on the
+  rear face (`traffic_blinker`).
 - **Drawing.** Each piece is code (`tools/mktrafcode.py`), as a bush's,
   but its paint comes from registers. A byte is all paint or none, so a
   word of paint is `PUSH DE` on even lines and `PUSH IY` on odd ones (two

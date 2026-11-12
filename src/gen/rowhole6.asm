@@ -3,9 +3,6 @@
 
 trafcode_rh6
 tr_s5_closed_c6
-    ld c,#C0
-    push bc
-    ld c,e
     ld b,#C0
     push bc
     ld sp,hl
@@ -55,6 +52,8 @@ tr_s5_closed_c6
     push ix
     ld bc,#C0E8
     push bc
+    ld sp,hl
+    push ix
     jp tr_s5_closed_c7
 trafcode_rh6_end
     ASSERT trafcode_rh6_end <= line_ends+256

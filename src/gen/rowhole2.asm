@@ -6,16 +6,6 @@ tr_s3_closed_c2
     push ix
     push ix
     push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    ld sp,hl
-    call tr_st0
-    ld bc,#D4C0
-    push bc
-    push ix
-    push ix
-    push ix
     ld bc,#C0E8
     push bc
     ld sp,hl
@@ -27,79 +17,88 @@ tr_s3_closed_c2
     ld bc,#C0E8
     push bc
     jp tr_done
-tr_s0l_closed
+tr_s0r_closed
     ld ix,#C0C0
     ld sp,hl
-    call tr_stm1
+    call tr_st1
+    push ix
+    push ix
     ld c,e
-    ld b,#FC
+    ld b,#C0
     push bc
     ld b,e
-    ld c,#C0
+    ld c,#FC
     push bc
-    push ix
-    push ix
     ld sp,hl
-    ld bc,#0802
-    call tr_stx
-    push iy
-    push ix
-    push ix
-    push iy
-    ld sp,hl
-    call tr_stm1
-    ld c,e
-    ld b,#FC
-    push bc
-    push de
-    push ix
-    push ix
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
+    call tr_st1
     ld b,iyl
     ld c,#C0
     push bc
     push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
+    push ix
     push iy
-    ld sp,hl
-    ld bc,#0802
-    call tr_stx
-    push de
-    ld b,e
-    ld c,#C0
+    ld bc,#BCFC
     push bc
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
     push ix
     ld c,e
     ld b,#C0
     push bc
-    push de
+    ld b,e
+    ld c,#3C
+    push bc
     ld sp,hl
     call tr_st0
-    ld bc,#FC7C
+    push iy
+    push ix
+    push ix
+    ld c,iyl
+    ld b,#C0
     push bc
+    ld b,iyl
+    ld c,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    push de
+    push ix
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    ld b,e
+    ld c,#3C
+    push bc
+    ld bc,#E8FC
+    push bc
+    ld sp,hl
+    call tr_st0
+    push iy
+    push ix
+    push ix
+    push iy
+    push iy
+    ld bc,#EDFC
+    push bc
+    ld sp,hl
+    call tr_st1
+    push de
+    push ix
+    push ix
+    push de
+    push de
+    ld bc,#EDFC
+    push bc
+    ld sp,hl
+    ld bc,#0802
+    call tr_stx
     push iy
     ld b,iyl
     ld c,#C0
     push bc
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    ld sp,hl
-    call tr_st0
-    ld c,e
-    ld b,#FC
-    push bc
-    push de
-    ld b,e
-    ld c,#C0
-    push bc
-    jp tr_s0l_closed_c3
+    jp tr_s0r_closed_c3
 trafcode_rh2_end
     ASSERT trafcode_rh2_end <= rr_depth+256

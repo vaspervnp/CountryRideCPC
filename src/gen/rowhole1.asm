@@ -3,16 +3,6 @@
 
 trafcode_rh1
 tr_s3_closed_c1
-    call tr_st1
-    push de
-    push de
-    push de
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    ld bc,#0F0F
-    push bc
     ld bc,#3C3C
     push bc
     ld bc,#0F0F
@@ -43,6 +33,16 @@ tr_s3_closed_c1
     call tr_st0
     ld b,e
     ld c,#C0
+    push bc
+    push ix
+    push ix
+    push ix
+    ld c,e
+    ld b,#C0
+    push bc
+    ld sp,hl
+    call tr_st0
+    ld bc,#D4C0
     push bc
     jp tr_s3_closed_c2
 trafcode_rh1_end

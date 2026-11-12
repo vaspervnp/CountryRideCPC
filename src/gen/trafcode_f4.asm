@@ -3,8 +3,6 @@
 
 trafcode_f4
 tr_s5_closed_c7
-    ld sp,hl
-    push ix
     push ix
     jp tr_done
 trafcode_f4_end

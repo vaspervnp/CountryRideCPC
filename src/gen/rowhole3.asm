@@ -2,25 +2,18 @@
 ;; Traffic sprite pieces, region rh3 (RAM_C6).
 
 trafcode_rh3
-tr_s0l_closed_c3
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
+tr_s0r_closed_c3
     push ix
     ld c,iyl
     ld b,#C0
     push bc
     push iy
+    push iy
+    ld b,iyl
+    ld c,#FC
+    push bc
     ld sp,hl
+    push de
     push de
     push de
     push de
@@ -29,84 +22,88 @@ tr_s0l_closed_c3
     push de
     push de
     jp tr_done
-tr_s0r_closed
+tr_s0l_closed
     ld ix,#C0C0
     ld sp,hl
     call tr_st1
-    push ix
-    push ix
     ld c,e
-    ld b,#C0
+    ld b,#FC
     push bc
     ld b,e
-    ld c,#FC
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    ld sp,hl
+    call tr_stm1
+    ld bc,#FC7C
+    push bc
+    push iy
+    push ix
+    push ix
+    ld c,iyl
+    ld b,#C0
     push bc
     ld sp,hl
     call tr_st0
+    ld c,e
+    ld b,#3C
+    push bc
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    ld bc,#0802
+    call tr_stx
+    ld c,iyl
+    ld b,#C0
+    push bc
+    ld b,iyl
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    push iy
+    ld sp,hl
+    call tr_st0
+    ld bc,#FCD4
+    push bc
+    ld c,e
+    ld b,#3C
+    push bc
+    ld b,e
+    ld c,#C0
+    push bc
+    push ix
+    push ix
+    push de
+    ld sp,hl
+    call tr_st0
+    ld bc,#FCDE
+    push bc
+    push iy
     push iy
     push ix
     push ix
     push iy
     ld sp,hl
     call tr_st1
-    push de
-    push ix
-    push ix
-    push de
-    ld b,e
-    ld c,#FC
+    ld bc,#FCDE
     push bc
+    push de
+    push de
+    push ix
+    push ix
+    push de
     ld sp,hl
     call tr_st0
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
     ld c,iyl
-    ld b,#C0
+    ld b,#FC
     push bc
     push iy
-    ld sp,hl
-    call tr_st0
-    push de
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld sp,hl
-    call tr_st0
-    push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
-    push ix
-    ld c,iyl
-    ld b,#C0
-    push bc
-    push iy
-    ld bc,#BCFC
-    push bc
-    ld sp,hl
-    call tr_st0
-    push de
-    ld b,e
-    ld c,#C0
-    push bc
-    push ix
-    ld c,e
-    ld b,#C0
-    push bc
-    push de
-    ld b,e
-    ld c,#FC
-    push bc
-    ld sp,hl
-    ld bc,#0802
-    jp tr_s0r_closed_c4
+    jp tr_s0l_closed_c4
 trafcode_rh3_end
     ASSERT trafcode_rh3_end <= rr_mask+256
