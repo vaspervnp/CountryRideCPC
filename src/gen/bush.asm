@@ -110,9 +110,11 @@ CAR_TOP       EQU 26   ; its lines from there, drawn whole when it changes
 CAR_HILL_ORG  EQU #F100 ; the views on hills from here (CARn.BIN)
 SPIN_VIEW     EQU 9   ; car_view: spun left in a crash, then right
 SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
-ROLL_VIEW     EQU 11   ; car_view: rolling over, 6 frames (jump.asm)
-ROLL_FRAMES   EQU 6
-ROLL_ABOVE    EQU 6    ; ... its lines this far above CAR_Y at most
+ROLL_VIEW     EQU 11   ; car_view: flipping over, 7 frames (jump.asm)
+ROLL_FRAMES   EQU 7
+ROLL_ABOVE    EQU 10   ; ... its lines this far above CAR_Y at most
+FLIP_T        EQU 73   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)
+FLIP_ROWS     EQU 4    ; ... rows up at most
 ;; per car_view (on the level, uphill, downhill; each straight, turning
 ;; left, turning right; spun left, right; rolling over): where its first
 ;; line's run ends in buffer 0, and its code - the first car's; boot.asm
@@ -131,6 +133,7 @@ car_views
     defw #83F5,car_code2
     defw #83F3,car_code1
     defw #83F5,car_code2
+    defw #83F5,car_code0
     defw #83F5,car_code0
     defw #83F5,car_code0
     defw #83F5,car_code0

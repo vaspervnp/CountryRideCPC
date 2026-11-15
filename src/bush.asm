@@ -790,8 +790,8 @@ car_lines_pitch
     sub SPIN_VIEW-1
     ld (car_vfull),a
 car_lines_seen
-    call car_air                ; (in the air, all it needs: jump.asm)
-    jr nz,car_roll              ; (... and perhaps rolling over)
+    call car_air                ; (flipping over, all it needs: jump.asm,
+    ret nz                      ; car_vfull too)
     ld hl,drawn_off
     call buf_entry
     ld a,(hl)
@@ -822,34 +822,9 @@ car_lines_one
     ret
 
 ;; ---------------------------------------------------------------------------
-;; car_roll - (car_lines) the car up in the air: its first 2 ROLL_FRAMES
-;; pictures (jump_t, which car_jump has moved on: 2 the first) it rolls
-;; over, a frame each two - rolled right, as it was shoved (coll_v
-;; negative), frame 0 on; rolled left, frame ROLL_FRAMES - 1 back: the
-;; same frames the other way round. Destroys AF, C.
-;; ---------------------------------------------------------------------------
-car_roll
-    ld a,(jump_t)
-    sub 2
-    cp 2*ROLL_FRAMES
-    ret nc                              ; (past it: upright, and spinning)
-    srl a                               ; the frame, rolled right
-    ld c,a
-    ld a,(coll_v+1)
-    rla
-    ld a,c
-    jr c,car_roll_set                   ; (shoved right)
-    cpl
-    add a,ROLL_FRAMES                   ; (... left: ROLL_FRAMES - 1 - it)
-car_roll_set
-    add a,ROLL_VIEW
-    ld (car_vfull),a
-    ret
-
-;; ---------------------------------------------------------------------------
-;; car_air - (car_lines) the car thrown up (jump.asm car_jump); while the
-;; jump is on, the shadow's lines whole too (car_shadow drew it in one buffer
-;; or the other). Keeps C; NZ: in the air.
+;; car_air - (car_lines) the car flipping over (jump.asm car_jump); while
+;; the flip is on, the shadow's lines whole too (car_shadow drew it in one
+;; buffer or the other). Keeps C; NZ: flipping (car_vfull its frame).
 car_air
     ld a,(jump_t)
     ld hl,(drawn_up)
@@ -883,7 +858,15 @@ car_shadow
     jr nz,cs_draw
     or c
     ret z                               ; (on the road)
-    ld a,lo(fx_bump)                    ; come down: a thud (sound.asm)
+    ld hl,coll_v+1                      ; come down: the shove a quarter (Out
+    sra (hl)                            ; Run's slide: halved a bounce, and
+    dec hl                              ; none once it stands)
+    rr (hl)
+    inc hl
+    sra (hl)
+    dec hl
+    rr (hl)
+    ld a,lo(fx_bump)                    ; ... and a thud (sound.asm)
     ld (fx_new),a
     ret
 cs_draw

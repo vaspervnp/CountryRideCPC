@@ -183,11 +183,11 @@ Up to two cars at a time drive ahead of you, slower than your car can go. They c
 
 A car with a flashing indicator is moving over to the next lane on that side. Your own car flashes too when you move across the road.
 
-**A bump.** Hit a car and for a second you are shoved away from it, wobbling, though you can go on steering. What it costs depends on the difficulty, and on MEDIUM and HARD on where you hit it. Square on, you lose most of your speed and hardly move sideways. Off its side, you lose less, but you are thrown across the road, and out onto the grass unless you steer against it. Hit one at three quarters of your top speed or more, though, and it is a crash, as below: the car is thrown up and rolls over.
+**A bump.** Hit a car and for a second you are shoved away from it, wobbling, though you can go on steering. What it costs depends on the difficulty, and on MEDIUM and HARD on where you hit it. Square on, you lose most of your speed and hardly move sideways. Off its side, you lose less, but you are thrown across the road, and out onto the grass unless you steer against it. Hit one at three quarters of your top speed or more, though, and it is a crash, as below: the car flips over.
 
 ### Bushes, trees and signs
 
-Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds the car spins out of your control and comes to a standstill. It is then brought back to the middle of the road, and you drive off from a standstill. Hit one at three quarters of your top speed or more, and the car is thrown up into the air and rolls over before it comes down.
+Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds the car spins out of your control and comes to a standstill. It is then brought back to the middle of the road, and you drive off from a standstill. Hit one at three quarters of your top speed or more, and the car flips over, as in Out Run: the blow turns it sideways, it is thrown into the air and tumbles over three times, bouncing lower each time, and lands on its wheels. About three seconds later it is turned back, and then brought back to the middle of the road.
 
 ## Tips
 

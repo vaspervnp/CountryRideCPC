@@ -776,9 +776,8 @@ coll_start
     jr nc,coll_car                      ; 2026-11-12)
     set 6,b
 coll_crash
-    call jump_start                     ; (jump.asm: at speed, thrown up)
-    ld hl,CRASH_V
-    ld de,256+CRASH_T+BACK_T
+    call jump_start                     ; (jump.asm: DE, a crash - at speed,
+    ld hl,CRASH_V                       ; flipping over, longer)
     jr coll_set
 coll_car
     ld a,b

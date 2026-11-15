@@ -16,7 +16,7 @@ OUT_DIR/<car>_<flat|up|down>_<0|left>.png. Turning right is the left view
 mirrored. CARS (default all four) picks which, TURNS (default both) the
 straight ("0") or the turning ("left") views, YAW (default car3d's) the
 turn; PHOTO (default) renders them photorealistic. SPIN renders the crash's
-view instead (spin_render).
+view instead (spin_render), FLIP the car flipping over (flip_render).
 """
 
 import importlib.util
@@ -742,23 +742,34 @@ def spin_render():
 
 
 # ---------------------------------------------------------------------------
-# Rolling over, for a crash at speed (since 2026-11-12; sprites only so far:
-# tools/mkroll.py): the car on the level rolled about its long axis through
-# its middle - right, clockwise as the camera sees it - ROLL_FIRST degrees
-# and then every ROLL_STEP, ROLL_FRAMES views (none upright: that is the
-# straight view), the same camera, scale and light as the other views, in a
-# frame ROLL_LINES high round the same middle, its middle there, to
-# OUT_DIR/<car>_roll<k>.png. Rolling left is these mirrored. ROLL_KS picks
-# which (default all).
+# Flipping over, Out Run's way, for a crash at speed (since 2026-11-15; a
+# barrel roll seen from behind, 2026-11-12 till then): the car turned
+# side-on, nose right, and tumbling forward - its top going away from the
+# camera, over its long axis once it is side-on - as Out Run's (the arcade's, and the SMS's eight
+# pictures, #12-#19: its underside, its flank upside down, its roof, its
+# flank upright). Each of FLIP_POSES is (yaw, tumble) in degrees: yawed
+# first (nose left positive: so -90 is nose right), then tumbled about the
+# world's axis across the road. The car is FLIP_SCALE of its size (as Out
+# Run's, which shows it smaller - further down the road - in its flight),
+# about its middle, in a frame FLIP_LINES high round the other views'
+# middle, to OUT_DIR/<car>_flip<k>.png; FLIP_KS picks which (default all).
+# Upright it is as low as the other views (SQUASH), but only FLIP_WZ of
+# that is the world's (heights on the screen): the rest squashes the car's
+# own height, so seen from above or below it keeps more of its width - as
+# Out Run's chunky tumbling car does.
 # ---------------------------------------------------------------------------
-ROLL_FRAMES = 6
-ROLL_FIRST = 30.0
-ROLL_STEP = 60.0
-ROLL_LINES = 64
-ROLL_KS = globals().get("ROLL_KS", range(ROLL_FRAMES))
+FLIP_POSES = globals().get("FLIP_POSES", [(-75, 115), (-90, 180), (-90, 240), (-90, 300),
+                                          (-90, 0), (-90, 60), (-90, 120)])
+FLIP_SCALE = globals().get("FLIP_SCALE", 0.6)
+FLIP_LINES = 64
+FLIP_WZ = globals().get("FLIP_WZ", 0.7)
+FLIP_UNDER = globals().get("FLIP_UNDER", (0.03, 0.07, 0.35))   # its underside
+                                           # (black on the road: as the SMS's,
+                                           # blue, the tyres black on it)
+FLIP_KS = globals().get("FLIP_KS", range(len(FLIP_POSES)))
 
 
-def roll_render():
+def flip_render():
     paths = []
     os.makedirs(OUT_DIR, exist_ok=True)
     sc = bpy.context.scene
@@ -767,13 +778,17 @@ def roll_render():
         car = MODELS[name]()
         root = bpy.data.objects.new("Squash", None)
         bpy.context.collection.objects.link(root)
-        root.scale = (1, 1, c3.SQUASH)
+        root.scale = (1, 1, FLIP_WZ)
         car.parent = root
         cam = c3.camera()
-        sc.render.resolution_y = ROLL_LINES * c3.CELL_PX[1]   # (the scale as it was)
+        sc.render.resolution_y = FLIP_LINES * c3.CELL_PX[1]   # (the scale as it was)
         if PHOTO:
             photoreal(PAINT[name])
             photo_setup((math.radians(45), 0, 0))
+            under = principled("under", FLIP_UNDER, 0.6)
+            for ob in car.children_recursive:
+                if ob.type == "MESH" and ob.name.split(".")[0] == "under":
+                    ob.data.materials[0] = under
         else:
             c3.setup()
         ground = bpy.data.objects.get("ground")
@@ -786,12 +801,17 @@ def roll_render():
         mid = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, car["length"] / 2,
                       (min(p.z for p in pts) + max(p.z for p in pts)) / 2))
         px_m = c3.CAR_CELLS * c3.CELL_PX[0] / 2.0
-        zf = (cam.location.z + cam.data.shift_y * sc.render.resolution_x / px_m) / c3.SQUASH
-        for k in ROLL_KS:
-            e = Euler((0, math.radians(ROLL_FIRST + k * ROLL_STEP), 0), "XYZ")
-            car.rotation_euler = e
-            car.location = Vector((0, mid.y, zf)) - e.to_matrix() @ mid
-            path = os.path.join(OUT_DIR, "%s_roll%d.png" % (name, k))
+        zf = (cam.location.z + cam.data.shift_y * sc.render.resolution_x / px_m) / FLIP_WZ
+        scale = (FLIP_SCALE, FLIP_SCALE, FLIP_SCALE * c3.SQUASH / FLIP_WZ)
+        sq = Matrix.Diagonal(scale)
+        car.scale = scale
+        for k in FLIP_KS:
+            yaw, tumble = FLIP_POSES[k]
+            r = (Matrix.Rotation(math.radians(-tumble), 3, "X")
+                 @ Matrix.Rotation(math.radians(yaw), 3, "Z"))
+            car.rotation_euler = r.to_euler("XYZ")
+            car.location = Vector((0, mid.y, zf)) - r @ (sq @ mid)
+            path = os.path.join(OUT_DIR, "%s_flip%d.png" % (name, k))
             sc.render.filepath = path
             bpy.ops.render.render(write_still=True)
             paths.append(path)
@@ -800,8 +820,8 @@ def roll_render():
 
 if globals().get("RUN", False):
     result = dict(paths=render())
-if globals().get("ROLL", False):
-    result = dict(paths=roll_render())
+if globals().get("FLIP", False):
+    result = dict(paths=flip_render())
 if globals().get("SPIN", False):
     result = dict(paths=spin_render())
 if globals().get("SIDE", False):

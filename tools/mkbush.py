@@ -1115,6 +1115,16 @@ def main():
         r[2] += ["%s   ; %s, size %d: %d lines" % (prop_label(pk, s), pk, s, data[3])]
         r[2] += defb_lines(data)
         r[1] -= len(data)
+    # the flip a picture at a time (jump.asm car_jump: scene.flip_seq), the
+    # same for every car: in the run that fits it best
+    flip = S.flip_tab()
+    fits = [r for r in hidden if r[1] >= len(flip)]
+    if not fits:
+        raise SystemExit("flip: no room in the hidden lines for its %d bytes" % len(flip))
+    r = min(fits, key=lambda r: r[1])
+    r[2] += ["flip_tab   ; the flip, a picture at a time: the rows up x 32 + car_vfull"]
+    r[2] += defb_lines(flip)
+    r[1] -= len(flip)
     traf_hidden = [(r[0], "#%04X" % r[0], r[2]) for r in hidden if r[2]]
     traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden))
     pieces = [a + b + c + d for a, b, c, d in zip(pieces, p2, hill_pieces, roll_hidden)]
@@ -1258,11 +1268,14 @@ def main():
     emit("SPIN_VIEW     EQU %d   ; car_view: spun left in a crash, then right" % S.SPIN_VIEW)
     emit("SPIN_OFF      EQU %d  ; ... seen so at most this far from the middle"
          % S.SPIN_OFF)
-    emit("ROLL_VIEW     EQU %d   ; car_view: rolling over, %d frames (jump.asm)"
+    emit("ROLL_VIEW     EQU %d   ; car_view: flipping over, %d frames (jump.asm)"
          % (S.ROLL_VIEW, S.ROLL_FRAMES))
     emit("ROLL_FRAMES   EQU %d" % S.ROLL_FRAMES)
-    emit("ROLL_ABOVE    EQU %d    ; ... its lines this far above CAR_Y at most"
+    emit("ROLL_ABOVE    EQU %d   ; ... its lines this far above CAR_Y at most"
          % S.ROLL_ABOVE)
+    emit("FLIP_T        EQU %d   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)"
+         % len(S.flip_seq()))
+    emit("FLIP_ROWS     EQU %d    ; ... rows up at most" % max(r for v, r in S.flip_seq()))
     emit(";; per car_view (on the level, uphill, downhill; each straight, turning")
     emit(";; left, turning right; spun left, right; rolling over): where its first")
     emit(";; line's run ends in buffer 0, and its code - the first car's; boot.asm")

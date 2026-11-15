@@ -464,7 +464,7 @@ at the graphics cursor, a letter at a time, each key in pen 15, each word in
 pen 3 (the credits' sky blue) and the one picked in 13. When the car is
 picked it stops the turning (`CALL &9C03`), inks the keys' line out, and
 loads the game over it: each of `ROADA.BIN`, `ROADBn.BIN` (the picked
-car's: bank 5 with its views rolling over, below), `ROADC.BIN` and
+car's: bank 5 with its frames flipping over, below), `ROADC.BIN` and
 `GAME.BIN` at `&4000` with its bank (4-7) switched in there, `SOUND.BIN` at
 `&98C0` and `RACE.BIN` at `&A0C0` - every file packed (below) - while the
 screen stays, the picked car's frame flashing; then it puts its `CARn.BIN`
@@ -615,18 +615,19 @@ first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
 
-Each car's six views rolling over (since 2026-11-12, 3.25-3.47K a car) are
-most of them in bank 5, which the car's code runs with only there (`RAM_C5`):
-under each of its per group arrays but the first three (205 bytes each,
-under the other 13), and past the bank's code (`ROLL5_TAIL`, `#7D00`, to
-`SB`) - 3382 bytes nothing writes in a race. So bank 5's file is a car's
-too: `ROADB0.BIN`-`ROADB3.BIN`, each main.asm's bank 5 (`build/roadb.raw`)
-with that car's views in that room (`build/roll5_<n>.raw`, `gen/roll5.asm`)
-- `gen/roadbn.asm` in `src/pack.asm` puts each together, with `INCBIN`s
-of each in turn. What does not fit there (up to 142 bytes) goes in the
-hidden lines the views on hills leave in pages 0 and 2, with each view's
-way in (`RAM_C5`, then into bank 5) and `roll_done` (`RAM_C1` again, for
-`bush_spr_done`): `CARn.BIN`'s records (`tools/mkbush.py` `roll_place`).
+Each car's seven frames flipping over (since 2026-11-15, 3.1-3.2K a car;
+its six rolling over, 3.25-3.47K, from 2026-11-12) are in bank 5, which the
+car's code runs with only there (`RAM_C5`): under each of its per group
+arrays but the first three (205 bytes each, under the other 13), and past
+the bank's code (`ROLL5_TAIL`, `#7D00`, to `SB`) - 3382 bytes nothing writes
+in a race. So bank 5's file is a car's too: `ROADB0.BIN`-`ROADB3.BIN`, each
+main.asm's bank 5 (`build/roadb.raw`) with that car's frames in that room
+(`build/roll5_<n>.raw`, `gen/roll5.asm`) - `gen/roadbn.asm` in
+`src/pack.asm` puts each together, with `INCBIN`s of each in turn. What
+does not fit there would go in the hidden lines the views on hills leave in
+pages 0 and 2; there are each frame's way in (`RAM_C5`, then into bank 5)
+and `roll_done` (`RAM_C1` again, for `bush_spr_done`), 64 bytes:
+`CARn.BIN`'s records (`tools/mkbush.py` `roll_place`).
 
 The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
@@ -1294,7 +1295,7 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   further (no more than 2 pairs a picture: the crash's 1.9 is what the
   road's steps have been measured with).
 - **A car at 3/4 of the top speed or faster: a crash too** (since
-  2026-11-12), as a bush's below - thrown up, rolling over.
+  2026-11-12), as a bush's below - flipping over.
 - **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
   it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
   of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
@@ -1308,44 +1309,64 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   48; 60 and 64 till the cars were made narrower, 2026-11-07), so further than `SPIN_OFF` (16 pairs) from the middle it would run
   off the screen: there `car_lines` shows the car turning instead. Spun,
   the car is seen on the level whatever the slope.
-- **A bush at speed: thrown up, rolling over.** At 3/4 of the car's top
-  speed or faster (`jump_min`, which `car_setup` works out from its top;
-  4/5 of the fastest's, `JUMP_SPEED`, till 2026-11-12) the crash throws
-  the car up, a character row - 8
-  lines - at a time, as its views' code is made for its rows (`car_draw`
-  starts it higher: `car_raise`): up to 5 rows, 40 lines (6, 48, until
-  the car stood higher, 2026-11-05: a 6th row would reach the ground
-  band), in 6 pictures,
-  held for 4, down in 5, and a bounce of a row - 0.76 s (`jump_rows`) -
-  rolling over on the way up and down, then spinning as the crash has it:
-  six frames (`tools/rollart.py`: rolled right 30, 90 ... 330 degrees, a
-  frame each 2 pictures, 12 pictures - `car_roll` in `src/bush.asm`, car_view
-  `ROLL_VIEW` on) the way it was shoved, rolling left the same frames
-  backwards (rolled left 30 degrees is rolled right 330). They are rendered
-  in Blender (`tools/cars3d.py`, `ROLL=True`) about the car's long axis
-  through its middle, squashed after as the other views, so on its side the
-  car is 31 lines, not 68; `tools/mkroll.py` brings them to the car's pens,
-  each line's run widened to whole pairs of bytes from any byte (not from
-  the car's pair grid) in the colours at its ends, not the asphalt's grey -
-  up in the air the grass can be under it. A frame's box is 32 pixels wide
-  and 31-32 lines, a character row higher than its render has it (so its
-  last line is the car's: it is only drawn up in the air) - `ROLL_ABOVE`, 6
-  lines over the car's top line, which `cj_mark` draws whole too and the
-  road's top keeps clear of; ~1.0 ms a frame, the spun views' 1.3-1.4 -
-  its shadow on the road under it, three black lines, smaller the higher
-  it is (40 pixels wide a row up, 24 five up: `SHADOW_W`, 26 bytes till
-  2026-11-07, as the car narrower), and a thud as it comes down (`car_shadow`). Never higher than the
-  road's top in the picture (`car_jump`): over a crest the ground behind
-  it is not drawn again. In each buffer the car's
-  lines where it was shown last are drawn whole - the grass's middle
-  line's own template too (`cj_mark`), the shadow's lines while the jump is
-  on (`car_air`) - and while it is up the far lines' road is drawn even
-  where it is as it was (`jump_frame`, as `traffic_pre` has it for a car
-  up there), so nothing of it stays behind; where it is now, the road is
-  as `road_project` has it, right for the car to be drawn over
-  (`src/jump.asm`). (Until 2026-11-05 those lines were drawn whole too;
-  with the shorter stripes, that made a picture in the air late - 40.3 ms,
-  1 in 6000 - where now the worst takes 38.9 ms.)
+- **A bush at speed: flipping over, Out Run's way** (since 2026-11-15;
+  from 2026-10-31 thrown up and down once, rolling over seen from behind
+  since 2026-11-12). At 3/4 of the car's top speed or faster (`jump_min`,
+  which `car_setup` works out from its top) the crash flips the car over as
+  Out Run does - the arcade (its `ocrash.cpp` as Cannonball has it: the blow
+  spins the car, then three tumbling sequences, each frame held 2, 3 and 4
+  ticks, a hop each, the slide halved at each bounce, then 30 ticks still
+  before the camera pans back) and the SMS (its pictures `#12`-`#19`: the
+  underside, the flank upside down, the roof, the flank upright). The car
+  is seen turning, then spun, its nose to the right (its first picture the
+  heaviest, the car still at speed: so the turning view, 0.8 ms, not the
+  spun one's 1.35), then turned side-on and tumbling
+  forward, its top going away, three times round in three hops, each lower
+  and slower (a frame each 2, then 3, then 4 pictures), and down on its
+  wheels side-on. It stands so for 20 pictures, is seen spun again for 4,
+  and the crash brings it back to the middle of the road: 73 pictures,
+  2.9 s (`FLIP_T`; a crash slower than that, 1.8 s: `CRASH_T`).
+  `flip_tab` has a byte a picture, the view (`car_vfull`) and the rows up
+  (times 32). It lives in the hidden lines, the same in every `CARn.BIN`
+  (`tools/scene.py` `flip_seq`, placed by `tools/mkbush.py`). The car goes
+  up a character row - 8 lines - at a time, as its views' code is made for
+  its rows (`car_draw` starts it higher: `car_raise`): up to 4 rows, 32
+  lines, in the first hop, 2 in the second, 1 in the third. At each landing
+  a thud, and the shove sideways a quarter of what it was (`car_shadow`):
+  1.9 pairs a picture in the first hop, then 0.47, 0.12 and 0.03.
+  The frames are seven a car (`tools/rollart.py`, car_view `ROLL_VIEW`
+  on): one on the way round (yawed 75 degrees, tumbled 115: its
+  underside), then side-on every 60 degrees - upside down, 240, 300 (the
+  roof), upright, 60 and 120 (the underside). They are rendered in Blender
+  (`tools/cars3d.py`, `FLIP=True`) at 0.6 of the car's size, as Out Run
+  shows its car smaller - further down the road - in its flight: 36 pixels
+  long side-on, against the rear view's 28 across. Upright the car is as
+  low as in its other views, but only 0.7 of that squash is the screen's
+  and the rest the car's own height, so seen from above or below it keeps
+  more of its width, chunky as Out Run's. Its underside is blue, as the
+  SMS's: black would not tell from its tyres. `tools/mkroll.py` brings them
+  to the car's pens, each line's run widened to whole pairs of bytes from
+  any byte (not from the car's pair grid) in the colours at its ends, not
+  the asphalt's grey - in the air the grass can be under it. A car's frames
+  share one box, 36 pixels wide and 32-33 lines, each frame at its bottom -
+  the line the car's wheels stand on - so whichever way up it is, it comes
+  down on the road there. That is `ROLL_ABOVE`, 10 lines over the car's
+  top line, which `cj_mark` draws whole too and the road's top keeps clear
+  of. A frame takes 0.45-1.3 ms (the spun views 1.3-1.4). In the air its
+  shadow is on the road under it, three black lines, smaller the higher it
+  is (40 pixels wide a row up, 28 four up: `SHADOW_W`), and a thud as it
+  comes down (`car_shadow`). Never higher than the road's top in the picture
+  (`car_jump`): over a crest the ground behind it is not drawn again. In
+  each buffer the car's lines where it was shown last are drawn whole -
+  `drawn_up` has `#80` on for a frame of the flip, so on the ground too -
+  the grass's middle line's own template too (`cj_mark`), and the shadow's
+  lines while the flip is on (`car_air`). And while it is on the far
+  lines' road is drawn even where it is as it was (`jump_frame`, as
+  `traffic_pre` has it for a car up there), so nothing of it stays behind.
+  Where it is now, the road is as `road_project` has it, right for the car
+  to be drawn over (`src/jump.asm`). (Until 2026-11-05 those lines were
+  drawn whole too; with the shorter stripes, that made a picture in the air
+  late - 40.3 ms, 1 in 6000.)
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -1625,6 +1646,17 @@ first car, the fourth), every picture as `scene.py` draws it; the road,
 the HUD and the screen in the three R5 models as `scene.py` has them, for
 all four cars. The worst view now takes 1.76 ms to draw, against 1.82.
 
+With the car flipping over, Out Run's way (2026-11-15): crashes forced at
+the top speed, and those the autopilot makes at a car or a bush, 13-16
+flips a car in 6000 pictures, on the level and on hills (fewer rows over a
+crest), every picture as `scene.py` draws it; 30.0-31.5 ms on average
+while flipping, 37.9 ms at worst, none past the flip. 16 races in the four
+cars, 37.3-38.2 ms at worst but one at 39.4 ms: the flip's first picture,
+the car hit at speed and seen spun. Seen turning there instead (0.55 ms
+less), the same race took 37.6 ms at worst, and that car's four routes
+37.6-38.0. The road, the HUD and the screen in the three R5 models as
+`scene.py` has them, for all four cars.
+
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
 `car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
@@ -1812,7 +1844,8 @@ src/            the game
                 effects, the music on or off (RACE.BIN)
   race.asm      the pause, the best times, FASTEST TIME!, the start of a
                 race (RACE.BIN)
-  jump.asm      a crash at speed: the car thrown up, rolling over (RACE.BIN)
+  jump.asm      a crash at speed: the car flipping over, Out Run's way
+                (RACE.BIN)
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
@@ -1830,12 +1863,12 @@ tools/
   car3d.py      the game's camera, curved shapes (lofts, arches,
                 fenders) for all the cars' models (Blender)
   cars3d.py     all four cars' models, rendered photorealistic in Blender:
-                nine views each from behind, one spun (SPIN), six rolled
-                over (ROLL), one from the side -> assets/cars/
+                nine views each from behind, one spun (SPIN), seven
+                flipping over (FLIP), one from the side -> assets/cars/
   dither.py     renders to mode 0: mean colours, the CPC's checkerboards
   mkcar.py      sprite art from renders: lone pixels, whole pairs, the box
   mkcars.py     the cars' views in the game's pens, flat -> tools/carsart.py
-  mkroll.py     ... rolling over -> tools/rollart.py
+  mkroll.py     ... flipping over -> tools/rollart.py
   mkselect.py   the title and the screen the car is picked on, the cars
                 from their pictures
                 -> src/gen/select.scr

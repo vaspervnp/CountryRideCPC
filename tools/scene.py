@@ -1080,7 +1080,7 @@ def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0, lanes=None):
 # ---------------------------------------------------------------------------
 
 from carsart import GAME_ART, GAME_GROUND, GAME_R0  # noqa: E402
-from rollart import ROLL_ART, ROLL_TOP  # noqa: E402
+from rollart import ROLL_ART, ROLL_Y  # noqa: E402
 import outrun as OR  # noqa: E402
 
 CARS = ["player", "ferrari", "lotus", "bmw"]    # car_id 0-3
@@ -1102,14 +1102,13 @@ CAR_VIEWS = 11                  # car_view: on the level, uphill, downhill;
                                 # then spun in a crash, left and right (a
                                 # wider box, as much more either side)
 SPIN_VIEW = 9
-ROLL_VIEW = CAR_VIEWS           # then rolling over in a crash at speed, thrown
-ROLL_FRAMES = 6                 # up (jump.asm): rolled right 30, 90 ... 330
-                                # degrees (tools/rollart.py; rolling left: the
-                                # same backwards) - a box as tall as the
-                                # frame, its lines from view_y
-ROLL_LIFT = 8                   # ... a character row higher than its frame
-                                # has it, so that its last line is the car's
-                                # (in the air only: car_up a row or more)
+ROLL_VIEW = CAR_VIEWS           # then flipping over in a crash at speed, Out
+ROLL_FRAMES = 7                 # Run's way (jump.asm, FLIP_SEQ): turned side-on,
+                                # nose right, tumbling forward - a frame on the
+                                # way round, then upside down, 240, 300,
+                                # upright, 60, 120 degrees (tools/rollart.py) -
+                                # a box as tall as the tallest, each frame at its
+                                # bottom, the line the wheels stand on (view_y)
 HIT_HALF = 9                    # bytes either side of the car's middle it
                                 # touches a car or a bush in (game.asm
                                 # CAR_HALF): its box's when it turned 10
@@ -1213,12 +1212,58 @@ def view_y(view):
     """car_view's first line from the car's top line (CAR_Y), on the ground."""
     if view < ROLL_VIEW:
         return 0
-    return ROLL_TOP[CARS[CAR_ID]] - GAME_R0 - ROLL_LIFT
+    return ROLL_Y[CARS[CAR_ID]]
 
 
-ROLL_ABOVE = max(ROLL_LIFT + GAME_R0 - t for t in ROLL_TOP.values())   # lines a
-                                # rolling car reaches above CAR_Y at most
-                                # (jump.asm: its lines drawn whole)
+ROLL_ABOVE = max(-y for y in ROLL_Y.values())   # lines a flipping car reaches
+                                # above CAR_Y at most (jump.asm: its lines
+                                # drawn whole)
+
+
+# The flip, a picture at a time (jump.asm car_jump: FLIP_TAB, CARn.BIN) - Out
+# Run's (the arcade's ocrash.cpp, as Cannonball has it, and the SMS's L2DED):
+# the blow turns the car (seen turning, then spun, nose right: FLIP_TURN,
+# FLIP_SPUN - the first picture the heaviest, the car hit at speed, so its
+# view the cheaper turning one: 0.8 ms, the spun 1.35), then it tumbles
+# over, three times, a frame each 2 pictures, then 3 and 4 as it slows -
+# three hops, each lower, the frames on as they were (Out Run's sequences:
+# held 2, 3 and 4 ticks) - and comes down on its wheels side-on, stays so a
+# while (Out Run's 30 ticks before its camera pans back) and is turned back
+# (spun) before the crash brings it back to the middle of the road. Per
+# picture (car_vfull, car_up): the view, and the rows up - never more than
+# the road's top lets it (car_jump clamps), 4 on the level.
+FLIP_TURN = 2                   # turning right, on the level
+FLIP_SPUN = SPIN_VIEW + 1       # spun right: its nose to the right
+FLIP_HOLDS = [2] * 8 + [3] * 5 + [4] * 4    # the frame on the way round, then
+                                # every 60 degrees round three times
+FLIP_ROWS = ([1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 1, 1]       # the throw
+             + [0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0]              # a bounce
+             + [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]           # and another
+             + [0] * 20                                                  # side-on
+             + [0] * 4)                                                  # turned back
+FLIP_REST = 20                  # pictures side-on, upright, at the end (Out
+FLIP_BACK = 4                   # Run's 30 ticks), then this many spun
+
+
+def flip_seq():
+    """The flip: (car_vfull, car_up) a picture, from the picture after the
+    crash's."""
+    views = [FLIP_TURN, FLIP_SPUN]
+    frames = [0] + [1 + i % 6 for i in range(len(FLIP_HOLDS) - 1)]
+    for f, h in zip(frames, FLIP_HOLDS):
+        views += [ROLL_VIEW + f] * h
+    assert frames[-1] == 4                  # (upright)
+    views += [ROLL_VIEW + 4] * FLIP_REST + [FLIP_SPUN] * FLIP_BACK
+    assert len(views) == len(FLIP_ROWS) and max(FLIP_ROWS) * 8 + ROLL_ABOVE <= CAR_Y - ROAD_Y
+    return list(zip(views, FLIP_ROWS))
+
+
+def flip_tab():
+    """jump.asm's FLIP_TAB: a byte a picture, the rows up times 32 and the
+    view, then #FF."""
+    out = [r * 32 + v for v, r in flip_seq()]
+    assert all(v < 32 and r < 8 for v, r in flip_seq()) and 0xFF not in out
+    return out + [0xFF]
 
 
 def view_x(view):
