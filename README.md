@@ -480,11 +480,20 @@ decoder after the format's reference one) and checks it byte for byte, and
 that it fits where it is loaded - in `make`. `SELECT.BIN`, loaded at `&4000`
 and called, copies the unpacker (`src/dzx0.asm`, rasm's `dzx0_standard`: 68
 bytes, the main registers and the stack only, so the firmware's interrupts
-run on) to `&A600` - past `RACE.BIN`'s place, before the 6128's characters
-240-255 - and unpacks the screen. Then the loader loads each file at `&8000`
-and calls `&A600`, or - the car's and `BOOT.BIN`, which would reach the
-sound and the race - at `&C000`, once the screen is black, and calls
-`&A605` (`src/discmap.asm`). 119,230 bytes go on the disc as 42,999 (36%):
+run on) to `&3F80` - under `&4000`, past where the car's file unpacks,
+where nothing else goes while the loader runs - and unpacks the screen.
+Then the loader loads each file at `&8000` and calls `&3F80`, or - the
+car's and `BOOT.BIN`, which would reach the sound and the race - at
+`&C000`, once the screen is black, and calls `&3F85` (`src/discmap.asm`).
+Till 2026-11-15 the unpacker was at `&A600`, just under the 6128's
+characters 240-255 (`&A67C`): a player with an M4 board found the loader
+dying once the car was picked ("Syntax error in 310"). Beside AMSDOS the
+M4's ROM takes 128 bytes more at the top of memory (`HIMEM` `&A5FB`, not
+`&A67B`), so those characters were at `&A5FC`, and the loader's `SYMBOL`s
+for its letters wrote over the unpacker. Nothing the loader puts at
+`&8000` or past it now goes past `MEM_TOP` (`&A5FC`, checked by `make`);
+the test for it: `SYMBOL AFTER 256:MEMORY &A67B:SYMBOL AFTER 240` before
+`RUN"COUNTRY`. 119,230 bytes go on the disc as 42,999 (36%):
 the screen 22%, the banks 22-31%, the game 59%, `BOOT.BIN` 45%, the cars
 about 41%, the sound and the race 82-88%. The disc has 51K on it, not 128K,
 and from `RUN"COUNTRY` the select screen was ready in 16.5 s, not 21.0, and

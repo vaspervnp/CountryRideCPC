@@ -18,25 +18,27 @@ import re
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
-# Each file: where the loader loads it, and what it must end before - the
-# unpacker for the banks (they unpack in #4000-#7FFF), the place it unpacks
+# Each file: where the loader loads it, and what it must end before - MEM_TOP
+# for the banks (they unpack in #4000-#7FFF), the place it unpacks
 # to for the sound and the race (the race's: the sound, already there), the
 # memory's end for the car's file and BOOT.BIN (the screen black by then);
 # SELECT.BIN, at #4000, its unpacker and code first (here only its data); the
 # turning's streams (into banks 4-7 and #4000) and code (unpacked at
 # SPIN_CODE, past it) as the banks
 FITS = [("revive", "#4000", "#8000"), ("select", "#4000", "#8000"),
-        ("spina", "PACK_LOW", "UNPACK"), ("spinb", "PACK_LOW", "UNPACK"),
-        ("spinc", "PACK_LOW", "UNPACK"), ("spind", "PACK_LOW", "UNPACK"),
-        ("spine", "PACK_LOW", "UNPACK"), ("spin", "PACK_LOW", "SPIN_CODE"),
-        ("roada", "PACK_LOW", "UNPACK"), ("roadb0", "PACK_LOW", "UNPACK"),
-        ("roadb1", "PACK_LOW", "UNPACK"), ("roadb2", "PACK_LOW", "UNPACK"),
-        ("roadb3", "PACK_LOW", "UNPACK"),
-        ("roadc", "PACK_LOW", "UNPACK"), ("game", "PACK_LOW", "UNPACK"),
+        ("spina", "PACK_LOW", "MEM_TOP"), ("spinb", "PACK_LOW", "MEM_TOP"),
+        ("spinc", "PACK_LOW", "MEM_TOP"), ("spind", "PACK_LOW", "MEM_TOP"),
+        ("spine", "PACK_LOW", "MEM_TOP"), ("spin", "PACK_LOW", "SPIN_CODE"),
+        ("roada", "PACK_LOW", "MEM_TOP"), ("roadb0", "PACK_LOW", "MEM_TOP"),
+        ("roadb1", "PACK_LOW", "MEM_TOP"), ("roadb2", "PACK_LOW", "MEM_TOP"),
+        ("roadb3", "PACK_LOW", "MEM_TOP"),
+        ("roadc", "PACK_LOW", "MEM_TOP"), ("game", "PACK_LOW", "MEM_TOP"),
         ("sound", "PACK_LOW", "SOUND_BLOB"), ("race", "PACK_LOW", "SOUND_BLOB"),
         ("car0", "PACK_HIGH", "#10000"), ("car1", "PACK_HIGH", "#10000"),
         ("car2", "PACK_HIGH", "#10000"), ("car3", "PACK_HIGH", "#10000"),
         ("boot", "PACK_HIGH", "#10000")]
+
+UNPACK_AT = None    # (discmap.asm's UNPACK, up to #4000: no file unpacks over it)
 
 # the files not made by main.asm: where their bytes are
 RAW = {"revive": ("assets", "revive8b.scr")}
@@ -114,11 +116,17 @@ def check(name, at, end):
                          % (name, len(out), n, len(pk) - 2, len(raw)))
     if at + len(pk) > end:
         raise SystemExit("%s: #%04X-#%04X, past #%04X" % (name, at, at + len(pk), end))
+    to = int.from_bytes(pk[:2], "little")
+    if to < 0x4000 and UNPACK_AT < to + len(raw):   # (it has #4000 less UNPACK)
+        raise SystemExit("%s: unpacks to #%04X-#%04X, over the unpacker (#%04X)"
+                         % (name, to, to + len(raw), UNPACK_AT))
     return len(raw), len(pk), int.from_bytes(pk[:2], "little")
 
 
 def main():
+    global UNPACK_AT
     eq = discmap()
+    UNPACK_AT = eq["UNPACK"]
     num = (lambda v: int(v[1:], 16) if v.startswith("#") else eq[v])
     total = [0, 0]
     for name, at, end in FITS:

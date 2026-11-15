@@ -123,7 +123,7 @@ unpack_file                             ; HL = a file: where it goes, then
 unpack_end
     ORG unpack_ph+unpack_end-UNPACK
     ASSERT from_low == UNPACK_LOW && from_high == UNPACK_HIGH
-    ASSERT unpack_end <= #A67C          ; (the 6128's characters 240-255)
+    ASSERT unpack_end <= #4000          ; (discmap.asm)
 select_pk
     defw #C000
     LZX0

@@ -59,7 +59,7 @@ T_LOADA = T_RUN0 + 2 * R + 6
 T_SET = T_LOADA + 8
 T_END = T_SET + 10
 AREAS = [0xC4, 0xC5, 0xC6, 0xC7, 0xC0]   # banks 4-7, then base memory at #4000
-PACKED_MAX = 0xA600 - 0x8000 - 2         # (UNPACK - PACK_LOW, less the word)
+PACKED_MAX = 0xA5FC - 0x8000 - 2         # (MEM_TOP - PACK_LOW, less the word)
 
 # the timing (spin.asm), in microseconds (NOPs) from a VSYNC's end (line 248)
 CALL_US = 60                     # tn_play's own, a car (its table, the bank, the call)

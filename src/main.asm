@@ -216,6 +216,7 @@ sound_end
     defw #FFFF
 race_end
     ASSERT race_end <= FRAG8+4*#800        ; (fragment 12's place)
+    ASSERT race_end <= MEM_TOP
     SAVE "build/race.raw",RACE_BLOB,race_end-RACE_BLOB
 
     BANK
@@ -233,7 +234,7 @@ race_end
     ORG SPIN_CODE
     INCLUDE "spin.asm"
 spin_end
-    ASSERT spin_end <= UNPACK
+    ASSERT spin_end <= MEM_TOP
     SAVE "build/spin.raw",SPIN_CODE,spin_end-SPIN_CODE
 
     BANK
