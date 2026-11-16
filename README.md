@@ -90,7 +90,7 @@ On the flat it is:
 |---|---|---|
 | 0–63 | ~1/4 | HUD on navy: TIME, SPEED gauge with the gear (L or H), TOTAL TIME, CHECKPOINT gauge; a line of messages |
 | 64–135 | ~1/4 | navy, the HUD's colour |
-| 136–179 | ~1/6 | dithered sky fading into the navy, snowy mountains up to 28 lines high |
+| 136–179 | ~1/6 | dithered sky fading into the navy, clouds, snowy mountains up to 28 lines high |
 | 180–187 | | a band of ground |
 | 188–267 | 3/10 … 1/4 | the road: 80 lines on the flat, 66 behind a crest |
 | 268–271 | | black: a monitor's edge hides these, and drawing them took ~0.7 ms a picture |
@@ -442,7 +442,23 @@ row count and R5 lines.
   columns'; 2.8K instead of 6K). That takes
   ~1.4 ms, done at the flip, before the sky part is on screen, so it never
   tears. The dithered sky repeats every word, so only the mountains seem to
-  move.
+  move - and the clouds.
+- **Clouds** (since 2026-11-16). Five of them hang over the mountains, in
+  the sky part's two rows above the panorama's (lines 132-147 on the flat:
+  `scene.CLOUDS`, each a base line and puffs, white, pastel under them -
+  the stage's tint: orange at SUNSET). They are as far off as the mountains,
+  so they turn with them, a word at a time as the road bends, and stand
+  still on a straight. `ring_col` wrote those two rows plain, the same
+  dither pair a line; now it goes to `cloud_col`, which writes each from a
+  16-byte tile (a word by 8 lines) whose address `cloud_map0`/`cloud_map1`
+  have per panorama column - the plain sky's are `sky_pairs`. 52 different
+  tiles, 1354 bytes with the code and the maps, all where `RAM_C3` sees
+  them: what the traffic left of the fragments (826) and the hidden lines
+  (528, `CARn.BIN`'s records; `tools/mkbush.py` `cloud_items`). A turn of
+  the ring takes 40 us more (`ring_col` 934 us, 894 before). The big navy
+  band over the sky part is border, not memory: nothing can be drawn
+  there, and making it memory would take a CRTC part more and a column of
+  it written at each turn.
 - **Timing.** The Gate Array interrupts come at fixed lines (~274, 14, 66,
   118, 170, 222), and each handler sets up the next one's, so none has to
   work out where the frame is. Each register is written with more than five
@@ -629,8 +645,9 @@ first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
 
-Each car's seven frames flipping over (since 2026-11-15, 3.1-3.2K a car;
-its six rolling over, 3.25-3.47K, from 2026-11-12) are in bank 5, which the
+Each car's seven frames flipping over (since 2026-11-15; 4.0-4.1K a car
+since 2026-11-16, 20% bigger - 3.1-3.2K till then; its six rolling over,
+3.25-3.47K, from 2026-11-12) are in bank 5, which the
 car's code runs with only there (`RAM_C5`): under each of its per group
 arrays but the first three (205 bytes each, under the other 13), and past
 the bank's code (`ROLL5_TAIL`, `#7D00`, to `SB`) - 3382 bytes nothing writes
@@ -638,10 +655,12 @@ in a race. So bank 5's file is a car's too: `ROADB0.BIN`-`ROADB3.BIN`, each
 main.asm's bank 5 (`build/roadb.raw`) with that car's frames in that room
 (`build/roll5_<n>.raw`, `gen/roll5.asm`) - `gen/roadbn.asm` in
 `src/pack.asm` puts each together, with `INCBIN`s of each in turn. What
-does not fit there would go in the hidden lines the views on hills leave in
-pages 0 and 2; there are each frame's way in (`RAM_C5`, then into bank 5)
-and `roll_done` (`RAM_C1` again, for `bush_spr_done`), 64 bytes:
-`CARn.BIN`'s records (`tools/mkbush.py` `roll_place`).
+does not fit there goes on in the hidden lines the views on hills leave in
+pages 0 and 2 (since the frames are 20% bigger, 713-786 bytes a car), with
+each frame's way in (`RAM_C5`, then into bank 5) and `roll_done` (`RAM_C1`
+again, for `bush_spr_done`), 64 bytes: `CARn.BIN`'s records
+(`tools/mkbush.py` `roll_place`). The traffic's pieces that go there have
+925 bytes left after them (1711 before).
 
 The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
@@ -1424,26 +1443,30 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   a thud, and the shove sideways a quarter of what it was (`car_shadow`):
   1.9 pairs a picture in the first hop, then 0.47, 0.12 and 0.03.
   The frames are seven a car (`tools/rollart.py`, car_view `ROLL_VIEW`
-  on): one on the way round (yawed 75 degrees, tumbled 115: its
+  on): one on the way round (yawed 78 degrees, tumbled 115: its
   underside), then side-on every 60 degrees - upside down, 240, 300 (the
   roof), upright, 60 and 120 (the underside). They are rendered in Blender
-  (`tools/cars3d.py`, `FLIP=True`) at 0.6 of the car's size, as Out Run
-  shows its car smaller - further down the road - in its flight: 36 pixels
-  long side-on, against the rear view's 28 across. Upright the car is as
+  (`tools/cars3d.py`, `FLIP=True`) at 0.72 of the car's size, as Out Run
+  shows its car smaller - further down the road - in its flight: 44 pixels
+  long side-on, against the rear view's 28 across (0.6 and 36 pixels till
+  2026-11-16, when they looked too small). Upright the car is as
   low as in its other views, but only 0.7 of that squash is the screen's
   and the rest the car's own height, so seen from above or below it keeps
   more of its width, chunky as Out Run's. Its underside is blue, as the
   SMS's: black would not tell from its tyres. `tools/mkroll.py` brings them
   to the car's pens, each line's run widened to whole pairs of bytes from
   any byte (not from the car's pair grid) in the colours at its ends, not
-  the asphalt's grey - in the air the grass can be under it. A car's frames
-  share one box, 36 pixels wide and 32-33 lines, each frame at its bottom -
+  the asphalt's grey - in the air the grass can be under it - and leaves
+  out a frame's first or last line if it has 8 pixels or fewer (`THIN`: a
+  tyre's edge, which made the tallest flanks a line too tall to stay under
+  the far lines four rows up). A car's frames
+  share one box, 40-44 pixels wide and 34-36 lines, each frame at its bottom -
   the line the car's wheels stand on - so whichever way up it is, it comes
-  down on the road there. That is `ROLL_ABOVE`, 10 lines over the car's
-  top line, which the road's top keeps clear of. A frame takes 0.45-1.3 ms
-  (the spun views 1.3-1.4). In the air its
+  down on the road there. That is `ROLL_ABOVE`, 13 lines over the car's
+  top line, which the road's top keeps clear of. A frame takes 0.62-1.75 ms
+  (0.45-1.3 the frames as small as before; the spun views 1.3-1.4). In the air its
   shadow is on the road under it, three black lines, smaller the higher it
-  is (40 pixels wide a row up, 28 four up: `SHADOW_W`), and a thud as it
+  is (48 pixels wide a row up, 36 four up: `SHADOW_W`), and a thud as it
   comes down (`car_shadow`). Never higher than the road's top in the picture
   (`car_jump`): over a crest the ground behind it is not drawn again. In
   each buffer the lines the car had where it was shown last are drawn
@@ -1451,11 +1474,11 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   last showed, the view and the rows up - the grass's middle line's own
   template too, and the shadow's lines while the flip is on (`car_air`).
   Those are the frame's own lines, from the wheels' line up (`cj_mark` in
-  `src/road15.asm`, `flip_lines`: 12 lines for the car upside down or
-  upright, 24-25 on its flanks, 33 for the first; a view of the car's own
+  `src/road15.asm`, `flip_lines`: 14-15 lines for the car upside down or
+  upright, 28-29 on its flanks, 36 for the first; a view of the car's own
   26), not the frames' whole box: four rows up, where the road is narrow,
   a whole line costs three times its road. And no frame reaches a far line
-  (`scene.flip_far_gap`: 3 lines short at the least, on any hill - checked
+  (`scene.flip_far_gap`: a line short at the least, on any hill - checked
   when the tables are made), so the far lines that have not changed stay
   as they are. Where the car is now, the road is as `road_project` has it,
   right for the car to be drawn over (`src/jump.asm`). (Till 2026-11-16
@@ -1801,6 +1824,26 @@ on the grass when it gets there (112 pictures a race for 50); with the
 traffic and the bushes 245.8 s against 255.0, with 13.5 crashes a race
 for 14.8, the car quicker off the mark after each.
 
+With the flip's frames 20% bigger (2026-11-16: Collisions): the jump test
+at four speeds a car and crashes forced at speed, 20 runs of 6000
+pictures through all five stages, some 350 flips, each picture as
+`scene.py` draws it, against the build before in the same runs: 28.9 ms
+on average while flipping (28.2) and 38.8 at worst (38.2), two pictures
+over 38.5 and none over 39.5, none late, none different - the worst the
+frame on the way round, still at speed, two rows up. The flip's first
+seven pictures 33.5 ms on average (33.0), the first hop's others 32.6
+(31.7), the rest 27.7 (26.9). The demo 37.4-38.4 ms; the road, the HUD
+and the screen in the three R5 models as `scene.py` has them, for all
+four cars.
+
+With the clouds (2026-11-16: The split screen): a turn of the sky ring 40
+us more; the demo 37.4-38.4 ms at worst, as before; the same 20 runs of the
+jump test, 120000 pictures, each as `scene.py` draws it: 28.9 ms on
+average while flipping, 39.2 at worst once (the first hop, three rows up),
+none over 39.5, none late, none different; the road, the HUD, the sky with
+its clouds and the screen in the three R5 models as `scene.py` has them,
+for all four cars.
+
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
 `car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
@@ -1994,7 +2037,8 @@ src/            the game
   traffic.asm   the traffic: cars coming and going, projected, drawn
   trafglue.asm  into a traffic sprite piece's bank and back, its steps
   hud.asm       HUD updates
-  horizon.asm   how far the horizon drops, the sky ring
+  horizon.asm   how far the horizon drops, the sky ring (its clouds: cloud_col,
+                in gen/bush.asm)
   screen.asm    buffers, blitting, the static picture
   gen/          generated by tools/ (committed)
 tools/
@@ -2038,7 +2082,8 @@ tools/
                 drive.asm
   mkbush.py     the bushes along the track, their sprites (as code and as
                 data), each car as code (CARn.BIN), what is left of the
-                traffic's code, the props' sprites, and tables -> src/gen/
+                traffic's code, the props' sprites, the clouds' tiles, and
+                tables -> src/gen/
   mkmanual.py   the manuals' PDFs, from docs/manual-*.md
   run.py        emulator harness: check, shots, watch
   zx0check.py   unpacks the disc's packed files again and checks them

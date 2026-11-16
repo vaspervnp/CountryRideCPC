@@ -132,7 +132,9 @@ ring_left_head
     ld (ring_w0),hl
 
 ;; HL = ring character of the column in the sky part's first row: write
-;; panorama column rc_col down all its rows, and the row after them green -
+;; panorama column rc_col down all its rows - the sky rows over the
+;; mountains' from its tiles, the clouds in them (cloud_col: mkbush.py), the
+;; mountains' from pano_cols - and the row after them green -
 ;; some CRTCs show that row in the sky part's R5 lines (hw.asm), and it is
 ;; the column's next character either way the ring turns. Reads the bytes
 ;; with POP, so interrupts must be off (they are in the interrupt handler).
@@ -147,15 +149,11 @@ ring_col
     or hi(RING_BASE)
     ld h,a
     ld de,#800
-    ld sp,sky_pairs             ; the plain sky rows: a dither pair a line
-    ld ixl,(PANO_Y0-SKY_Y)/8
-    ASSERT PANO_Y0 > SKY_Y && (PANO_Y0-SKY_Y)%8 == 0
-ring_col_sky
-    RING_ROW
-    dec ixl
-    jr nz,ring_col_sky
-    ex de,hl                    ; the mountain rows: the panorama's column,
-    ld a,(rc_col)               ; a row at a time where pano_cols says
+    jp cloud_col                ; the sky rows: the plain sky, or the clouds
+    ASSERT PANO_Y0-SKY_Y == 8*CLOUD_ROWS    ; in it (gen/bush.asm: mkbush.py)
+ring_col_pano0                  ; (cloud_col's way back, DE on the next row)
+    ld a,(rc_col)               ; the mountain rows: the panorama's column,
+                                ; a row at a time where pano_cols says
     ld l,a
     ld h,0
     add hl,hl

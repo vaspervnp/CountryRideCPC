@@ -35,10 +35,16 @@ import mkcar  # noqa: E402
 import mkcars  # noqa: E402
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-POSES = [(-75, 115), (-90, 180), (-90, 240), (-90, 300),   # cars3d.py's FLIP_POSES:
+POSES = [(-78, 115), (-90, 180), (-90, 240), (-90, 300),   # cars3d.py's FLIP_POSES:
          (-90, 0), (-90, 60), (-90, 120)]                   # (yaw, tumble), degrees
 FRAMES = len(POSES)
 ROLL_LINES = 64                     # cars3d.py's (the frame's height, lines)
+THIN = 8                            # a frame's first or last line of this many
+                                    # pixels or fewer is left out: a tyre's
+                                    # edge, a sliver that would make the frame
+                                    # a line taller (since 2026-11-16, the
+                                    # frames 20% bigger: the tallest flanks 28
+                                    # lines, under the far lines at 4 rows up)
 
 
 def bytes_run(r):
@@ -75,6 +81,11 @@ def flip_frames(name):
     renders = [mkcars.flat_pens(name, os.path.join(mkcars.SRC, "%s_flip%d.png" % (name, k)),
                                 (mkcar.CELLS[0], ROLL_LINES)) for k in range(FRAMES)]
     rows = [[bytes_run(r) for r in v] for v in renders]
+    for v in rows:
+        used = [i for i, r in enumerate(v) if r.strip(".")]
+        for i in (used[0], used[-1]):
+            if len(v[i].strip(".")) <= THIN:
+                v[i] = "." * len(v[i])
     spans = []
     for v in rows:
         used = [i for i, r in enumerate(v) if r.strip(".")]

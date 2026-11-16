@@ -845,8 +845,10 @@ car_air
 ;; bytes less two a row up, the first and the last SHADOW_IN less; and as it
 ;; comes down to the road (car_up back to 0), a thud. Destroys everything.
 ;; ---------------------------------------------------------------------------
-SHADOW_W    EQU 22                      ; (26 and 6 till 2026-11-07: the cars
-SHADOW_IN   EQU 4                       ; 20% narrower since; even, both)
+SHADOW_W    EQU 26                      ; (26 and 6 till 2026-11-07, then 22
+SHADOW_IN   EQU 4                       ; with the cars 20% narrower; 26 again
+                                        ; since 2026-11-16, the flip's frames
+                                        ; 20% bigger; even, both)
 SHADOW_H    EQU 3
 
 car_shadow

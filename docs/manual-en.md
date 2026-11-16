@@ -69,7 +69,7 @@ The cars have the gears and the top speeds of the one in Out Run, the ROSSO GT i
 | Pause, and go on | **ESC** | |
 | Music off, or on again | **M** | |
 
-You change gear yourself, as in Out Run. You start in LOW, which pulls hard, hardest of all from a standstill, but goes no faster than two thirds of your top speed. HIGH reaches the top speed but pulls two thirds as hard from low down: change up at about half of your top speed. Change down again after a crash or a big bump. With neither the pedal nor the brake held, the car loses about a sixth of its top speed a second; the brake stops it from full speed in under two seconds.
+You change gear yourself, as in Out Run. You start in LOW, which pulls hard, hardest of all from a standstill, but goes no faster than two thirds of your top speed. HIGH reaches the top speed but pulls two thirds as hard from low down: change up at about half of your top speed. Change down again after a crash or a big bump. With neither the pedal nor the brake held, the air slows the car: at full speed by about a seventh of its top speed a second, at half speed by less than half of that, and hardly at all at a crawl. The brake stops it from full speed in a little over two seconds.
 
 ## The screen
 
@@ -136,7 +136,7 @@ The game keeps the five best times to the finish for as long as the machine is o
 
 ## The stages
 
-Each stage has its own road and colours, and each next stage has more traffic. The first is always the COUNTRYSIDE.
+Each stage has its own road and colours, and each next stage has more traffic. The first is always the COUNTRYSIDE. Far off over the mountains hang clouds, in each stage's light: they turn with the mountains as the road bends.
 
 | Stage | Left | Right |
 |---|---|---|

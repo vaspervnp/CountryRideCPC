@@ -771,7 +771,124 @@ tr_s7_closed_c8
     ld bc,#C0C0
     push bc
     jp tr_done
-    defs 162,0
+cloud_col   ; (ring_col, horizon.asm) the sky rows' tiles, the clouds in them
+    ex de,hl
+    ld a,(rc_col)
+    ld l,a
+    ld h,0
+    add hl,hl
+    ld bc,cloud_map0
+    add hl,bc            ; its first row's tile
+    ld (cc_row0+2),hl
+    ld bc,cloud_map1-cloud_map0
+    add hl,bc
+    ld (cc_row1+2),hl
+    ex de,hl
+    ld de,#800
+cc_row0
+    ld sp,(0)            ; (self-modified: its tile)
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    ld a,l
+    add a,96
+    ld l,a
+    ld a,h
+    adc a,-#40
+    and hi(RING_BASE)+7
+    ld h,a
+cc_row1
+    ld sp,(0)            ; (self-modified: its tile)
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    ld a,l
+    add a,96
+    ld l,a
+    ld a,h
+    adc a,-#40
+    and hi(RING_BASE)+7
+    ld h,a
+    ex de,hl
+    jp ring_col_pano0
+    ASSERT $-cloud_col == 138
+cloud_t2
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C
+    defs 8,0
 bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FC,#FB,#F9,#F8,#F6,#F5,#F3,#F2,#F0,#EF,#EE,#EC,#EB,#E9
     defb #E8,#E6,#E5,#E3,#E2,#E1,#DF,#DE,#DC,#DB,#D9,#D8,#D6,#D5,#D3,#D2
@@ -779,7 +896,11 @@ bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (sig
     defb #B9,#B8,#B6,#B5,#B4,#B2,#B1,#AF,#AE,#AC,#AB,#A9,#A8,#A7,#A5,#A4
     defb #A2,#A1,#9F,#9E,#9C,#9B,#99,#98,#97,#95,#94,#92,#91,#8F,#8E,#8C
     defb #8B,#8A,#88,#87,#85
-    defs 43,0
+cloud_t3
+    defb #0C,#0C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+cloud_t4
+    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+    defs 11,0
 bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of it (cache.asm: rd_gp)
     defb #CD,#CD,#CE,#CE,#CF,#D0,#D1,#D1,#D2,#D2,#D3,#D4,#D4,#D5,#D5,#D6
     defb #D7,#D7,#D8,#D8,#D9,#DA,#DA,#DB,#DB,#DC,#DC,#DD,#DE,#DE,#DF,#DF
@@ -787,7 +908,11 @@ bush_rh   ; per row: its template group's lane, #CD + g, for road_x's share of i
     defb #EA,#EA,#EB,#EB,#EC,#ED,#ED,#EE,#EE,#EF,#F0,#F0,#F1,#F1,#F2,#F3
     defb #F3,#F4,#F4,#F5,#F5,#F6,#F7,#F7,#F8,#F8,#F9,#FA,#FA,#FB,#FB,#FC
     defb #FD,#FD,#FE,#FE,#FF
-    defs 43,0
+cloud_t5
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#84,#3C
+cloud_t6
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+    defs 11,0
 bush_cx0   ; curve level 0, per row: the road's centre
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
@@ -795,7 +920,11 @@ bush_cx0   ; curve level 0, per row: the road's centre
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-    defs 43,0
+cloud_t7
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#1C,#3C,#3C,#3C
+cloud_t8
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#3C,#3C,#3C
+    defs 11,0
 bush_cx1   ; curve level 1, per row: the road's centre
     defb #39,#39,#38,#38,#38,#38,#38,#37,#37,#37,#37,#37,#36,#36,#36,#36
     defb #36,#36,#35,#35,#35,#35,#35,#35,#34,#34,#34,#34,#34,#34,#33,#33
@@ -803,9 +932,25 @@ bush_cx1   ; curve level 1, per row: the road's centre
     defb #31,#31,#31,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
+cloud_t9
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#2C
+cloud_t10
+    defb #2C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     ASSERT $ <= #B000
     ORG #B540,FRAG_ST14
-    defs 192,0
+cloud_map0   ; per panorama column, the tile of the sky part's row 0: 8 lines of a word
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
+    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
 bush_cx2   ; curve level 2, per row: the road's centre
     defb #42,#42,#41,#41,#41,#40,#40,#3F,#3F,#3F,#3E,#3E,#3D,#3D,#3D,#3C
     defb #3C,#3C,#3B,#3B,#3A,#3A,#3A,#3A,#39,#39,#39,#38,#38,#38,#37,#37
@@ -813,7 +958,11 @@ bush_cx2   ; curve level 2, per row: the road's centre
     defb #33,#33,#33,#33,#32,#32,#32,#32,#32,#32,#31,#31,#31,#31,#31,#31
     defb #31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-    defs 43,0
+cloud_t11
+    defb #3C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+cloud_t12
+    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+    defs 11,0
 bush_cx3   ; curve level 3, per row: the road's centre
     defb #4C,#4B,#4A,#4A,#49,#48,#48,#47,#46,#46,#45,#45,#44,#44,#43,#43
     defb #42,#42,#41,#40,#40,#3F,#3F,#3F,#3E,#3D,#3D,#3C,#3C,#3C,#3B,#3B
@@ -821,7 +970,11 @@ bush_cx3   ; curve level 3, per row: the road's centre
     defb #35,#34,#34,#34,#34,#33,#33,#33,#33,#33,#32,#32,#32,#32,#31,#31
     defb #31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-    defs 43,0
+cloud_t13
+    defb #0C,#0C,#0C,#0C,#0C,#8C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
+cloud_t14
+    defb #0C,#0C,#0C,#0C,#0C,#8C,#3C,#0C,#3C,#3C,#30,#3C,#30,#3C,#4C,#4C
+    defs 11,0
 bush_cx4   ; curve level 4, per row: the road's centre
     defb #55,#54,#53,#53,#52,#51,#50,#4F,#4E,#4E,#4D,#4C,#4B,#4B,#4A,#49
     defb #48,#48,#47,#46,#45,#45,#44,#44,#43,#42,#42,#41,#40,#40,#3F,#3F
@@ -829,7 +982,11 @@ bush_cx4   ; curve level 4, per row: the road's centre
     defb #37,#36,#36,#36,#35,#35,#35,#34,#34,#34,#33,#33,#33,#33,#32,#32
     defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-    defs 43,0
+cloud_t15
+    defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#0C,#2C,#8C,#3C,#4C,#3C,#CC,#4C,#4C
+cloud_t16
+    defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#1C,#8C,#3C,#4C,#3C,#8C,#CC,#4C,#4C
+    defs 11,0
 bush_cx5   ; curve level 5, per row: the road's centre
     defb #5E,#5D,#5C,#5B,#5A,#59,#58,#57,#56,#55,#54,#53,#52,#51,#50,#4F
     defb #4E,#4E,#4C,#4C,#4A,#4A,#49,#49,#47,#47,#46,#45,#44,#44,#43,#42
@@ -837,9 +994,25 @@ bush_cx5   ; curve level 5, per row: the road's centre
     defb #38,#38,#37,#37,#36,#36,#36,#35,#35,#35,#34,#34,#33,#33,#33,#33
     defb #32,#32,#31,#31,#31,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
+cloud_t17
+    defb #0C,#0C,#0C,#0C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#8C,#CC,#4C,#4C
+cloud_t18
+    defb #0C,#0C,#0C,#0C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
     ASSERT $ <= #B800
     ORG #BD40,FRAG_ST15
-    defs 192,0
+cloud_map1   ; per panorama column, the tile of the sky part's row 1: 8 lines of a word
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
+    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
+    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
+    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
+    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
+    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
+    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
+    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
 bush_cx6   ; curve level 6, per row: the road's centre
     defb #68,#66,#65,#64,#63,#61,#60,#5F,#5D,#5D,#5B,#5A,#59,#58,#57,#56
     defb #54,#54,#52,#51,#50,#4F,#4E,#4E,#4C,#4B,#4B,#49,#48,#48,#47,#46
@@ -847,7 +1020,11 @@ bush_cx6   ; curve level 6, per row: the road's centre
     defb #3A,#39,#39,#39,#38,#37,#37,#36,#36,#36,#35,#35,#34,#34,#33,#33
     defb #33,#33,#32,#32,#32,#31,#31,#31,#31,#30,#30,#30,#30,#30,#30,#30
     defb #30,#30,#30,#30,#30
-    defs 43,0
+cloud_t19
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#84,#94
+cloud_t20
+    defb #1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
+    defs 11,0
 bush_cx7   ; curve level 7, per row: the road's centre
     defb #71,#6F,#6E,#6D,#6B,#69,#68,#67,#65,#64,#62,#61,#60,#5F,#5D,#5C
     defb #5A,#5A,#58,#57,#55,#54,#53,#53,#51,#50,#4F,#4D,#4C,#4C,#4B,#4A

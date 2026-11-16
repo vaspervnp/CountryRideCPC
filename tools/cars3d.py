@@ -758,9 +758,9 @@ def spin_render():
 # own height, so seen from above or below it keeps more of its width - as
 # Out Run's chunky tumbling car does.
 # ---------------------------------------------------------------------------
-FLIP_POSES = globals().get("FLIP_POSES", [(-75, 115), (-90, 180), (-90, 240), (-90, 300),
+FLIP_POSES = globals().get("FLIP_POSES", [(-78, 115), (-90, 180), (-90, 240), (-90, 300),
                                           (-90, 0), (-90, 60), (-90, 120)])
-FLIP_SCALE = globals().get("FLIP_SCALE", 0.6)
+FLIP_SCALE = globals().get("FLIP_SCALE", 0.72)
 FLIP_LINES = 64
 FLIP_WZ = globals().get("FLIP_WZ", 0.7)
 FLIP_UNDER = globals().get("FLIP_UNDER", (0.03, 0.07, 0.35))   # its underside

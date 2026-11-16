@@ -112,17 +112,20 @@ SPIN_VIEW     EQU 9   ; car_view: spun left in a crash, then right
 SPIN_OFF      EQU 16  ; ... seen so at most this far from the middle
 ROLL_VIEW     EQU 11   ; car_view: flipping over, 7 frames (jump.asm)
 ROLL_FRAMES   EQU 7
-ROLL_ABOVE    EQU 10   ; ... its lines this far above CAR_Y at most
+CLOUD_ROWS    EQU 2    ; the sky part's rows over the panorama's: the
+;; ... clouds' (cloud_col, cloud_map0/1, cloud_tN: in the fragments and the
+;; hidden lines)
+ROLL_ABOVE    EQU 13   ; ... its lines this far above CAR_Y at most
 FLIP_T        EQU 73   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)
 FLIP_ROWS     EQU 4    ; ... rows up at most
 ;; ... per frame, its lines from the wheels' line up (cj_mark: flip_lines)
-FLIP_L0       EQU 33
-FLIP_L1       EQU 12
-FLIP_L2       EQU 24
-FLIP_L3       EQU 25
-FLIP_L4       EQU 12
-FLIP_L5       EQU 24
-FLIP_L6       EQU 25
+FLIP_L0       EQU 36
+FLIP_L1       EQU 14
+FLIP_L2       EQU 28
+FLIP_L3       EQU 28
+FLIP_L4       EQU 15
+FLIP_L5       EQU 28
+FLIP_L6       EQU 29
 GAME_GROUND   EQU 22   ; the wheels' line, from CAR_Y
 ;; per car_view (on the level, uphill, downhill; each straight, turning
 ;; left, turning right; spun left, right; rolling over): where its first

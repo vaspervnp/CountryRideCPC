@@ -12,38 +12,37 @@
 car0_roll0
     ld de,#C0C0
     ld bc,#3F3F
-    ld ix,#3F95
-    ld iy,#C000
+    ld ix,#95C0
+    ld iy,#3FC0
     ld sp,hl
     ei
     nop
     di
     push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push ix
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#2A3F
-    di
-    push hl
-    push de
-    ld hl,#0805
-    add hl,sp
-    ld sp,hl
-    ei
     ld hl,#3F2A
+    push hl
+    ld l,#95
+    push hl
+    ld hl,#0806
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#003F
     di
     push hl
-    ld hl,#95C0
+    ld hl,#3F95
     push hl
+    push de
+    ld hl,#C868
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#152A
+    push hl
+    push iy
     push de
     ld hl,#0808
     add hl,sp
@@ -52,40 +51,19 @@ car0_roll0
     nop
     di
     push bc
-    ld hl,#3F6A
+    ld hl,#956A
+    push hl
+    ld hl,#80C0
     push hl
     push de
-    push de
-    ld hl,#0808
+    ld hl,#0809
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    push de
-    push de
-    push de
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3FC0
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C86A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push ix
-    push de
     push de
     push de
     push de
@@ -96,19 +74,20 @@ car0_roll0
     nop
     di
     push bc
-    ld hl,#95C0
-    push hl
+    push iy
     push de
     push de
     push de
     push de
-    ld hl,#080C
+    ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
+    push bc
+    ld hl,#3F95
+    push hl
     push de
     push de
     push de
@@ -121,19 +100,6 @@ car0_roll0
     nop
     di
     push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#2A95
-    di
-    push hl
     push de
     push de
     push de
@@ -146,27 +112,8 @@ car0_roll0
     ei
     nop
     di
+    push bc
     push ix
-    ld hl,#C095
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    jp #6600
-    ASSERT $ <= #65CD
-    ORG #6600
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
     push de
     push de
     push de
@@ -177,10 +124,10 @@ car0_roll0
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#002A
     di
-    push ix
-    push de
+    push hl
+    push iy
     push de
     push de
     push de
@@ -194,263 +141,448 @@ car0_roll0
     ei
     nop
     di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
     push iy
-    ld hl,#0812
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
+    jp #6600
+    ASSERT $ <= #65CD
+    ORG #6600
     push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6A95
+    ld hl,#80C0
     push hl
-    ld hl,#003F
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F95
+    di
     push hl
-    ld hl,#0812
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F95
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#3F15
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    push bc
-    push bc
-    ld hl,#C871
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push ix
     push de
     push de
     push de
     push de
-    ld hl,#C040
-    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C876
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
     jp #6700
     ASSERT $ <= #66CD
     ORG #6700
-    ld hl,#0015
-    push hl
-    ld l,#00
-    push hl
-    ld hl,#0810
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#403F
-    push hl
-    ld hl,#152A
-    push hl
     push bc
-    ld hl,#0810
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0000
+    push hl
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
-    push de
-    push de
-    push de
+    push bc
     push iy
-    push bc
-    ld hl,#152A
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
     push hl
-    ld hl,#080E
+    ld hl,#3F00
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#3F2A
+    push hl
+    push bc
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
     push de
     push de
     push de
     ld hl,#003F
     push hl
+    ld hl,#3F2A
+    push hl
     push bc
+    ld hl,#C875
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
     push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#0000
+    push hl
+    ld h,#3F
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#002A
+    push hl
+    ld hl,#3F15
+    push hl
+    ld hl,#003F
+    push hl
+    ld h,#2A
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    ld hl,#4000
+    push hl
+    push bc
+    ld hl,#3F15
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    jp #6800
+    ASSERT $ <= #67CD
+    ORG #6800
+    di
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#003F
+    push hl
+    push bc
+    ld hl,#3F15
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#C03F
+    push hl
+    push de
+    ld hl,#002A
+    push hl
+    push bc
+    ld hl,#3F00
+    push hl
+    push bc
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#1500
+    push hl
+    push bc
+    ld h,#3F
+    push hl
+    ld h,#00
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
-    push de
-    push de
-    push iy
     push bc
-    ld hl,#0000
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
     push de
-    ld hl,#3F40
+    ld hl,#C03F
     push hl
-    ld hl,#2A3F
+    ld hl,#152A
     push hl
-    ld hl,#1500
+    ld hl,#3F00
     push hl
-    ld hl,#080A
+    ld h,#00
+    push hl
+    ld hl,#080B
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3F95
     di
-    push ix
-    push de
-    ld hl,#3F15
     push hl
-    ld l,#00
+    ld hl,#4000
     push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#C040
+    ld h,#00
     push hl
-    ld hl,#0000
-    push hl
-    ld h,#15
+    ld h,#2A
     push hl
     ld hl,#C868
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3F15
     di
-    push bc
-    ld hl,#4000
     push hl
-    ld h,#2A
+    ld hl,#2A00
     push hl
-    ld hl,#0805
+    ld hl,#3F15
+    push hl
+    ld hl,#0806
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    ld hl,#1500
+    ld hl,#3F00
+    push hl
+    ld h,#00
     push hl
     jp car0_roll_done
-    ASSERT $ <= #67CD
-    ORG #67B5
+    ASSERT $ <= #68CD
+    ORG #689C
 car0_roll1
     ld de,#3F3F
     ld sp,hl
@@ -463,7 +595,2345 @@ car0_roll1
     push bc
     push bc
     push bc
-    ld hl,#080D
+    push bc
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    ld hl,#4095
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2AC0
+    push hl
+    push bc
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    jp #6900
+    ASSERT $ <= #68CD
+    ORG #6900
+    nop
+    di
+    push bc
+    push bc
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#C06A
+    push hl
+    ld hl,#3F95
+    push hl
+    push bc
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#6A3F
+    push hl
+    ld hl,#3FC0
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld bc,#2A3F
+    push bc
+    ld h,#95
+    push hl
+    ld hl,#C03F
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#0F0F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld bc,#1F2F
+    push bc
+    push de
+    ld bc,#151F
+    push bc
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#3F1F
+    push hl
+    push de
+    push hl
+    push de
+    push de
+    push de
+    ld bc,#1F2F
+    push bc
+    ld bc,#2A3F
+    push bc
+    ld hl,#150F
+    push hl
+    ld h,#0F
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#153F
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#1F0F
+    push hl
+    push bc
+    ld h,#3F
+    push hl
+    ld h,#0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#3F00
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld bc,#1F0F
+    push bc
+    ld bc,#1500
+    push bc
+    ld hl,#2A0F
+    push hl
+    ld hl,#2F3F
+    push hl
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#003F
+    push hl
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    jp #6A00
+    ASSERT $ <= #69CD
+    ORG #6A00
+    ld hl,#3F15
+    push hl
+    ld hl,#0000
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#C86E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    push de
+    ld hl,#0807
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#0000
+    push hl
+    ld bc,#003F
+    push bc
+    jp car0_roll_done
+    ASSERT $ <= #6ACD
+    ORG #6A30
+car0_roll2
+    ld de,#3F3F
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld bc,#95C0
+    push bc
+    ld hl,#C0C0
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    push de
+    push de
+    push de
+    ld bc,#3F0F
+    push bc
+    ld h,#2F
+    push hl
+    ld hl,#C06A
+    push hl
+    ld hl,#0F0F
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F2F
+    di
+    push hl
+    ld hl,#C0C0
+    push hl
+    ld hl,#1F3F
+    push hl
+    push de
+    push de
+    ld l,#0F
+    push hl
+    ld hl,#0F15
+    push hl
+    ld hl,#151F
+    push hl
+    ld hl,#0F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    ld bc,#0F2F
+    push bc
+    ld bc,#956A
+    push bc
+    ld bc,#0F1F
+    push bc
+    push hl
+    push hl
+    push hl
+    push hl
+    ld bc,#3F0F
+    push bc
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    push hl
+    ld bc,#001F
+    push bc
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    jp #6B00
+    ASSERT $ <= #6ACD
+    ORG #6B00
+    ld bc,#0F3F
+    push bc
+    push hl
+    push hl
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    push bc
+    push de
+    ld bc,#3F00
+    push bc
+    ld bc,#2A3F
+    push bc
+    push de
+    push de
+    ld bc,#3F1F
+    push bc
+    push hl
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#3F00
+    push hl
+    ld bc,#0000
+    push bc
+    ld hl,#2A3F
+    push hl
+    push de
+    ld hl,#000F
+    push hl
+    ld h,#0F
+    push hl
+    ld l,#3F
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F2F
+    push hl
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2A00
+    push hl
+    ld h,#15
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    push hl
+    ld hl,#1500
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld h,#15
+    push hl
+    jp #6C00
+    ASSERT $ <= #6BCD
+    ORG #6C00
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld h,#15
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld h,#15
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld h,#2A
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    jp #6D00
+    ASSERT $ <= #6CCD
+    ORG #6D00
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    push de
+    ld hl,#0A0F
+    push hl
+    ld hl,#0F2F
+    push hl
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#C870
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#002A
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080A
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    jp car0_roll_done
+    ASSERT $ <= #6DCD
+    ORG #6D6E
+car0_roll3
+    ld de,#0F0F
+    ld bc,#0000
+    ld ix,#3F3F
+    ld iy,#3F1F
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3F95
+    push hl
+    ld hl,#C0C0
+    push hl
+    push hl
+    push iy
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#80C0
+    push hl
+    ld h,#C0
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    jp #6E00
+    ASSERT $ <= #6DCD
+    ORG #6E00
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#002A
+    push hl
+    push ix
+    push ix
+    ld hl,#1F0F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push ix
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push ix
+    ld hl,#0F2F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push ix
+    ld hl,#0F2F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push ix
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    jp #6F00
+    ASSERT $ <= #6ECD
+    ORG #6F00
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#000A
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    ld hl,#0095
+    push hl
+    ld hl,#C000
+    push hl
+    ld hl,#2A1F
+    push hl
+    ld hl,#2F3F
+    push hl
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    jp #7000
+    ASSERT $ <= #6FCD
+    ORG #7000
+    push bc
+    push bc
+    ld hl,#3F0F
+    push hl
+    ld l,#15
+    push hl
+    push de
+    ld hl,#2F3F
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#0F00
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#001F
+    push hl
+    push de
+    push de
+    ld hl,#0FC0
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#0F00
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#003F
+    push hl
+    ld hl,#1F0F
+    push hl
+    push de
+    ld hl,#0FC0
+    push hl
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#002A
+    push hl
+    push ix
+    push ix
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push ix
+    push ix
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#2D3C
+    push hl
+    ld h,#3C
+    push hl
+    push hl
+    push hl
+    ld hl,#1E0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    ld hl,#151F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0F2F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    ld hl,#3F15
+    push hl
+    push bc
+    push ix
+    push ix
+    push iy
+    push de
+    push de
+    ld l,#0F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#C872
+    jp #7100
+    ASSERT $ <= #70CD
+    ORG #7100
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F15
+    di
+    push hl
+    push hl
+    ld hl,#2A00
+    push hl
+    push bc
+    push bc
+    push ix
+    ld hl,#3F15
+    push hl
+    ld hl,#002A
+    push hl
+    push ix
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    ld h,#15
+    push hl
+    ld hl,#3F00
+    push hl
+    push ix
+    jp car0_roll_done
+    ASSERT $ <= #71CD
+    ORG #7137
+car0_roll4
+    ld de,#0F0F
+    ld sp,hl
+    ei
+    ld bc,#3F3F
+    di
+    push bc
+    ld hl,#3F95
+    push hl
+    ld hl,#C0C0
+    push hl
+    ld hl,#6A3F
+    push hl
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#C0C0
+    push hl
+    push hl
+    push hl
+    push de
+    ld hl,#C86A
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F2F
+    push hl
+    push bc
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#9F4F
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld l,#0F
+    push hl
+    ld h,#1F
+    push hl
+    push de
+    ld hl,#3F1F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld hl,#4F0F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld h,#3F
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    push de
+    ld hl,#2F00
+    push hl
+    ld hl,#2A0F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0500
+    push hl
+    ld hl,#1F0F
+    push hl
+    push de
+    jp #7D00
+    ASSERT $ <= #71CD
+    ORG #7D00
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#053F
+    push hl
+    ld hl,#150F
+    push hl
+    push de
+    ld hl,#2F3F
+    push hl
+    push bc
+    ld hl,#1F0F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#3F0F
+    push hl
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    ld hl,#3F1F
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#1F2F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#150F
+    push hl
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#1F2F
+    push hl
+    push bc
+    ld hl,#151F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F6A
+    push hl
+    push bc
+    ld bc,#0000
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    ld hl,#3F15
+    push hl
+    push bc
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    ld l,#40
+    push hl
+    ld hl,#3F15
+    push hl
+    ld hl,#4000
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    ld hl,#3F15
+    push hl
+    push bc
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    jp car0_roll_done
+    ASSERT $ <= #7FCD
+    ORG #7DB2
+car0_roll5
+    ld de,#C0C0
+    ld bc,#0000
+    ld ix,#0080
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#95C0
+    push hl
+    ld hl,#3F0F
+    push hl
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C040
+    di
+    push hl
+    ld hl,#1F3F
+    push hl
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    ld l,#C0
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#0F0F
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F95
+    di
+    push hl
+    push de
+    ld hl,#3F3F
+    push hl
+    push hl
+    ld hl,#1500
+    push hl
+    push bc
+    push ix
+    ld hl,#C015
+    push hl
+    ld hl,#002A
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    ld hl,#3F3F
+    push hl
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F15
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push bc
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    push ix
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#C875
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#00C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    jp #8040
+    ASSERT $ <= #7FCD
+    SAVE "build/roll5_0.raw",#4000,#4000
+
+    BANK
+    ORG #6500
+car1_roll0
+    ld de,#C0C0
+    ld bc,#3F3F
+    ld ix,#95C0
+    ld iy,#3FC0
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F2A
+    push hl
+    ld l,#95
+    push hl
+    ld hl,#0806
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#003F
+    di
+    push hl
+    ld hl,#3F95
+    push hl
+    push de
+    ld hl,#C868
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#152A
+    push hl
+    push iy
+    push de
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#956A
+    push hl
+    ld hl,#80C0
+    push hl
+    push de
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F95
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#002A
+    di
+    push hl
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    jp #6600
+    ASSERT $ <= #65CD
+    ORG #6600
+    push de
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F95
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F95
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C876
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    jp #6700
+    ASSERT $ <= #66CD
+    ORG #6700
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0000
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#3F00
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#3F2A
+    push hl
+    push bc
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#003F
+    push hl
+    ld hl,#3F2A
+    push hl
+    push bc
+    ld hl,#C875
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#0000
+    push hl
+    ld h,#3F
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#002A
+    push hl
+    ld hl,#3F15
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    ld hl,#4000
+    push hl
+    push bc
+    ld hl,#3F15
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
@@ -473,2321 +2943,106 @@ car0_roll1
     nop
     di
     push bc
-    ld hl,#3FC0
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#003F
     push hl
     push bc
-    push bc
-    push bc
-    push bc
-    ld h,#95
+    ld hl,#3F15
     push hl
-    push bc
+    ld hl,#0000
+    push hl
     ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#C03F
+    push hl
+    push de
+    ld hl,#002A
+    push hl
+    push bc
+    ld hl,#3F00
+    push hl
+    push bc
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#1500
+    push hl
+    push bc
+    ld h,#3F
+    push hl
+    ld h,#00
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#152A
+    push hl
+    ld hl,#3F00
+    push hl
+    ld h,#00
+    push hl
+    ld hl,#080B
     add hl,sp
     ld sp,hl
     ei
     ld hl,#3F95
     di
     push hl
-    push bc
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#C06A
-    push hl
-    ld hl,#3FC0
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F0F
-    di
-    push hl
-    ld bc,#0F3F
-    push bc
-    ld bc,#3F15
-    push bc
-    push de
-    push de
-    push de
-    ld c,#2A
-    push bc
-    push de
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#1F3F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0F2A
-    push hl
-    push de
-    ld l,#0F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#3F15
-    push hl
-    push bc
-    push de
-    push de
-    ld c,#1F
-    push bc
-    ld bc,#0F3F
-    push bc
-    ld bc,#3F0A
-    push bc
-    ld bc,#0F0F
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#003F
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push hl
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    push de
-    ld bc,#3F00
-    push bc
-    ld bc,#2A3F
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C86B
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    ld bc,#002A
-    push bc
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push bc
-    jp car0_roll_done
-    ASSERT $ <= #68CD
-    ORG #6900
-car0_roll2
-    ld de,#3F3F
-    ld bc,#0F0F
-    ld ix,#0000
-    ld iy,#002A
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    ld hl,#6A3F
-    push hl
-    push de
-    push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#C0C0
-    push hl
-    ld hl,#1F0F
-    push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F2F
-    di
-    push hl
-    ld hl,#C06A
-    push hl
-    ld hl,#2F3F
-    push hl
-    push de
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F95
-    push hl
-    ld hl,#6A1F
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#0F2F
-    push hl
-    ld hl,#C01F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#1F0F
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    ld hl,#3F0F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#2F3F
-    push hl
-    push de
-    push de
-    ld h,#1F
-    push hl
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    ld hl,#0F2F
-    push hl
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F3F
-    push hl
-    push de
-    ld hl,#3F0F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    ld hl,#3F15
-    push hl
-    jp #6A00
-    ASSERT $ <= #69CD
-    ORG #6A00
-    ld hl,#1F0F
-    push hl
-    push bc
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    push ix
-    push ix
-    ld hl,#1F2F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    push ix
-    push ix
-    ld hl,#2A3F
-    push hl
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#003F
-    push hl
-    ld hl,#1500
-    push hl
-    push ix
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld hl,#1500
-    push hl
-    ld hl,#003F
-    push hl
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push iy
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push iy
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    ld hl,#003F
-    push hl
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld hl,#1500
-    push hl
-    push de
-    push de
-    jp #6B00
-    ASSERT $ <= #6ACD
-    ORG #6B00
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld hl,#152A
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld h,#15
-    push hl
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1500
-    push hl
-    push ix
-    ld hl,#2A15
-    push hl
-    push iy
-    push bc
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1500
-    push hl
-    push ix
-    push ix
-    push iy
-    push de
-    push de
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0807
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    jp car0_roll_done
-    ASSERT $ <= #6BCD
-    ORG #6BA5
-car0_roll3
-    ld de,#0F0F
-    ld bc,#0000
-    ld ix,#0F2F
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    jp #6C00
-    ASSERT $ <= #6BCD
-    ORG #6C00
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2FC0
-    push hl
-    ld h,#C0
-    push hl
-    push hl
-    ld hl,#6A0F
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    push bc
-    push bc
-    ld hl,#001F
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#0F3F
-    push hl
-    ld hl,#3F1F
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    ld hl,#0F3F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    jp #6D00
-    ASSERT $ <= #6CCD
-    ORG #6D00
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A3F
-    push hl
-    ld h,#3F
-    push hl
-    ld hl,#150F
-    push hl
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#003F
-    push hl
-    ld h,#3F
-    push hl
-    ld hl,#0A0F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    push bc
-    ld hl,#1F0F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    push bc
-    ld hl,#1F3F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#0F3E
-    push hl
-    ld hl,#3F3F
-    push hl
-    push hl
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#0812
-    jp #6E00
-    ASSERT $ <= #6DCD
-    ORG #6E00
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0F2D
-    push hl
-    ld hl,#3C3C
-    push hl
-    ld hl,#4F8F
-    push hl
-    ld hl,#3C3C
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F1F
-    di
-    push hl
-    push de
-    ld l,#0F
-    push hl
-    push de
-    push de
-    push de
-    ld h,#2D
-    push hl
-    push de
-    ld hl,#0F3F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    push hl
-    ld hl,#002A
-    push hl
-    ld hl,#3F3F
-    push hl
-    push hl
-    ld l,#0F
-    push hl
-    push ix
-    push hl
-    ld l,#3F
-    push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#003F
-    di
-    push hl
-    ld hl,#1515
-    push hl
-    push bc
-    push bc
-    ld hl,#2A3F
-    push hl
-    push bc
-    push hl
-    ld hl,#C868
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#003F
-    push hl
-    ld h,#2A
-    push hl
-    ld l,#00
-    push hl
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    jp car0_roll_done
-    ASSERT $ <= #6ECD
-    ORG #6E88
-car0_roll4
-    ld de,#0F0F
-    ld sp,hl
-    ei
-    ld bc,#CFCF
-    di
-    push bc
-    push bc
-    ld hl,#C865
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F95
-    di
-    push hl
-    ld hl,#C0C0
-    push hl
-    ld l,#4A
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld bc,#C03F
-    push bc
-    push hl
-    ld bc,#000A
-    push bc
-    push de
-    ld bc,#CFCF
-    push bc
-    ld hl,#080D
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF6F
-    di
-    push hl
-    jp #6F00
-    ASSERT $ <= #6ECD
-    ORG #6F00
-    ld bc,#1F0F
-    push bc
-    ld hl,#0F3F
-    push hl
-    ld h,#3F
-    push hl
-    push bc
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF0F
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF4F
-    di
-    push hl
-    push de
-    ld bc,#001F
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#0F05
-    push hl
-    push bc
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#0F05
-    push hl
-    ld bc,#3F3F
-    push bc
-    ld hl,#2F3F
-    push hl
-    push bc
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F3F
-    push hl
-    ld hl,#3F0A
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#0F2F
-    push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#2F3F
-    push hl
-    push bc
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F2A
-    push hl
-    push bc
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F15
-    push hl
-    ld hl,#1500
-    push hl
-    ld h,#00
-    push hl
-    ld l,#3F
-    push hl
-    ld hl,#3F2A
-    push hl
-    push bc
-    push bc
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C040
-    di
-    push hl
-    ld c,#95
-    push bc
-    ld bc,#0000
-    push bc
-    push bc
-    push bc
-    ld hl,#002A
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#00C0
-    push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    jp car0_roll_done
-    ASSERT $ <= #6FCD
-    ORG #7000
-car0_roll5
-    ld de,#C0C0
-    ld bc,#0000
-    ld ix,#C040
-    ld iy,#00C0
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld hl,#1F0F
-    push hl
-    ld hl,#95C0
-    push hl
-    ld hl,#1F0F
-    push hl
-    ld hl,#080D
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C06A
-    di
-    push hl
-    ld hl,#2F3F
-    push hl
-    ld h,#3F
-    push hl
-    push hl
-    ld l,#95
-    push hl
-    ld hl,#C03F
-    push hl
-    ld hl,#0F0F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F2F
-    di
-    push hl
-    push ix
-    ld hl,#3F3F
-    push hl
-    ld l,#00
-    push hl
-    push bc
-    ld hl,#0080
-    push hl
-    ld hl,#C000
-    push hl
-    ld hl,#003F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F0F
-    di
-    push hl
-    ld hl,#3F00
-    push hl
-    push ix
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    push de
-    ld hl,#0080
-    push hl
-    push de
-    push de
-    push de
-    push ix
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#0080
-    push hl
-    push de
-    push de
-    push de
-    push ix
-    push iy
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#0080
-    push hl
-    push de
-    push de
-    push de
-    push ix
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#40C0
-    push hl
-    push de
-    jp #7100
-    ASSERT $ <= #70CD
-    ORG #7100
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    jp #7D00
-    ASSERT $ <= #71CD
-    ORG #7D00
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0080
-    di
-    push hl
-    push ix
-    ld hl,#80C0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#C000
-    push hl
-    ld hl,#0040
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    jp car0_roll_done
-    ASSERT $ <= #7FCD
-    ORG #7D4E
-car0_roll6
-    ld de,#C0C0
-    ld sp,hl
-    ei
-    ld bc,#3F3F
-    di
-    push bc
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#2A3F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#C03F
-    push hl
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#6A95
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    ld hl,#C06A
-    push hl
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#3FC0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld h,#95
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#0000
-    push hl
-    ld c,#15
-    push bc
-    push hl
-    push hl
-    push hl
-    ld bc,#002A
-    push bc
-    ld bc,#3F00
-    push bc
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld hl,#0000
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#2A
-    push hl
-    push bc
-    ld l,#00
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#3F3F
-    push hl
-    push hl
-    push bc
-    ld b,#00
-    push bc
-    push hl
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#1500
-    push hl
-    push bc
-    push bc
-    ld hl,#002A
-    push hl
-    ld hl,#3F00
-    push hl
-    ld l,#3F
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F00
-    push hl
-    ld bc,#152A
-    push bc
-    jp car0_roll_done
-    ASSERT $ <= #7FCD
-    SAVE "build/roll5_0.raw",#4000,#4000
-
-    BANK
-    ORG #6500
-car1_roll0
-    ld de,#C0C0
-    ld bc,#3F3F
-    ld ix,#3F95
-    ld iy,#1500
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push ix
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#2A3F
-    di
-    push hl
-    push de
-    ld hl,#0805
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F2A
-    di
-    push hl
-    ld hl,#95C0
-    push hl
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F6A
-    push hl
-    push de
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3FC0
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C86A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#2A95
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#C095
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    jp #6600
-    ASSERT $ <= #65CD
-    ORG #6600
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C000
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6A95
-    push hl
-    ld hl,#003F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#3F15
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    push bc
-    push bc
-    ld hl,#C871
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C040
-    jp #6700
-    ASSERT $ <= #66CD
-    ORG #6700
-    push hl
-    ld hl,#0015
-    push hl
-    ld l,#00
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#403F
-    push hl
-    ld hl,#152A
-    push hl
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    ld hl,#C000
-    push hl
-    push bc
-    push iy
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    ld hl,#003F
-    push hl
-    push bc
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    ld hl,#C000
-    push hl
-    push bc
-    ld h,#00
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    ld hl,#3F40
-    push hl
-    ld hl,#2A3F
-    push hl
-    push iy
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    ld hl,#3F15
-    push hl
-    ld l,#00
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#C040
-    push hl
-    ld hl,#0000
-    push hl
-    push iy
-    ld hl,#C868
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
     ld hl,#4000
     push hl
+    ld h,#00
+    push hl
     ld h,#2A
     push hl
-    ld hl,#0805
+    ld hl,#C868
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F15
+    di
+    push hl
+    ld hl,#2A00
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#0806
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    push iy
+    ld hl,#3F00
+    push hl
+    ld h,#00
+    push hl
     jp car1_roll_done
-    ASSERT $ <= #67CD
-    ORG #67B2
+    ASSERT $ <= #68CD
+    ORG #689C
 car1_roll1
     ld de,#3F3F
     ld sp,hl
@@ -2800,268 +3055,90 @@ car1_roll1
     push bc
     push bc
     push bc
-    ld hl,#080D
+    push bc
+    ld hl,#0811
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    jp #6800
-    ASSERT $ <= #67CD
-    ORG #6800
-    ld hl,#15C0
+    push bc
+    ld hl,#4095
     push hl
     push bc
     push bc
     push bc
     push bc
-    ld h,#80
+    push bc
+    ld hl,#2AC0
     push hl
     push bc
-    ld hl,#0812
+    ld hl,#C874
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3F95
+    jp #6900
+    ASSERT $ <= #68CD
+    ORG #6900
+    nop
     di
+    push bc
+    push bc
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#C040
+    push hl
+    ld hl,#3F80
     push hl
     push bc
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#C06A
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#6A3F
     push hl
     ld hl,#3FC0
     push hl
     push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F0F
-    di
+    push bc
+    push bc
+    push bc
+    ld bc,#2A3F
+    push bc
+    ld h,#95
     push hl
-    ld bc,#0F3F
-    push bc
-    ld bc,#3F15
-    push bc
-    push de
-    push de
-    push de
-    ld c,#2A
-    push bc
-    push de
+    ld hl,#C03F
     push hl
-    ld hl,#0812
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push de
-    ld hl,#3F15
-    push hl
-    push de
-    ld hl,#2F3F
-    push hl
-    push de
-    push de
-    ld hl,#0F2A
-    push hl
-    push bc
-    ld bc,#0F0F
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#3F15
-    push hl
-    ld hl,#2A2A
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#0F15
-    push hl
-    ld hl,#3F0A
-    push hl
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#002A
+    ld hl,#0F0F
     push hl
     push de
     push de
     push de
     push de
-    ld bc,#003F
-    push bc
     push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    ld b,#2A
-    push bc
-    ld l,#00
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C86B
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    ld bc,#002A
-    push bc
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push bc
-    jp car1_roll_done
-    ASSERT $ <= #68CD
-    ORG #6900
-car1_roll2
-    ld de,#3F3F
-    ld bc,#0F0F
-    ld ix,#0000
-    ld iy,#002A
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    ld hl,#6A3F
-    push hl
-    push de
-    push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#95C0
-    push hl
     ld hl,#1F2F
     push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0F2F
-    di
+    push bc
+    ld hl,#151F
     push hl
-    ld hl,#C06A
+    ld hl,#0F0F
     push hl
-    ld hl,#2F3F
-    push hl
-    push de
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F3F
-    push hl
-    ld hl,#6A1F
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#0F2F
-    push hl
-    ld hl,#951F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#1F0F
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    ld hl,#3F0F
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#1F0F
-    push hl
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#2F3F
-    push hl
-    push de
-    ld hl,#3F1F
-    push hl
-    ld hl,#2F3F
-    push hl
-    push de
-    ld hl,#3F2F
-    push hl
-    push de
-    push de
-    ld hl,#0812
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
@@ -3069,188 +3146,61 @@ car1_roll2
     di
     push de
     push de
-    push de
-    push ix
-    ld hl,#2A3F
+    ld hl,#153F
     push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#1F0F
-    jp #6A00
-    ASSERT $ <= #69CD
-    ORG #6A00
-    push hl
-    ld hl,#0F2F
+    ld l,#1F
     push hl
     push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push de
     push de
-    push de
-    push ix
-    push ix
-    push ix
     ld hl,#1F2F
     push hl
-    push de
-    push de
-    ld hl,#0812
+    push bc
+    ld hl,#150F
+    push hl
+    ld h,#0F
+    push hl
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push de
-    push de
-    push de
-    push ix
-    push ix
-    push ix
-    ld hl,#2A15
-    push hl
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#003F
-    push hl
-    ld hl,#1500
-    push hl
-    push ix
-    push iy
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld hl,#1500
-    push hl
-    ld hl,#003F
-    push hl
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push ix
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push iy
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
-    push hl
-    push iy
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
-    push de
-    ld hl,#1500
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    jp #6B00
-    ASSERT $ <= #6ACD
-    ORG #6B00
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#2A3F
-    push hl
     push de
     ld hl,#152A
     push hl
+    ld hl,#003F
+    push hl
     push de
     push de
-    ld hl,#0812
+    push de
+    ld bc,#1F0F
+    push bc
+    push hl
+    ld hl,#2A0F
+    push hl
+    ld h,#0F
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push de
-    push de
-    push de
-    push ix
+    ld hl,#3F00
+    push hl
     ld hl,#2A3F
     push hl
     push de
-    ld h,#15
-    push hl
     push de
+    push de
+    push bc
+    ld bc,#1500
+    push bc
+    ld l,#0F
+    push hl
     push de
     ld hl,#0811
     add hl,sp
@@ -3259,999 +3209,1445 @@ car1_roll2
     nop
     di
     push de
-    push de
-    ld hl,#3F00
-    push hl
-    push iy
-    push de
-    ld l,#15
+    ld hl,#2A3F
     push hl
     push de
     push de
-    ld hl,#0810
+    push de
+    push de
+    ld h,#00
+    push hl
+    push de
+    ld hl,#080F
     add hl,sp
     ld sp,hl
+    jp #6A00
+    ASSERT $ <= #69CD
+    ORG #6A00
     ei
     nop
     di
     push de
     push de
-    ld hl,#1500
-    push hl
-    push iy
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1500
-    push hl
-    push ix
-    ld h,#2A
-    push hl
-    push iy
     push bc
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1500
+    ld hl,#0000
     push hl
-    push ix
-    push ix
-    push iy
+    ld l,#3F
+    push hl
     push de
     push de
-    ld hl,#C86E
+    ld hl,#C86D
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push ix
     push de
-    push de
-    push de
-    push de
-    push de
-    push de
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld hl,#2A3F
+    push hl
     ld hl,#0807
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push de
-    push de
-    push de
+    push bc
+    ld hl,#0000
+    push hl
+    ld bc,#003F
+    push bc
     jp car1_roll_done
-    ASSERT $ <= #6BCD
-    ORG #6BA1
-car1_roll3
-    ld de,#0F0F
+    ASSERT $ <= #6ACD
+    ORG #6A36
+car1_roll2
+    ld de,#3F3F
     ld bc,#0000
-    ld ix,#0F2F
-    ld iy,#3F3F
+    ld ix,#0F0F
+    ld iy,#002A
     ld sp,hl
     ei
     nop
     di
     push de
-    push de
-    push de
-    push de
+    ld hl,#3F95
+    push hl
+    ld hl,#C03F
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#C06A
     di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    jp #6C00
-    ASSERT $ <= #6BCD
-    ORG #6C00
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2FC0
-    push hl
-    ld h,#C0
-    push hl
-    push hl
-    ld hl,#6A0F
     push hl
     push de
     push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push de
-    push de
-    ld hl,#2F00
-    push hl
-    push bc
-    push bc
-    ld hl,#001F
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#0F3F
-    push hl
     ld hl,#3F1F
     push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    ld hl,#0F3F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    jp #6D00
-    ASSERT $ <= #6CCD
-    ORG #6D00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#2F00
-    push hl
-    ld hl,#002A
-    push hl
-    push de
-    push ix
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#2F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A0F
-    push hl
-    push de
-    ld h,#05
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#2A3F
-    push hl
-    push iy
-    ld hl,#150F
-    push hl
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#003F
-    push hl
-    push iy
-    ld hl,#0A0F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    push bc
-    ld hl,#0A0F
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    push bc
-    push iy
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#0F3E
-    push hl
-    push iy
-    push iy
-    push iy
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    jp #6E00
-    ASSERT $ <= #6DCD
-    ORG #6E00
-    push de
-    push de
-    ld hl,#0F2D
-    push hl
-    ld hl,#3C3C
-    push hl
-    ld hl,#4F8F
-    push hl
-    ld hl,#3C3C
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    ld hl,#3F0F
-    push hl
-    push de
-    push de
-    push de
-    ld h,#2D
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    ld hl,#3F15
-    push hl
-    ld hl,#002A
-    push hl
-    push iy
-    push iy
-    ld hl,#3F0F
-    push hl
-    push ix
-    push iy
-    push iy
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#002A
-    di
-    push hl
-    ld hl,#1515
-    push hl
-    push bc
-    push bc
-    ld hl,#2A3F
-    push hl
-    push bc
-    push hl
-    ld hl,#C868
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#003F
-    push hl
-    ld hl,#2A15
-    push hl
-    push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    jp car1_roll_done
-    ASSERT $ <= #6ECD
-    ORG #6E7F
-car1_roll4
-    ld de,#0F0F
-    ld sp,hl
-    ei
-    ld bc,#CFCF
-    di
-    push bc
-    push bc
-    ld hl,#C865
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F95
-    di
-    push hl
-    ld bc,#C0C0
-    push bc
-    ld c,#4A
-    push bc
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld c,#3F
-    push bc
-    push hl
-    ld bc,#000A
-    push bc
-    push de
-    ld hl,#080B
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF6F
-    di
-    push hl
-    ld bc,#1F0F
-    push bc
-    ld hl,#0F3F
-    push hl
-    ld h,#3F
-    push hl
-    push bc
-    push de
-    jp #6F00
-    ASSERT $ <= #6ECD
-    ORG #6F00
-    ld bc,#8FCF
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF0F
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF4F
-    di
-    push hl
-    push de
-    ld bc,#001F
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#0F05
-    push hl
-    push bc
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#0F05
-    push hl
-    ld bc,#3F3F
-    push bc
-    ld hl,#2F3F
-    push hl
-    push bc
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F3F
-    push hl
-    ld hl,#3F0A
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#0F05
-    push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#2F3F
-    push hl
-    push bc
-    ld hl,#3F1F
-    push hl
-    ld hl,#0F2A
-    push hl
-    push bc
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    push hl
-    ld hl,#1500
-    push hl
-    ld h,#00
-    push hl
-    ld l,#3F
-    push hl
-    ld hl,#3F2A
-    push hl
-    push hl
-    push bc
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C040
-    di
-    push hl
-    ld c,#80
-    push bc
-    ld bc,#0000
-    push bc
-    push bc
-    push bc
-    ld hl,#002A
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#00C0
-    push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    jp car1_roll_done
-    ASSERT $ <= #6FCD
-    ORG #6FBF
-car1_roll5
-    ld de,#C0C0
-    ld bc,#0000
-    ld ix,#00C0
-    ld sp,hl
-    jp #7000
-    ASSERT $ <= #6FCD
-    ORG #7000
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld hl,#1F0F
-    push hl
-    ld hl,#95C0
-    push hl
-    ld hl,#1F0F
-    push hl
-    ld hl,#080D
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#953F
-    di
-    push hl
-    ld h,#2F
-    push hl
-    ld h,#3F
-    push hl
-    push hl
-    ld l,#95
+    ld hl,#2F95
     push hl
     ld hl,#C03F
     push hl
-    ld hl,#0F0F
-    push hl
-    ld hl,#0810
+    push ix
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
     ld hl,#0F2F
     di
     push hl
-    ld hl,#C040
+    ld hl,#C0C0
     push hl
-    ld hl,#3F3F
+    ld hl,#1F3F
     push hl
+    push de
+    push de
+    ld l,#0F
+    push hl
+    ld hl,#0F15
+    push hl
+    ld hl,#001F
+    push hl
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    ld hl,#0F2F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#0F1F
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#3F0F
+    push hl
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push ix
+    ld hl,#001F
+    push hl
+    push ix
+    push ix
+    push ix
+    jp #6B00
+    ASSERT $ <= #6ACD
+    ORG #6B00
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#2F3F
+    push hl
+    ld hl,#3F1F
+    push hl
+    push ix
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F1F
+    di
+    push hl
+    push de
+    push de
     ld l,#00
     push hl
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F2F
+    push hl
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#3F00
+    push hl
     push bc
-    ld hl,#002A
+    ld hl,#2A3F
     push hl
-    ld hl,#6A00
+    push de
+    ld hl,#000F
     push hl
-    ld hl,#003F
+    push ix
+    ld hl,#2F3F
     push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0F2F
+    push hl
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2A00
+    push hl
+    ld h,#15
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    jp #6C00
+    ASSERT $ <= #6BCD
+    ORG #6C00
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    push bc
+    ld hl,#1500
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld l,#2A
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    push bc
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    push iy
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#2A2A
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    jp #6D00
+    ASSERT $ <= #6CCD
+    ORG #6D00
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push de
+    push de
+    ld hl,#0A0F
+    push hl
+    ld hl,#0F2F
+    push hl
+    push de
     ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3F3F
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#C870
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    jp car1_roll_done
+    ASSERT $ <= #6DCD
+    ORG #6D79
+car1_roll3
+    ld de,#0F0F
+    ld bc,#0000
+    ld ix,#3F3F
+    ld iy,#000A
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F1F
     di
     push hl
-    ld l,#00
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3F95
     push hl
-    ld hl,#C015
+    ld hl,#C0C0
+    push hl
+    push hl
+    ld hl,#3F1F
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    jp #6E00
+    ASSERT $ <= #6DCD
+    ORG #6E00
+    push hl
+    ld hl,#80C0
+    push hl
+    ld h,#C0
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#002A
+    push hl
+    push ix
+    ld hl,#3F15
+    push hl
+    ld l,#0F
+    push hl
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    push ix
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    push ix
+    ld hl,#0F2F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    push ix
+    ld hl,#0F2F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    push ix
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    push de
+    jp #6F00
+    ASSERT $ <= #6ECD
+    ORG #6F00
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#0F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    push de
+    ld hl,#3F1F
+    push hl
+    ld hl,#2F3F
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    ld hl,#0095
+    push hl
+    ld hl,#C000
+    push hl
+    ld hl,#2A1F
+    push hl
+    ld hl,#2F3F
+    push hl
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    jp #7000
+    ASSERT $ <= #6FCD
+    ORG #7000
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    ld hl,#3F0F
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#2F3F
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#0F00
     push hl
     push bc
     push bc
     push bc
+    ld hl,#001F
+    push hl
+    push de
+    push de
+    ld hl,#0FC0
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#0F00
+    push hl
     push bc
     push bc
     push bc
-    ld hl,#0812
+    ld hl,#003F
+    push hl
+    ld hl,#1F0F
+    push hl
+    push de
+    ld hl,#0FC0
+    push hl
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    ld hl,#2A3F
+    push hl
+    push ix
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push ix
+    push ix
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#2D3C
+    push hl
+    ld h,#3C
+    push hl
+    push hl
+    push hl
+    ld hl,#1E0F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F1F
+    di
+    push hl
+    push de
+    ld h,#15
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    ld hl,#3F15
+    push hl
+    push bc
+    push ix
+    push ix
+    push ix
+    push de
+    push de
+    ld l,#0F
+    push hl
+    ld hl,#2F3F
+    push hl
+    jp #7100
+    ASSERT $ <= #70CD
+    ORG #7100
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
     ld hl,#3F15
     di
     push hl
-    push de
-    ld hl,#0080
+    ld h,#2A
     push hl
-    push de
-    push de
-    push de
-    ld hl,#C040
+    ld l,#00
+    push hl
+    push bc
+    push bc
+    push ix
+    ld hl,#3F15
+    push hl
+    ld hl,#002A
     push hl
     push ix
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#0080
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    push ix
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#0080
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    push ix
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#40C0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    jp #7100
-    ASSERT $ <= #70CD
-    ORG #7100
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
     ld hl,#0810
     add hl,sp
     ld sp,hl
     ei
     nop
     di
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    ld hl,#1500
+    push hl
+    push hl
     push ix
+    jp car1_roll_done
+    ASSERT $ <= #71CD
+    ORG #7139
+car1_roll4
+    ld de,#0F0F
+    ld sp,hl
+    ei
+    ld bc,#3F3F
+    di
+    push bc
+    ld hl,#3F95
+    push hl
+    ld hl,#C0C0
+    push hl
+    ld hl,#6A3F
+    push hl
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#C0C0
+    push hl
+    push hl
+    push hl
+    push de
+    ld hl,#C86A
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F2F
+    push hl
+    push bc
+    ld hl,#1500
+    push hl
+    push de
+    push de
+    ld hl,#9FCF
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld l,#0F
+    push hl
+    ld h,#1F
+    push hl
+    push de
+    push bc
     push de
     push de
     push de
     push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld hl,#4F0F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld h,#3F
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    push de
+    ld hl,#2F00
+    push hl
+    ld hl,#2A0F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0500
+    push hl
+    ld hl,#1F0F
+    push hl
     push de
     jp #7D00
     ASSERT $ <= #71CD
     ORG #7D00
-    push de
-    push de
-    ld hl,#0810
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#0080
+    nop
     di
+    push de
+    push de
+    ld hl,#053F
+    push hl
+    ld hl,#150F
+    push hl
+    push de
+    push bc
+    push bc
+    ld h,#1F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld l,#0F
+    push hl
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#153F
+    push hl
+    ld l,#1F
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#1F2F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#150F
+    push hl
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#1F2F
+    push hl
+    ld hl,#2A3F
+    push hl
+    ld hl,#151F
+    push hl
+    ld hl,#0F3F
+    push hl
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3F40
+    push hl
+    ld c,#15
+    push bc
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#2A
+    push hl
+    push bc
+    ld l,#00
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    ld l,#40
+    push hl
+    push bc
+    ld bc,#4000
+    push bc
+    ld b,#00
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#3F00
+    push hl
+    push bc
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    jp car1_roll_done
+    ASSERT $ <= #7FCD
+    ORG #7DAE
+car1_roll5
+    ld de,#C0C0
+    ld bc,#0000
+    ld ix,#0080
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    ld hl,#1F0F
+    push hl
+    ld hl,#80C0
+    push hl
+    ld hl,#3F0F
+    push hl
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#9515
+    di
+    push hl
+    ld hl,#1F3F
+    push hl
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    ld l,#95
+    push hl
+    ld hl,#C040
+    push hl
+    ld hl,#0F0F
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F3F
+    di
+    push hl
+    push de
+    ld h,#3F
+    push hl
+    push hl
+    ld hl,#1500
+    push hl
+    push bc
+    ld hl,#002A
+    push hl
+    ld hl,#C015
+    push hl
+    ld hl,#002A
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    ld hl,#3F3F
+    push hl
+    ld hl,#C06A
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F15
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push bc
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    push ix
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push ix
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
     push hl
     ld hl,#C040
     push hl
@@ -4262,106 +4658,50 @@ car1_roll5
     push de
     push de
     push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push de
-    ld hl,#C000
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
     push hl
-    ld hl,#0040
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    jp car1_roll_done
-    ASSERT $ <= #7FCD
-    ORG #7D4B
-car1_roll6
-    ld de,#C0C0
-    ld sp,hl
-    ei
-    ld bc,#3F3F
-    di
-    push bc
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#2A3F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
     push de
     ld hl,#C03F
     push hl
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#6A95
-    push hl
-    push de
-    ld hl,#0810
+    ld hl,#C875
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3FC0
+    nop
     di
-    push hl
-    ld hl,#C06A
-    push hl
-    ld hl,#95C0
-    push hl
+    push ix
     push de
     push de
     push de
     push de
     push de
-    ld hl,#0810
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3FC0
+    nop
     di
-    push hl
+    push ix
     push de
     push de
     push de
@@ -4369,13 +4709,15 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0810
+    push de
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3FC0
+    nop
     di
-    push hl
+    push ix
     push de
     push de
     push de
@@ -4383,7 +4725,25 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0811
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4398,7 +4758,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#C872
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4413,7 +4774,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4428,7 +4790,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4443,7 +4806,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#C874
     add hl,sp
     ld sp,hl
     ei
@@ -4458,7 +4822,27 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#00C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C03F
+    push hl
+    ld hl,#0815
     add hl,sp
     ld sp,hl
     ei
@@ -4473,7 +4857,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4488,7 +4873,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4503,7 +4889,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#0812
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4518,7 +4905,8 @@ car1_roll6
     push de
     push de
     push de
-    ld hl,#C872
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -4526,156 +4914,7 @@ car1_roll6
     di
     push bc
     push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#3FC0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld h,#95
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#0000
-    push hl
-    ld c,#15
-    push bc
-    push hl
-    push hl
-    push hl
-    ld bc,#002A
-    push bc
-    ld bc,#3F00
-    push bc
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld hl,#0000
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#2A
-    push hl
-    push bc
-    ld l,#00
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F15
-    di
-    push hl
-    push bc
-    ld hl,#0000
-    push hl
-    ld hl,#3F3F
-    push hl
-    push hl
-    push bc
-    ld b,#00
-    push bc
-    push hl
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#1500
-    push hl
-    push bc
-    push bc
-    push bc
-    push hl
-    ld hl,#3F3F
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F00
-    push hl
-    ld c,#2A
-    push bc
-    jp car1_roll_done
+    jp #8040
     ASSERT $ <= #7FCD
     SAVE "build/roll5_1.raw",#4000,#4000
 
@@ -4683,556 +4922,64 @@ car1_roll6
     ORG #6500
 car2_roll0
     ld de,#C0C0
-    ld sp,hl
-    ei
     ld bc,#3F3F
-    di
-    push bc
-    ld hl,#0804
-    add hl,sp
+    ld ix,#3F95
+    ld iy,#0000
     ld sp,hl
     ei
     nop
     di
     push bc
-    ld hl,#3FCF
+    ld hl,#3F2A
     push hl
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#2A3F
-    di
+    ld l,#C0
     push hl
-    push de
-    ld hl,#0806
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#2A95
-    push hl
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F95
-    push hl
-    push de
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3FC5
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C86B
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3FC5
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#2A9F
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#2AC0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#95C0
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC5
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    jp #6600
-    ASSERT $ <= #65CD
-    ORG #6600
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#9FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#9FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6A15
-    push hl
-    ld hl,#2A3F
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#3F15
-    push hl
-    push bc
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC5
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld b,#00
-    push bc
-    ld hl,#1515
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF95
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C000
-    push hl
-    ld h,#00
-    push hl
-    push hl
-    jp #6700
-    ASSERT $ <= #66CD
-    ORG #6700
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF95
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push bc
-    ld hl,#152A
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC5
-    di
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#402A
-    push hl
-    ld hl,#9F3F
-    push hl
-    ld hl,#1500
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC5
-    di
-    push hl
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    ld hl,#2A9F
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC5
-    di
-    push hl
-    push de
-    push de
-    ld hl,#402A
-    push hl
-    ld hl,#9F3F
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC5
-    di
-    push hl
-    push de
-    ld hl,#C015
-    push hl
-    ld hl,#2ACF
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#0809
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFC0
-    di
-    push hl
-    ld hl,#C03F
-    push hl
-    ld h,#15
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3FC0
-    di
-    push hl
-    push bc
-    ld c,#00
-    push bc
-    push bc
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF00
-    di
-    push hl
-    ld b,#15
-    push bc
-    push bc
     ld hl,#C866
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF9F
+    ld hl,#003F
     di
     push hl
-    ld b,#45
+    ld hl,#3F80
+    push hl
+    push de
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
     push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#9F3F
-    di
-    push hl
-    jp car2_roll_done
-    ASSERT $ <= #67CD
-    ORG #6800
-car2_roll1
-    ld de,#C0C0
-    ld bc,#3F3F
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080D
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#C03F
+    ld hl,#153F
     push hl
     ld hl,#95C0
     push hl
     push de
-    push de
-    push de
-    ld hl,#6A3F
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#6733
-    di
-    push hl
-    ld hl,#3B9F
-    push hl
-    ld hl,#453F
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#8A6F
-    push hl
-    ld hl,#2A9F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#9FCF
-    di
-    push hl
-    ld hl,#6F9F
-    push hl
-    ld hl,#45CF
-    push hl
-    ld h,#CF
-    push hl
-    push hl
-    push hl
-    ld hl,#8A6F
-    push hl
-    ld l,#67
-    push hl
-    ld hl,#0810
+    ld hl,#080A
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    ld hl,#3F2A
+    push bc
+    ld hl,#95C0
     push hl
-    ld hl,#2A9B
-    push hl
-    ld hl,#CFCF
-    push hl
-    push hl
-    push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#CF67
-    push hl
-    ld hl,#080E
+    push de
+    push de
+    ld hl,#080A
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3F15
+    nop
     di
+    push bc
+    ld hl,#3FC0
     push hl
-    ld hl,#8ACF
-    push hl
-    ld h,#CF
-    push hl
-    push hl
-    push hl
-    ld hl,#452A
-    push hl
-    ld hl,#CFCF
-    push hl
+    push de
+    push de
+    push de
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -5240,979 +4987,11 @@ car2_roll1
     nop
     di
     push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C86C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F15
-    jp #6900
-    ASSERT $ <= #68CD
-    ORG #6900
-    push hl
-    ld hl,#0000
-    push hl
-    ld l,#3F
-    push hl
-    push bc
-    ld hl,#0807
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push bc
-    jp car2_roll_done
-    ASSERT $ <= #69CD
-    ORG #6919
-car2_roll2
-    ld de,#CFCF
-    ld bc,#0000
-    ld ix,#3333
-    ld iy,#6F00
-    ld sp,hl
-    ei
-    ld hl,#3F95
-    di
-    push hl
-    ld hl,#6A3F
-    push hl
-    ld h,#3F
-    push hl
-    push hl
-    push hl
-    ld hl,#956A
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#9B95
-    push hl
-    ld hl,#6ACF
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#956A
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#3315
-    push hl
-    ld hl,#9F33
-    push hl
-    push ix
-    push ix
-    push ix
-    ld hl,#458A
-    push hl
-    push ix
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#9B67
-    di
-    push hl
-    ld hl,#339B
-    push hl
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#CF67
-    push hl
-    push ix
-    push ix
-    ld hl,#33CF
-    push hl
-    ld hl,#6733
-    push hl
-    push ix
-    push ix
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#CF00
-    push hl
-    ld hl,#003F
-    push hl
-    ld hl,#CF6F
-    push hl
-    ld hl,#3F33
-    push hl
     push ix
     push de
-    jp #6A00
-    ASSERT $ <= #69CD
-    ORG #6A00
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push de
     push de
-    push iy
-    push bc
-    push bc
-    ld hl,#2A33
-    push hl
-    ld hl,#9BCF
-    push hl
-    ld hl,#6F9F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
     push de
-    push de
-    push iy
-    push bc
-    push bc
-    ld hl,#00CF
-    push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    jp #6B00
-    ASSERT $ <= #6ACD
-    ORG #6B00
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#003F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#003F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    ld hl,#CF00
-    push hl
-    push bc
-    ld hl,#009F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld hl,#9FCF
-    push hl
-    push iy
-    ld hl,#002A
-    push hl
-    push de
-    push iy
-    push bc
-    ld l,#3F
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    push hl
-    ld l,#00
-    push hl
-    push bc
-    ld l,#3F
-    push hl
-    ld h,#15
-    push hl
-    ld h,#3F
-    push hl
-    ld h,#00
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    push hl
-    ld l,#00
-    push hl
-    push bc
-    push bc
-    ld hl,#0033
-    push hl
-    push ix
-    push de
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F3F
-    di
-    push hl
-    ld l,#00
-    push hl
-    push bc
-    push bc
-    ld hl,#2ACF
-    push hl
-    push de
-    ld hl,#9F3F
-    jp #6C00
-    ASSERT $ <= #6BCD
-    ORG #6C00
-    push hl
-    ld hl,#0809
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    jp car2_roll_done
-    ASSERT $ <= #6CCD
-    ORG #6C0F
-car2_roll3
-    ld de,#3333
-    ld bc,#0000
-    ld ix,#9B00
-    ld iy,#3F3F
-    ld sp,hl
-    ei
-    ld hl,#339B
-    di
-    push hl
-    ld l,#CF
-    push hl
-    ld hl,#CF6F
-    push hl
-    push iy
-    ld hl,#9F33
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    ld hl,#2A33
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    ld hl,#003F
-    push hl
-    ld hl,#9FCF
-    push hl
-    ld hl,#CF33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#9B2A
-    push hl
-    push iy
-    ld hl,#3F33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F33
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    jp #6D00
-    ASSERT $ <= #6CCD
-    ORG #6D00
-    ld hl,#3F33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F33
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#008A
-    push hl
-    push de
-    ld hl,#333F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    ld hl,#002A
-    push hl
-    ld hl,#CFCF
-    push hl
-    ld l,#3F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    jp #6E00
-    ASSERT $ <= #6DCD
-    ORG #6E00
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    ld hl,#003F
-    push hl
-    push iy
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    ld hl,#CFCF
-    push hl
-    ld hl,#4533
-    push hl
-    ld hl,#CF6F
-    push hl
-    ld hl,#3F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push iy
-    ld hl,#0033
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push ix
-    push bc
-    push bc
-    ld hl,#00CF
-    push hl
-    ld hl,#CF33
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#9B3F
-    push hl
-    push iy
-    push bc
-    ld h,#2A
-    push hl
-    ld hl,#9FCF
-    push hl
-    ld hl,#6733
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3367
-    push hl
-    ld l,#CF
-    push hl
-    ld h,#CF
-    push hl
-    ld hl,#6733
-    push hl
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#3345
-    push hl
-    ld hl,#CFCF
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#9F
-    push hl
-    ld l,#CF
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF6F
-    di
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#0015
-    push hl
-    push bc
-    push bc
-    ld l,#2A
-    push hl
-    push bc
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    jp #6F00
-    ASSERT $ <= #6ECD
-    ORG #6F00
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#2A15
-    push hl
-    jp car2_roll_done
-    ASSERT $ <= #6FCD
-    ORG #6F0E
-car2_roll4
-    ld de,#3333
-    ld bc,#0000
-    ld sp,hl
-    ei
-    ld hl,#CFC0
-    di
-    push hl
-    ld hl,#C0CA
-    push hl
-    push de
-    ld hl,#0809
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFCF
-    di
-    push hl
-    ld hl,#C56A
-    push hl
-    ld hl,#CF6F
-    push hl
-    ld hl,#6A33
-    push hl
-    push de
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CFCF
-    di
-    push hl
-    ld hl,#679B
-    push hl
-    push bc
-    ld hl,#2A33
-    push hl
-    push de
-    ld hl,#9BCF
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#CF33
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#336F
-    push hl
-    ld hl,#6733
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#3B8A
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#9B2A
-    push hl
-    ld hl,#3F9B
-    push hl
-    ld hl,#CFCF
-    push hl
-    push hl
-    ld l,#67
-    push hl
-    ld hl,#3F15
-    push hl
-    ld hl,#6767
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#CF9F
-    push hl
-    ld hl,#45CF
-    push hl
-    ld h,#CF
-    push hl
-    push hl
-    push hl
-    ld hl,#8A6F
-    push hl
-    ld l,#67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#33CF
-    di
-    push hl
-    ld hl,#459F
-    push hl
-    push hl
-    jp #7000
-    ASSERT $ <= #6FCD
-    ORG #7000
-    ld hl,#CFCF
-    push hl
-    push hl
-    ld l,#6F
-    push hl
-    ld h,#8A
-    push hl
-    ld l,#9F
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#002A
-    push hl
-    ld hl,#1500
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#2A15
-    push hl
-    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -6221,652 +5000,11 @@ car2_roll4
     di
     push bc
     push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    jp car2_roll_done
-    ASSERT $ <= #70CD
-    ORG #7038
-car2_roll5
-    ld de,#C0C0
-    ld bc,#0000
-    ld ix,#0080
-    ld iy,#00C0
-    ld sp,hl
-    ei
-    nop
-    di
     push de
-    ld hl,#6ACF
-    push hl
-    ld h,#CF
-    push hl
-    push hl
-    push hl
-    ld hl,#956A
-    push hl
-    ld hl,#CFCF
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3333
-    di
-    push hl
-    ld hl,#6FC0
-    push hl
-    ld hl,#6A9F
-    push hl
-    ld hl,#6F3F
-    push hl
-    ld h,#3F
-    push hl
-    ld hl,#CF6F
-    push hl
-    ld hl,#95C0
-    push hl
-    ld hl,#9F67
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#4500
-    di
-    push hl
-    ld hl,#002A
-    push hl
-    ld hl,#1500
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    ld hl,#C000
-    push hl
-    ld hl,#80C0
-    push hl
     push de
     push de
     push de
-    ld hl,#4000
-    push hl
     push de
-    ld hl,#C871
-    add hl,sp
-    ld sp,hl
-    ei
-    jp #7100
-    ASSERT $ <= #70CD
-    ORG #7100
-    nop
-    di
-    push bc
-    push de
-    ld hl,#4080
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C040
-    push hl
-    ld hl,#80C0
-    push hl
-    ld hl,#C0CF
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C080
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    jp #7D00
-    ASSERT $ <= #71CD
-    ORG #7D00
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C86E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    jp car2_roll_done
-    ASSERT $ <= #7FCD
-    ORG #7D6C
-car2_roll6
-    ld de,#C0C0
-    ld bc,#3F3F
-    ld ix,#3FC0
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3F2A
-    push hl
-    push bc
-    push bc
-    push bc
-    ld l,#15
-    push hl
-    push hl
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#4095
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6A95
-    push hl
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3F00
-    di
-    push hl
-    ld hl,#003F
-    push hl
-    ld hl,#1500
-    push hl
-    ld h,#00
-    push hl
-    push hl
-    push hl
-    ld hl,#2A3F
-    push hl
-    ld hl,#0000
-    push hl
     ld hl,#0810
     add hl,sp
     ld sp,hl
@@ -6876,157 +5014,8 @@ car2_roll6
     push bc
     ld hl,#153F
     push hl
-    ld l,#2A
+    ld hl,#95C0
     push hl
-    push bc
-    push bc
-    ld hl,#3F15
-    push hl
-    ld hl,#2A3F
-    push hl
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#1500
-    push hl
-    ld hl,#002A
-    push hl
-    push bc
-    push bc
-    ld hl,#3F15
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#2A3F
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    ld hl,#2A15
-    push hl
-    ld hl,#002A
-    push hl
-    jp car2_roll_done
-    ASSERT $ <= #7FCD
-    SAVE "build/roll5_2.raw",#4000,#4000
-
-    BANK
-    ORG #6500
-car3_roll0
-    ld de,#3030
-    ld bc,#C0C0
-    ld ix,#C060
-    ld iy,#80C0
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    ld hl,#0805
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#C030
-    push hl
-    push de
-    ld hl,#0806
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    ld hl,#6030
-    push hl
-    push de
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push bc
-    push de
-    ld hl,#3090
-    push hl
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#6030
-    di
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C86A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
     push de
     push de
     push de
@@ -7036,24 +5025,10 @@ car3_roll0
     add hl,sp
     ld sp,hl
     ei
-    nop
-    di
-    push bc
-    push ix
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0080
+    ld hl,#003F
     di
     push hl
-    ld hl,#C030
+    ld hl,#15C0
     push hl
     push de
     push de
@@ -7061,14 +5036,30 @@ car3_roll0
     push de
     push de
     push de
-    ld hl,#0811
+    ld hl,#C872
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push bc
-    push ix
+    ld hl,#153F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
     push de
     push de
     push de
@@ -7079,6 +5070,1146 @@ car3_roll0
     jp #6600
     ASSERT $ <= #65CD
     ORG #6600
+    ld hl,#0813
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F9F
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F9F
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    jp #6700
+    ASSERT $ <= #66CD
+    ORG #6700
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#4000
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#3F15
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C06A
+    push hl
+    ld hl,#3F15
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF6F
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#4000
+    push hl
+    push bc
+    ld hl,#2A2A
+    push hl
+    ld hl,#C873
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFC0
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#002A
+    push hl
+    ld l,#15
+    push hl
+    push iy
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFC0
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#4000
+    push hl
+    ld hl,#3F9F
+    push hl
+    ld hl,#002A
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFC0
+    di
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#2A9F
+    push hl
+    ld hl,#CF3F
+    push hl
+    push iy
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFC0
+    di
+    push hl
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#9F6F
+    push hl
+    ld hl,#3F00
+    push hl
+    ld hl,#080E
+    add hl,sp
+    jp #6800
+    ASSERT $ <= #67CD
+    ORG #6800
+    ld sp,hl
+    ei
+    ld hl,#CFC5
+    di
+    push hl
+    push de
+    push de
+    push iy
+    ld hl,#3FCF
+    push hl
+    ld hl,#6F15
+    push hl
+    push iy
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFC5
+    di
+    push hl
+    push de
+    push bc
+    ld hl,#2A9F
+    push hl
+    ld hl,#6F3F
+    push hl
+    push iy
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#6F95
+    di
+    push hl
+    ld hl,#C000
+    push hl
+    push bc
+    ld hl,#2A6F
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#080A
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#9FC5
+    di
+    push hl
+    push iy
+    ld hl,#3F00
+    push hl
+    ld hl,#2A15
+    push hl
+    push iy
+    ld hl,#C86A
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF45
+    di
+    push hl
+    ld hl,#3F15
+    push hl
+    ld h,#00
+    push hl
+    push iy
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld l,#15
+    push hl
+    push iy
+    jp car2_roll_done
+    ASSERT $ <= #68CD
+    ORG #6882
+car2_roll1
+    ld de,#3F3F
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld bc,#C0C0
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    ld hl,#3F15
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#C040
+    push hl
+    ld hl,#15C0
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF9F
+    di
+    push hl
+    push bc
+    jp #6900
+    ASSERT $ <= #68CD
+    ORG #6900
+    ld hl,#9F6F
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#C08A
+    push hl
+    ld hl,#CF80
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF33
+    di
+    push hl
+    ld bc,#3311
+    push bc
+    ld bc,#9F6F
+    push bc
+    ld bc,#8ACF
+    push bc
+    ld b,#CF
+    push bc
+    push bc
+    push bc
+    ld bc,#6F9F
+    push bc
+    ld bc,#CF2A
+    push bc
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#CF45
+    push hl
+    ld bc,#9F6F
+    push bc
+    ld bc,#8A3F
+    push bc
+    push de
+    push de
+    push de
+    ld bc,#9F8A
+    push bc
+    ld b,#CF
+    push bc
+    ld bc,#3FCF
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#0000
+    push hl
+    ld b,#CF
+    push bc
+    push bc
+    push bc
+    push bc
+    ld h,#CF
+    push hl
+    ld hl,#158A
+    push hl
+    ld hl,#CF33
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#002A
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#CF45
+    push hl
+    ld hl,#00CF
+    push hl
+    push bc
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#002A
+    di
+    push hl
+    push de
+    ld bc,#1500
+    push bc
+    ld b,#00
+    push bc
+    ld hl,#2A3F
+    push hl
+    push de
+    push de
+    ld hl,#C86C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F15
+    di
+    push hl
+    push bc
+    push bc
+    ld hl,#2A3F
+    jp #6A00
+    ASSERT $ <= #69CD
+    ORG #6A00
+    push hl
+    push de
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    push de
+    jp car2_roll_done
+    ASSERT $ <= #6ACD
+    ORG #6A14
+car2_roll2
+    ld de,#CFCF
+    ld bc,#0000
+    ld ix,#3333
+    ld iy,#002A
+    ld sp,hl
+    ei
+    ld hl,#95C0
+    di
+    push hl
+    ld hl,#9FCF
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#3FC0
+    push hl
+    ld hl,#C03F
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    ld hl,#33CF
+    push hl
+    ld hl,#95C0
+    push hl
+    ld hl,#9FCF
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#CF95
+    push hl
+    ld hl,#6A8A
+    push hl
+    ld hl,#CF33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push ix
+    ld hl,#158A
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#3345
+    push hl
+    ld hl,#2A33
+    push hl
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3367
+    di
+    push hl
+    push ix
+    ld h,#9B
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#CF67
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#9FCF
+    push hl
+    push de
+    jp #6B00
+    ASSERT $ <= #6ACD
+    ORG #6B00
+    push de
+    ld hl,#CF67
+    push hl
+    push ix
+    push ix
+    ld hl,#9BCF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#9522
+    push hl
+    push ix
+    ld hl,#33CF
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    ld hl,#0022
+    push hl
+    ld hl,#33CF
+    push hl
+    ld hl,#CF6F
+    push hl
+    ld hl,#3FCF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    ld hl,#008A
+    push hl
+    ld hl,#CF3F
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#2ACF
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push bc
+    ld hl,#3F3F
+    push hl
+    ld l,#15
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    jp #6C00
+    ASSERT $ <= #6BCD
+    ORG #6C00
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push bc
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#8ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#8ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#8ACF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    push iy
+    push de
+    ld hl,#CF45
+    push hl
+    push bc
+    push bc
+    ld hl,#8ACF
+    push hl
+    ld hl,#0813
+    jp #6D00
+    ASSERT $ <= #6CCD
+    ORG #6D00
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F9F
+    di
+    push hl
+    push de
+    ld hl,#CF15
+    push hl
+    push bc
+    ld hl,#2ACF
+    push hl
+    push de
+    ld hl,#4500
+    push hl
+    push bc
+    ld hl,#008A
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    push hl
+    ld hl,#CF15
+    push hl
+    push bc
+    ld hl,#2ACF
+    push hl
+    ld hl,#CF3F
+    push hl
+    ld hl,#3F00
+    push hl
+    push bc
+    push iy
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    push hl
+    ld l,#00
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#8A67
+    push hl
+    ld hl,#9BCF
+    push hl
+    ld hl,#CF9F
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    push hl
+    ld l,#00
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#2233
+    push hl
+    ld hl,#33CF
+    push hl
+    push de
+    ld hl,#C870
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3F3F
+    di
+    push hl
+    ld l,#00
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#8ACF
+    push hl
+    ld hl,#CF3F
+    push hl
+    ld h,#3F
+    push hl
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    jp car2_roll_done
+    ASSERT $ <= #6DCD
+    ORG #6D9F
+car2_roll3
+    ld de,#3333
+    ld sp,hl
+    ei
+    ld bc,#CFCF
+    di
+    push bc
+    ld hl,#33CF
+    push hl
+    push bc
+    ld hl,#95C0
+    push hl
+    ld hl,#C03F
+    push hl
+    ld hl,#6733
+    push hl
+    push de
+    push de
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    jp #6E00
+    ASSERT $ <= #6DCD
+    ORG #6E00
+    ld hl,#0080
+    push hl
+    ld hl,#C0C0
+    push hl
+    push hl
+    ld hl,#6233
+    push hl
+    push de
+    push de
     ld hl,#0812
     add hl,sp
     ld sp,hl
@@ -7087,6 +6218,1145 @@ car3_roll0
     di
     push de
     push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld hl,#8ACF
+    push hl
+    ld hl,#6733
+    push hl
+    push de
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    ld bc,#003F
+    push bc
+    ld b,#3F
+    push bc
+    push hl
+    ld l,#2A
+    push hl
+    ld hl,#3F37
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#8A33
+    push hl
+    push de
+    ld hl,#113F
+    push hl
+    push bc
+    ld hl,#3F37
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#8A33
+    push hl
+    push de
+    ld hl,#113F
+    push hl
+    push bc
+    ld hl,#3F37
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#8A33
+    push hl
+    push de
+    ld hl,#113F
+    push hl
+    push bc
+    ld hl,#3F37
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3345
+    push hl
+    ld hl,#0000
+    push hl
+    ld hl,#8A33
+    push hl
+    push de
+    ld hl,#113F
+    push hl
+    push bc
+    jp #6F00
+    ASSERT $ <= #6ECD
+    ORG #6F00
+    ld hl,#3F37
+    push hl
+    ld hl,#0813
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#4500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#3311
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#4500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#4500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#4500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#4500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#3733
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#008A
+    jp #7000
+    ASSERT $ <= #6FCD
+    ORG #7000
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#9F33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld hl,#008A
+    push hl
+    push de
+    ld hl,#333B
+    push hl
+    push bc
+    push bc
+    ld hl,#9F33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    push hl
+    push hl
+    push bc
+    push bc
+    ld hl,#9F33
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    push hl
+    push hl
+    push bc
+    push bc
+    ld hl,#9F33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    ld hl,#CFCF
+    push hl
+    ld l,#62
+    push hl
+    ld hl,#9BCF
+    push hl
+    push bc
+    ld hl,#9F33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    ld hl,#CFCF
+    push hl
+    ld hl,#6F22
+    push hl
+    push de
+    ld hl,#339B
+    push hl
+    ld hl,#CF33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    push hl
+    ld l,#8A
+    push hl
+    ld hl,#CF33
+    push hl
+    push de
+    ld hl,#3391
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    jp #7100
+    ASSERT $ <= #70CD
+    ORG #7100
+    push de
+    push de
+    push de
+    ld hl,#1500
+    push hl
+    ld h,#00
+    push hl
+    push hl
+    ld l,#2A
+    push hl
+    ld hl,#9FCF
+    push hl
+    ld hl,#CF33
+    push hl
+    ld hl,#3391
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#CF6F
+    push hl
+    push bc
+    push bc
+    ld hl,#3FCF
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    ld l,#33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#6733
+    push hl
+    ld bc,#339B
+    push bc
+    ld bc,#CFCF
+    push bc
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#459F
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#9FCF
+    push hl
+    push bc
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#CF3F
+    push hl
+    ld bc,#0000
+    push bc
+    ld h,#2A
+    push hl
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#002A
+    push hl
+    ld l,#3F
+    push hl
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#002A
+    di
+    push hl
+    ld hl,#1500
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#2A15
+    push hl
+    push bc
+    jp car2_roll_done
+    ASSERT $ <= #71CD
+    ORG #71A8
+car2_roll4
+    ld de,#0000
+    ld bc,#3333
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    push hl
+    ld hl,#6733
+    push hl
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld hl,#C0C0
+    push hl
+    push hl
+    jp #7D00
+    ASSERT $ <= #71CD
+    ORG #7D00
+    ld hl,#6233
+    push hl
+    push bc
+    ld hl,#C86C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    push hl
+    push hl
+    ld l,#95
+    push hl
+    ld hl,#2233
+    push hl
+    push bc
+    ld hl,#9B3F
+    push hl
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF33
+    di
+    push hl
+    push hl
+    ld hl,#339B
+    push hl
+    ld hl,#6F3F
+    push hl
+    ld hl,#3F67
+    push hl
+    push bc
+    push bc
+    ld hl,#9B33
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#6733
+    di
+    push hl
+    ld hl,#6F9F
+    push hl
+    ld hl,#3339
+    push hl
+    ld hl,#3C3C
+    push hl
+    push hl
+    ld hl,#3633
+    push hl
+    ld hl,#336F
+    push hl
+    ld hl,#2A33
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF67
+    di
+    push hl
+    ld hl,#339B
+    push hl
+    push de
+    ld hl,#6733
+    push hl
+    push bc
+    push bc
+    push bc
+    ld hl,#3300
+    push hl
+    ld hl,#1522
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#336F
+    push hl
+    ld h,#9F
+    push hl
+    ld hl,#8A00
+    push hl
+    push de
+    push de
+    push de
+    ld l,#2A
+    push hl
+    ld hl,#6F8A
+    push hl
+    ld hl,#00CF
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#3311
+    push hl
+    ld hl,#9F6F
+    push hl
+    ld hl,#8ACF
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    push hl
+    ld hl,#6F8A
+    push hl
+    ld hl,#CF2A
+    push hl
+    ld l,#9B
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CFCF
+    di
+    push hl
+    ld l,#15
+    push hl
+    ld hl,#9F6F
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#008A
+    push hl
+    ld hl,#CF00
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#2A15
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#002A
+    push hl
+    ld hl,#3F00
+    push hl
+    push de
+    ld hl,#0811
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    jp car2_roll_done
+    ASSERT $ <= #7FCD
+    ORG #7E2A
+car2_roll5
+    ld de,#C0C0
+    ld bc,#0000
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#6ACF
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#95C0
+    push hl
+    ld hl,#67CF
+    push hl
+    ld hl,#C871
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#333B
+    di
+    push hl
+    push de
+    ld hl,#9FCF
+    push hl
+    ld h,#CF
+    push hl
+    push hl
+    push hl
+    ld hl,#4595
+    push hl
+    ld hl,#C09F
+    push hl
+    ld hl,#CF33
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#CF6F
+    di
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#956A
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#002A
+    push hl
+    ld hl,#1500
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push bc
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#0080
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0080
+    di
+    push hl
+    push de
+    ld hl,#4000
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    ld hl,#4080
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    ld hl,#C06A
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#80C0
+    push hl
+    ld hl,#C06A
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    jp #8040
+    ASSERT $ <= #7FCD
+    SAVE "build/roll5_2.raw",#4000,#4000
+
+    BANK
+    ORG #6500
+car3_roll0
+    ld de,#3030
+    ld bc,#C0C0
+    ld ix,#30C0
+    ld iy,#6030
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#C060
+    push hl
+    push de
+    ld hl,#0806
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#80C0
+    di
+    push hl
+    ld hl,#4030
+    push hl
+    push de
+    ld hl,#0808
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
+    push hl
+    push iy
+    push de
+    ld hl,#0809
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#90C0
+    push hl
+    ld hl,#8060
+    push hl
+    push de
+    push de
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C030
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C060
+    di
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
     push de
     push de
     push de
@@ -7100,52 +7370,191 @@ car3_roll0
     ei
     nop
     di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#30C0
+    push bc
+    ld hl,#2030
     push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
     ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
     nop
     di
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0000
+    di
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    jp #6600
+    ASSERT $ <= #65CD
+    ORG #6600
+    ei
+    ld hl,#3090
+    di
+    push hl
+    ld hl,#C060
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push ix
+    ld hl,#C876
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
     push de
     push de
     push de
@@ -7156,7 +7565,7 @@ car3_roll0
     push de
     ld hl,#C000
     push hl
-    ld hl,#0812
+    ld hl,#0816
     add hl,sp
     ld sp,hl
     ei
@@ -7167,122 +7576,177 @@ car3_roll0
     push de
     push de
     push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#9040
+    push hl
+    ld hl,#00C0
+    push hl
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    jp #6700
+    ASSERT $ <= #66CD
+    ORG #6700
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push bc
+    ld hl,#0000
+    push hl
+    push iy
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#3090
+    push hl
+    push bc
+    ld hl,#8030
+    push hl
+    push bc
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push ix
+    ld hl,#40C0
+    push hl
+    ld hl,#C080
+    push hl
+    push bc
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#00C0
+    push hl
+    ld hl,#4080
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#9040
+    push hl
+    ld hl,#0060
+    push hl
+    ld hl,#1000
+    push hl
+    ld hl,#8080
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push ix
+    ld hl,#0080
+    push hl
+    push de
+    ld h,#40
+    push hl
+    push bc
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#3090
+    push hl
+    ld hl,#4000
+    push hl
+    ld hl,#C030
+    push hl
+    ld hl,#90C0
+    push hl
+    ld hl,#4000
+    push hl
+    ld hl,#0810
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    ld hl,#C000
+    push hl
+    ld hl,#0060
+    push hl
+    push ix
+    push bc
+    ld hl,#080E
+    jp #6800
+    ASSERT $ <= #67CD
+    ORG #6800
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
     push de
     push de
     ld hl,#C040
     push hl
-    ld hl,#8030
+    ld hl,#0080
     push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
     ld hl,#3090
-    push hl
-    ld hl,#4080
-    push hl
-    ld hl,#90C0
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#3090
-    push hl
-    push bc
-    push iy
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#9000
-    push hl
-    ld hl,#8040
-    push hl
-    push iy
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    ld hl,#30C0
-    push hl
-    ld h,#00
-    push hl
-    jp #6700
-    ASSERT $ <= #66CD
-    ORG #6700
-    push hl
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C000
-    push hl
-    ld hl,#6090
-    push hl
-    push iy
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    ld hl,#30C0
-    push hl
-    ld hl,#8030
-    push hl
-    push bc
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    ld hl,#4080
-    push hl
-    ld hl,#30C0
     push hl
     push bc
     ld hl,#080C
@@ -7292,71 +7756,51 @@ car3_roll0
     nop
     di
     push de
-    push de
-    ld hl,#9040
-    push hl
-    ld hl,#8030
-    push hl
-    push bc
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#30C0
-    push hl
-    ld hl,#4020
-    push hl
-    ld hl,#90C0
-    push hl
-    push bc
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#90C0
-    push hl
-    ld hl,#8090
-    push hl
-    push bc
-    ld hl,#0808
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3090
-    di
-    push hl
-    ld hl,#8040
-    push hl
-    ld hl,#00C0
-    push hl
-    ld hl,#C866
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#0080
+    push ix
+    ld hl,#C000
     push hl
     push iy
-    ld hl,#0806
+    push bc
+    push bc
+    ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push de
+    ld hl,#C080
+    push hl
+    ld l,#40
+    push hl
+    push ix
+    push bc
+    ld hl,#C86A
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#4080
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    ld hl,#0807
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3010
+    di
+    push hl
     ld hl,#00C0
     push hl
+    ld l,#00
+    push hl
     jp car3_roll_done
-    ASSERT $ <= #67CD
-    ORG #67AE
+    ASSERT $ <= #68CD
+    ORG #6861
 car3_roll1
     ld de,#C0C0
     ld sp,hl
@@ -7369,7 +7813,8 @@ car3_roll1
     push de
     push de
     push de
-    ld hl,#080D
+    push de
+    ld hl,#0811
     add hl,sp
     ld sp,hl
     ei
@@ -7382,100 +7827,152 @@ car3_roll1
     push de
     push de
     push de
-    jp #6800
-    ASSERT $ <= #67CD
-    ORG #6800
     push de
-    ld hl,#C872
+    push de
+    push de
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
     nop
     di
     push de
-    ld bc,#C030
+    ld bc,#6030
     push bc
     push de
     push de
     push de
     push de
+    push de
+    ld hl,#C030
+    push hl
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3030
+    di
+    push hl
+    ld l,#60
+    push hl
+    ld l,#90
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld bc,#C060
     push bc
+    push hl
     push de
-    push de
-    ld hl,#0812
+    ld bc,#6030
+    push bc
+    ld hl,#C876
     add hl,sp
     ld sp,hl
     ei
     ld hl,#3C3C
     di
     push hl
-    ld b,#30
+    ld bc,#3460
     push bc
+    ld bc,#3090
+    jp #6900
+    ASSERT $ <= #68CD
+    ORG #6900
     push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#9030
     push hl
-    ld hl,#303C
     push hl
-    ld hl,#0812
+    push hl
+    push hl
+    ld bc,#3420
+    push bc
+    ld bc,#3010
+    push bc
+    ld bc,#383C
+    push bc
+    ld l,#30
+    push hl
+    ld hl,#0815
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#303C
+    ld hl,#3834
     di
     push hl
+    ld hl,#6030
+    push hl
+    ld l,#3C
+    push hl
+    ld h,#3C
+    push hl
+    push hl
+    push hl
+    push hl
+    ld bc,#2030
     push bc
-    ld bc,#603C
-    push bc
-    ld b,#3C
-    push bc
-    push bc
-    push bc
-    ld bc,#9030
+    ld bc,#103C
     push bc
     push hl
-    ld bc,#3C3C
-    push bc
-    ld hl,#0812
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
     ld hl,#3038
     di
     push hl
-    ld hl,#1090
+    push de
+    ld b,#28
+    push bc
+    ld b,#3C
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#10C0
     push hl
-    ld hl,#283C
+    ld hl,#203C
     push hl
     push bc
-    push bc
-    push bc
-    ld bc,#1460
-    push bc
-    push hl
-    ld bc,#3C3C
-    push bc
-    ld hl,#0812
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#C060
+    ld hl,#C030
     di
     push hl
-    ld hl,#3080
+    ld hl,#9080
     push hl
     ld hl,#383C
     push hl
     push bc
     push bc
     push bc
-    ld c,#90
+    push bc
+    ld bc,#3400
     push bc
     push hl
-    ld c,#3C
+    ld bc,#3C3C
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#C030
+    push hl
+    ld h,#30
+    push hl
+    push hl
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
     push bc
     ld hl,#0812
     add hl,sp
@@ -7484,75 +7981,80 @@ car3_roll1
     nop
     di
     push de
-    ld hl,#C060
+    push de
+    push de
+    push de
+    ld hl,#6030
     push hl
     ld bc,#3030
     push bc
     push bc
     push bc
     push bc
-    ld hl,#303C
-    push hl
-    ld hl,#3C30
-    push hl
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
     push bc
+    ld hl,#3C34
+    push hl
+    ld bc,#1000
+    push bc
+    ld b,#00
+    push bc
+    push bc
+    push bc
+    ld hl,#80C0
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#C060
+    nop
     di
+    push de
+    ld hl,#8060
     push hl
-    push bc
+    jp #6A00
+    ASSERT $ <= #69CD
+    ORG #6A00
     ld hl,#4000
     push hl
+    push bc
+    push bc
+    push bc
     ld hl,#80C0
     push hl
-    push de
-    push de
-    push de
-    ld hl,#080C
+    ld hl,#C86D
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push bc
-    ld hl,#1000
-    jp #6900
-    ASSERT $ <= #68CD
-    ORG #6900
-    push hl
-    ld bc,#0000
-    push bc
-    push bc
-    ld hl,#00C0
-    push hl
-    ld hl,#C86A
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
+    push de
     push bc
     push bc
     push bc
     push bc
     ld hl,#0080
     push hl
-    ld hl,#0808
+    ld hl,#080A
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#4000
+    ld hl,#C040
     di
     push hl
     push bc
     push bc
     push bc
+    ld b,#80
+    push bc
     jp car3_roll_done
-    ASSERT $ <= #69CD
-    ORG #692B
+    ASSERT $ <= #6ACD
+    ORG #6A30
 car3_roll2
     ld de,#3030
     ld sp,hl
@@ -7565,631 +8067,581 @@ car3_roll2
     push bc
     push bc
     push bc
-    ld hl,#080E
+    push bc
+    push bc
+    ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3CC0
-    di
-    push hl
-    ld hl,#C060
-    push hl
     ld hl,#3C3C
+    di
     push hl
-    push hl
-    push hl
-    ld bc,#3C90
     push bc
-    ld bc,#C068
+    ld c,#3C
     push bc
     push hl
-    ld hl,#0810
+    push hl
+    push hl
+    push hl
+    ld bc,#80C0
+    push bc
+    ld bc,#603C
+    push bc
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3C34
+    ld hl,#3C3C
     di
     push hl
-    ld c,#38
+    ld bc,#14C0
     push bc
-    ld bc,#3C3C
+    ld bc,#383C
     push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#303C
     push hl
+    push hl
+    push hl
+    push hl
+    ld bc,#3430
     push bc
-    ld hl,#0810
+    push hl
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3C3C
     di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C871
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3C3C
     di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0812
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3C3C
     di
+    push hl
+    push hl
+    ld bc,#3C34
     push bc
+    push hl
+    push hl
+    push hl
+    ld c,#30
     push bc
-    ld hl,#3C90
-    push hl
     push de
-    push de
-    push de
-    push de
-    ld b,#30
+    ld bc,#383C
     push bc
-    ld bc,#3C30
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3010
     push hl
-    ld bc,#0000
-    push bc
-    ld hl,#6030
-    push hl
-    push de
-    ld hl,#C040
-    push hl
-    ld hl,#0038
-    jp #6A00
-    ASSERT $ <= #69CD
-    ORG #6A00
-    push hl
-    ld hl,#3430
-    push hl
-    ld hl,#0812
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
     nop
     di
-    push de
-    push de
-    ld hl,#3010
-    push hl
     push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0038
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3040
-    push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0060
-    push hl
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#0030
-    push hl
-    push de
-    push de
-    push de
-    ld l,#20
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#0030
-    push hl
-    push de
-    push de
-    push de
-    ld l,#20
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#0060
-    push hl
-    push de
-    push de
-    push de
-    ld l,#20
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#0060
-    push hl
-    push de
-    push de
-    push de
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#0060
-    push hl
-    push de
-    push de
-    push de
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3040
-    push hl
-    push bc
-    ld hl,#6030
-    push hl
-    push de
-    push de
-    ld b,#30
-    push bc
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
     push de
     jp #6B00
     ASSERT $ <= #6ACD
     ORG #6B00
-    ld hl,#3040
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#6030
-    push hl
-    push de
-    push de
-    push bc
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld bc,#0060
-    push bc
-    push de
-    push de
-    push de
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#6030
-    di
-    push hl
-    push de
-    ld hl,#4000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    push de
-    ld hl,#4000
-    push hl
-    push bc
-    push de
-    push de
-    ld hl,#3090
-    push hl
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    push hl
-    ld bc,#4000
-    push bc
-    ld bc,#0080
-    push bc
-    push hl
-    push hl
-    push hl
-    ld hl,#0030
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C0C0
-    di
-    push hl
-    push hl
-    ld hl,#4000
-    push hl
-    push bc
-    ld bc,#C0C0
-    push bc
-    push bc
-    ld c,#40
-    push bc
-    ld bc,#80C0
-    push bc
-    ld hl,#080C
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push hl
-    push hl
-    push hl
-    push bc
-    jp car3_roll_done
-    ASSERT $ <= #6BCD
-    ORG #6B9E
-car3_roll3
-    ld de,#3C3C
-    ld sp,hl
-    ei
-    ld bc,#C0C0
-    di
-    push bc
-    push bc
-    ld hl,#C060
-    push hl
-    ld hl,#3030
-    push hl
-    ld l,#3C
-    push hl
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#14C0
-    push hl
-    ld hl,#C060
-    push hl
-    ld hl,#3030
-    push hl
-    jp #6C00
-    ASSERT $ <= #6BCD
-    ORG #6C00
-    push hl
-    ld hl,#90C0
-    push hl
-    ld hl,#683C
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1400
-    push hl
-    ld hl,#0038
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#603C
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1400
-    push hl
-    ld hl,#0038
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#C03C
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1400
-    push hl
-    ld hl,#0038
-    push hl
-    push de
-    push de
-    push de
-    ld h,#C0
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1400
-    push hl
-    ld hl,#0038
-    push hl
-    push de
-    push de
-    push de
-    ld h,#C0
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3C14
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#383C
-    push hl
-    push de
-    push de
-    ld hl,#3CC0
-    push hl
-    ld hl,#3830
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3C14
-    push hl
-    ld hl,#0000
-    push hl
-    ld hl,#383C
-    push hl
-    push de
-    push de
-    ld b,#3C
-    push bc
-    push hl
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1400
-    push hl
-    ld bc,#0038
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C038
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    jp #6D00
-    ASSERT $ <= #6CCD
-    ORG #6D00
-    ld hl,#1000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C038
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C038
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C038
-    push hl
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#C038
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#1000
-    push hl
-    push bc
-    push de
-    push de
-    push de
-    ld b,#C0
-    push bc
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    ld hl,#3C10
+    ld hl,#3010
     push hl
     ld bc,#0000
     push bc
+    ld hl,#80C0
+    push hl
+    ld h,#C0
+    push hl
+    ld bc,#6030
+    push bc
+    push hl
+    ld l,#68
+    push hl
+    ld hl,#3C38
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    ld l,#60
+    push hl
+    push de
+    ld hl,#3090
+    push hl
+    ld hl,#C000
+    push hl
+    ld hl,#0028
+    push hl
+    ld hl,#3C30
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#28
+    push hl
+    ld hl,#3430
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#20
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    ld l,#30
+    push hl
+    push de
+    push de
+    push de
+    ld bc,#3040
+    push bc
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld bc,#0000
+    push bc
+    ld c,#30
+    push bc
+    push de
+    push de
+    push de
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    push bc
+    jp #6C00
+    ASSERT $ <= #6BCD
+    ORG #6C00
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#3040
+    jp #6D00
+    ASSERT $ <= #6CCD
+    ORG #6D00
+    push hl
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C030
+    di
+    push hl
+    push de
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    push bc
+    push de
+    push de
+    push de
+    ld bc,#3000
+    push bc
+    ld hl,#8030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
     ld hl,#6030
+    push hl
+    ld hl,#3010
+    push hl
+    ld hl,#0000
+    push hl
+    ld l,#60
+    push hl
+    push de
+    push de
+    push de
+    push bc
+    ld bc,#8030
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    push hl
+    ld bc,#3010
+    push bc
+    ld bc,#0000
+    push bc
+    ld hl,#0060
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#9000
+    push hl
+    ld hl,#2030
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    push hl
+    ld l,#40
+    push hl
+    push bc
+    ld hl,#00C0
+    push hl
+    ld h,#C0
+    push hl
+    push hl
+    push hl
+    ld b,#C0
+    push bc
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    ld c,#40
+    push bc
+    ld bc,#0000
+    push bc
+    ld c,#80
+    push bc
+    push hl
+    push hl
+    ld bc,#C000
+    push bc
+    ld b,#00
+    push bc
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    jp car3_roll_done
+    ASSERT $ <= #6DCD
+    ORG #6DB7
+car3_roll3
+    ld de,#3C3C
+    ld bc,#0000
+    ld ix,#C0C0
+    ld iy,#003C
+    ld sp,hl
+    ei
+    nop
+    di
+    jp #6E00
+    ASSERT $ <= #6DCD
+    ORG #6E00
+    push ix
+    push ix
+    ld hl,#C030
     push hl
     ld h,#30
     push hl
-    ld l,#C0
+    ld hl,#383C
     push hl
-    ld hl,#0060
+    ld hl,#C870
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#3C34
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#C060
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C34
+    push hl
+    push bc
+    ld hl,#8038
+    push hl
+    push de
+    push de
+    push de
+    ld hl,#3490
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C34
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
     push hl
     ld hl,#383C
     push hl
-    ld hl,#0812
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -8197,16 +8649,18 @@ car3_roll3
     di
     push de
     push de
-    ld hl,#3C10
+    ld hl,#3C94
     push hl
     push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0060
-    push hl
+    push iy
     push de
-    ld hl,#0812
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#683C
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -8214,16 +8668,18 @@ car3_roll3
     di
     push de
     push de
-    ld hl,#3C10
+    ld hl,#3C94
     push hl
     push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0030
-    push hl
+    push iy
     push de
-    ld hl,#0812
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -8231,20 +8687,254 @@ car3_roll3
     di
     push de
     push de
-    ld hl,#3C10
+    ld hl,#3C94
     push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C94
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    jp #6F00
+    ASSERT $ <= #6ECD
+    ORG #6F00
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C94
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C94
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C94
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    jp #7000
+    ASSERT $ <= #6FCD
+    ORG #7000
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#94
+    push hl
+    ld hl,#603C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push iy
+    push de
+    push de
+    push de
+    ld l,#90
+    push hl
+    ld hl,#C03C
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    ld hl,#0080
+    push hl
+    ld hl,#60C0
+    push hl
+    push ix
+    ld hl,#4000
+    push hl
+    ld hl,#0080
+    push hl
+    ld hl,#303C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
+    push hl
+    push bc
+    push bc
     push bc
     push bc
     push bc
     ld hl,#0080
     push hl
-    jp #6E00
-    ASSERT $ <= #6DCD
-    ORG #6E00
-    ld hl,#C060
-    push hl
     push de
-    ld hl,#0812
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -8252,19 +8942,80 @@ car3_roll3
     di
     push de
     push de
-    ld hl,#3C30
+    ld hl,#3C14
     push hl
-    ld bc,#90C0
     push bc
-    ld b,#C0
     push bc
-    ld bc,#6030
     push bc
-    ld bc,#3038
     push bc
+    push bc
+    ld hl,#0020
+    push hl
     push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C14
     push hl
-    ld hl,#0811
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0020
+    push hl
+    ld hl,#383C
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    ld hl,#3C34
+    push hl
+    push ix
+    ld hl,#C040
+    push hl
+    ld hl,#80C0
+    push hl
+    push ix
+    push ix
+    ld hl,#C030
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#383C
+    di
+    push hl
+    push de
+    jp #7100
+    ASSERT $ <= #70CD
+    ORG #7100
+    ld hl,#3C94
+    push hl
+    push ix
+    ld hl,#60C0
+    push hl
+    ld l,#30
+    push hl
+    ld hl,#3038
+    push hl
+    push de
+    push de
+    ld hl,#3C34
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
@@ -8273,61 +9024,68 @@ car3_roll3
     push hl
     push hl
     push hl
-    ld bc,#90C0
-    push bc
+    push hl
+    push ix
     push hl
     push hl
     push hl
     push hl
-    ld hl,#0810
+    ld l,#C0
+    push hl
+    ld hl,#0814
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#C040
+    nop
     di
+    push ix
+    ld hl,#4000
     push hl
-    ld bc,#0080
-    push bc
-    ld bc,#C0C0
-    push bc
-    push bc
-    push bc
-    push bc
+    ld hl,#80C0
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#C000
+    push hl
+    push ix
+    push ix
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
     ld hl,#00C0
     push hl
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
     push bc
-    ld hl,#C870
+    push hl
+    push ix
+    ld hl,#0812
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#0000
+    ld hl,#00C0
     di
     push hl
-    ld hl,#C040
-    push hl
     push bc
     push bc
     push bc
-    ld c,#00
     push bc
-    ld hl,#4080
-    push hl
     push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    push hl
-    push hl
-    push hl
+    ld h,#80
     push hl
     push bc
     jp car3_roll_done
-    ASSERT $ <= #6ECD
-    ORG #6E81
+    ASSERT $ <= #71CD
+    ORG #7182
 car3_roll4
     ld de,#3C3C
     ld sp,hl
@@ -8336,881 +9094,6 @@ car3_roll4
     di
     push bc
     push bc
-    push bc
-    push bc
-    ld hl,#3000
-    push hl
-    ld hl,#080A
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3090
-    di
-    push hl
-    ld hl,#C0C0
-    push hl
-    push hl
-    push hl
-    ld l,#30
-    push hl
-    ld hl,#C86C
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#9060
-    push hl
-    push bc
-    push bc
-    ld hl,#C0C0
-    push hl
-    ld hl,#0038
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#3C30
-    push hl
-    jp #6F00
-    ASSERT $ <= #6ECD
-    ORG #6F00
-    push de
-    ld hl,#9460
-    push hl
-    push bc
-    push bc
-    ld hl,#303C
-    push hl
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#3400
-    push hl
-    ld bc,#383C
-    push bc
-    push de
-    push de
-    push de
-    push hl
-    push bc
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#9030
-    push hl
-    ld b,#68
-    push bc
-    push de
-    push de
-    push de
-    push hl
-    ld b,#60
-    push bc
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#3030
-    push hl
-    ld b,#30
-    push bc
-    push de
-    push de
-    push de
-    push hl
-    push bc
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#6030
-    di
-    push hl
-    ld bc,#4000
-    push bc
-    ld hl,#0000
-    push hl
-    push hl
-    push hl
-    ld hl,#8030
-    push hl
-    ld hl,#1000
-    push hl
-    ld hl,#0030
-    push hl
-    ld hl,#C870
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C030
-    di
-    push hl
-    ld hl,#0000
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#30
-    push hl
-    push bc
-    ld bc,#00C0
-    push bc
-    ld hl,#0806
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    jp car3_roll_done
-    ASSERT $ <= #6FCD
-    ORG #6FBC
-car3_roll5
-    ld de,#C0C0
-    ld bc,#0000
-    ld ix,#3C3C
-    ld iy,#00C0
-    jp #7000
-    ASSERT $ <= #6FCD
-    ORG #7000
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#3030
-    push hl
-    ld hl,#383C
-    push hl
-    ld hl,#3C30
-    push hl
-    push ix
-    ld hl,#080F
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push de
-    ld hl,#C068
-    push hl
-    push ix
-    push ix
-    push ix
-    ld hl,#3C90
-    push hl
-    ld hl,#C068
-    push hl
-    push ix
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#90C0
-    push hl
-    ld hl,#C030
-    push hl
-    ld h,#30
-    push hl
-    push hl
-    push hl
-    push de
-    ld h,#C0
-    push hl
-    ld hl,#383C
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3090
-    di
-    push hl
-    push iy
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0030
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#3000
-    di
-    push hl
-    ld h,#40
-    push hl
-    ld hl,#80C0
-    push hl
-    push de
-    push de
-    push de
-    ld hl,#4000
-    push hl
-    ld hl,#80C0
-    push hl
-    push de
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#C000
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#C000
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push hl
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    jp #7100
-    ASSERT $ <= #70CD
-    ORG #7100
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#C871
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    jp #7D00
-    ASSERT $ <= #71CD
-    ORG #7D00
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#C86F
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0804
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    jp car3_roll_done
-    ASSERT $ <= #7FCD
-    ORG #7D21
-car3_roll6
-    ld de,#3030
-    ld bc,#C0C0
-    ld ix,#30C0
-    ld iy,#6030
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C040
-    di
-    push hl
-    push hl
-    push bc
-    push bc
-    push bc
-    ld l,#80
-    push hl
-    push bc
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C060
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push iy
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C060
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0810
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#C060
-    di
-    push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0811
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push iy
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#C872
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push ix
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#00C0
-    push hl
-    ld hl,#4000
-    push hl
-    ld h,#00
-    push hl
-    push hl
-    push hl
-    ld l,#C0
-    push hl
-    ld l,#00
-    push hl
-    push hl
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#8000
-    push hl
-    ld hl,#40C0
-    push hl
-    push bc
-    push bc
-    push bc
-    ld h,#80
-    push hl
-    ld h,#40
-    push hl
-    push bc
-    ld hl,#0812
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push bc
-    ld hl,#00C0
-    push hl
-    push hl
-    push bc
-    push bc
-    push bc
-    ld l,#00
-    push hl
-    ld l,#C0
-    push hl
-    push bc
-    ld hl,#C871
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#0000
-    di
-    push hl
-    ld h,#C0
-    push hl
-    push bc
-    push bc
-    push bc
-    push hl
-    push hl
     push bc
     ld hl,#0807
     add hl,sp
@@ -9221,6 +9104,555 @@ car3_roll6
     push bc
     push bc
     push bc
+    push bc
+    ld hl,#3090
+    push hl
+    ld hl,#080C
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#90C0
+    push hl
+    ld h,#C0
+    push hl
+    push hl
+    push hl
+    ld l,#60
+    push hl
+    ld hl,#080D
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#90C0
+    push hl
+    push bc
+    push bc
+    ld h,#C0
+    push hl
+    ld hl,#4000
+    push hl
+    jp #7D00
+    ASSERT $ <= #71CD
+    ORG #7D00
+    ld hl,#283C
+    push hl
+    ld hl,#080F
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    ld hl,#3C10
+    push hl
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld l,#28
+    push hl
+    ld hl,#3C30
+    push hl
+    ld hl,#C872
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#303C
+    di
+    push hl
+    ld hl,#3C34
+    push hl
+    push de
+    ld l,#30
+    push hl
+    push bc
+    ld c,#3C
+    push bc
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#9400
+    push hl
+    ld b,#38
+    push bc
+    push de
+    push de
+    push de
+    push de
+    ld h,#34
+    push hl
+    push bc
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#8090
+    push hl
+    ld hl,#283C
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#9030
+    push hl
+    ld hl,#603C
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3C34
+    di
+    push hl
+    ld hl,#6030
+    push hl
+    ld l,#3C
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#2030
+    push hl
+    ld hl,#103C
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#3460
+    push hl
+    ld hl,#3090
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#3420
+    push hl
+    ld hl,#3010
+    push hl
+    push bc
+    ld bc,#3C30
+    push bc
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    ld b,#60
+    push bc
+    ld bc,#4000
+    push bc
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    push hl
+    ld hl,#2030
+    push hl
+    ld hl,#1000
+    push hl
+    ld hl,#0080
+    push hl
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#C0C0
+    di
+    push hl
+    ld hl,#8030
+    push hl
+    ld b,#00
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push hl
+    ld hl,#4000
+    push hl
+    ld hl,#0080
+    push hl
+    ld hl,#0812
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
     jp car3_roll_done
+    ASSERT $ <= #7FCD
+    ORG #7E2B
+car3_roll5
+    ld de,#C0C0
+    ld bc,#0000
+    ld ix,#3C3C
+    ld iy,#0080
+    ld sp,hl
+    ei
+    ld hl,#3C30
+    di
+    push hl
+    ld h,#30
+    push hl
+    push ix
+    ld h,#34
+    push hl
+    push ix
+    ld hl,#C870
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push de
+    ld hl,#303C
+    push hl
+    push ix
+    push ix
+    push ix
+    push ix
+    ld hl,#90C0
+    push hl
+    ld hl,#603C
+    push hl
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push ix
+    push de
+    ld hl,#403C
+    push hl
+    push ix
+    push ix
+    push ix
+    ld hl,#3C34
+    push hl
+    push de
+    ld hl,#4038
+    push hl
+    push ix
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#3C34
+    di
+    push hl
+    push de
+    ld hl,#4000
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#00C0
+    push hl
+    push bc
+    ld l,#68
+    push hl
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#1000
+    di
+    push hl
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push bc
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push bc
+    push hl
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    ld hl,#4000
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push hl
+    ld hl,#80C0
+    push hl
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#8040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C040
+    push hl
+    ld hl,#00C0
+    push hl
+    push de
+    push de
+    ld hl,#0816
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
+    push hl
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld h,#00
+    push hl
+    push de
+    ld hl,#C030
+    push hl
+    ld hl,#C876
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push bc
+    ld hl,#80C0
+    push hl
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0815
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#0814
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#C874
+    add hl,sp
+    ld sp,hl
+    ei
+    nop
+    di
+    push iy
+    push de
+    push de
+    push de
+    jp #8040
     ASSERT $ <= #7FCD
     SAVE "build/roll5_3.raw",#4000,#4000

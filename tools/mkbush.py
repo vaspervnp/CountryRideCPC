@@ -805,6 +805,101 @@ def prop_label(kind, s):
     return "prop_%s%d" % (kind, s)
 
 
+# --- the clouds ---------------------------------------------------------------
+# The clouds (scene.CLOUDS) over the mountains, in the sky part's rows above
+# the panorama's (since 2026-11-16): ring_col (src/horizon.asm) jumps to
+# cloud_col for those rows, which writes each a word of the panorama's column
+# wide from a 16-byte tile - per column its address in cloud_map0 (the first
+# row) and cloud_map1 (the second; the plain sky's: sky_pairs).
+# All of it where only page 2 or the hidden lines are needed (it runs with
+# RAM_C3): what is left of the fragments, then the hidden lines.
+CLOUD_ROWS = 2
+
+
+def cloud_data():
+    """(the tiles, [16 bytes] each but the plain ones, and per panorama
+    column its rows' tile numbers)."""
+    clouds = S.cloud_pens()
+    assert S.pano_y0() - G.SKY_Y == 8 * CLOUD_ROWS
+    tiles, cmap = {}, []
+    for c in range(S.PANO_WORDS):
+        nums = []
+        for r in range(CLOUD_ROWS):
+            t = []
+            plain = True
+            for y in range(G.SKY_Y + 8 * r, G.SKY_Y + 8 * r + 8):
+                p = []
+                for x in range(4 * c, 4 * c + 4):
+                    if (x, y) in clouds:
+                        plain = False
+                    p.append(clouds.get((x, y), S.sky_pen(x, y)))
+                t += [G.m0_byte(p[0], p[1]), G.m0_byte(p[2], p[3])]
+            nums.append(r if plain else tiles.setdefault(tuple(t), CLOUD_ROWS + len(tiles)))
+        cmap.append(nums)
+    assert CLOUD_ROWS + len(tiles) <= 256
+    return [list(t) for t in sorted(tiles, key=tiles.get)], cmap
+
+
+def ring_row():
+    """horizon.asm's RING_ROW: a row of a column, HL its character's line 0,
+    DE #800, the lines' bytes from SP; HL on to the next row's."""
+    out = []
+    for _ in range(4):
+        out += ["    pop bc", "    ld (hl),c", "    inc l", "    ld (hl),b", "    add hl,de",
+                "    pop bc", "    ld (hl),b", "    dec l", "    ld (hl),c", "    add hl,de"]
+    return out + ["    ld a,l", "    add a,96", "    ld l,a", "    ld a,h", "    adc a,-#40",
+                  "    and hi(RING_BASE)+7", "    ld h,a"]
+
+
+CLOUD_COL_LEN = 138
+
+
+def cloud_code():
+    """cloud_col: ring_col's sky rows, the clouds in them (HL: the column's
+    line 0 in the sky part's first row, DE #800): each row's tile from
+    cloud_map; back to ring_col_pano0 with DE on the next row's. Interrupts
+    off (POP), RAM_C3. ~40 us more than the plain sky's loop it replaces."""
+    out = ["cloud_col   ; (ring_col, horizon.asm) the sky rows' tiles, the clouds in them",
+           "    ex de,hl", "    ld a,(rc_col)", "    ld l,a", "    ld h,0", "    add hl,hl",
+           "    ld bc,cloud_map0", "    add hl,bc            ; its first row's tile",
+           "    ld (cc_row0+2),hl", "    ld bc,cloud_map1-cloud_map0", "    add hl,bc",
+           "    ld (cc_row1+2),hl",
+           "    ex de,hl", "    ld de,#800"]
+    for r in range(CLOUD_ROWS):
+        out += ["cc_row%d" % r, "    ld sp,(0)            ; (self-modified: its tile)"] + ring_row()
+    return out + ["    ex de,hl", "    jp ring_col_pano0",
+                  "    ASSERT $-cloud_col == %d" % CLOUD_COL_LEN]
+
+
+def cloud_items():
+    """The clouds' code, map and tiles: (label, lines, bytes)."""
+    tiles, cmap = cloud_data()
+    addr = lambda n: "sky_pairs+%d" % (16 * n) if n < CLOUD_ROWS else "cloud_t%d" % n
+    items = [("cloud_col", cloud_code(), CLOUD_COL_LEN)]
+    for r in range(CLOUD_ROWS):
+        items.append(("cloud_map%d" % r, ["cloud_map%d   ; per panorama column, the tile of the"
+                                          " sky part's row %d: 8 lines of a word" % (r, r)]
+                      + ["    defw " + ",".join(addr(c[r]) for c in cmap[i:i + 8])
+                         for i in range(0, len(cmap), 8)], 2 * S.PANO_WORDS))
+    return items + [("cloud_t%d" % (CLOUD_ROWS + i), ["cloud_t%d" % (CLOUD_ROWS + i)]
+                     + defb_lines(t), 16) for i, t in enumerate(tiles)]
+
+
+def cloud_place(items, runs):
+    """Lay each item in the run that fits it best (runs: [start, room,
+    lines]); returns the items left over and the bytes laid."""
+    left, used = [], 0
+    for label, lines, n in items:
+        fits = [r for r in runs if r[1] >= n]
+        if not fits:
+            left.append((label, lines, n))
+            continue
+        r = min(fits, key=lambda r: r[1])
+        r[2] += lines
+        r[1] -= n
+        used += n
+    return left, used
+
 def defb_lines(data):
     return ["    defb " + ",".join("#%02X" % v for v in data[j:j + 16])
             for j in range(0, len(data), 16)]
@@ -1096,14 +1191,17 @@ def main():
         if hat is None:
             raise SystemExit("traffic: no room in the fragments or the hidden lines for "
                              "%s; runs %s, %s" % (code[0], free, hill_left))
-    traf_used = 0
+    traf_used = sum(ln - r[1] for (a, ln), r in zip(free, runs))
+    # the clouds (cloud_items): in what the traffic left of the fragments,
+    # what does not fit there in the hidden lines, after the flip (below)
+    citems = cloud_items()
+    cloud_left, cloud_frag = cloud_place(citems, runs)
     for (a, ln), (_, rm, laid) in zip(free, runs):
         if laid:
             piece = CodePiece()
             piece.lines = laid
             piece.size = ln - rm
             sp.placed.append((a, None, None, piece))
-            traf_used += ln - rm
     # the props' sprites page 1 has no room for: after the traffic's pieces,
     # each in the run that fits it best
     for pk, s in props_left:
@@ -1125,8 +1223,12 @@ def main():
     r[2] += ["flip_tab   ; the flip, a picture at a time: the rows up x 32 + car_vfull"]
     r[2] += defb_lines(flip)
     r[1] -= len(flip)
+    cloud_left, cloud_hidden = cloud_place(cloud_left, hidden)
+    if cloud_left:
+        raise SystemExit("clouds: no room in the fragments or the hidden lines for %s"
+                         % ", ".join(l for l, ls, n in cloud_left))
     traf_hidden = [(r[0], "#%04X" % r[0], r[2]) for r in hidden if r[2]]
-    traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden))
+    traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden)) - cloud_hidden
     pieces = [a + b + c + d for a, b, c, d in zip(pieces, p2, hill_pieces, roll_hidden)]
     view_code = (["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
                  + ["#%04X" % a for a in roll_entries])
@@ -1271,6 +1373,10 @@ def main():
     emit("ROLL_VIEW     EQU %d   ; car_view: flipping over, %d frames (jump.asm)"
          % (S.ROLL_VIEW, S.ROLL_FRAMES))
     emit("ROLL_FRAMES   EQU %d" % S.ROLL_FRAMES)
+    emit("CLOUD_ROWS    EQU %d    ; the sky part's rows over the panorama's: the"
+         % CLOUD_ROWS)
+    emit(";; ... clouds' (cloud_col, cloud_map0/1, cloud_tN: in the fragments and the")
+    emit(";; hidden lines)")
     emit("ROLL_ABOVE    EQU %d   ; ... its lines this far above CAR_Y at most"
          % S.ROLL_ABOVE)
     emit("FLIP_T        EQU %d   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)"
@@ -1370,6 +1476,8 @@ def main():
     print("  the traffic's pieces in the fragments: %d bytes, %d left there; in the "
           "hidden lines (CARn.BIN): %d bytes, %d left there"
           % (traf_used, sum(r[1] for r in runs), traf_hidden_used, sum(r[1] for r in hidden)))
+    print("  the clouds: %d tiles; %d bytes in the fragments, %d in the hidden lines"
+          % (len(citems) - 1 - CLOUD_ROWS, cloud_frag, cloud_hidden))
     for c, cars in enumerate(allcars):
         print("  car %d: %d lines; views %s bytes of code, %s us"
               % (c, S.CAR_H, "/".join(str(sum(SIZE[kind(t)] for t, st in car))

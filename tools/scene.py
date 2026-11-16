@@ -256,6 +256,47 @@ SKY_STOPS = [  # (line, pen) - the gradient passes through these
 BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
 
 
+# Clouds (since 2026-11-16): far off over the mountains, in the sky part's
+# rows above the panorama's (lines SKY_Y..pano_y0()-1), so the ring turns
+# them with the mountains - they move only as the road bends, as the
+# mountains do - and ring_col writes them where it wrote the plain sky
+# (src/horizon.asm, cloud_col: tools/mkbush.py). Each is its base line and
+# its puffs: (middle x in the 384-pixel panorama, half width in pixels,
+# height in lines); white, the two lines over the base pastel where it is
+# more than 3 lines high - the stage's tint under it (course.STAGE_PENS).
+CLOUDS = [
+    (146, [(20, 9, 6), (32, 12, 9), (46, 10, 7), (58, 8, 4)]),
+    (145, [(112, 7, 4), (122, 9, 7), (133, 7, 5)]),
+    (146, [(186, 10, 7), (200, 13, 10), (216, 11, 8), (230, 8, 5)]),
+    (144, [(286, 8, 5), (298, 10, 7), (309, 7, 4)]),
+    (143, [(350, 6, 3), (358, 7, 5), (367, 5, 3)]),
+]
+CLOUD_TOP_PEN, CLOUD_BASE_PEN = PEN["WHITE"], PEN["PASTEL"]
+_cloud_cache = []
+
+
+def cloud_pens():
+    """{(x, y): pen} of the clouds, x in the panorama (0..PANORAMA_W-1)."""
+    if not _cloud_cache:
+        f = {}
+        for base, puffs in CLOUDS:
+            x0 = min(px - rx for px, rx, h in puffs)
+            x1 = max(px + rx for px, rx, h in puffs)
+            for x in range(x0, x1 + 1):
+                hgt = 0.0
+                for px, rx, h in puffs:
+                    u = (x - px) / rx
+                    if abs(u) < 1:
+                        hgt = max(hgt, h * (1 - u * u) ** 0.5)
+                n = int(round(hgt))
+                for k in range(n):
+                    f[(x % PANORAMA_W, base - k)] = CLOUD_BASE_PEN if k < 2 and n > 3 \
+                        else CLOUD_TOP_PEN
+        assert all(SKY_Y <= y < pano_y0() for x, y in f), "clouds: in the sky rows only"
+        _cloud_cache.append(f)
+    return _cloud_cache[0]
+
+
 def sky_pen(x, y):
     if y < SKY_STOPS[0][0]:
         return SKY_STOPS[0][1]
@@ -1466,7 +1507,7 @@ def car_runs(view=0):
     return out
 
 
-SHADOW_W, SHADOW_IN, SHADOW_H = 22, 4, 3     # (bush.asm car_shadow, bytes)
+SHADOW_W, SHADOW_IN, SHADOW_H = 26, 4, 3     # (bush.asm car_shadow, bytes)
 
 # Moving over to another lane, the car blinks its indicator on that side as
 # the traffic does (TRAFFIC_BLINK, TRAFFIC_LIT; src/signal.asm): CAR_BLINK_LINES
@@ -1572,12 +1613,14 @@ def pano_y0():
 def sky_lines(heading=0):
     """The sky part, lines SKY_Y..BLOCK_BOTTOM-1, looking `heading` words
     to the right. The dithered sky repeats every word, so only the mountains
-    move."""
+    and the clouds move."""
     top, pano = horizon_panorama()
+    clouds = cloud_pens()
     out = []
     for y in range(SKY_Y, BLOCK_BOTTOM):
         if y < top:
-            out.append([sky_pen(x, y) for x in range(SCR_W)])
+            out.append([clouds.get(((x + 4 * heading) % PANORAMA_W, y),
+                                   sky_pen(x, y)) for x in range(SCR_W)])
         else:
             row = pano[y - top]
             out.append([row[(x + 4 * heading) % PANORAMA_W] for x in range(SCR_W)])
