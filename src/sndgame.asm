@@ -9,7 +9,7 @@
 ;; in the gear picked, LOW's half as many again as HIGH's at a speed (as Out
 ;; Run's ratios), so it drops changing up - every other picture a little
 ;; lower (a hum); on the grass a rumble with it, and in a curve that carries
-;; the car out hard (push_v) the tyres' squeal.
+;; the car out hard (push_v from SLIDE_V on) the tyres' squeal.
 ;; ===========================================================================
 
 ENG_IDLE    EQU 962             ; the engine's period standing still (65 Hz)
@@ -18,9 +18,9 @@ ENG_HIGH    EQU 10              ; ... in HIGH: 340-360 Hz at their tops
 ENG_MIN     EQU 170             ; ... no shorter (LOW over its top, slowing)
 ENG_VOL     EQU 9
 ENG_GRASS   EQU 12              ; its noise's period on the grass
-SQUEAL_N    EQU 2               ; ... in a hard curve,
-SQUEAL_V    EQU #0050           ; ... the curve's push from this on (8.8
-                                ; pairs a picture)
+SQUEAL_N    EQU 2               ; ... in a hard curve, the curve's push
+                                ; from SLIDE_V on: the tyres slipping
+                                ; (game.asm steer)
     ASSERT SPEED_MAX*ENG_LOW < 65536
 
 ;; ---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ sf_off
     sub h
     ld h,a
 sf_push
-    ld de,-SQUEAL_V
+    ld de,-SLIDE_V
     add hl,de
     ld c,SQUEAL_N
     jr c,sf_mix

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""The driving's model: Out Run's physics (Sega's SMS game) as the user's
-OutrunOutrunCPC runs them - its own code written to the SMS's
-(OutrunOutrunCPC tools/native/LOGIC.md, steps 1.10a and 1.10b: the engine
-L2F6B and the steering L264D) - and what Country Ride makes of them
-(src/game.asm steer and speed_player, scene.py's car stats).
+"""Out Run's physics (Sega's SMS game) as the user's OutrunOutrunCPC runs
+them - its own code written to the SMS's (OutrunOutrunCPC
+tools/native/LOGIC.md, steps 1.10a and 1.10b: the engine L2F6B and the
+steering L264D) - and what Country Ride takes from them (src/game.asm
+steer and speed_player, scene.py's car stats).
 
 Out Run's car (OutrunOutrunCPC: 12 race loops a second; the steering a
 loop, the engine twice):
@@ -29,14 +29,20 @@ loop, the engine twice):
 Ours (25 pictures a second, the steering once a picture, the speed a
 VSYNC): a speed of SPEED_TOP (8.8 depth units a VSYNC, the first car's top)
 is 293 km/h; Out Run's 108 units are OFFROAD_X (20) pairs, so a unit is
-UNIT pairs and a loop's move U pairs a picture times 12 / 25; a curve level
-L is a radius 45 x 7 / L (curvature with the level, level 7 Out Run's
-sharpest). The first car (ROSSO) is Out Run's; the others are as far from
-it as their bars (scene.py CAR_LEVELS): the speed curve scaled to their top
-and each acceleration bar 15% quicker or slower, each grip bar 10% more
-steering and 10% less pull.
+UNIT pairs and a loop's move U pairs a picture times 12 / 25. From Out Run
+the game has its engine and gears (T_LOW, T_HIGH: acc_table), the most the
+pedal gives off the road (CAPS), the wheel's turn and its full lock (the
+user's STEER_SCALE of it) and how fast the pull comes and goes. Its pull
+in the curves, its steering cut in the sharp ones, its lifting off and its
+brake were the game's too from 2026-11-10 to 2026-11-15; since then those
+are a car's (scene.py: the centrifugal push by the speed squared, the
+air's drag, the brake over it, the tyres' slip) - pull_levels and
+sharp_levels stay here as Out Run's.
+The first car (ROSSO) has Out Run's engine; the others are as far from it
+as their bars (scene.py CAR_LEVELS): the speed curve scaled to their top
+and each acceleration bar 15% quicker or slower.
 
-    python3 tools/outrun.py           the numbers ours come to
+    python3 tools/outrun.py           Out Run's numbers in our units
     python3 tools/outrun.py --check   T_LOW, T_HIGH again from the model (needs
                                       ../OutrunOutrunCPC: its engine's
                                       tables are the ROM's)
@@ -129,14 +135,16 @@ def radius(level):
 
 
 def pull_levels():
-    """Per curve level 1-7: Out Run's k (game.asm push_levels)."""
+    """Per curve level 1-7: Out Run's k (the game's push_levels till
+    2026-11-15)."""
     return [k_of_r(radius(L)) for L in range(1, 8)]
 
 
 def sharp_levels():
-    """Per curve level 1-7: the steering's cut in a sharp bend, 64 - r
-    (0 for r 64 and up) times 13 (game.asm steer_sharp: (speed / 16 - 79)
-    x this / 256 is the cut, /256 of the turn: 147 km/h is 79 x 16)."""
+    """Per curve level 1-7: Out Run's cut of the steering in a sharp bend,
+    64 - r (0 for r 64 and up) times 13 ((speed / 16 - 79) x this / 256 is
+    the cut, /256 of the turn: 147 km/h is 79 x 16; the game's till
+    2026-11-15)."""
     return [13 * max(0, 64 - radius(L)) for L in range(1, 8)]
 
 

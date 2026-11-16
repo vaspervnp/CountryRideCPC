@@ -52,11 +52,13 @@ the cursor keys, O and P, or a joystick, left and right; the pedal is
 space or fire, the brake Z or fire 2; the gears, LOW and HIGH, are up
 (cursor up, Q, joystick up) and down (cursor down, A, joystick down) - the
 car starts in LOW, which goes to 193 km/h, HIGH to the top speed, slow to
-pull from low down. The car drives as Out Run's (Steering, below): with
-neither the pedal nor the brake held it slows down; with a wheel off the
-road (the road 20 pairs or more to one side) it is on the sand, and 7 pairs
-further on the grass, where it goes only as fast as Out Run's pedal gives
-there in that gear. ESC pauses the race, and goes on with it.
+pull from low down. Its engine is Out Run's, the rest a car's (Steering,
+below): off the pedal the air slows it - hard at speed, hardly at a crawl,
+where it rolls on - and the brake much more; a curve carries it out as
+hard as its speed squared, so that slowing down for one tells; with a
+wheel off the road (the road 20 pairs or more to one side) it is on the
+sand, and 7 pairs further on the grass, where it goes only as fast as Out
+Run's pedal gives there in that gear. ESC pauses the race, and goes on with it.
 M turns the race's music off, or on again (in the demo too, for the races
 to come), with a beep.
 
@@ -267,7 +269,7 @@ drives the car):
 | WEDGE TURBO | 4 | 3 | 5 |
 | TOURING | 3 | 5 | 4 |
 
-The first, the ROSSO GT, is Out Run's car (Steering, below), and the
+The first, the ROSSO GT, has Out Run's engine (Steering, below), and the
 others are as far from it as their bars (`scene.py`; `tools/mkdrive.py`
 writes the numbers, `src/gen/drive.asm`). Speed 5 is the top speed of 9.8
 depth units a VSYNC - Out Run's 293 km/h - 4 is 9.2, 3 is 8.5 (since
@@ -280,11 +282,21 @@ table a gear, in its `CARn.BIN`). Grip is how fast the car is steered
 across - at the full lock 0.8, 0.88, 0.97 or 1.06 pairs a picture with grip
 2, 3, 4 or 5, 55% of Out Run's 1.6 (`scene.STEER_SCALE`: the user's "half
 that speed" of 2026-11-10, then 10% more), 10% more or less a bar -
-and how little a curve carries it out of it: Out Run's push, as hard as
-its, 10% less a bar. So at the top speed a car holds only the gentlest
-curves at the full lock, if any: the ROSSO GT levels 1-2 at any speed, 3
-below ~240 km/h, 4 below ~180, 5 below ~135, 6 below ~115 and 7 below ~95.
-(Till
+and how little a curve carries it out of it, 10% less a bar. A curve's
+push goes by the speed squared (Steering), so each car holds a curve at
+the full lock up to a speed, and any curve slowly:
+
+| km/h | level 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|
+| ROSSO GT (top 293) | any | 281 | 229 | 198 | 177 | 162 | 150 |
+| BERLINETTA (293) | any | 255 | 208 | 180 | 161 | 147 | 136 |
+| WEDGE TURBO (273) | any | any | any | 243 | 218 | 199 | 184 |
+| TOURING (254) | any | any | 253 | 219 | 196 | 179 | 165 |
+
+(Till 2026-11-15 the push was Out Run's, by the speed: the ROSSO GT held
+levels 1-2 at any speed, 3 below ~240 km/h, 4 below ~180, 5 below ~135,
+and 6-7 at no speed at all - they pulled harder than the wheel held even
+at a crawl. Till
 2026-11-10 the cars drove by the user's own figures - a steady
 acceleration, full speed in 4.9 to 7.8 s, half a pair or more to the full
 lock, a gauge segment lost turning: git log.) On two lanes the curves are
@@ -753,10 +765,12 @@ hill either: the road can still be a level into the curve before, and
 bent on a hill that moves, with a jump, the change's bit more made a
 picture late. On two lanes, half as wide as four, a curve has half the
 room to carry the car out, so each is two levels gentler than written
-(`gentle`: 7 is 5, 6 is 4, 5 and 4 are 3, not below 3) - at their top
-speeds the first two cars are carried out at most 0.9 and 1.4 times the
-road's room there with the full lock held (2.0 and 2.9 before), about as
-on three lanes, and the other two hold every curve of two lanes.
+(`gentle`: 7 is 5, 6 is 4, 5 and 4 are 3, not below 3): the sharpest
+there, level 5, the cars hold at the full lock up to 161-218 km/h, and
+level 3 up to 208-281 (the table in Picking a car; with Out Run's push,
+till 2026-11-15, the first two cars were carried out at most 0.9 and 1.4
+times the road's room there at their top speeds, 2.0 and 2.9 before the
+curves were made gentler).
 
 ### Lanes
 
@@ -826,12 +840,16 @@ one more picture, so the two never fall on the same picture.
 
 ### Steering
 
-The car is driven as Out Run's - the SMS's, as OutrunOutrunCPC runs it
+The car's engine is Out Run's - the SMS's, as OutrunOutrunCPC runs it
 (its `tools/native/LOGIC.md`: the engine `L2F6B`, the steering `L264D`):
 `tools/outrun.py` models it and works out ours, the first car's Out Run's
 own (the others: Picking a car, above). Out Run runs 12 loops a second; a
 unit across its road is 20/108 pairs (its road's edge, 108 from the
-middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8.
+middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8. From
+2026-11-10 the whole driving was Out Run's; since 2026-11-15 ("check
+physics and make car movement more realistic") what its arcade physics
+got wrong for a car is a car's (`tools/scene.py`, `tools/mkdrive.py`):
+the curves' push, lifting off, the brake, the tyres, a car standing.
 
 - **The engine.** Out Run's revs, torque curve and two gears the player
   changes (`drive_gear`: up LOW, down HIGH): LOW to 193 km/h - 100 in 3.6
@@ -839,29 +857,46 @@ middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8.
   4.8 s, 193 in 10.4, 250 in 12.7; changed up at 160, the best (the demo
   does: `SHIFT_SPEED`), 193 in 6.6 s, 250 in 9.0, 280 in 13.7 and 293 in
   23.6. The speed gained a VSYNC by the speed, a table a gear (`acc_tab`,
-  `speed_acc`, sixteenths). With neither the pedal nor the brake held the
-  car loses 48 km/h a second (`SPEED_COAST`), braking 164 (`SPEED_BRK`);
-  changed down to LOW over its top it slows to it 48 a second. Off the
-  road the pedal gives less: on the sand (Out Run's 40 units, 7 pairs) HIGH
-  221 km/h at most (LOW its 193), on the grass past it LOW 117 and HIGH 88
-  (`sp_caps`, each car's of its top; `speed_player`, `off_cls`).
+  `speed_acc`, sixteenths). Changed down to LOW over its top the car slows
+  to it 48 km/h a second. Off the road the pedal gives less: on the sand
+  (Out Run's 40 units, 7 pairs) HIGH 221 km/h at most (LOW its 193), on the
+  grass past it LOW 117 and HIGH 88 (`sp_caps`, each car's of its top;
+  `speed_player`, `off_cls`).
+- **Lifting off, and the brake.** With neither held the air slows the car,
+  by its speed squared (`drag_tab`, by speed / 256: 2 to 8 units a VSYNC):
+  47 km/h a second at the top - as Out Run's at any speed - but 29 at 200,
+  23 at 150, 17 at 100 and 12 under 90, so the car rolls on: from 256 km/h
+  to a standstill in 14.6 s (Out Run's: 5.5 s, a brake's). The brake takes 105
+  km/h a second more (`SPEED_BRK`, 3 g: from 250 km/h to a standstill in
+  2.1 s and 68 m; Out Run's 164 a second, 1.5 s).
 - **The wheel.** Left or right turns it (`steer_s`) towards the full lock,
   neither brings it back, 31 of 127 a picture at most: 0.17 s to the full
-  lock (Out Run: 64 a loop). At the full lock the car moves 1.6 pairs (6.4
-  pixels) a picture - Out Run's 18 units a loop - from 128 km/h on, or off
-  the road (since 2026-11-10 less: 0.88 pairs, 55%, `scene.STEER_SCALE`,
-  the user finding Out Run's too quick to turn and change lanes); on it,
-  slower, as much less (`STEER_SPEED`), not at all
-  standing still. In a curve of level 5-7 above 147 km/h less, by the
-  level and the speed (`sharp_tab`: Out Run's bends under radius 64): at
-  the top speed 1%, 18% and 29% less.
-- **The curves.** A curve level *L* stands for a bend of radius 45 × 7 /
-  *L* - the curvature with the level, level 7 Out Run's sharpest (its bends
-  are radius 45-90, mostly 50-63: our 5 and 6) - and carries the car out of
-  it as Out Run's does, the speed × *k* / 220 units a loop, *k* = 1091 / *r*
-  - 1 (`push_levels`: 7, 7, 9, 12, 16, 19, 23): on a level 7 curve at full
-  speed 2.72 pairs a picture, 170% of Out Run's full lock (310% of ours). The push comes and
-  goes, 0.21 pairs a picture each picture at most (Out Run: 5 units a loop).
+  lock (Out Run: 64 a loop). At the full lock the car moves 0.88 pairs
+  (3.5 pixels) a picture from 128 km/h on - 55% of Out Run's 18 units a
+  loop (`scene.STEER_SCALE`, the user finding Out Run's too quick to turn
+  and change lanes) - and slower as much less (`STEER_SPEED`), not at all
+  standing still: there the car is not seen turning either. That goes off
+  the road too (Out Run steers in full there at any speed: standing on the
+  grass, the wheel held, the car slid sideways 16 pairs in 20 pictures).
+- **The curves.** A curve carries the car out as the centrifugal force
+  does, by its speed squared and the curve's level (its curvature):
+  (speed / 16)² / 256 × the car's *m* × 2*L* / 256 pairs a picture
+  (`push_levels`; *m* 164 for the first car, 10% less a grip bar). *m* is
+  such that the first car holds level 7 at the full lock up to 150 km/h
+  (`scene.GRIP_V7`), so level *L* up to 150 × √(7 / *L*) - and any curve
+  slowly, as a car does (the table in Picking a car). On a level 7 curve
+  at 293 km/h the push is 3.4 pairs a picture, at 200 1.5, at 100 0.35.
+  The push comes and goes, 0.21 pairs a picture each picture at most.
+  Out Run's pull went by the speed, not its square (*k* = 1091 / *r* - 1,
+  with the gentlest curves pulling as hard as a middling one), and with
+  the wheel at 55% of its own a level 6 or 7 curve pulled harder than the
+  full lock held at any speed, a crawl too.
+- **The tyres.** From 0.62 pairs a picture of push on (`SLIDE_V`: 0.7 of
+  the first car's full lock) they slip: they squeal (`sndgame.asm`) and
+  take speed, what the push is over it / 32 a picture - 6 km/h a second
+  at the full lock's worth of push, 26 at twice that. So a curve entered
+  too fast carries the car out and slows it till it grips again, and the
+  squeal is the warning (before, it sounded in every curve).
 
 The two moves add up in `steer_x`, where the road - the camera - is to
 go, and its fraction `car_xf` (`steer` in `src/game.asm`), at most 8 pairs
@@ -1296,13 +1331,20 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   road's steps have been measured with).
 - **A car at 3/4 of the top speed or faster: a crash too** (since
   2026-11-12), as a bush's below - flipping over.
-- **A bush: a crash.** For 1.8 s (`CRASH_T`) the car is shoved away from
-  it, 1.9 pairs a picture (24 a step) - across the road - spinning and out
-  of control, slowing to a standstill (`speed_player`: `CRASH_BRK` a
-  VSYNC); then it is brought back to the middle of the road, 0.63 pairs a
-  picture (8 a step), and the player drives off again from a standstill:
-  there it waits till the car stands (since 2026-11-12: brought back
-  sooner, it drove off still rolling).
+- **A bush: a crash.** The car is shoved away from it, 1.9 pairs a
+  picture (24 a step) - across the road - spinning and out of control,
+  slowing 140 km/h a second (`speed_player`: `CRASH_BRK` a VSYNC), for as
+  long as it slides: till it is under 30 km/h (`crash_stand` in
+  `jump.asm`), 1.8 s at most (`CRASH_T`) - 1.1 s from 180 km/h, a third of
+  a second from 60, and a bush touched at a crawl spins it not at all
+  (till 2026-11-15 it spun for 1.8 s whatever its speed, most of that
+  standing still, and slid sideways after it stood). Then the car drives
+  back to the middle of the road by itself (`coll_back`): it pulls away,
+  up to 60 km/h (`BACK_SPEED`), and from 15 km/h on goes across 0.63 pairs
+  a picture (8 a step), seen turning that way; in the middle - or after
+  3.8 s (`BACK_T`) - it is the player's again, rolling (till then it was
+  slid there standing, the world moving sideways under a car at rest, and
+  drove off from a standstill).
   The spin (`spin_views`) is a view each 2 pictures: turning, spun, spun,
   turning one way, then the other - first its nose swung towards the side
   that was hit, as the blow turns it. A spun view's box is wider (52 pixels, the white car's
@@ -1324,8 +1366,13 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   forward, its top going away, three times round in three hops, each lower
   and slower (a frame each 2, then 3, then 4 pictures), and down on its
   wheels side-on. It stands so for 20 pictures, is seen spun again for 4,
-  and the crash brings it back to the middle of the road: 73 pictures,
-  2.9 s (`FLIP_T`; a crash slower than that, 1.8 s: `CRASH_T`).
+  and then drives back to the middle of the road as after any crash: 73
+  pictures, 2.9 s (`FLIP_T`). The road slows under it all the way down:
+  the brake is the flip's own, the speed / 128 + speed / 512 + 1 a VSYNC
+  (`flip_begin`), so that it stands as the car comes down the last time,
+  some 50 pictures on, whatever speed it crashed at (with `CRASH_BRK` a
+  flip at 3/4 of the top speed stood after 39 pictures, and the car
+  tumbled on over a road at rest).
   `flip_tab` has a byte a picture, the view (`car_vfull`) and the rows up
   (times 32). It lives in the hidden lines, the same in every `CARn.BIN`
   (`tools/scene.py` `flip_seq`, placed by `tools/mkbush.py`). The car goes
@@ -1438,8 +1485,8 @@ Run's ratios - 65 Hz standing, ~340 Hz at LOW's top, ~360 at HIGH's - so
 it drops as the gear changes up, and races in LOW over its top (till then
 six gears by the speed, as the HUD showed them). Every other
 picture it is 1/16 lower (a hum); on the grass a noise rumbles with it,
-and where a curve carries the car out hard (`push_v` from `SQUEAL_V` on)
-the tyres squeal, a higher noise.
+and where a curve carries the car out hard (`push_v` from `SLIDE_V` on:
+the tyres slipping - Steering) the tyres squeal, a higher noise.
 
 `read_keys` reads the keyboard through the PSG's port too, its
 interrupts off meanwhile. An update takes ~0.2 ms in the demo and
@@ -1656,6 +1703,23 @@ the car hit at speed and seen spun. Seen turning there instead (0.55 ms
 less), the same race took 37.6 ms at worst, and that car's four routes
 37.6-38.0. The road, the HUD and the screen in the three R5 models as
 `scene.py` has them, for all four cars.
+
+With a car's physics (2026-11-15: the curves' push by the speed squared,
+the air's drag off the pedal, the brake, the tyres' slip, a crash as long
+as the car slides and the drive back to the road - Steering, Collisions):
+16 races in the four cars, 37.4-39.1 ms at worst, none past the flip and
+none over 39.5 ms, every tenth picture as `scene.py` draws it; crashes
+forced at speed, 17-18 flips a car in 6000 pictures, 37.9-39.1 ms at
+worst - the flip's first pictures, as before (the build before, over the
+same 6000 pictures, 15-17 flips: 37.7-38.4) - every picture as
+`scene.py` draws it;
+the demo 37.3-37.9 ms; the road, the HUD and the screen in the three R5
+models as `scene.py` has them, for all four cars. `steer` takes 0.63 ms
+on a straight (0.79 before: no push to work out there) and 1.02 in a
+curve (0.99). The autopilot's races, the clock kept going, 16 a build:
+with nothing touching the car 154.6 s on average against 156.0 - the
+driving is as fast as it was; with the traffic and the bushes 255 s
+against 272, its 14 crashes a race costing less.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from

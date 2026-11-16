@@ -89,10 +89,12 @@ def ramp(h, k):
 
 # On a road of two lanes, half as wide as four's, a curve has half the room
 # for carrying the car out (src/game.asm steer): there each is LANE2_GENTLER
-# levels gentler than written, but not below 3 (a lower one as it is). At
-# full speed, the full lock held against them, the first two cars are
-# carried out at most 0.9 and 1.4 times the road's room then (2.0 and 2.9
-# before) - about as on three lanes; the other two cars hold them all.
+# levels gentler than written, but not below 3 (a lower one as it is): the
+# sharpest there is level 5, which the cars hold at the full lock up to
+# 161-218 km/h (scene.py GRIP_V7). (With Out Run's push, till 2026-11-15:
+# at full speed, the full lock held against them, the first two cars were
+# carried out at most 0.9 and 1.4 times the road's room then, 2.0 and 2.9
+# before - about as on three lanes; the other two cars held them all.)
 LANE2_GENTLER = 2
 
 

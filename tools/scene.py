@@ -1120,22 +1120,34 @@ SPIN_OFF = 16                   # the car seen spun only this far (pairs, car_of
 CAR_OFF_MAX = 0                 # car_off at most: the car always in the middle
                                 # since 2026-11-12 (car_lines)
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
-# what the game makes of them (mkbush.py: car_stats, CARn.BIN's acc_tab):
-# Out Run's driving (tools/outrun.py), the first car's its own and the
-# others as far from it as their bars. The top speed (8.8 depth units a
-# VSYNC; 5 is the most the pictures keep up with; the first car's,
-# SPEED_TOP, is Out Run's 293 km/h); the speed gained a VSYNC, sixteenths,
-# by speed / 64 (acc_tab: Out Run's engine with its gear changed at its
-# best, scaled to the car's top, each acceleration bar from 4 15% quicker
-# or slower; since 2026-11-11 a table a gear, LOW and HIGH, the player
-# changing them); and the steering's and the curves' factors (game.asm steer):
-# k, the full lock moving the car 127 x k / 64 / 256 pairs a picture (half
-# Out Run's 18 units a loop: 0.8 - STEER_SCALE), and m, a curve of level L at speed s
-# carrying it out s x m x push_levels[L] / 8192 pairs a picture (Out
-# Run's v k(r) / 220 a loop) - each grip bar from 3 10% more k and 10%
-# less m. (Till 2026-11-10 the cars drove by the user's own figures: a
-# straight acceleration, GRIP's k and m, STEER_MORE, a gauge segment lost
-# turning - git log.)
+# what the game makes of them (mkdrive.py: car_stats, CARn.BIN's acc_tab).
+# The engine and the gears are Out Run's (tools/outrun.py), the first car's
+# its own and the others as far from it as their bars: the top speed (8.8
+# depth units a VSYNC; 5 is the most the pictures keep up with; the first
+# car's, SPEED_TOP, is Out Run's 293 km/h); the speed gained a VSYNC,
+# sixteenths, by speed / 64 (acc_tab: a table a gear, LOW and HIGH, the
+# player changing them - scaled to the car's top, each acceleration bar
+# from 4 15% quicker or slower).
+# The rest is a car's, as far as an arcade game's can be (since 2026-11-15:
+# "make car movement more realistic" - Out Run's own till then, git log):
+# - the wheel: k, the full lock moving the car 127 x k / 64 / 256 pairs a
+#   picture (0.88: STEER_SCALE of Out Run's 18 units a loop) from
+#   STEER_SPEED on, as much less as it is slower under it - on the road and
+#   off it: a car standing does not move sideways;
+# - a curve carries the car out as the centrifugal force does, by the
+#   speed squared and the curvature (the level): (speed / 16)^2 / 256 x m x
+#   PUSH_K[L] / 256 pairs a picture - m such that the first car holds the
+#   sharpest curve at the full lock up to GRIP_V7 km/h, so a level L up to
+#   GRIP_V7 x sqrt(7 / L), and any curve slowly (Out Run's pull went with
+#   the speed, not its square, and levels 6-7 pulled harder than the wheel
+#   held at any speed, a crawl too);
+# - each grip bar from 3: 10% more k and 10% less m;
+# - past SLIDE of the first car's full lock the tyres slip: they squeal and
+#   take speed, what the push is over it / 32 a picture;
+# - off the pedal the air slows the car, DRAG_KMHS km/h a second standing
+#   and at the top, between them by the speed squared (drag_tab, by speed /
+#   256: Out Run's 48 a second at any speed stopped it like a brake); the
+#   brake BRAKE_KMHS more.
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 SPEED_UP = 1.5
 TOP_SPEED = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 0x05B0, 4: 0x0620, 5: 0x0690}.items()}
@@ -1145,16 +1157,46 @@ ACC_N = 40                      # ... entries (SPEED_TOP / 64 + 1)
 ACC_BAR = 0.15                  # an acceleration bar: this much quicker
 GRIP_BAR = 0.10                 # a grip bar: this much more steering, less pull
 STEER_SCALE = 0.55              # the steering, of Out Run's (the user, on
-                                # 2026-11-10: half - the curves pull as hard;
-                                # 2026-11-11: 10% more)
+                                # 2026-11-10: half; 2026-11-11: 10% more)
 STEER_K0 = round(18 * OR.LOOP_TO_PIC * 256 * 64 / 127 * STEER_SCALE)  # the
                                 # first car's k
-PUSH_M0 = round(OR.V_TOP / SPEED_TOP / 220 * OR.LOOP_TO_PIC * 256 * 8192)
-STEER_SPEED = round(128 * SPEED_TOP / OR.V_TOP)         # Out Run: v 128
-SHARP_S16 = round(147 * SPEED_TOP / OR.V_TOP / 16)      # ... v 147, / 16
+FULL_LOCK0 = 127 * STEER_K0 / 64 / 256      # ... its full lock, pairs a picture
+STEER_SPEED = round(128 * SPEED_TOP / OR.V_TOP)         # 128 km/h
+GRIP_V7 = 150                   # km/h the first car holds level 7 up to
+PUSH_K = [2 * L for L in range(1, 8)]       # push_levels: with the curvature
+PUSH_S2_TOP = (SPEED_TOP >> 4) ** 2 >> 8    # (speed / 16)^2 / 256 at SPEED_TOP
+PUSH_M0 = round(FULL_LOCK0 * (OR.V_TOP / GRIP_V7) ** 2 * 65536 / (PUSH_S2_TOP * PUSH_K[-1]))
+SLIDE = 0.7                     # of the first car's full lock: the push the
+SLIDE_V = round(SLIDE * FULL_LOCK0 * 256)   # tyres slip from (8.8 pairs)
+DRAG_KMHS = (12, 48)            # km/h a second lost off the pedal: standing,
+                                # at SPEED_TOP
+BRAKE_KMHS = 105                # ... the brake's more (3 g; Out Run's 164
+                                # with the drag in it)
+STOP_KMHS = 164                 # ... the game's own braking: the time up,
+                                # the demo's, before the start
+BACK_SPEED = 0x0200             # a crash over, the car drives back to the
+                                # road's middle this fast at most (60 km/h)
 SAND_W = round(OR.SAND_W * OR.UNIT)                     # pairs of sand
 SHIFT_SPEED = round(OR.ENGINE_SHIFT * SPEED_TOP / OR.V_TOP)  # the demo's
                                 # drive: HIGH from here on, LOW under it
+
+
+def per_vsync(kmh_a_second):
+    """km/h a second as 8.8 depth units a VSYNC (SPEED_TOP: 293 km/h)."""
+    return kmh_a_second * SPEED_TOP / OR.V_TOP / OR.VSYNCS
+
+
+def drag_tab():
+    """Units a VSYNC the air takes, by speed / 256 (its band's middle)."""
+    d0, d1 = DRAG_KMHS
+    return [int(per_vsync(d0 + (d1 - d0) * (min(256 * h + 128, SPEED_TOP) / SPEED_TOP) ** 2) + 0.5)
+            for h in range((SPEED_TOP >> 8) + 1)]
+
+
+def push_of(car_id, level, speed):
+    """The curve's push at the level and the speed (8.8 units), as steer
+    works it out: 8.8 pairs a picture."""
+    return ((speed >> 4) ** 2 >> 8) * car_push_m(car_id) * PUSH_K[level - 1] >> 8
 
 
 def car_acc(car_id):

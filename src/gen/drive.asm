@@ -6,26 +6,26 @@
 ;; and the curves' factors k and m (game.asm steer)
 car_stats
     defw #067C,#09D8,#067C,#076D,#03EE,#02F5   ; player: speed 5, acceleration 4, grip 3
-    defb 114,99
+    defb 114,164
     defw #067C,#09D8,#067C,#076D,#03EE,#02F5   ; ferrari: speed 5, acceleration 5, grip 2
-    defb 103,109
+    defb 103,180
     defw #060D,#0930,#060D,#06EE,#03AB,#02C2   ; lotus: speed 4, acceleration 3, grip 5
-    defb 137,79
+    defb 137,131
     defw #059F,#0888,#059F,#066F,#0368,#0290   ; bmw: speed 3, acceleration 5, grip 4
-    defb 125,89
+    defb 125,148
 CAR_STATS_LEN EQU 14  ; bytes a car
 
-;; per curve level 1-7: Out Run's pull for the radius it stands for
-;; (315, 158, 105, 79, 63, 52, 45): k, the push s x m x k / 8192 (game.asm steer)
+;; per curve level 1-7: the push with the curvature - (speed / 16)^2 / 256
+;; x m x this / 256 pairs a picture (game.asm steer): the first car
+;; holds level 7 at the full lock up to 150 km/h
 push_levels
-    defb 7,7,9,12,16,19,23
+    defb 2,4,6,8,10,12,14
     ASSERT hi(push_levels-1) == hi(push_levels+6)
-;; per curve level 0-7: the steering's cut from SHARP_S16 on - (speed /
-;; 16 - SHARP_S16) x this / 256 is the cut, /256 of the turn (Out Run: a
-;; bend under r 64, (v - 147)(64 - r) / 9408)
-sharp_tab
-    defb 0,0,0,0,0,13,156,247
-    ASSERT hi(sharp_tab) == hi(sharp_tab+7)
+;; the air's drag: units a VSYNC slower off the pedal, by speed / 256
+;; (12 km/h a second standing, 48 at SPEED_TOP, by the speed squared)
+drag_tab
+    defb 2,2,2,3,3,4,5,6,7,8
+    ASSERT hi(drag_tab) == hi(drag_tab+9)
 ;; the speed gained a VSYNC faster held, sixteenths of a unit, by speed /
 ;; 64, in LOW then in HIGH (speed_acc): the first car's - CARn.BIN puts
 ;; the picked one's

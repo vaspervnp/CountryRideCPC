@@ -79,6 +79,26 @@ cj_done
     pop bc
     ret
 
+;; flip_begin - (jump_start) the flip's first picture next; and the brake
+;; this crash has (speed_player's sp_crash_brk): the flip's by its speed,
+;; speed / 128 + speed / 512 + 1 a VSYNC, so that the road stands as the car
+;; comes down the last time (~50 pictures on), not sooner. crash_brk_set: A
+;; = a crash's. Keeps BC, DE.
+flip_begin
+    ld a,1
+    ld (jump_t),a
+    ld hl,(speed)
+    add hl,hl
+    ld a,h                              ; speed / 128
+    rrca
+    rrca
+    and #3F
+    add a,h
+    inc a
+crash_brk_set
+    ld (sp_crash_brk+1),a
+    ret
+
     REC_END JUMP_P0,SND_PIECE
 ;; ---------------------------------------------------------------------------
     REC_TAIL jump_m2,rec_SND_M2_end
@@ -134,18 +154,18 @@ jump_frame
 
 ;; jump_start - (coll_start) a crash: DE its kind and its pictures
 ;; (coll_t) - at jump_min or faster (3/4 of the car's top speed), the car
-;; flips over (FLIP_T pictures, then back to the middle). Keeps BC.
+;; flips over (FLIP_T pictures, then back to the middle) - and its brake
+;; (flip_begin). Keeps BC.
 jump_start
     ld hl,(speed)
 jump_min
     ld de,-JUMP_SPEED                   ; (car_setup: the car's)
     add hl,de
     ld de,256+CRASH_T+BACK_T
-    ret nc
+    ld a,CRASH_BRK
+    jp nc,crash_brk_set
     ld e,FLIP_T+BACK_T
-    ld a,1
-    ld (jump_t),a
-    ret
+    jp flip_begin
 
     REC_TAIL_END jump_m0,rec_SND_M0_end,SND_M0+SND_PIECE
 ;; ---------------------------------------------------------------------------
@@ -210,3 +230,21 @@ drawn_up    defb 0,0                    ; ... as each buffer last showed it,
     ASSERT FLIP_T+BACK_T < 256 && CRASH_T+BACK_T < 256
 
     REC_TAIL_END jump_p10,rec_SND_P10_end,SND_P10+SND_PIECE
+;; ---------------------------------------------------------------------------
+    REC_TAIL crash_p6,rec_SND_P6_end
+
+;; crash_stand - (coll_step) a picture of a crash, the car out of control:
+;; once it is slow enough (under 256: 30 km/h) - not flipping - that is
+;; over, and it drives back to the road (coll_back): a spin lasts as long as
+;; the car slides, a touch at a crawl not at all. Destroys AF, D.
+crash_stand
+    ld a,(jump_t)
+    ld d,a
+    ld a,(speed+1)
+    or d
+    ret nz
+    ld a,BACK_T
+    ld (coll_t),a
+    ret
+
+    REC_TAIL_END crash_p6,rec_SND_P6_end,SND_P6+SND_PIECE

@@ -54,7 +54,7 @@ The four cars drive differently. The bars on the screen rate each one out of fiv
 - **Accel** is how quickly it gets there: two thirds of its top speed in about 6 to 8 seconds, the last of it slowly, as an engine near its top.
 - **Grip** is how quickly you can steer it across the road, and how little a curve carries it outwards.
 
-The cars drive like the one in Out Run, the ROSSO GT so, but steer a little over half as fast. At full speed you can hold only the gentlest curves: let go of the pedal before the others, and brake for the sharp ones.
+The cars have the engine and the gears of the one in Out Run, the ROSSO GT its own. The rest they do as a car does. Off the pedal the air slows them: hard at speed, hardly at all when slow, where the car rolls on. A curve throws the car outwards as hard as its speed squared, so that a little slower is a lot easier: at full speed you can hold only the gentlest curves, at half speed nearly all of them.
 
 ## Controls
 
@@ -162,7 +162,7 @@ Each stage has its own road and colours, and each next stage has more traffic. T
 
 ### Curves
 
-A curve carries the car towards its outside unless you steer against it. The sharper the curve and the faster you go, the harder it pulls, and in the sharpest curves at high speed the car also steers less. At full speed all but the gentlest curves pull harder than you can steer: let go of the pedal for a moment, or brake, before you run wide.
+A curve carries the car towards its outside unless you steer against it. The sharper the curve the harder it pulls, and twice as fast it pulls four times as hard. At full speed all but the gentlest curves pull harder than you can steer; slow enough, you can hold any of them. When the tyres squeal they are slipping: the car runs wide and loses speed until they grip again. Letting go of the pedal slows the car only gently unless you are going very fast, so brake before a sharp curve.
 
 | Sign | What it tells you |
 |---|---|
@@ -187,19 +187,20 @@ A car with a flashing indicator is moving over to the next lane on that side. Yo
 
 ### Bushes, trees and signs
 
-Hit a bush, or the trunk of a tree or sign, and you crash. For about two seconds the car spins out of your control and comes to a standstill. It is then brought back to the middle of the road, and you drive off from a standstill. Hit one at three quarters of your top speed or more, and the car flips over, as in Out Run: the blow turns it sideways, it is thrown into the air and tumbles over three times, bouncing lower each time, and lands on its wheels. About three seconds later it is turned back, and then brought back to the middle of the road.
+Hit a bush, or the trunk of a tree or sign, and you crash. The car spins out of your control for as long as it slides, up to a second and a half at speed and hardly at all at a crawl. Then it drives itself back to the middle of the road, and is yours again there, already rolling. Hit one at three quarters of your top speed or more, and the car flips over, as in Out Run: the blow turns it sideways, it is thrown into the air and tumbles over three times along the road, bouncing lower each time, and lands on its wheels as it comes to rest. About three seconds after the blow it is turned back, and then drives back to the middle of the road.
 
 ## Tips
 
-- Keep the pedal down. Letting go loses speed, and speed is time.
+- Keep the pedal down on the straights: speed is time.
 - Change up to HIGH at about half speed, and back down to LOW when you have slowed right down.
 - Watch for the yellow boards, and start steering as the curve starts.
-- Lift off before a sharp curve rather than run wide onto the grass: it costs you less.
+- Brake before a sharp curve rather than run wide onto the grass: it costs you less. Lifting off alone is enough only for the gentle ones.
+- If the tyres squeal, you are too fast for the curve: slow down.
 - Stay off the grass. It slows you down hard, and it is where the crashes are.
 - Move out early when a car is ahead. Do not pass on the side its indicator is flashing.
 - When the two stage names appear, get to that side of the road in good time.
 - After hitting a car off its side, steer against the shove to stay off the grass.
-- Crashes cost far more time than bumps. A bump is over in a second and leaves you rolling, while a crash leaves you at a standstill.
+- Crashes cost far more time than bumps. A bump is over in a second and leaves you rolling, while a crash at speed costs you four seconds and nearly all your speed.
 
 ## Sound
 

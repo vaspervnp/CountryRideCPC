@@ -420,30 +420,34 @@ cache_steps_gate
 ;; steer - where the car is on the road (car_x) and where the road is to go
 ;; (steer_x), once a picture, and how the car is seen (car_view).
 ;;
-;; The player, as Out Run (SMS: L264D) does it (tools/outrun.py; the
-;; numbers gen/drive.asm's). Left or right turns the wheel (steer_s)
-;; towards 127 or -127, neither brings it back to 0, WHEEL_RAMP a picture
-;; at most: 0.17 s to the full lock.
+;; The player (the numbers: tools/scene.py, gen/drive.asm). Left or right
+;; turns the wheel (steer_s) towards 127 or -127, neither brings it back to
+;; 0, WHEEL_RAMP a picture at most: 0.17 s to the full lock.
 ;; The wheel moves the car - left: car_x up, the road under it going right
 ;; - its turn x the car's k / 64 / 256 pairs a picture (0.8-1.06 at the
-;; full lock, the first car's 0.88: 55% of Out Run's): all of it from STEER_SPEED on
-;; (128 km/h) or off the road, on the road as much less as the car is
-;; slower below it, none standing still; in a curve of level 5-7 from 147
-;; km/h on less, by the level and the speed (sharp_tab: a third less at
-;; level 7 at the top). And a curve carries the car out of it - out of a
-;; right curve the car goes left, the road right: push_v goes towards the
-;; speed x the car's m x the level's k / 8192 pairs a picture, PUSH_RAMP a
-;; picture at most (push_levels: Out Run's pull for a bend of radius 45 x
-;; 7 / L), as hard as Out Run's though the wheel is 55% its: at the top
-;; speed the first car holds levels 1-2 at the full lock, 4 below ~180
-;; km/h, 7 below ~95. Both moves add up in steer_x, where the road is to
-;; go, and its fraction car_xf, CAR_LEAD pairs at most from where it is; the
-;; road follows as fast as its steps can. The car is always in the middle
-;; of the screen (since 2026-11-12, the user's: the world moves under it -
-;; it was drawn road_x - car_x pairs right of the middle before, the road
-;; following it), so it is where the road is: car_x = road_x, for the sand
-;; and the grass, the forks, the rumble.
-;; The car is seen turning while left or right is held (not both).
+;; full lock, the first car's 0.88) from STEER_SPEED on (128 km/h), as much
+;; less as the car is slower under it, none standing still - on the road
+;; and off it. And a curve carries the car out of it, as the centrifugal
+;; force does, by the speed squared and the curvature - out of a right
+;; curve the car goes left, the road right: push_v goes towards (speed /
+;; 16)^2 / 256 x the car's m x the level's k / 256 pairs a picture
+;; (push_levels: twice the level), PUSH_RAMP a picture at most. The first
+;; car holds the sharpest curve, level 7, at the full lock up to 150 km/h,
+;; level 4 up to ~200, level 2 up to ~280, and any of them slowly (Out
+;; Run's pull, the game's till 2026-11-15, went with the speed, not its
+;; square: levels 6-7 pulled harder than the wheel held at any speed).
+;; From SLIDE_V on - 0.7 of the first car's full lock - the tyres slip:
+;; they squeal (sndgame.asm) and take speed, what the push is over it / 32
+;; a picture, so a curve taken too fast slows the car as it carries it out.
+;; Both moves add up in steer_x, where the road is to go, and its fraction
+;; car_xf, CAR_LEAD pairs at most from where it is; the road follows as
+;; fast as its steps can. The car is always in the middle of the screen
+;; (since 2026-11-12, the user's: the world moves under it - it was drawn
+;; road_x - car_x pairs right of the middle before, the road following
+;; it), so it is where the road is: car_x = road_x, for the sand and the
+;; grass, the forks, the rumble.
+;; The car is seen turning while left or right is held (not both) and the
+;; wheel moves it: not standing still.
 ;;
 ;; Outside the race the demo steers: a new place every DEMO_HOLD pictures
 ;; - before the race START_X - the car seen turning while the road moves to
@@ -463,18 +467,22 @@ HILL_PITCH  EQU 20              ; the hill, either way, from which the car
 CAR_LEAD    EQU 8               ; pairs steer_x may be from road_x (the car
                                 ; was drawn that far from the middle of the
                                 ; screen till 2026-11-12, 16 before that day)
-CAR_STEER_K EQU 103             ; (the first car's; car_setup: each its own)
-CAR_PUSH_M  EQU 99
+CAR_STEER_K EQU 114             ; (the first car's; car_setup: each its own)
+CAR_PUSH_M  EQU 164
 HIT_Y       EQU CAR_Y+CAR_TOP/2-ROAD_AREA_Y ; a car or a bush touches ours with
                                 ; its base line on the car's lower half...
 HIT_TRIM    EQU 2               ; ... the two overlapping, this many bytes in
 BUMP_T      EQU 25              ; a bump (Out Run: a car hit), pictures: the
                                 ; shove and the speed as bump_tab says
-CRASH_T     EQU 45              ; a crash (a bush), pictures (Out Run: 1.5-2 s)
+CRASH_T     EQU 45              ; a crash (a bush), pictures at most (Out
+                                ; Run: 1.5-2 s) - till the car is slow
+                                ; (jump.asm crash_stand)
 CRASH_V     EQU 480             ; ... the shove away from it (24 a step, 20)
-CRASH_BRK   EQU 24              ; ... the speed lost a VSYNC, to a standstill
-BACK_V      EQU 160             ; then back to the middle (8 a step)
-BACK_T      EQU 64              ; ... in this many pictures at most
+CRASH_BRK   EQU 24              ; ... the speed lost a VSYNC (a flip's: by
+                                ; its speed - jump.asm flip_begin)
+BACK_V      EQU 160             ; then it drives back to the middle (8 a
+                                ; step), up to BACK_SPEED
+BACK_T      EQU 96              ; ... in this many pictures at most
 
 steer
     call read_keys              ; (player.asm)
@@ -539,54 +547,19 @@ steer_keys
     ld (steer_s),hl
 
     ; HL = the wheel's move: |turn| x k / 64 - k the car's, from
-    ; STEER_SPEED on or off the road; slower on it, k x speed / STEER_SPEED;
-    ; in a sharp curve from SHARP_S16 on, the turn less sharp_tab's cut
+    ; STEER_SPEED on; slower, k x speed / STEER_SPEED
     ld a,l
     or a
-    jr z,steer_moved            ; (HL 0)
+    jr z,steer_still            ; (HL 0)
     jp p,$+5
     neg
     ld c,a                      ; C = |turn|
     ld de,(speed)
-    ld a,(off_cls)
-    or a
-    jr nz,steer_fast
     ld a,e
     cp lo(STEER_SPEED)
     ld a,d
     sbc a,hi(STEER_SPEED)
     jr c,steer_slow
-steer_fast
-    ld a,(road_curve)           ; E = the curve level's cut
-    or a
-    jp p,$+5
-    neg
-    add a,lo(sharp_tab)
-    ld l,a
-    ld h,hi(sharp_tab)
-    ld a,(hl)
-    or a
-    jr z,steer_whole
-    ld b,a
-    ex de,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    ld a,h                      ; speed / 16
-    sub SHARP_S16
-    jr c,steer_whole
-    ld h,a
-    ld e,b
-    call mul8
-    ld e,h                      ; E = the cut, 256ths
-    ld h,c
-    call mul8
-    ld a,c
-    sub h
-    ld c,a                      ; C = the turn less it
-    jr steer_k
-steer_whole
     ld a,c
     cp 127
 steer_full
@@ -619,32 +592,38 @@ steer_sign
     or a
     call m,neg_hl
 steer_moved
+    ld a,h                      ; (the wheel moving it nowhere - standing -
+    or l                        ; the car is not seen turning)
+    jr nz,$+5
+    ld (car_view),a
+steer_still
     push hl
 
-    ; HL = the push asked: the level's k (push_levels) x (speed / 16 x m /
-    ; 2) / 256, outwards - m the car's
-    ld hl,(speed)
-    add hl,hl
-    add hl,hl
-    add hl,hl
-    add hl,hl                   ; H = speed / 16
-steer_m
-    ld e,CAR_PUSH_M             ; (car_setup: the car's)
-    call mul8
-    srl h
-    rr l
-    ex de,hl                    ; DE = speed / 16 x m / 2
+    ; HL = the push asked: the level's k (push_levels) x (speed / 16)^2 /
+    ; 256 x m / 256, outwards - m the car's
     ld hl,0
     ld a,(road_curve)
     or a
-    jr z,steer_pushed
+    jr z,steer_pushed           ; (straight on: none)
     ld c,a
     jp p,$+5
     neg
     add a,lo(push_levels-1)     ; (gen/drive.asm)
     ld l,a
     ld h,hi(push_levels)
-    ld b,(hl)
+    ld a,(hl)                   ; A = the level's k (mul8 keeps it)
+    ld hl,(speed)
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; H = speed / 16
+    ld e,h
+    call mul8                   ; H = its square / 256
+steer_m
+    ld e,CAR_PUSH_M             ; (car_setup: the car's)
+    call mul8
+    ex de,hl                    ; DE = (speed / 16)^2 / 256 x m
+    ld b,a
     ld hl,0
     xor a
 steer_pmul
@@ -660,6 +639,23 @@ steer_pushed
     ld c,PUSH_RAMP
     call ramp
     ld (push_v),hl
+    push hl                     ; from SLIDE_V on the tyres slip (and squeal:
+    bit 7,h                     ; sndgame.asm), and that takes speed: what
+    call nz,neg_hl              ; the push is over it / 32, a picture
+    ld de,-SLIDE_V
+    add hl,de
+    jr nc,steer_grip
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; (no carry: the push is under 8 pairs)
+    ld e,h
+    ld d,0
+    ld hl,(speed)
+    sbc hl,de
+    jr c,steer_grip
+    ld (speed),hl
+steer_grip
+    pop hl
     pop de
     add hl,de                   ; the car's move: the wheel's and the push
     ld a,(coll_t)
@@ -761,11 +757,13 @@ neg_hl
 ;; most of its speed and is hardly shoved, so that the one it hit goes on
 ;; ahead; off its side, it loses less and is thrown out (bump_tab: by the
 ;; difficulty picked, coll_diff) - but at 3/4 of the car's top speed or
-;; faster, a crash as a bush's. A bush
-;; (bit 6), off the road: a crash, CRASH_T pictures of the car shoved away
-;; from it - across the road - out of control, slowing to a standstill
-;; (speed_player); then back to the middle of the road, BACK_T pictures at
-;; most, and off again once it stands. Both wobble (coll_step). Keeps C.
+;; faster, a crash as a bush's. A bush (bit 6), off the road: a crash - the
+;; car shoved away from it, across the road, out of control, spinning and
+;; slowing (speed_player) for as long as it slides: CRASH_T pictures at
+;; most, till it is slow (jump.asm crash_stand; at speed it flips over
+;; instead, FLIP_T pictures); then it drives back to the middle of the
+;; road (coll_back), BACK_T pictures at most, and is the player's again.
+;; Both wobble (coll_step). Keeps C.
 ;; ---------------------------------------------------------------------------
 coll_start
     bit 6,b
@@ -856,22 +854,26 @@ DIFF_ROWS   EQU $-bump_tab
     ASSERT DIFF_ROWS == 32              ; (disc/country.bas line 310)
 
 ;; coll_step - A = coll_t, not 0: a picture of a bump or a crash. HL = the
-;; car's move: the shove added - or, the crash over, the way back to the
-;; road's middle in its place. Sets car_view: in a bump the car wobbles,
-;; left and right; in a crash it spins (spin_views). Destroys AF, DE.
+;; car's move: the shove added, while the car moves - or, the crash over,
+;; the way back to the road's middle in its place. Sets car_view: in a bump
+;; the car wobbles, left and right; in a crash it spins (spin_views).
+;; Destroys AF, DE.
 coll_step
     dec a
     ld (coll_t),a
     ld e,a
-    jr nz,coll_on
-    ld (coll_kind),a                    ; (over)
-coll_on
     ld a,(coll_kind)
     or a
     jr z,coll_bump
     ld a,e
+    or a
+    jr nz,coll_on
+    ld (coll_kind),a                    ; (its time up: over, where it is)
+    jr coll_view
+coll_on
     cp BACK_T
     jr c,coll_back
+    call crash_stand                    ; (jump.asm: slow enough, the spin over)
     ld a,CRASH_T+BACK_T-1               ; a crash: a view each 2 pictures
     sub e
     rra
@@ -895,6 +897,10 @@ coll_bump
     inc a
 coll_shove
     ld (car_view),a
+    ld de,(speed)                       ; (standing, it slides no further)
+    ld a,d
+    or e
+    ret z
     ld de,(coll_v)
     add hl,de
     ret
@@ -905,24 +911,26 @@ coll_shove
 spin_views
     defb 2,SPIN_VIEW+1,SPIN_VIEW+1,2,1,SPIN_VIEW,SPIN_VIEW,1
 coll_back
-    ld a,(steer_x)                      ; the road towards 0
-    ld hl,BACK_V
+    ld hl,(speed)                       ; the crash over, the car drives back
+    add hl,hl                           ; to the road's middle - once it
+    ld a,h                              ; rolls again (speed_player: from 128
+    ld hl,0                             ; on), seen turning that way: the
+    or a                                ; road towards 0
+    jr z,coll_view
+    ld a,(steer_x)
     or a
-    jp m,coll_view
-    ld hl,-BACK_V
-    jr nz,coll_view
-    ld hl,(speed)                       ; there: off again, once it stands
-    ld a,h                              ; (the brakes on till then: it
-    or l                                ; stands well before BACK_T is up)
-    ld hl,0
-    jr nz,coll_view
-    ld (coll_kind),a
+    jr nz,coll_drive
+    ld (coll_kind),a                    ; there: the player's again
     ld (coll_t),a
     ld (car_xf),a
-    ld l,a
-    ld h,a
+    jr coll_view
+coll_drive
+    ld hl,BACK_V
+    ld a,1
+    jp m,coll_view
+    ld hl,-BACK_V
+    inc a
 coll_view
-    xor a
     ld (car_view),a
     ret
 
@@ -1062,16 +1070,19 @@ demo_cp_set
 
 ;; ---------------------------------------------------------------------------
 ;; speed_player - (demo_step, once the player has pressed faster or slower)
-;; one VSYNC of the player's speed, as Out Run's engine (SMS: L2F6B,
-;; tools/outrun.py): the gear first - down (KEY_HIGH) HIGH, over up
-;; (KEY_LOW) LOW, else as it was; then faster held, speed_acc (the car's
-;; acc_tab for the gear); slower, SPEED_BRK down (both: slower); neither,
-;; SPEED_COAST down. No faster than sp_caps says for the gear: on the road,
+;; one VSYNC of the player's speed. The gear first - down (KEY_HIGH) HIGH,
+;; over up (KEY_LOW) LOW, else as it was; then faster held, speed_acc (the
+;; car's acc_tab for the gear: Out Run's engine, SMS L2F6B, tools/outrun.py);
+;; neither, the air's drag by the speed (drag_tab: little at a crawl, 48
+;; km/h a second at the top - the car rolls on); slower, the brake's
+;; SPEED_BRK more (both: slower). In a crash CRASH_BRK down (a flip's by its
+;; speed), then driving back to the road's middle, up to BACK_SPEED
+;; (coll_back). No faster than sp_caps says for the gear: on the road,
 ;; LOW's top or HIGH's; off it - a wheel off it, car_x OFFROAD_X (5 a lane)
 ;; or more either way - on the sand, SAND_W pairs, and on the grass past it
 ;; what Out Run's pedal gives there: over it, SPEED_DRAG a VSYNC slower (so
-;; also changing down to LOW above its top). off_cls: where (steer). The
-;; caps and acc_tab are the car's (car_setup, CARn.BIN). Goes on with
+;; also changing down to LOW above its top). off_cls: where. The caps and
+;; acc_tab are the car's (car_setup, CARn.BIN). Goes on with
 ;; demo_speed_set, HL = the speed.
 ;; ---------------------------------------------------------------------------
 speed_player
@@ -1087,22 +1098,42 @@ sp_not_high
     ld (hl),0                   ; LOW
 sp_geared
     ld hl,(speed)
-    ld a,(coll_kind)            ; a crash: to a standstill (coll_start)
+    ld a,(coll_kind)            ; a crash (coll_start)
     or a
-    ld de,-CRASH_BRK
-    jr nz,sp_less
+    jr nz,sp_crash
     ld a,(keys_now)
-    ld de,-SPEED_BRK
+    ld c,SPEED_BRK              ; C = the brake's
     bit 3,a
-    jr nz,sp_less               ; slower
-    ld de,-SPEED_COAST
+    jr nz,sp_drag               ; slower
+    ld c,0
     bit 2,a
-    jr z,sp_less                ; neither
+    jr z,sp_drag                ; neither: the air's drag alone
+sp_faster
     call speed_acc              ; faster
     jr sp_top
-sp_less
-    add hl,de
-    jr c,sp_top
+sp_crash
+    ld a,(coll_t)
+    cp BACK_T
+    jr nc,sp_crash_brk          ; out of control: slowing
+    ld a,h                      ; then it drives back to the road's middle
+    cp hi(BACK_SPEED)           ; (coll_back): up to BACK_SPEED
+    jr c,sp_faster
+sp_crash_brk
+    ld a,CRASH_BRK              ; (jump.asm jump_start: this crash's)
+    jr sp_less
+sp_drag                         ; the drag by the speed (drag_tab), and C
+    ld a,h
+    add a,lo(drag_tab)
+    ld e,a
+    ld d,hi(drag_tab)
+    ld a,(de)
+    add a,c
+sp_less                         ; A = units slower
+    ld e,a
+    ld d,0
+    or a
+    sbc hl,de
+    jr nc,sp_top
     ld hl,0                     ; standing still
 sp_top                          ; HL = the speed asked: no more than the most
     ld b,0                      ; here (B: off_cls)
@@ -1217,8 +1248,8 @@ demo_step
     cp MODE_RACE
     jp z,speed_player
     jr c,demo_mode
-    ld hl,(speed)               ; time up: braking (player.asm)
-    ld de,-SPEED_BRK
+    ld hl,(speed)               ; time up: braking
+    ld a,SPEED_STOP
     jp sp_less
 demo_mode
     or a
@@ -1272,7 +1303,7 @@ demo_acc_ok
     jr demo_speed_set
 demo_brake
     ex de,hl
-    ld bc,SPEED_BRK
+    ld bc,SPEED_STOP
 demo_less
     or a
     sbc hl,bc
