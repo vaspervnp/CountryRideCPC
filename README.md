@@ -459,6 +459,28 @@ row count and R5 lines.
   band over the sky part is border, not memory: nothing can be drawn
   there, and making it memory would take a CRTC part more and a column of
   it written at each turn.
+- **The wind** (since 2026-11-17). The clouds drift left on their own, a
+  word every 30 pictures (`scene.CLOUD_WIND`; about a minute across the
+  screen) once the step is done. `cloud_col` reads the maps `cc_drift`
+  columns further on, so the columns the ring turns in are already moved;
+  the step itself - `cc_drift` one on, then each character of the two rows
+  with a cloud in it or left of it written again from its tile - is
+  `cloud_wind`'s, in the time the game has to spare: called from
+  `main_spin`, the picture done and the cache's jobs over (the frame's last
+  interrupt before the flip, ~3 ms on average, the beam past the clouds).
+  Four lines at a time with interrupts off (~70 us), and only while the
+  VSYNC has not started (PPI port B): the flip's interrupt comes ~70 us
+  after it, so it is never held back (6 us at most, measured). If it comes
+  while the wind is at it, `dw_flip` sends the main code out at once
+  (`dw_abort`), so the next picture starts at most ~25 us later than it
+  would have: `ring_turn` begins with an `LD HL,dw_flip` that `cloud_wind`
+  makes a `CALL` while it runs (a call at every flip cost 20 us). Where it stopped is kept as the column's place
+  in the panorama (`dw_p`), right however the ring turns meanwhile. A step
+  takes 4-5 pictures; mid-step a cloud can show one column twice for a
+  moment. 266 bytes (`cloud_wind`, `dw_char`: `tools/mkbush.py`
+  `cloud_wind_code`), in the fragments and the hidden lines. Tried first:
+  the same work from the interrupt at ~222 while the main code waited - it
+  hardly ever was, the cache's jobs filling that time.
 - **Timing.** The Gate Array interrupts come at fixed lines (~274, 14, 66,
   118, 170, 222), and each handler sets up the next one's, so none has to
   work out where the frame is. Each register is written with more than five
@@ -659,8 +681,9 @@ does not fit there goes on in the hidden lines the views on hills leave in
 pages 0 and 2 (since the frames are 20% bigger, 713-786 bytes a car), with
 each frame's way in (`RAM_C5`, then into bank 5) and `roll_done` (`RAM_C1`
 again, for `bush_spr_done`), 64 bytes: `CARn.BIN`'s records
-(`tools/mkbush.py` `roll_place`). The traffic's pieces that go there have
-925 bytes left after them (1711 before).
+(`tools/mkbush.py` `roll_place`). The traffic's pieces that go there had
+925 bytes left after them (1711 before); the clouds, their wind and the
+brake lights have taken all but 29.
 
 The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
@@ -1088,6 +1111,22 @@ cache, made for the curve level and `road_x` (`src/cache.asm`).
   bytes of places, `car_blinks`: buffer 0 addresses), called through
   `car_blink_go` in fragment 1 with
   what it needs of bank 7's in registers; ~0.05 ms.
+- **Its brake lights** (since 2026-11-17). The car's red lights are drawn
+  unlit, dark (`CAR_DARK`), and lit while it brakes: the player's brake in
+  the race, the braking to a standstill before the start, at TIME UP and
+  after FINISH (`brake_on`, set by `speed_player` and `demo_step`) - not in
+  a bump or a crash, up in the air or spun. Which cells are the lights,
+  per car and view: `tools/cars3d.py` `MASK` renders each view with the red
+  lights alone, white on black (`assets/cars/*_mask.png`), and
+  `tools/mkcars.py` takes the cells they cover half of (`BRAKE_CELLS` in
+  `tools/carsart.py`). Lit, each side's main light is a box three bytes wide
+  round it (`scene.brake_rects`), all `RED` (`scene.BRAKE_PEN`, per car),
+  the light glowing a little past its edges. `car_brake` (`src/brake.asm`,
+  bank 4, after the traffic's pieces) writes the view's two boxes from
+  `brake_tab` - per view 6 bytes, each car's own in its `CARn.BIN` (in the
+  hidden lines, with `brake_on`, `brake_ink` and `car_brake_go`, the way in
+  from bank 7). With the lights unlit the car's views are 2-4% quicker to
+  draw; lit, ~0.2 ms more.
 
 ### Bushes
 
@@ -1843,6 +1882,19 @@ average while flipping, 39.2 at worst once (the first hop, three rows up),
 none over 39.5, none late, none different; the road, the HUD, the sky with
 its clouds and the screen in the three R5 models as `scene.py` has them,
 for all four cars.
+
+With the wind and the brake lights (2026-11-17): the flip's interrupt
+never held back (from the interrupt at ~222 to it 3332 us at most, as
+before); the next picture starting at most 38 us after the flip (18
+before); the demo 37.6-38.2 ms at worst, and 37.8-38.1 with the brake
+lights lit in every picture; the jump test, 20 runs, 120000 pictures, 38.7
+ms at worst, none over 39.5, none late, none different; the road with the
+brake lights lit, every view, as `scene.py` has it (200 pictures a car);
+the road, the HUD, the sky and the screen in the three R5 models, for all
+four cars. One run of the jump test on the way, before the last change
+to the wind, met a flip of 39.75 ms (not late): the car two rows up in a
+dip on two lanes, its road 28.9 ms, the traffic and the bushes 4.2 - the
+wind idle, the brake lights not drawn in a crash; the flip as it was.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from

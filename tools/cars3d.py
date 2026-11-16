@@ -557,6 +557,40 @@ def place(car, pitch, yaw):
     car.location = p - e.to_matrix() @ p
 
 
+MASK = globals().get("MASK", False)        # the brake lights alone (render
+                                           # to <car>_<..>_<..>_mask.png)
+
+
+def mask_setup():
+    """The red lights (the brake lights) white, all else black - for
+    mkcars.py's brake_cells: which of a view's cells they are."""
+    off = principled("mask_off", (0, 0, 0), 1.0)
+    on = principled("mask_on", (0, 0, 0), 1.0, emit=(1, 1, 1), strength=8.0)
+    for ob in bpy.data.objects:
+        if ob.type != "MESH":
+            continue
+        part = ob.name.split(".")[0]
+        old = ob.data.materials[0].name.split(".")[0] if ob.data.materials else ""
+        lit = part == "light" and old == "RED"
+        for i in range(len(ob.data.materials)):
+            ob.data.materials[i] = on if lit and i == 0 else off
+    sc = bpy.context.scene
+    sc.render.engine = "CYCLES"
+    sc.cycles.device = "CPU"
+    sc.cycles.samples = 16
+    sc.cycles.use_denoising = False
+    sc.render.film_transparent = True
+    sc.render.filter_size = 1.0
+    sc.view_settings.view_transform = "Standard"
+    sc.view_settings.look = "None"
+    sc.render.image_settings.file_format = "PNG"
+    sc.render.image_settings.color_mode = "RGBA"
+    world = bpy.data.worlds.new("Black")
+    sc.world = world
+    world.use_nodes = True
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.0
+
+
 def render():
     paths = []
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -570,7 +604,9 @@ def render():
         root.scale = (1, 1, c3.SQUASH)
         car.parent = root
         c3.camera()
-        if PHOTO:
+        if MASK:
+            mask_setup()
+        elif PHOTO:
             photoreal(PAINT[name])
             photo_setup((math.radians(45), 0, 0))   # from behind, above
         else:
@@ -585,7 +621,8 @@ def render():
                 place(car, pitch, yaw)
                 if ground:
                     place(ground, pitch, 0.0)
-                p = os.path.join(OUT_DIR, "%s_%s_%s.png" % (name, vname, yname))
+                p = os.path.join(OUT_DIR, "%s_%s_%s%s.png" % (name, vname, yname,
+                                                             "_mask" if MASK else ""))
                 bpy.context.scene.render.filepath = p
                 bpy.ops.render.render(write_still=True)
                 paths.append(p)

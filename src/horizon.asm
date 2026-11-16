@@ -62,7 +62,9 @@ MEND
 ;; interrupt handler at a flip, which is always made while the game waits
 ;; for it in RAM_C1, so this bank is mapped; done before the sky part is on
 ;; screen (~1.4 ms from line ~274), so nothing is ever seen half done. May
-;; use AF, BC and HL only.
+;; use AF, BC and HL only. First, the main code sent out of the clouds' wind
+;; if the flip came in it (dw_flip: mkbush.py cloud_wind, which makes the
+;; LD HL a CALL while it runs).
 ;;
 ;; The sky part shows ring characters ring_w0 .. ring_w0 + 527, 48 a row.
 ;; Moving the start one on turns every row one word right: the character
@@ -71,6 +73,7 @@ MEND
 ;; the panorama. Moving it back is the same on the left.
 ;; ---------------------------------------------------------------------------
 ring_turn
+    ld hl,dw_flip               ; (self-modified: CALL in cloud_wind)
     ld a,(flip_head)
     ld hl,ring_head
     sub (hl)

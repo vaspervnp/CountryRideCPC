@@ -813,6 +813,11 @@ def prop_label(kind, s):
 # row) and cloud_map1 (the second; the plain sky's: sky_pairs).
 # All of it where only page 2 or the hidden lines are needed (it runs with
 # RAM_C3): what is left of the fragments, then the hidden lines.
+# The wind (since 2026-11-16, scene.CLOUD_WIND): cloud_col looks cc_drift
+# columns further right in the maps, and cloud_wind (main_spin: the main code
+# waiting for the flip, the beam past the clouds) moves that on a word every
+# CLOUD_WIND pictures, then writes each character on the screen that changes
+# again, a few a picture: the time is the game's to give.
 CLOUD_ROWS = 2
 
 
@@ -837,6 +842,8 @@ def cloud_data():
             nums.append(r if plain else tiles.setdefault(tuple(t), CLOUD_ROWS + len(tiles)))
         cmap.append(nums)
     assert CLOUD_ROWS + len(tiles) <= 256
+    assert all(n[-1] >= CLOUD_ROWS for n in cmap if any(t >= CLOUD_ROWS for t in n)), \
+        "clouds: cloud_wind tells a column has one from its last row's tile"
     return [list(t) for t in sorted(tiles, key=tiles.get)], cmap
 
 
@@ -851,31 +858,157 @@ def ring_row():
                   "    and hi(RING_BASE)+7", "    ld h,a"]
 
 
-CLOUD_COL_LEN = 138
+CLOUD_COL_LEN = 146
 
 
 def cloud_code():
     """cloud_col: ring_col's sky rows, the clouds in them (HL: the column's
     line 0 in the sky part's first row, DE #800): each row's tile from
-    cloud_map; back to ring_col_pano0 with DE on the next row's. Interrupts
-    off (POP), RAM_C3. ~40 us more than the plain sky's loop it replaces."""
+    cloud_map, cc_drift columns on (the wind); back to ring_col_pano0 with DE
+    on the next row's (cloud_wind: to ring_col_sp, ring_col's RET).
+    Interrupts off (POP), RAM_C3. ~45 us more than the plain sky's loop it
+    replaces."""
     out = ["cloud_col   ; (ring_col, horizon.asm) the sky rows' tiles, the clouds in them",
-           "    ex de,hl", "    ld a,(rc_col)", "    ld l,a", "    ld h,0", "    add hl,hl",
+           "    ex de,hl", "    ld a,(rc_col)",
+           "cc_drift", "    add a,0              ; (self-modified: the wind's columns, cloud_wind)",
+           "    cp PANO_WORDS", "    jr c,$+4", "    sub PANO_WORDS",
+           "    ld l,a", "    ld h,0", "    add hl,hl",
            "    ld bc,cloud_map0", "    add hl,bc            ; its first row's tile",
-           "    ld (cc_row0+2),hl", "    ld bc,cloud_map1-cloud_map0", "    add hl,bc",
+           "    ld (cc_row0+2),hl", "    ld bc,(cloud_map1-cloud_map0)&#FFFF", "    add hl,bc",
            "    ld (cc_row1+2),hl",
            "    ex de,hl", "    ld de,#800"]
     for r in range(CLOUD_ROWS):
         out += ["cc_row%d" % r, "    ld sp,(0)            ; (self-modified: its tile)"] + ring_row()
-    return out + ["    ex de,hl", "    jp ring_col_pano0",
+    return out + ["    ex de,hl",
+                  "cc_back", "    jp ring_col_pano0    ; (self-modified: cloud_wind's way back)",
                   "    ASSERT $-cloud_col == %d" % CLOUD_COL_LEN]
+
+
+def code_len(lines):
+    """The bytes generated code takes, as rasm assembles it (its outside
+    names given 16-bit values, its ASSERTs left out)."""
+    import re
+    import subprocess
+    import tempfile
+    body = [l for l in lines if not l.strip().startswith("ASSERT")]
+    own = {l.split()[0].lower() for l in body if l and not l[0].isspace()}
+    names = set()
+    for l in body:
+        parts = l.split(";")[0].split(None, 1)
+        if l[:1].isspace() and len(parts) > 1:
+            names |= {w.lower() for w in re.findall(r"[A-Za-z_][A-Za-z0-9_]*",
+                                                     re.sub(r"#[0-9A-Fa-f]+", "", parts[1]))}
+    regs = {"a", "b", "c", "d", "e", "h", "l", "af", "bc", "de", "hl", "sp", "ix", "iy",
+            "ixh", "ixl", "nz", "z", "nc", "hi", "lo", "m", "p", "po", "pe"}
+    outside = sorted(names - own - regs)
+    with tempfile.TemporaryDirectory() as d:
+        src = os.path.join(d, "t.asm")
+        open(src, "w").write("\n".join(["%s EQU #1234" % n for n in outside]
+                                        + ["    ORG #8000"] + body) + "\n")
+        subprocess.run([os.environ.get("RASM", "rasm"), src, "-o", os.path.join(d, "t")],
+                       check=True, capture_output=True)
+        return os.path.getsize(os.path.join(d, "t.bin"))
+
+
+def cloud_wind_code():
+    """cloud_wind: main_spin's, with the beam past the clouds and the flip
+    at the VSYNC (game.asm). Every CLOUD_WIND pictures the clouds a word left
+    (cc_drift), then each character of their rows on the screen with a cloud
+    in it or left of it written again from its tile (dw_char), four lines at
+    a time with interrupts off (~70 us) - from the VSYNC seen off: the
+    flip's interrupt comes ~70 us after it starts, or more. On the VSYNC it
+    stops; if the flip's interrupt comes first, it sends the main code out
+    at once (dw_flip, rup_flip: to dw_abort), so the next picture starts as
+    it would have. Where it stopped is kept as the column's place in the
+    panorama (dw_p), right however the ring turns meanwhile; the columns the
+    ring turns in are cloud_col's, already moved. RAM_C1 in and out (RAM_C3
+    meanwhile: noted in main_cfg for the flip). Destroys everything."""
+    out = [
+        "cloud_wind  ; (main_spin) the wind takes the clouds left",
+        "dw_wait", "    ld a,WIND_PICS       ; (self-modified: pictures to the next step)",
+        "    dec a", "    jr z,dw_due", "    ld (dw_wait+1),a", "    ret",
+        "dw_due", "    ld (dw_esp+1),sp     ; (dw_abort's way out)",
+        "    ld a,#CD             ; ring_turn calls dw_flip while the wind runs -",
+        "    ld (ring_turn),a", "    ld a,(flip_req)      ; unless the flip came just now",
+        "    or a", "    jr z,dw_stop",
+        "    ld a,RAM_C3", "    ld (main_cfg),a      ; (the flip's interrupt puts it back)",
+        "    ld b,#7F", "    out (c),a",
+        "dw_p", "    ld a,#FF             ; (self-modified: rc_col of the column to go on"
+        " from; #FF: a step to start)",
+        "    inc a", "    jr nz,dw_on",
+        "    ld a,(ring_head)     ; the step, from the screen's left edge: the",
+        "    ld (dw_p+1),a        ; clouds a word left",
+        "    ld hl,cc_drift+1",
+        "    ld a,(hl)", "    inc a", "    cp PANO_WORDS", "    jr c,$+3", "    xor a",
+        "    ld (hl),a", "    ld a,(dw_p+1)", "    inc a",
+        "dw_on", "    dec a", "    ld hl,ring_head", "    sub (hl)", "    jr nc,$+4",
+        "    add a,PANO_WORDS     ; its column on the screen (0..PANO_WORDS-1)",
+        "    cp PANO_WORDS*3/4    ; (gone off the left as the ring turned: from"
+        " the edge)",
+        "    jr c,dw_col", "    xor a",
+        "dw_col                  ; A = the column on the screen",
+        "    cp SCR_BYTES/2", "    jr nc,dw_done", "    ld (dw_j+1),a",
+        "    ld hl,ring_head", "    add a,(hl)", "    cp PANO_WORDS", "    jr c,$+4",
+        "    sub PANO_WORDS", "    ld (dw_p+1),a        ; (on from it, if it stops)",
+        "    ld hl,cc_drift+1", "    add a,(hl)", "    cp PANO_WORDS", "    jr c,$+4",
+        "    sub PANO_WORDS", "    add a,a", "    ld (dw_m+1),a        ; its tiles' place in"
+        " the maps",
+        "    ld hl,cloud_map1+1   ; the last row first: with no cloud there, a",
+        "    ld e,48              ; column has none",
+        "    call dw_char", "    jr c,dw_stop", "    jr z,dw_next",
+        "    ld hl,cloud_map0+1", "    ld e,0", "    call dw_char", "    jr c,dw_stop",
+        "dw_next", "dw_j", "    ld a,0               ; (self-modified: the column on the screen)",
+        "    inc a", "    jr dw_col",
+        "dw_done", "    ld a,#FF", "    ld (dw_p+1),a", "    ld a,WIND_PICS",
+        "    ld (dw_wait+1),a",
+        "dw_abort                ; (dw_flip: the flip came - its interrupt returns here)",
+        "dw_esp", "    ld sp,0              ; (self-modified: SP in cloud_wind)",
+        "dw_stop", "    ld a,#21             ; (ring_turn's LD HL again)", "    ld (ring_turn),a",
+        "    ld a,RAM_C1", "    ld (main_cfg),a", "    ld b,#7F", "    out (c),a",
+        "    ret",
+        ";; dw_flip - (ring_turn: the flip's interrupt, while the wind runs) the",
+        ";; main code sent out of it: its return to dw_abort. Destroys HL.",
+        "dw_flip", "    ld hl,(isr_sp+1)", "    ld (hl),lo(dw_abort)", "    inc hl",
+        "    ld (hl),hi(dw_abort)", "    ret",
+        "    ASSERT hi(sky_pairs) >= #C0 && SCR_BYTES/2+48 < 256"]
+    char = [
+        ";; dw_char - HL = a row's map + 1, E = the row's characters on in the ring:",
+        ";; its character in the column written again if it or the one left of it",
+        ";; has a cloud (NZ). C: the VSYNC is on - no time.",
+        "dw_char", "dw_m", "    ld bc,0              ; (self-modified: its place in the maps)",
+        "    add hl,bc", "    ld a,(hl)", "    dec hl", "    dec hl",
+        "    and (hl)             ; (left of the first: the byte before the map -"
+        " the last has none,",
+        "    cp hi(sky_pairs)&#C0 ; written again at worst; the plain sky's tiles in"
+        " bank 7)",
+        "    jr c,dw_cloud", "    xor a                ; (Z: none, NC)", "    ret",
+        "dw_cloud", "    inc hl", "    ld c,(hl)", "    inc hl", "    ld b,(hl)",
+        "    ld (dw_t+1),bc       ; its tile",
+        "    ld hl,(ring_w0)      ; its character in the ring", "    ld a,(dw_j+1)",
+        "    add a,e", "    add a,l", "    ld l,a", "    jr nc,$+3", "    inc h", "    ld a,h",
+        "    and hi(RING_WORDS-1)", "    ld h,a", "    add hl,hl", "    ld a,h",
+        "    or hi(RING_BASE)", "    ld h,a", "    ld de,#800",
+        "dw_half", "    ld b,#F5             ; the VSYNC: the flip's interrupt next",
+        "    in a,(c)", "    rra", "    ret c", "    di",
+        "    ld (dw_sp+1),sp", "dw_t", "    ld sp,0              ; (self-modified: the"
+        " tile's next four lines)"]
+    char += ring_row()[:20]
+    char += ["    ld (dw_t+1),sp", "dw_sp", "    ld sp,0              ; (self-modified)", "    ei",
+             "    bit 7,h              ; (line 4: #6x, past line 7: #8x)", "    jr z,dw_half",
+             "    or 1                 ; (NZ: written, NC)", "    ret",
+             "    ASSERT hi(RING_BASE) == #40"]
+    return out, char
 
 
 def cloud_items():
     """The clouds' code, map and tiles: (label, lines, bytes)."""
     tiles, cmap = cloud_data()
     addr = lambda n: "sky_pairs+%d" % (16 * n) if n < CLOUD_ROWS else "cloud_t%d" % n
-    items = [("cloud_col", cloud_code(), CLOUD_COL_LEN)]
+    wind, char = cloud_wind_code()
+    items = [("cloud_col", cloud_code(), CLOUD_COL_LEN),
+             ("cloud_wind", wind, code_len(wind)), ("dw_char", char, code_len(char))]
+    assert all(t < CLOUD_ROWS for t in cmap[-1]), \
+        "clouds: cloud_wind looks left of the first column, before cloud_map1: the last plain"
     for r in range(CLOUD_ROWS):
         items.append(("cloud_map%d" % r, ["cloud_map%d   ; per panorama column, the tile of the"
                                           " sky part's row %d: 8 lines of a word" % (r, r)]
@@ -903,6 +1036,37 @@ def cloud_place(items, runs):
 def defb_lines(data):
     return ["    defb " + ",".join("#%02X" % v for v in data[j:j + 16])
             for j in range(0, len(data), 16)]
+
+
+# The brake lights (src/brake.asm, since 2026-11-17): brake_on, brake_ink and
+# brake_tab in the hidden lines, as the traffic's pieces are - zeros there,
+# then each CARn.BIN's own ink and boxes over them.
+BRAKE_LEN = 2 + 6 * S.SPIN_VIEW
+BRAKE_GO = [                    # (where both RAM_C1 and RAM_C4 see it)
+    ";; car_brake_go - (draw_picture: not in a bump or a crash) the car's brake",
+    ";; lights, braking (brake_on: game.asm demo_step, speed_player) - car_brake",
+    ";; (bank 4). H = car_vfull; DE, HL, IX kept; A 0 after. RAM_C1 in and out.",
+    "car_brake_go", "    ld a,(brake_on)", "    or a", "    ret z", "    push de", "    push hl",
+    "    ld bc,#7F00+RAM_C4", "    out (c),c", "    call car_brake", "    ld bc,#7F00+RAM_C1",
+    "    out (c),c", "    pop hl", "    pop de", "    xor a", "    ret"]
+
+
+def brake_table(car_id):
+    """A car's brake_ink, then per car_view 0-8 its lit lights' boxes
+    (scene.brake_rects, BRAKE_W bytes wide), left then right: the first
+    byte in buffer 0, the car in the middle, and the lines."""
+    S.set_car(car_id)
+    out = [G.m0_solid(G.PEN[S.BRAKE_PEN[S.CARS[car_id]]])]
+    for v in range(S.SPIN_VIEW):
+        for t, b, w, h in S.brake_rects(v):
+            a = line_addr(S.CAR_Y + t) + b
+            assert 0x8000 <= a < 0xC000 and w == S.BRAKE_W == 3 and 1 <= h <= 8
+            assert all((line_addr(S.CAR_Y + t + k) + b) >> 8 ==
+                       (line_addr(S.CAR_Y + t + k) + b + w - 1) >> 8 for k in range(h))
+            out += [a & 0xFF, a >> 8, h]
+    S.set_car(0)
+    assert len(out) == BRAKE_LEN - 1
+    return out
 
 
 def blink_table(car_id):
@@ -977,6 +1141,9 @@ def cars_asm(pieces, ends, codes, traffic):
                       "    ORG #%04X,%s_ph" % (addr, p),
                       p] + code + ["%s_end" % p,
                                    "    ORG %s_ph+%s_end-%s" % (p, p, p)]
+        tab = brake_table(n)
+        lines += ["    defw brake_ink,%d                 ; (its brake lights: brake_table)"
+                  % len(tab)] + defb_lines(tab)
         lines += ["    defw #FFFF", "car%d_blob_end" % n,
                   "    ASSERT car%d_blob_end <= FRAG7   ; (in place before boot_car)" % n,
                   '    SAVE "build/car%d.raw",CAR_BLOB,car%d_blob_end-CAR_BLOB'
@@ -1223,12 +1390,20 @@ def main():
     r[2] += ["flip_tab   ; the flip, a picture at a time: the rows up x 32 + car_vfull"]
     r[2] += defb_lines(flip)
     r[1] -= len(flip)
+    brake = [("brake_on", BRAKE_GO + [
+        "brake_on    ; braking: the lights lit (brake.asm; game.asm demo_step)",
+        "    defb 0", "brake_ink   ; ... in this (CARn.BIN: brake_table)",
+        "    defb 0", "brake_tab   ; ... per car_view 0-8, two boxes",
+        "    defs %d,0" % (6 * S.SPIN_VIEW)], BRAKE_LEN + code_len(BRAKE_GO))]
+    if cloud_place(brake, hidden)[0]:
+        raise SystemExit("brake: no room in the hidden lines for its %d bytes" % BRAKE_LEN)
     cloud_left, cloud_hidden = cloud_place(cloud_left, hidden)
     if cloud_left:
         raise SystemExit("clouds: no room in the fragments or the hidden lines for %s"
                          % ", ".join(l for l, ls, n in cloud_left))
     traf_hidden = [(r[0], "#%04X" % r[0], r[2]) for r in hidden if r[2]]
-    traf_hidden_used = sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden)) - cloud_hidden
+    traf_hidden_used = (sum(ln - r[1] for (a, ln), r in zip(hidden0, hidden)) - cloud_hidden
+                        - BRAKE_LEN - code_len(BRAKE_GO))
     pieces = [a + b + c + d for a, b, c, d in zip(pieces, p2, hill_pieces, roll_hidden)]
     view_code = (["car_code0", "car_code1", "car_code2"] + ["#%04X" % a for a in hill_starts]
                  + ["#%04X" % a for a in roll_entries])
@@ -1377,6 +1552,9 @@ def main():
          % CLOUD_ROWS)
     emit(";; ... clouds' (cloud_col, cloud_map0/1, cloud_tN: in the fragments and the")
     emit(";; hidden lines)")
+    emit("WIND_PICS     EQU %d   ; pictures a word the wind takes them left"
+         % S.CLOUD_WIND)
+    emit(";; (cloud_wind: scene.CLOUD_WIND)")
     emit("ROLL_ABOVE    EQU %d   ; ... its lines this far above CAR_Y at most"
          % S.ROLL_ABOVE)
     emit("FLIP_T        EQU %d   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)"
@@ -1477,7 +1655,7 @@ def main():
           "hidden lines (CARn.BIN): %d bytes, %d left there"
           % (traf_used, sum(r[1] for r in runs), traf_hidden_used, sum(r[1] for r in hidden)))
     print("  the clouds: %d tiles; %d bytes in the fragments, %d in the hidden lines"
-          % (len(citems) - 1 - CLOUD_ROWS, cloud_frag, cloud_hidden))
+          % (len(citems) - 3 - CLOUD_ROWS, cloud_frag, cloud_hidden))
     for c, cars in enumerate(allcars):
         print("  car %d: %d lines; views %s bytes of code, %s us"
               % (c, S.CAR_H, "/".join(str(sum(SIZE[kind(t)] for t, st in car))

@@ -224,9 +224,13 @@ main_wait                       ; the cache's work until the flip
 main_job                        ; (tools: timing)
     jr main_wait
 main_spin
+    ld a,(irq_n)                ; the frame's last interrupt before the
+    cp 2*6-1                    ; flip: the beam past the clouds, the time
+    call z,cloud_wind           ; till the VSYNC the wind's on them
+main_spun                       ; (cloud_wind: tools/mkbush.py)
     ld a,(flip_req)
     or a
-    jr nz,main_spin
+    jr nz,main_spun
 main_flipped
     ld a,(back_buf)
     ld (front_buf),a
@@ -287,6 +291,8 @@ pic_bushes
     ld de,(car_x)               ; it needs of bank 7's - car_off, car_vfull
     ld hl,(car_view)            ; next)
     ld ix,(car_id)
+    or a                        ; and its brake lights, not in a bump or a
+    call z,car_brake_go         ; crash (mkbush.py brake.asm) - A kept
     call car_blink_go
 pic_car
     ld a,(irq_n)                ; the HUD, with the time left (RAM_C1)
@@ -1173,6 +1179,8 @@ sp_crash_brk
     jr sp_less
 sp_brake                        ; C = the brake's: on the grass less
     ld bc,GRASS_BRK*256+SPEED_BRK
+    ld a,c
+    ld (brake_on),a
     call grass_pick             ; (player.asm)
 sp_drag                         ; the drag by the speed (drag_tab), and C
     ld a,h
@@ -1283,6 +1291,8 @@ speed_acc
 ;; - the camera, the sky's turn, the race's rules.
 ;; ---------------------------------------------------------------------------
 demo_step
+    xor a                       ; (the brake lights: lit below if braking -
+    ld (brake_on),a             ; brake.asm)
     ld a,(player)               ; the tools' (#FF, or as the player: once
     inc a                       ; faster or slower is pressed, the keys')
     jr z,demo_cycle
@@ -1294,6 +1304,7 @@ demo_step
     jr c,demo_mode
     ld hl,(speed)               ; time up: braking
     ld a,SPEED_STOP
+    ld (brake_on),a
     jp sp_less
 demo_mode
     or a
@@ -1343,6 +1354,8 @@ demo_acc_ok
 demo_brake
     ex de,hl
     ld bc,SPEED_STOP
+    ld a,c
+    ld (brake_on),a
 demo_less
     or a
     sbc hl,bc

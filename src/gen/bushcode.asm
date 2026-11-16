@@ -105,17 +105,15 @@ car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5E4F
+    ld hl,#5E6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8FAD
+    push bc
+    push bc
+    ld hl,#9FAD
     push hl
     ld hl,#C86E
     add hl,sp
@@ -137,17 +135,14 @@ car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9F4F
+    ld hl,#9F6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8F6F
+    push bc
+    push bc
     push hl
     ld hl,#080E
     add hl,sp
@@ -274,7 +269,7 @@ car_code0
     push de
     push bc
     jp bush_spr_done
-    defs 9   ; (another car's is longer)
+    defs 21   ; (another car's is longer)
 bush_c0
     ld de,#C3C3
     ld ix,#C300
@@ -320,14 +315,13 @@ bush_c0
     ld bc,#0000
     push bc
     jp bush_spr_done
-prop_dead0   ; dead, size 0: 5 lines
-    defb #01,#03,#05,#05,#11,#FC
-    ASSERT $ <= #4800
-    ORG #4E00
 bush_c1
     ld de,#C3C3
     ld sp,hl
     ei
+    jp #4E00
+    ASSERT $ <= #4800
+    ORG #4E00
     ld bc,#0801
     di
     add hl,bc
@@ -612,12 +606,12 @@ bush_c4
     ld sp,hl
     ei
     ld bc,#0802
-    jp #5600
-    ASSERT $ <= #5000
-    ORG #5600
     di
     add hl,bc
     bit 6,h
+    jp #5600
+    ASSERT $ <= #5000
+    ORG #5600
     call nz,bush_next_row
     push iy
     ld bc,#8343
@@ -902,12 +896,12 @@ bush_c6
     bit 6,h
     call nz,bush_next_row
     ld bc,#82C3
-    jp #5E00
-    ASSERT $ <= #5800
-    ORG #5E00
     push bc
     ld b,#43
     push bc
+    jp #5E00
+    ASSERT $ <= #5800
+    ORG #5E00
     ld bc,#0343
     push bc
     push de
@@ -1168,17 +1162,15 @@ car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#8F0F
+    ld hl,#8F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -1199,20 +1191,15 @@ car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#CF3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#0F0F
-    push hl
-    jp #6600
-    ASSERT $ <= #6000
-    ORG #6600
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -1222,6 +1209,10 @@ car_code1
     di
     push hl
     push de
+    jp #6600
+    defs 2   ; (another car's is longer)
+    ASSERT $ <= #6000
+    ORG #6600
     ld hl,#2A3F
     push hl
     push de
@@ -1337,7 +1328,7 @@ car_code1
     push de
     push bc
     jp bush_spr_done
-    defs 116   ; (another car's is longer)
+    defs 128   ; (another car's is longer)
 prop_dir
     defw prop_palm0,prop_palm1,prop_palm2,prop_palm3,prop_palm4,prop_palm5,prop_palm6,prop_palm7
     defw prop_stump0,prop_stump1,prop_stump2,prop_stump3,prop_stump4,prop_stump5,prop_stump6,prop_stump7
@@ -1353,9 +1344,9 @@ prop_stump7   ; stump, size 7: 24 lines
     defb #A1,#C3,#C3,#01,#12,#C3,#22,#43,#00,#A1,#C3,#C3,#01,#12,#C3,#22
     defb #43,#00,#91,#C3,#01,#12,#C3,#22,#3F,#00,#91,#C3,#01,#25,#CF,#00
     defb #91,#C3
-prop_palm4   ; palm, size 4: 21 lines
-    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
-    defb #91,#C3
+prop_stump3   ; stump, size 3: 9 lines
+    defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
+    defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
     ASSERT $ <= #6800
     ORG #6E00
 prop_palm6   ; palm, size 6: 34 lines
@@ -1448,7 +1439,7 @@ prop_curve5   ; curve, size 5: 13 lines
 prop_curve_r4   ; curve_r, size 4: 10 lines
     defb #01,#03,#05,#0A,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #01,#B0,#11,#22,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-prop_curve2   ; curve, size 2: 6 lines
-    defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
-    defb #33,#33
+prop_palm4   ; palm, size 4: 21 lines
+    defb #04,#08,#10,#15,#14,#9F,#03,#C3,#C3,#C3,#C3,#C3,#02,#23,#C3,#C3
+    defb #91,#C3
     ASSERT $ <= #8000

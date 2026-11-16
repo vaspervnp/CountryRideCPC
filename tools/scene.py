@@ -272,6 +272,12 @@ CLOUDS = [
     (143, [(350, 6, 3), (358, 7, 5), (367, 5, 3)]),
 ]
 CLOUD_TOP_PEN, CLOUD_BASE_PEN = PEN["WHITE"], PEN["PASTEL"]
+# And the wind takes them left, on their own, a word (4 pixels) every
+# CLOUD_WIND pictures (25 a second) - in the time the game has to spare: the
+# main code waiting for the flip, the beam past the clouds (cloud_wind:
+# tools/mkbush.py), a few characters a picture. 30: across the screen in
+# about a minute.
+CLOUD_WIND = 30
 _cloud_cache = []
 
 
@@ -1120,7 +1126,7 @@ def draw_traffic(lines, y0, hill, zcam, curve, cars, x=0, lanes=None):
 # it out to whole pairs. Every car's views are over the same lines.
 # ---------------------------------------------------------------------------
 
-from carsart import GAME_ART, GAME_GROUND, GAME_R0  # noqa: E402
+from carsart import GAME_ART, GAME_GROUND, GAME_R0, BRAKE_CELLS  # noqa: E402
 from rollart import ROLL_ART, ROLL_Y  # noqa: E402
 import outrun as OR  # noqa: E402
 
@@ -1360,13 +1366,74 @@ assert all(v < 0x1000 for v in TOP_SPEED.values())    # (speed / 16: a byte)
 assert all(len(a) == CAR_H for c in CARS for a in GAME_ART[c])
 
 
+# The brake lights (since 2026-11-17): the car's red lights are drawn unlit,
+# in CAR_DARK (BRAKE_CELLS: tools/mkcars.py, from cars3d.py's MASK renders);
+# braking, each side's lit - a box of whole bytes round its main light (the
+# cells within BRAKE_GAP rows of each other, the most of them), BRAKE_W
+# bytes wide, all RED, the light glowing a little past its edges (src/brake.asm car_brake: the boxes
+# from tools/mkbush.py brake_table). Not in a bump or a crash, nor in the
+# air or spun.
+BRAKE_GAP = 2
+BRAKE_W = 3                     # bytes a lit light's box (brake.asm: written
+                                # three at a time)
+BRAKE_PEN = dict(player="RED", ferrari="RED", lotus="RED", bmw="RED")   # lit
+
+
+def unlit(car_id):
+    """GAME_ART's views 0-8 of a car, its brake lights unlit."""
+    out = []
+    for v, art in enumerate(GAME_ART[CARS[car_id]][:SPIN_VIEW]):
+        rows = [list(r) for r in art]
+        for j, x in BRAKE_CELLS[CARS[car_id]][v]:
+            rows[j][x] = "D"
+        out.append(["".join(r) for r in rows])
+    return out
+
+
+def brake_rects(view):
+    """The picked car's lit brake lights seen as car_view `view` (0-8):
+    [(top line from CAR_Y, first byte from the screen's left, bytes, lines)],
+    the left one then the right one."""
+    cells = BRAKE_CELLS[CARS[CAR_ID]][view]
+    art = CAR_ARTS[view]
+    half = len(art[0]) // 2
+    out = []
+    for side in (lambda x: x < half, lambda x: x >= half):
+        left = {c for c in cells if side(c[1])}
+        groups = []
+        while left:
+            todo, g = [left.pop()], set()
+            while todo:
+                c = todo.pop()
+                g.add(c)
+                near = {d for d in left if abs(d[0] - c[0]) <= BRAKE_GAP and abs(d[1] - c[1]) <= 1}
+                left -= near
+                todo += near
+            groups.append(g)
+        g = max(groups, key=lambda g: (len(g), -min(c[0] for c in g)))
+        t0, t1 = min(j for j, x in g), max(j for j, x in g)
+        b0 = (view_x(view) + min(x for j, x in g)) // 2
+        b1 = (view_x(view) + max(x for j, x in g)) // 2
+        while b1 - b0 + 1 < BRAKE_W:            # wider, towards the middle
+            if 2 * (b0 + b1 + 1) < SCR_W:
+                b1 += 1
+            else:
+                b0 -= 1
+        assert b1 - b0 + 1 == BRAKE_W and all(
+            art[j][2 * b - view_x(view) + k] != "."
+            for j in range(t0, t1 + 1) for b in range(b0, b1 + 1) for k in (0, 1)), view
+        out.append((t0, b0, BRAKE_W, t1 - t0 + 1))
+    assert all(h <= 8 for t, b, w, h in out), out
+    return out
+
+
 def set_car(car_id):
     """The car picked: CAR_ARTS (per car_view), its width CAR_W (pixels,
     the same either side of the middle) and its left edge CAR_X - a spun
     view's box is wider, its left edge view_x."""
     global CAR_ID, CAR_ARTS, CAR_W, CAR_X
     CAR_ID = car_id
-    CAR_ARTS = GAME_ART[CARS[car_id]] + ROLL_ART[CARS[car_id]]
+    CAR_ARTS = unlit(car_id) + GAME_ART[CARS[car_id]][SPIN_VIEW:] + ROLL_ART[CARS[car_id]]
     CAR_W = len(CAR_ARTS[0][0])
     CAR_X = (SCR_W - CAR_W) // 2
     assert CAR_W % 4 == 0 and CAR_X % 2 == 0 and len(CAR_ARTS) == ROLL_VIEW + ROLL_FRAMES
@@ -1550,12 +1617,13 @@ def car_blinker(view, car_id=None):
                  for j, i in (left, right))
 
 
-def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
+def draw_car(lines, y0, view=0, off=0, up=0, blink=0, brake=False):
     """Draw the car into `lines` (pen rows, the first being line y0), seen
     as car_view `view` says, `off` pairs right of the middle (the game's
     car_off), `up` character rows higher (thrown up in a crash: jump.asm's
     car_up) - its shadow on the road under it then (bush.asm car_shadow) -
-    its indicator lit if `blink` (1 left, 2 right: signal.asm car_lit)."""
+    its brake lights lit if `brake` (brake.asm car_brake), its indicator
+    if `blink` (1 left, 2 right: signal.asm car_lit)."""
     if up:
         w = SHADOW_W - 2 * up
         mid = SCR_W // 2 + 4 * off
@@ -1567,6 +1635,11 @@ def draw_car(lines, y0, view=0, off=0, up=0, blink=0):
             if c != ".":
                 lines[CAR_Y + view_y(view) - 8 * up + j - y0][view_x(view) + 4 * off + i] = \
                     PEN[CAR_PEN[c]]
+    if brake:
+        for t, b, w, h in brake_rects(view):
+            for j in range(t, t + h):
+                for x in range(2 * b, 2 * (b + w)):
+                    lines[CAR_Y - 8 * up + j - y0][x + 4 * off] = PEN[BRAKE_PEN[CARS[CAR_ID]]]
     if blink:
         t, b = car_blinker(view)[blink - 1]
         for j in range(t, t + CAR_BLINK_LINES):
@@ -1610,16 +1683,17 @@ def pano_y0():
     return SKY_Y + (mountains_top() - SKY_Y) // 8 * 8
 
 
-def sky_lines(heading=0):
+def sky_lines(heading=0, drift=0):
     """The sky part, lines SKY_Y..BLOCK_BOTTOM-1, looking `heading` words
-    to the right. The dithered sky repeats every word, so only the mountains
-    and the clouds move."""
+    to the right, the clouds `drift` words left of where they started (the
+    wind: CLOUD_WIND). The dithered sky repeats every word, so only the
+    mountains and the clouds move."""
     top, pano = horizon_panorama()
     clouds = cloud_pens()
     out = []
     for y in range(SKY_Y, BLOCK_BOTTOM):
         if y < top:
-            out.append([clouds.get(((x + 4 * heading) % PANORAMA_W, y),
+            out.append([clouds.get(((x + 4 * (heading + drift)) % PANORAMA_W, y),
                                    sky_pen(x, y)) for x in range(SCR_W)])
         else:
             row = pano[y - top]
@@ -1629,7 +1703,7 @@ def sky_lines(heading=0):
 
 def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
               car_off=0, traffic=(), prop=None, only=None, car_up=0, lanes=None,
-              car_blink=0):
+              car_blink=0, car_brake=False):
     """The road part: lines ROAD_AREA_Y..SCR_H-1, ground then the road, the
     traffic (traffic_items' cars), the prop in sight (prop_item's), the
     bushes (those in `only`, if given) and the car (seen as car_view
@@ -1643,7 +1717,7 @@ def road_area(hill=0, zcam=0, curve=0, bushes=True, x=0, car=True, view=0,
     if bushes:
         draw_bushes(lines, ROAD_AREA_Y, hill, zcam, curve, x, only)
     if car:
-        draw_car(lines, ROAD_AREA_Y, view, car_off, car_up, car_blink)
+        draw_car(lines, ROAD_AREA_Y, view, car_off, car_up, car_blink, car_brake)
     return lines
 
 

@@ -122,23 +122,49 @@ def spin_view(name, width):
     return [r[mkcar.MID - half:mkcar.MID + half] for r in rows]
 
 
+# The brake lights (since 2026-11-17): cars3d.py MASK renders each view with
+# the red lights alone, white on black (<car>_<pitch>_<turn>_mask.png); a
+# cell they cover BRAKE_COVER of is a light's. The game draws them unlit
+# (scene.py: CAR_DARK) and, braking, lit (brake_rects).
+BRAKE_COVER = 0.5
+
+
+def mask_cells(path):
+    """The cells of a MASK render the lights cover, as fractions."""
+    im = mkcar.narrow(Image.open(path).convert("RGBA"))
+    (w, h), (cw, ch) = mkcar.CELLS, mkcar.CELL_PX
+    px = im.load()
+    return [[sum(px[x, y][0] * px[x, y][3] for y in range(cy * ch, (cy + 1) * ch)
+                 for x in range(cx * cw, (cx + 1) * cw)) / (cw * ch * 255.0 * 255.0)
+             for cx in range(w)] for cy in range(h)]
+
+
 def car_views(name):
-    """{pitch: {turn: art}} for one car, all in one box."""
-    renders = []
+    """({pitch: {turn: art}} for one car, all in one box; the pixels drawn;
+    the box's top row; {pitch: {turn: its brake lights' cells (row, x)}})."""
+    renders, masks = [], []
     for p in PITCHES:
         for v in ("0", "left"):
             path = os.path.join(SRC, "%s_%s_%s.png" % (name, p, v))
             renders.append(flat_pens(name, path, mkcar.CELLS))
+            masks.append(mask_cells(os.path.join(SRC, "%s_%s_%s_mask.png" % (name, p, v))))
     drawn, arts, (top, bottom) = min(mkcar.fit(renders, ph) for ph in (0, 2))
-    out = {}
+    half = len(arts[0][0]) // 2
+    cells = [{(j, x) for j, r in enumerate(m[top:bottom + 1])
+              for x, f in enumerate(r[mkcar.MID - half:mkcar.MID + half]) if f >= BRAKE_COVER}
+             for m in masks]
+    out, lights = {}, {}
     for i, p in enumerate(PITCHES):
         straight, left = arts[2 * i], arts[2 * i + 1]
         out[p] = dict(left=left, straight=straight, right=[r[::-1] for r in left])
+        lights[p] = dict(straight=cells[2 * i], left=cells[2 * i + 1],
+                         right={(j, 2 * half - 1 - x) for j, x in cells[2 * i + 1]})
     for p in PITCHES:
         for t in TURNS:
             for r in out[p][t]:
                 assert "." not in r.strip("."), (name, p, t, r)
-    return out, drawn, top
+            assert all(out[p][t][j][x] != "." for j, x in lights[p][t]), (name, p, t)
+    return out, drawn, top, lights
 
 
 def sheet(cars, path, sx=3, sy=3):
@@ -179,7 +205,7 @@ def sheet(cars, path, sx=3, sy=3):
 VIEWS = [(p, t) for p in PITCHES for t in ("straight", "left", "right")]   # car_view
 
 
-def game_art(cars, tops):
+def game_art(cars, tops, lights):
     """The views the race draws, in car_view's order (on the level, uphill,
     downhill; each straight, turning left, turning right; then spun left
     and right), every car's over the same lines of the renders (the ground
@@ -218,6 +244,16 @@ def game_art(cars, tops):
             out += ['            "%s",' % r for r in art]
             out.append("        ],")
         out.append("    ],")
+    out += ["}", "",
+            "# Their brake lights' cells (mkcars.py BRAKE_COVER), (row, x) in",
+            "# GAME_ART[car][car_view] for car_view 0-8: drawn unlit, CAR_DARK -",
+            "# braking, lit (scene.py brake_rects).",
+            "BRAKE_CELLS = {"]
+    for name in CARS:
+        out.append('    "%s": [' % name)
+        for p, t in VIEWS:
+            out.append("        %s," % sorted((tops[name] + j - r0, x) for j, x in lights[name][p][t]))
+        out.append("    ],")
     out += ["}", ""]
     return out
 
@@ -230,11 +266,11 @@ def main():
              "down, turn left, straight or right - rows of mode 0 pixels, letters as",
              "tools/mkcars.py LETTERS, '.' none.", '"""', "", "CARS_ART = {"]
     only = sys.argv[1:]
-    tops = {}
+    tops, lights = {}, {}
     for name in CARS:
         if only and name not in only:
             continue
-        cars[name], drawn, tops[name] = car_views(name)
+        cars[name], drawn, tops[name], lights[name] = car_views(name)
         a = cars[name]["flat"]["straight"]
         print("%s: %d x %d pixels, %d drawn in its six rendered views"
               % (name, len(a[0]), len(a), drawn))
@@ -250,7 +286,7 @@ def main():
     lines.append("}")
     lines.append("")
     if not only:
-        lines += game_art(cars, tops)
+        lines += game_art(cars, tops, lights)
     open(os.path.join(ROOT, "tools", "carsart.py"), "w").write("\n".join(lines))
     os.makedirs(os.path.join(ROOT, "build"), exist_ok=True)
     sheet(cars, os.path.join(ROOT, "build", "cars-sheet.png"))

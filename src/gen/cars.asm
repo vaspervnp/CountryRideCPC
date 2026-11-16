@@ -22,12 +22,12 @@ car0_diff
     defw #83F5,car_code2
     defw #AB93,#42A0
     defw #AB91,#6AA0
-    defw #AB93,#F145
-    defw #8BF3,#F3BD
-    defw #8BF3,#F571
-    defw #8BF3,#F793
-    defw #83F5,#F9B1
-    defw #83F5,#FC7F
+    defw #AB93,#F146
+    defw #8BF3,#F3B9
+    defw #8BF3,#F56A
+    defw #8BF3,#F78C
+    defw #83F5,#F9AA
+    defw #83F5,#FC78
     defw #B2CD,#8008
     defw #B3F7,#8010
     defw #B32E,#8018
@@ -147,17 +147,15 @@ car0_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5E4F
+    ld hl,#5E6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8FAD
+    push bc
+    push bc
+    ld hl,#9FAD
     push hl
     ld hl,#C86E
     add hl,sp
@@ -179,17 +177,14 @@ car0_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9F4F
+    ld hl,#9F6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8F6F
+    push bc
+    push bc
     push hl
     ld hl,#080E
     add hl,sp
@@ -318,9 +313,9 @@ car0_car_code0
     jp bush_spr_done
 car0_p0_end
     ORG car0_p0_ph+car0_p0_end-car0_p0
-    defw #5F1A,car0_p1_end-car0_p1
+    defw #5F16,car0_p1_end-car0_p1
 car0_p1_ph
-    ORG #5F1A,car0_p1_ph
+    ORG #5F16,car0_p1_ph
 car0_p1
 car0_car_code1
     ld de,#0000
@@ -424,17 +419,15 @@ car0_car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#8F0F
+    ld hl,#8F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -455,24 +448,15 @@ car0_car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#CF3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#0F0F
-    push hl
-    jp #6600
-car0_p1_end
-    ORG car0_p1_ph+car0_p1_end-car0_p1
-    defw #6600,car0_p2_end-car0_p2
-car0_p2_ph
-    ORG #6600,car0_p2_ph
-car0_p2
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -482,6 +466,13 @@ car0_p2
     di
     push hl
     push de
+    jp #6600
+car0_p1_end
+    ORG car0_p1_ph+car0_p1_end-car0_p1
+    defw #6600,car0_p2_end-car0_p2
+car0_p2_ph
+    ORG #6600,car0_p2_ph
+car0_p2
     ld hl,#2A3F
     push hl
     push de
@@ -605,12 +596,16 @@ car0_p3_ph
 car0_p3
 car0_car_code2
     ld de,#0000
-    ld bc,#3F3F
-    ld ix,#0F0F
-    ld iy,#3F1F
     ld sp,hl
     ei
-    ld hl,#FC3F
+    ld bc,#FC3F
+    di
+    push bc
+    ld hl,#3F3F
+    push hl
+    push hl
+    push hl
+    ld hl,#0808
     jp #8F40
 car0_p3_end
     ORG car0_p3_ph+car0_p3_end-car0_p3
@@ -618,25 +613,19 @@ car0_p3_end
 car0_p4_ph
     ORG #8F40,car0_p4_ph
 car0_p4
-    di
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#0808
     add hl,sp
     ld sp,hl
     ei
     ld hl,#9F85
     di
     push hl
-    ld hl,#4000
-    push hl
+    ld bc,#4000
+    push bc
     push de
-    ld hl,#806A
-    push hl
-    ld hl,#ADFC
-    push hl
+    ld bc,#806A
+    push bc
+    ld bc,#ADFC
+    push bc
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -646,8 +635,8 @@ car0_p4
     push hl
     push de
     push de
-    ld hl,#002A
-    push hl
+    ld bc,#002A
+    push bc
     ld hl,#0FFC
     push hl
     ld hl,#080C
@@ -657,6 +646,10 @@ car0_p4
     ld hl,#FC7E
     di
     push hl
+    ld hl,#1F0F
+    push hl
+    push de
+    push de
     jp #959A
 car0_p4_end
     ORG car0_p4_ph+car0_p4_end-car0_p4
@@ -664,10 +657,6 @@ car0_p4_end
 car0_p5_ph
     ORG #959A,car0_p5_ph
 car0_p5
-    ld hl,#1F0F
-    push hl
-    push de
-    push de
     ld hl,#000A
     push hl
     ld hl,#0FFC
@@ -681,9 +670,11 @@ car0_p5
     push hl
     ld hl,#1F0F
     push hl
-    push bc
-    push bc
-    push iy
+    ld hl,#3F3F
+    push hl
+    push hl
+    ld l,#1F
+    push hl
     ld hl,#0FAD
     push hl
     ld hl,#080C
@@ -693,12 +684,13 @@ car0_p5
     ld hl,#DE4F
     di
     push hl
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld hl,#0FAD
+    ld hl,#0F0F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#AD
     push hl
     ld hl,#080E
     add hl,sp
@@ -709,10 +701,11 @@ car0_p5
     push hl
     ld hl,#2F3F
     push hl
-    push bc
-    push bc
-    push bc
-    push bc
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    push hl
     ld hl,#1FAD
     push hl
     ld hl,#080E
@@ -722,8 +715,11 @@ car0_p5
     ld hl,#3F8F
     di
     push hl
-    push ix
-    push bc
+    ld l,#3F
+    push hl
+    push hl
+    push hl
+    push hl
     jp #9755
 car0_p5_end
     ORG car0_p5_ph+car0_p5_end-car0_p5
@@ -731,10 +727,8 @@ car0_p5_end
 car0_p6_ph
     ORG #9755,car0_p6_ph
 car0_p6
-    push bc
-    push bc
-    push iy
-    ld hl,#0F4F
+    push hl
+    ld l,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -743,13 +737,15 @@ car0_p6
     ld hl,#9F2F
     di
     push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#003F
+    ld hl,#3F3F
     push hl
-    push iy
+    push de
+    push de
+    push de
+    ld h,#00
+    push hl
+    ld hl,#3F1F
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -764,12 +760,13 @@ car0_p6_end
 car0_p7_ph
     ORG #97D5,car0_p7_ph
 car0_p7
-    push ix
-    push bc
-    push bc
-    push bc
-    push iy
-    ld hl,#0FCF
+    ld l,#3F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#CF
     push hl
     ld hl,#080E
     add hl,sp
@@ -778,18 +775,19 @@ car0_p7
     ld hl,#3F2F
     di
     push hl
-    push bc
+    ld l,#3F
+    push hl
     push de
     push de
     ld l,#15
     push hl
     push de
-    ld hl,#002A
-    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
+    ld hl,#3F0F
     jp #9D40
 car0_p7_end
     ORG car0_p7_ph+car0_p7_end-car0_p7
@@ -797,18 +795,18 @@ car0_p7_end
 car0_p8_ph
     ORG #9D40,car0_p8_ph
 car0_p8
-    ld hl,#3F0F
     di
     push hl
-    push ix
-    ld hl,#0F3F
+    ld h,#0F
     push hl
-    ld hl,#3C3C
+    ld bc,#0F3F
+    push bc
+    ld bc,#3C3C
+    push bc
+    ld c,#05
+    push bc
     push hl
-    ld l,#05
     push hl
-    push ix
-    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -816,15 +814,16 @@ car0_p8
     ld hl,#3F0F
     di
     push hl
-    push ix
-    ld hl,#0F3F
+    ld h,#0F
+    push hl
+    ld l,#3F
     push hl
     ld hl,#3C3C
     push hl
-    ld l,#05
-    push hl
-    push ix
-    push ix
+    push bc
+    ld bc,#0F0F
+    push bc
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -832,13 +831,14 @@ car0_p8
     ld hl,#3F0F
     di
     push hl
-    push ix
+    push bc
     ld hl,#0F2F
     push hl
+    ld hl,#3F3F
+    push hl
+    push hl
     push bc
     push bc
-    push ix
-    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -846,13 +846,14 @@ car0_p8
     ld hl,#7E0F
     di
     push hl
-    push ix
+    push bc
     ld hl,#3F15
     push hl
     push de
     push de
-    push iy
-    push ix
+    ld l,#1F
+    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -860,8 +861,8 @@ car0_p8
     ld hl,#5400
     di
     push hl
-    ld hl,#002A
-    push hl
+    ld bc,#002A
+    push bc
     push de
     push de
     push de
@@ -892,8 +893,8 @@ car0_p8
     push de
     push de
     push de
-    ld hl,#00FC
-    push hl
+    ld c,#FC
+    push bc
     jp bush_spr_done
 car0_p8_end
     ORG car0_p8_ph+car0_p8_end-car0_p8
@@ -1099,17 +1100,15 @@ car0_p11_end
 car0_p12_ph
     ORG #5DA0,car0_p12_ph
 car0_p12
-    ld hl,#4F4F
+    ld hl,#4F6F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#8F8F
+    push de
+    push de
+    ld hl,#9F8F
     push hl
     ld hl,#080E
     add hl,sp
@@ -1132,17 +1131,14 @@ car0_p12
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9F4F
+    ld hl,#9F6F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#8F6F
+    push de
+    push de
     push hl
     ld hl,#080E
     add hl,sp
@@ -1156,13 +1152,6 @@ car0_p12
     ld hl,#0000
     push hl
     push hl
-    jp #62A0
-car0_p12_end
-    ORG car0_p12_ph+car0_p12_end-car0_p12
-    defw #62A0,car0_p13_end-car0_p13
-car0_p13_ph
-    ORG #62A0,car0_p13_ph
-car0_p13
     push hl
     ld hl,#2A3F
     push hl
@@ -1172,6 +1161,13 @@ car0_p13
     ld sp,hl
     ei
     ld hl,#1F3F
+    jp #62A0
+car0_p12_end
+    ORG car0_p12_ph+car0_p12_end-car0_p12
+    defw #62A0,car0_p13_end-car0_p13
+car0_p13_ph
+    ORG #62A0,car0_p13_ph
+car0_p13
     di
     push hl
     ld hl,#3F0F
@@ -1220,13 +1216,6 @@ car0_p13
     add hl,sp
     ld sp,hl
     ei
-    jp #65A0
-car0_p13_end
-    ORG car0_p13_ph+car0_p13_end-car0_p13
-    defw #65A0,car0_p14_end-car0_p14
-car0_p14_ph
-    ORG #65A0,car0_p14_ph
-car0_p14
     ld hl,#1F0F
     di
     push hl
@@ -1237,6 +1226,13 @@ car0_p14
     ld h,#00
     push hl
     ld l,#3F
+    jp #65A0
+car0_p13_end
+    ORG car0_p13_ph+car0_p13_end-car0_p13
+    defw #65A0,car0_p14_end-car0_p14
+car0_p14_ph
+    ORG #65A0,car0_p14_ph
+car0_p14
     push hl
     ld hl,#3F0F
     push hl
@@ -1490,17 +1486,15 @@ car0_p18
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#8F0F
+    ld hl,#2F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#0F0F
-    push hl
-    ld l,#6F
+    push de
+    push de
+    ld hl,#0F6F
     push hl
     ld hl,#080E
     add hl,sp
@@ -1521,17 +1515,15 @@ car0_p18
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#6F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push de
+    push de
+    ld h,#4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -1546,13 +1538,6 @@ car0_p18
     push hl
     push hl
     push de
-    jp #7AA0
-car0_p18_end
-    ORG car0_p18_ph+car0_p18_end-car0_p18
-    defw #7AA0,car0_p19_end-car0_p19
-car0_p19_ph
-    ORG #7AA0,car0_p19_ph
-car0_p19
     ld hl,#1F3F
     push hl
     ld hl,#080E
@@ -1561,6 +1546,13 @@ car0_p19
     ei
     ld hl,#0F0F
     di
+    jp #7AA0
+car0_p18_end
+    ORG car0_p18_ph+car0_p18_end-car0_p18
+    defw #7AA0,car0_p19_end-car0_p19
+car0_p19_ph
+    ORG #7AA0,car0_p19_ph
+car0_p19
     push hl
     push hl
     ld bc,#0A0F
@@ -1613,13 +1605,6 @@ car0_p19
     ld bc,#0000
     push bc
     push bc
-    jp #7DA0
-car0_p19_end
-    ORG car0_p19_ph+car0_p19_end-car0_p19
-    defw #7DA0,car0_p20_end-car0_p20
-car0_p20_ph
-    ORG #7DA0,car0_p20_ph
-car0_p20
     ld h,#2A
     push hl
     ld hl,#0F0F
@@ -1628,6 +1613,13 @@ car0_p20
     push hl
     ld hl,#080E
     add hl,sp
+    jp #7DA0
+car0_p19_end
+    ORG car0_p19_ph+car0_p19_end-car0_p19
+    defw #7DA0,car0_p20_end-car0_p20
+car0_p20_ph
+    ORG #7DA0,car0_p20_ph
+car0_p20
     ld sp,hl
     ei
     ld hl,#5400
@@ -1668,9 +1660,9 @@ car0_p20
     jp bush_spr_done
 car0_p20_end
     ORG car0_p20_ph+car0_p20_end-car0_p20
-    defw #F145,car0_p21_end-car0_p21
+    defw #F146,car0_p21_end-car0_p21
 car0_p21_ph
-    ORG #F145,car0_p21_ph
+    ORG #F146,car0_p21_ph
 car0_p21
 car0_view5
     ld de,#3F3F
@@ -1851,14 +1843,12 @@ car0_view5
     ld hl,#9F0F
     di
     push hl
-    ld h,#0F
-    push hl
+    push de
+    push de
     push de
     push de
     push de
     ld hl,#3F1F
-    push hl
-    ld hl,#0F4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -1881,14 +1871,12 @@ car0_view5
     ld hl,#3F8F
     di
     push hl
-    ld hl,#0F0F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F1F
-    push hl
-    ld hl,#0FCF
+    push de
+    push de
+    ld l,#9F
     push hl
     ld hl,#080E
     add hl,sp
@@ -2012,9 +2000,9 @@ car0_view5
     jp bush_spr_done
 car0_p21_end
     ORG car0_p21_ph+car0_p21_end-car0_p21
-    defw #F3BD,car0_p22_end-car0_p22
+    defw #F3B9,car0_p22_end-car0_p22
 car0_p22_ph
-    ORG #F3BD,car0_p22_ph
+    ORG #F3B9,car0_p22_ph
 car0_p22
 car0_view6
     ld de,#3F3F
@@ -2074,18 +2062,16 @@ car0_view6
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5E0F
+    ld hl,#5E2F
     di
     push hl
-    ld bc,#0F2F
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld bc,#1FAD
     push bc
-    push de
-    push de
-    push de
-    ld h,#1F
-    push hl
-    ld hl,#0FAD
-    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -2098,22 +2084,21 @@ car0_view6
     push de
     push de
     push de
-    ld hl,#3FAD
-    push hl
+    ld b,#3F
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#DE4F
+    ld hl,#DE6F
     di
     push hl
-    push bc
     push de
     push de
     push de
-    ld hl,#1F0F
-    push hl
-    ld hl,#8FED
+    push de
+    push de
+    ld hl,#9FED
     push hl
     ld hl,#C86E
     add hl,sp
@@ -2127,8 +2112,7 @@ car0_view6
     push de
     push de
     push de
-    ld hl,#3FAD
-    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -2136,32 +2120,31 @@ car0_view6
     ld hl,#5E0F
     di
     push hl
-    ld h,#0F
-    push hl
-    ld bc,#2F2D
+    ld bc,#0F0F
     push bc
-    ld bc,#3C3C
-    push bc
-    ld bc,#1E1F
-    push bc
-    push hl
-    ld l,#AD
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#5E0F
-    di
-    push hl
-    ld h,#0F
-    push hl
     ld hl,#2F2D
     push hl
     ld hl,#3C3C
     push hl
+    ld hl,#1E1F
+    push hl
     push bc
-    ld bc,#0F0F
+    ld hl,#0FAD
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#5E0F
+    di
+    push hl
+    push bc
+    ld hl,#2F2D
+    push hl
+    ld hl,#3C3C
+    push hl
+    ld hl,#1E1F
+    push hl
     push bc
     ld hl,#0FAD
     push hl
@@ -2284,9 +2267,9 @@ car0_view6
     jp bush_spr_done
 car0_p22_end
     ORG car0_p22_ph+car0_p22_end-car0_p22
-    defw #F571,car0_p23_end-car0_p23
+    defw #F56A,car0_p23_end-car0_p23
 car0_p23_ph
-    ORG #F571,car0_p23_ph
+    ORG #F56A,car0_p23_ph
 car0_p23
 car0_view7
     ld de,#3F3F
@@ -2347,16 +2330,15 @@ car0_view7
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#DE0F
+    ld hl,#DE3F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    push bc
-    ld l,#FC
+    push de
+    push de
+    ld hl,#0FFC
     push hl
     ld hl,#080E
     add hl,sp
@@ -2376,15 +2358,14 @@ car0_view7
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#CF3F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    push bc
+    push de
+    push de
     ld hl,#4FBD
     push hl
     ld hl,#C86E
@@ -2558,9 +2539,9 @@ car0_view7
     jp bush_spr_done
 car0_p23_end
     ORG car0_p23_ph+car0_p23_end-car0_p23
-    defw #F793,car0_p24_end-car0_p24
+    defw #F78C,car0_p24_end-car0_p24
 car0_p24_ph
-    ORG #F793,car0_p24_ph
+    ORG #F78C,car0_p24_ph
 car0_p24
 car0_view8
     ld de,#3F3F
@@ -2624,13 +2605,12 @@ car0_view8
     ld hl,#FC0F
     di
     push hl
-    push bc
     push de
     push de
     push de
-    ld h,#3F
-    push hl
-    ld hl,#0FED
+    push de
+    push de
+    ld hl,#3FED
     push hl
     ld hl,#080E
     add hl,sp
@@ -2653,13 +2633,12 @@ car0_view8
     ld hl,#7E8F
     di
     push hl
-    push bc
     push de
     push de
     push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#0FCF
+    push de
+    push de
+    ld hl,#3FCF
     push hl
     ld hl,#C86E
     add hl,sp
@@ -2828,9 +2807,9 @@ car0_view8
     jp bush_spr_done
 car0_p24_end
     ORG car0_p24_ph+car0_p24_end-car0_p24
-    defw #F9B1,car0_p25_end-car0_p25
+    defw #F9AA,car0_p25_end-car0_p25
 car0_p25_ph
-    ORG #F9B1,car0_p25_ph
+    ORG #F9AA,car0_p25_ph
 car0_p25
 car0_view9
     ld de,#3F3F
@@ -3234,9 +3213,9 @@ car0_view9
     jp bush_spr_done
 car0_p25_end
     ORG car0_p25_ph+car0_p25_end-car0_p25
-    defw #FC7F,car0_p26_end-car0_p26
+    defw #FC78,car0_p26_end-car0_p26
 car0_p26_ph
-    ORG #FC7F,car0_p26_ph
+    ORG #FC78,car0_p26_ph
 car0_p26
 car0_view10
     ld de,#3F3F
@@ -4267,8 +4246,6 @@ car0_traffic
 car0_p34_ph
     ORG #A052,car0_p34_ph
 car0_p34
-cloud_t27
-    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
 cloud_t28
     defb #0C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
 cloud_t29
@@ -4279,6 +4256,8 @@ cloud_t31
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#3C,#3C,#3C,#3C,#3C
 cloud_t32
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#68,#C0,#3C,#68,#3C,#3C
+cloud_t33
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
 car0_p34_end
     ORG car0_p34_ph+car0_p34_end-car0_p34
     defw #A800,car0_p35_end-car0_p35
@@ -4302,12 +4281,12 @@ car0_p35_end
 car0_p36_ph
     ORG #B000,car0_p36_ph
 car0_p36
-prop_curve3   ; curve, size 3: 8 lines
-    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
-    defb #11,#00,#01,#A0,#00,#00
 prop_curve_r3   ; curve_r, size 3: 8 lines
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
+prop_curve2   ; curve, size 2: 6 lines
+    defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
+    defb #33,#33
 prop_curve_r2   ; curve_r, size 2: 6 lines
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
@@ -4315,8 +4294,8 @@ prop_palm3   ; palm, size 3: 16 lines
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
 prop_palm1   ; palm, size 1: 10 lines
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
-prop_dead1   ; dead, size 1: 6 lines
-    defb #01,#03,#06,#06,#11,#FC
+prop_curve1   ; curve, size 1: 5 lines
+    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
 car0_p36_end
     ORG car0_p36_ph+car0_p36_end-car0_p36
     defw #B800,car0_p37_end-car0_p37
@@ -4325,8 +4304,6 @@ car0_p37_ph
 car0_p37
 prop_stump2   ; stump, size 2: 7 lines
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-prop_curve1   ; curve, size 1: 5 lines
-    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
 prop_curve_r0   ; curve_r, size 0: 4 lines
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
 prop_curve_r1   ; curve_r, size 1: 5 lines
@@ -4341,8 +4318,10 @@ prop_limit0   ; limit, size 0: 5 lines
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
 prop_limit1   ; limit, size 1: 6 lines
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
-prop_dead2   ; dead, size 2: 8 lines
-    defb #02,#04,#08,#08,#12,#FC
+prop_limit2   ; limit, size 2: 8 lines
+    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+prop_dead0   ; dead, size 0: 5 lines
+    defb #01,#03,#05,#05,#11,#FC
 car0_p37_end
     ORG car0_p37_ph+car0_p37_end-car0_p37
     defw #0000,car0_p38_end-car0_p38
@@ -4352,17 +4331,15 @@ car0_p38
 prop_curve_r5   ; curve_r, size 5: 13 lines
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-prop_stump3   ; stump, size 3: 9 lines
-    defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
-    defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
+prop_curve3   ; curve, size 3: 8 lines
+    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
+    defb #11,#00,#01,#A0,#00,#00
 car0_p38_end
     ORG car0_p38_ph+car0_p38_end-car0_p38
     defw #003B,car0_p39_end-car0_p39
 car0_p39_ph
     ORG #003B,car0_p39_ph
 car0_p39
-cloud_t33
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
 cloud_t34
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#94,#3C
 cloud_t35
@@ -4377,14 +4354,52 @@ cloud_t39
     defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#1C,#8C,#9C,#4C,#4C,#8C,#CC,#4C,#4C
 cloud_t40
     defb #0C,#1C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C,#8C,#CC,#4C,#4C
+cloud_t41
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
 car0_p39_end
     ORG car0_p39_ph+car0_p39_end-car0_p39
     defw #0800,car0_p40_end-car0_p40
 car0_p40_ph
     ORG #0800,car0_p40_ph
 car0_p40
-cloud_t41
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
+cloud_map0   ; per panorama column, the tile of the sky part's row 0: 8 lines of a word
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
+    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+car0_p40_end
+    ORG car0_p40_ph+car0_p40_end-car0_p40
+    defw #1000,car0_p41_end-car0_p41
+car0_p41_ph
+    ORG #1000,car0_p41_ph
+car0_p41
+cloud_map1   ; per panorama column, the tile of the sky part's row 1: 8 lines of a word
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
+    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
+    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
+    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
+    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
+    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
+    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
+    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
+car0_p41_end
+    ORG car0_p41_ph+car0_p41_end-car0_p41
+    defw #1800,car0_p42_end-car0_p42
+car0_p42_ph
+    ORG #1800,car0_p42_ph
+car0_p42
 cloud_t42
     defb #3C,#1C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
 cloud_t43
@@ -4407,22 +4422,18 @@ cloud_t51
     defb #3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
 cloud_t52
     defb #3C,#2C,#3C,#3C,#30,#34,#30,#34,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car0_p40_end
-    ORG car0_p40_ph+car0_p40_end-car0_p40
-    defw #1000,car0_p41_end-car0_p41
-car0_p41_ph
-    ORG #1000,car0_p41_ph
-car0_p41
 cloud_t53
     defb #0C,#0C,#3C,#0C,#3C,#3C,#3C,#3C,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car0_p41_end
-    ORG car0_p41_ph+car0_p41_end-car0_p41
-    defw #2800,car0_p42_end-car0_p42
-car0_p42_ph
-    ORG #2800,car0_p42_ph
-car0_p42
-prop_limit2   ; limit, size 2: 8 lines
-    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+car0_p42_end
+    ORG car0_p42_ph+car0_p42_end-car0_p42
+    defw #2800,car0_p43_end-car0_p43
+car0_p43_ph
+    ORG #2800,car0_p43_ph
+car0_p43
+prop_dead1   ; dead, size 1: 6 lines
+    defb #01,#03,#06,#06,#11,#FC
+prop_dead2   ; dead, size 2: 8 lines
+    defb #02,#04,#08,#08,#12,#FC
 prop_dead3   ; dead, size 3: 10 lines
     defb #02,#04,#0A,#0A,#12,#FC
 flip_tab   ; the flip, a picture at a time: the rows up x 32 + car_vfull
@@ -4431,26 +4442,45 @@ flip_tab   ; the flip, a picture at a time: the rows up x 32 + car_vfull
     defb #11,#0C,#2C,#2C,#2C,#2D,#2D,#2D,#0D,#0E,#0E,#0E,#0E,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0A,#0A,#0A,#0A,#FF
-car0_p42_end
-    ORG car0_p42_ph+car0_p42_end-car0_p42
-    defw #3000,car0_p43_end-car0_p43
-car0_p43_ph
-    ORG #3000,car0_p43_ph
-car0_p43
-cloud_t21
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#3C
-cloud_t22
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-cloud_t23
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#84
-cloud_t24
-    defb #0C,#0C,#2C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-cloud_t25
-    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-cloud_t26
-    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#30,#3C,#30,#3C,#8C,#CC,#4C,#4C
 car0_p43_end
     ORG car0_p43_ph+car0_p43_end-car0_p43
+    defw #3000,car0_p44_end-car0_p44
+car0_p44_ph
+    ORG #3000,car0_p44_ph
+car0_p44
+;; car_brake_go - (draw_picture: not in a bump or a crash) the car's brake
+;; lights, braking (brake_on: game.asm demo_step, speed_player) - car_brake
+;; (bank 4). H = car_vfull; DE, HL, IX kept; A 0 after. RAM_C1 in and out.
+car_brake_go
+    ld a,(brake_on)
+    or a
+    ret z
+    push de
+    push hl
+    ld bc,#7F00+RAM_C4
+    out (c),c
+    call car_brake
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    pop hl
+    pop de
+    xor a
+    ret
+brake_on    ; braking: the lights lit (brake.asm; game.asm demo_step)
+    defb 0
+brake_ink   ; ... in this (CARn.BIN: brake_table)
+    defb 0
+brake_tab   ; ... per car_view 0-8, two boxes
+    defs 54,0
+cloud_t27
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
+car0_p44_end
+    ORG car0_p44_ph+car0_p44_end-car0_p44
+    defw brake_ink,55                 ; (its brake lights: brake_table)
+    defb #0F,#EA,#BB,#03,#F3,#BB,#03,#EB,#BB,#03,#F3,#BB,#03,#EA,#BB,#03
+    defb #F2,#BB,#03,#4A,#8C,#03,#53,#8C,#03,#4B,#8C,#03,#54,#8C,#03,#49
+    defb #8C,#03,#52,#8C,#03,#EA,#AB,#03,#F3,#AB,#03,#EB,#AB,#03,#F3,#AB
+    defb #03,#EA,#AB,#03,#F2,#AB,#03
     defw #FFFF
 car0_blob_end
     ASSERT car0_blob_end <= FRAG7   ; (in place before boot_car)
@@ -4470,12 +4500,12 @@ car1_diff
     defw #83F5,car_code2
     defw #AB93,#42A0
     defw #AB91,#6AA0
-    defw #AB93,#F145
-    defw #8BF3,#F3BD
-    defw #8BF3,#F571
-    defw #8BF3,#F793
-    defw #83F5,#F9B1
-    defw #83F5,#FC7F
+    defw #AB93,#F146
+    defw #8BF3,#F3B9
+    defw #8BF3,#F56A
+    defw #8BF3,#F78C
+    defw #83F5,#F9AA
+    defw #83F5,#FC78
     defw #B2CD,#8008
     defw #B3F7,#8010
     defw #B32E,#8018
@@ -4496,18 +4526,17 @@ car1_p0_ph
     ORG #4600,car1_p0_ph
 car1_p0
 car1_car_code0
-    ld de,#0000
+    ld de,#3F3F
     ld sp,hl
     ei
     ld bc,#FC7E
     di
     push bc
-    ld hl,#3F3F
+    push de
+    push de
+    push de
+    ld hl,#BDFC
     push hl
-    push hl
-    push hl
-    ld bc,#BDFC
-    push bc
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -4517,11 +4546,12 @@ car1_car_code0
     push hl
     ld bc,#C000
     push bc
-    push de
-    ld bc,#00C0
+    ld b,#00
     push bc
-    ld bc,#1FFC
-    push bc
+    ld hl,#00C0
+    push hl
+    ld hl,#1FFC
+    push hl
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -4529,11 +4559,11 @@ car1_car_code0
     ld hl,#7E0F
     di
     push hl
-    push de
-    push de
-    push de
-    ld bc,#0FBD
     push bc
+    push bc
+    push bc
+    ld hl,#0FBD
+    push hl
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -4541,10 +4571,9 @@ car1_car_code0
     ld hl,#DE0F
     di
     push hl
-    ld bc,#153F
-    push bc
-    ld b,#3F
-    push bc
+    ld hl,#153F
+    push hl
+    push de
     ld hl,#3F2A
     push hl
     ld hl,#0FED
@@ -4556,9 +4585,9 @@ car1_car_code0
     ld hl,#DE2F
     di
     push hl
-    push bc
-    push bc
-    push bc
+    push de
+    push de
+    push de
     ld hl,#1FED
     push hl
     ld hl,#080C
@@ -4570,9 +4599,9 @@ car1_car_code0
     push hl
     ld hl,#4F0F
     push hl
-    push bc
-    push bc
-    push bc
+    push de
+    push de
+    push de
     ld hl,#0F8F
     push hl
     ld hl,#CFFC
@@ -4584,28 +4613,26 @@ car1_car_code0
     ld hl,#DE0F
     di
     push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
+    push de
+    push de
+    push de
+    push de
+    push de
     ld hl,#0FED
     push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5E4F
+    ld hl,#5E6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8FAD
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld hl,#9FAD
     push hl
     ld hl,#C86E
     add hl,sp
@@ -4616,9 +4643,9 @@ car1_car_code0
     push hl
     ld hl,#3F15
     push hl
-    push de
-    push de
-    push de
+    push bc
+    push bc
+    push bc
     ld hl,#2A3F
     push hl
     ld hl,#3FAD
@@ -4627,17 +4654,14 @@ car1_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9F4F
+    ld hl,#9F6F
     di
     push hl
-    ld hl,#0F2F
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#1F0F
-    push hl
-    ld hl,#8F6F
+    push de
+    push de
+    push de
+    push de
+    push de
     push hl
     ld hl,#080E
     add hl,sp
@@ -4645,15 +4669,15 @@ car1_car_code0
     ei
     nop
     di
-    push bc
+    push de
     ld hl,#3F00
     push hl
-    push de
-    push de
-    push de
+    push bc
+    push bc
+    push bc
     ld hl,#003F
     push hl
-    push bc
+    push de
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -4700,9 +4724,8 @@ car1_car_code0
     push bc
     ld hl,#2F3F
     push hl
-    ld h,#3F
-    push hl
-    ld l,#1F
+    push de
+    ld hl,#3F1F
     push hl
     push bc
     ld c,#2F
@@ -4717,8 +4740,9 @@ car1_car_code0
     push bc
     ld bc,#3F00
     push bc
-    push de
-    ld bc,#003F
+    ld b,#00
+    push bc
+    ld c,#3F
     push bc
     push hl
     ld bc,#0F2F
@@ -4730,13 +4754,14 @@ car1_car_code0
     ld hl,#5400
     di
     push hl
-    push de
-    push de
-    push de
-    push de
-    push de
-    ld bc,#00A8
+    ld bc,#0000
     push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#00A8
+    push hl
     ld hl,#C86E
     add hl,sp
     ld sp,hl
@@ -4744,12 +4769,13 @@ car1_car_code0
     ld hl,#5400
     di
     push hl
-    push de
-    push de
-    push de
-    push de
-    push de
     push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld hl,#00A8
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -4757,18 +4783,19 @@ car1_car_code0
     ld hl,#5400
     di
     push hl
-    push de
-    push de
-    push de
-    push de
-    push de
+    push bc
+    push bc
+    push bc
+    push bc
+    push bc
+    ld c,#A8
     push bc
     jp bush_spr_done
 car1_p0_end
     ORG car1_p0_ph+car1_p0_end-car1_p0
-    defw #5F1A,car1_p1_end-car1_p1
+    defw #5F16,car1_p1_end-car1_p1
 car1_p1_ph
-    ORG #5F1A,car1_p1_ph
+    ORG #5F16,car1_p1_ph
 car1_p1
 car1_car_code1
     ld de,#0000
@@ -4873,17 +4900,15 @@ car1_car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#8F0F
+    ld hl,#8F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -4904,24 +4929,15 @@ car1_car_code1
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#CF3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push bc
     push bc
     push bc
-    jp #6600
-car1_p1_end
-    ORG car1_p1_ph+car1_p1_end-car1_p1
-    defw #6600,car1_p2_end-car1_p2
-car1_p2_ph
-    ORG #6600,car1_p2_ph
-car1_p2
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push bc
+    push bc
+    ld h,#4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -4931,6 +4947,13 @@ car1_p2
     di
     push hl
     push de
+    jp #6600
+car1_p1_end
+    ORG car1_p1_ph+car1_p1_end-car1_p1
+    defw #6600,car1_p2_end-car1_p2
+car1_p2_ph
+    ORG #6600,car1_p2_ph
+car1_p2
     ld hl,#2A3F
     push hl
     push de
@@ -5056,7 +5079,7 @@ car1_car_code2
     ld de,#0000
     ld bc,#3F3F
     ld ix,#0F0F
-    ld iy,#3F1F
+    ld iy,#002A
     ld sp,hl
     ei
     ld hl,#FC3F
@@ -5095,8 +5118,7 @@ car1_p4
     push hl
     push de
     push de
-    ld hl,#002A
-    push hl
+    push iy
     ld hl,#0FFC
     push hl
     ld hl,#080C
@@ -5173,7 +5195,8 @@ car1_p5
     ld hl,#3F8F
     di
     push hl
-    push ix
+    push bc
+    push bc
     push bc
     jp #9755
 car1_p5_end
@@ -5184,8 +5207,7 @@ car1_p6_ph
 car1_p6
     push bc
     push bc
-    push iy
-    ld hl,#0F4F
+    ld l,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -5200,7 +5222,8 @@ car1_p6
     push de
     ld hl,#003F
     push hl
-    push iy
+    ld hl,#3F1F
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -5208,6 +5231,7 @@ car1_p6
     ld hl,#3F8F
     di
     push hl
+    push bc
     jp #97D5
 car1_p6_end
     ORG car1_p6_ph+car1_p6_end-car1_p6
@@ -5215,12 +5239,11 @@ car1_p6_end
 car1_p7_ph
     ORG #97D5,car1_p7_ph
 car1_p7
-    push ix
     push bc
     push bc
     push bc
-    push iy
-    ld hl,#0FCF
+    push bc
+    ld l,#CF
     push hl
     ld hl,#080E
     add hl,sp
@@ -5235,12 +5258,15 @@ car1_p7
     ld l,#15
     push hl
     push de
-    ld hl,#002A
-    push hl
+    push iy
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
+    ld hl,#3F0F
+    di
+    push hl
+    push ix
     jp #9D40
 car1_p7_end
     ORG car1_p7_ph+car1_p7_end-car1_p7
@@ -5248,10 +5274,6 @@ car1_p7_end
 car1_p8_ph
     ORG #9D40,car1_p8_ph
 car1_p8
-    ld hl,#3F0F
-    di
-    push hl
-    push ix
     ld hl,#0F3F
     push hl
     ld hl,#3C3C
@@ -5302,7 +5324,8 @@ car1_p8
     push hl
     push de
     push de
-    push iy
+    ld l,#1F
+    push hl
     push ix
     ld hl,#080E
     add hl,sp
@@ -5311,8 +5334,7 @@ car1_p8
     ld hl,#5400
     di
     push hl
-    ld hl,#002A
-    push hl
+    push iy
     push de
     push de
     push de
@@ -5549,17 +5571,15 @@ car1_p11_end
 car1_p12_ph
     ORG #5DA0,car1_p12_ph
 car1_p12
-    ld hl,#4F4F
+    ld hl,#4F6F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#8F8F
+    push de
+    push de
+    ld hl,#9F8F
     push hl
     ld hl,#080E
     add hl,sp
@@ -5582,17 +5602,14 @@ car1_p12
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9F4F
+    ld hl,#9F6F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F0F
-    push hl
-    ld hl,#8F6F
+    push de
+    push de
     push hl
     ld hl,#080E
     add hl,sp
@@ -5606,13 +5623,6 @@ car1_p12
     ld hl,#0000
     push hl
     push hl
-    jp #62A0
-car1_p12_end
-    ORG car1_p12_ph+car1_p12_end-car1_p12
-    defw #62A0,car1_p13_end-car1_p13
-car1_p13_ph
-    ORG #62A0,car1_p13_ph
-car1_p13
     push hl
     ld hl,#2A3F
     push hl
@@ -5624,6 +5634,13 @@ car1_p13
     nop
     di
     push de
+    jp #62A0
+car1_p12_end
+    ORG car1_p12_ph+car1_p12_end-car1_p12
+    defw #62A0,car1_p13_end-car1_p13
+car1_p13_ph
+    ORG #62A0,car1_p13_ph
+car1_p13
     ld hl,#3F0F
     push hl
     ld hl,#2F1F
@@ -5673,13 +5690,6 @@ car1_p13
     push hl
     ld c,#3F
     push bc
-    jp #65A0
-car1_p13_end
-    ORG car1_p13_ph+car1_p13_end-car1_p13
-    defw #65A0,car1_p14_end-car1_p14
-car1_p14_ph
-    ORG #65A0,car1_p14_ph
-car1_p14
     ld bc,#3F00
     push bc
     ld b,#00
@@ -5689,6 +5699,13 @@ car1_p14
     push hl
     ld b,#0F
     push bc
+    jp #65A0
+car1_p13_end
+    ORG car1_p13_ph+car1_p13_end-car1_p13
+    defw #65A0,car1_p14_end-car1_p14
+car1_p14_ph
+    ORG #65A0,car1_p14_ph
+car1_p14
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -5940,17 +5957,15 @@ car1_p18
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#8F0F
+    ld hl,#2F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#0F0F
-    push hl
-    ld l,#6F
+    push de
+    push de
+    ld hl,#0F6F
     push hl
     ld hl,#080E
     add hl,sp
@@ -5971,17 +5986,15 @@ car1_p18
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#6F3F
     di
     push hl
-    ld hl,#2F3F
-    push hl
     push de
     push de
     push de
-    ld hl,#0F0F
-    push hl
-    ld hl,#4F3F
+    push de
+    push de
+    ld h,#4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -5991,13 +6004,6 @@ car1_p18
     di
     push hl
     push bc
-    jp #7AA0
-car1_p18_end
-    ORG car1_p18_ph+car1_p18_end-car1_p18
-    defw #7AA0,car1_p19_end-car1_p19
-car1_p19_ph
-    ORG #7AA0,car1_p19_ph
-car1_p19
     ld hl,#0000
     push hl
     push hl
@@ -6007,6 +6013,13 @@ car1_p19
     ld hl,#080E
     add hl,sp
     ld sp,hl
+    jp #7AA0
+car1_p18_end
+    ORG car1_p18_ph+car1_p18_end-car1_p18
+    defw #7AA0,car1_p19_end-car1_p19
+car1_p19_ph
+    ORG #7AA0,car1_p19_ph
+car1_p19
     ei
     ld hl,#2F3F
     di
@@ -6060,13 +6073,6 @@ car1_p19
     push de
     ld hl,#2F3F
     push hl
-    jp #7DA0
-car1_p19_end
-    ORG car1_p19_ph+car1_p19_end-car1_p19
-    defw #7DA0,car1_p20_end-car1_p20
-car1_p20_ph
-    ORG #7DA0,car1_p20_ph
-car1_p20
     ld bc,#0000
     push bc
     push bc
@@ -6074,6 +6080,13 @@ car1_p20
     push hl
     ld hl,#0F0F
     push hl
+    jp #7DA0
+car1_p19_end
+    ORG car1_p19_ph+car1_p19_end-car1_p19
+    defw #7DA0,car1_p20_end-car1_p20
+car1_p20_ph
+    ORG #7DA0,car1_p20_ph
+car1_p20
     ld hl,#2FA8
     push hl
     ld hl,#080E
@@ -6118,9 +6131,9 @@ car1_p20
     jp bush_spr_done
 car1_p20_end
     ORG car1_p20_ph+car1_p20_end-car1_p20
-    defw #F145,car1_p21_end-car1_p21
+    defw #F146,car1_p21_end-car1_p21
 car1_p21_ph
-    ORG #F145,car1_p21_ph
+    ORG #F146,car1_p21_ph
 car1_p21
 car1_view5
     ld de,#3F3F
@@ -6306,14 +6319,12 @@ car1_view5
     ld hl,#9F0F
     di
     push hl
-    ld h,#0F
-    push hl
+    push de
+    push de
     push de
     push de
     push de
     ld hl,#3F1F
-    push hl
-    ld hl,#0F4F
     push hl
     ld hl,#080E
     add hl,sp
@@ -6337,14 +6348,12 @@ car1_view5
     ld hl,#3F8F
     di
     push hl
-    ld hl,#0F0F
-    push hl
     push de
     push de
     push de
-    ld hl,#3F1F
-    push hl
-    ld hl,#0FCF
+    push de
+    push de
+    ld l,#9F
     push hl
     ld hl,#080E
     add hl,sp
@@ -6469,9 +6478,9 @@ car1_view5
     jp bush_spr_done
 car1_p21_end
     ORG car1_p21_ph+car1_p21_end-car1_p21
-    defw #F3BD,car1_p22_end-car1_p22
+    defw #F3B9,car1_p22_end-car1_p22
 car1_p22_ph
-    ORG #F3BD,car1_p22_ph
+    ORG #F3B9,car1_p22_ph
 car1_p22
 car1_view6
     ld de,#3F3F
@@ -6529,18 +6538,16 @@ car1_view6
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#5E0F
+    ld hl,#5E2F
     di
     push hl
-    ld bc,#0F2F
+    push de
+    push de
+    push de
+    push de
+    push de
+    ld bc,#1FAD
     push bc
-    push de
-    push de
-    push de
-    ld h,#1F
-    push hl
-    ld hl,#0FAD
-    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -6553,22 +6560,21 @@ car1_view6
     push de
     push de
     push de
-    ld hl,#3FAD
-    push hl
+    ld b,#3F
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#DE4F
+    ld hl,#DE6F
     di
     push hl
-    push bc
     push de
     push de
     push de
-    ld hl,#1F0F
-    push hl
-    ld hl,#8FED
+    push de
+    push de
+    ld hl,#9FED
     push hl
     ld hl,#C86E
     add hl,sp
@@ -6582,8 +6588,7 @@ car1_view6
     push de
     push de
     push de
-    ld hl,#3FAD
-    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -6591,32 +6596,31 @@ car1_view6
     ld hl,#5E0F
     di
     push hl
-    ld h,#0F
-    push hl
-    ld bc,#2F2D
+    ld bc,#0F0F
     push bc
-    ld bc,#3C3C
-    push bc
-    ld bc,#1E1F
-    push bc
-    push hl
-    ld l,#AD
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#5E0F
-    di
-    push hl
-    ld h,#0F
-    push hl
     ld hl,#2F2D
     push hl
     ld hl,#3C3C
     push hl
+    ld hl,#1E1F
+    push hl
     push bc
-    ld bc,#0F0F
+    ld hl,#0FAD
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#5E0F
+    di
+    push hl
+    push bc
+    ld hl,#2F2D
+    push hl
+    ld hl,#3C3C
+    push hl
+    ld hl,#1E1F
+    push hl
     push bc
     ld hl,#0FAD
     push hl
@@ -6740,13 +6744,12 @@ car1_view6
     jp bush_spr_done
 car1_p22_end
     ORG car1_p22_ph+car1_p22_end-car1_p22
-    defw #F571,car1_p23_end-car1_p23
+    defw #F56A,car1_p23_end-car1_p23
 car1_p23_ph
-    ORG #F571,car1_p23_ph
+    ORG #F56A,car1_p23_ph
 car1_p23
 car1_view7
     ld de,#3F3F
-    ld ix,#0F0F
     ld sp,hl
     ei
     ld bc,#FCC0
@@ -6800,16 +6803,15 @@ car1_view7
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#DE0F
+    ld hl,#DE3F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    push ix
-    ld l,#FC
+    push de
+    push de
+    ld hl,#0FFC
     push hl
     ld hl,#080E
     add hl,sp
@@ -6829,15 +6831,14 @@ car1_view7
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#CF0F
+    ld hl,#CF3F
     di
     push hl
-    ld hl,#0F3F
-    push hl
     push de
     push de
     push de
-    push ix
+    push de
+    push de
     ld hl,#4FBD
     push hl
     ld hl,#C86E
@@ -6858,66 +6859,68 @@ car1_view7
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#0F0F
     di
-    push ix
-    push ix
-    ld hl,#1F3C
     push hl
-    ld h,#3C
     push hl
-    ld hl,#3F0F
-    push hl
-    push ix
-    ld hl,#0F3F
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    push ix
-    ld hl,#1F3C
-    push hl
-    ld h,#3C
-    push hl
-    ld hl,#2F0F
-    push hl
-    push ix
-    ld hl,#0F3F
-    push hl
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    nop
-    di
-    push ix
-    ld hl,#0FCF
-    push hl
+    ld bc,#1F3C
     push bc
-    ld bc,#3F1F
+    ld b,#3C
     push bc
-    ld bc,#1F8F
+    ld bc,#3F0F
     push bc
-    push ix
+    push hl
     ld bc,#0F3F
     push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#0F0F
     di
-    push ix
+    push hl
+    push hl
+    ld bc,#1F3C
+    push bc
+    ld b,#3C
+    push bc
+    ld bc,#2F0F
+    push bc
+    push hl
+    ld bc,#0F3F
+    push bc
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
+    ld c,#CF
+    push bc
+    ld bc,#2F3F
+    push bc
+    ld bc,#3F1F
+    push bc
+    ld bc,#1F8F
+    push bc
+    push hl
+    ld bc,#0F3F
+    push bc
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#0F0F
+    di
+    push hl
     push bc
     push de
     push de
-    ld hl,#3F95
+    ld bc,#3F95
+    push bc
     push hl
-    push ix
+    ld bc,#0F3F
     push bc
     ld hl,#080E
     add hl,sp
@@ -7008,9 +7011,9 @@ car1_view7
     jp bush_spr_done
 car1_p23_end
     ORG car1_p23_ph+car1_p23_end-car1_p23
-    defw #F793,car1_p24_end-car1_p24
+    defw #F78C,car1_p24_end-car1_p24
 car1_p24_ph
-    ORG #F793,car1_p24_ph
+    ORG #F78C,car1_p24_ph
 car1_p24
 car1_view8
     ld de,#3F3F
@@ -7070,14 +7073,12 @@ car1_view8
     ld hl,#FC0F
     di
     push hl
-    ld h,#0F
-    push hl
     push de
     push de
     push de
-    ld h,#3F
-    push hl
-    ld hl,#0FED
+    push de
+    push de
+    ld hl,#3FED
     push hl
     ld hl,#080E
     add hl,sp
@@ -7099,14 +7100,12 @@ car1_view8
     ld hl,#7E8F
     di
     push hl
-    ld hl,#0F0F
-    push hl
     push de
     push de
     push de
-    ld h,#3F
-    push hl
-    ld hl,#0FCF
+    push de
+    push de
+    ld hl,#3FCF
     push hl
     ld hl,#C86E
     add hl,sp
@@ -7276,9 +7275,9 @@ car1_view8
     jp bush_spr_done
 car1_p24_end
     ORG car1_p24_ph+car1_p24_end-car1_p24
-    defw #F9B1,car1_p25_end-car1_p25
+    defw #F9AA,car1_p25_end-car1_p25
 car1_p25_ph
-    ORG #F9B1,car1_p25_ph
+    ORG #F9AA,car1_p25_ph
 car1_p25
 car1_view9
     ld de,#3F3F
@@ -7691,9 +7690,9 @@ car1_view9
     jp bush_spr_done
 car1_p25_end
     ORG car1_p25_ph+car1_p25_end-car1_p25
-    defw #FC7F,car1_p26_end-car1_p26
+    defw #FC78,car1_p26_end-car1_p26
 car1_p26_ph
-    ORG #FC7F,car1_p26_ph
+    ORG #FC78,car1_p26_ph
 car1_p26
 car1_view10
     ld de,#3F3F
@@ -8728,12 +8727,12 @@ car1_traffic
 car1_p34_ph
     ORG #A052,car1_p34_ph
 car1_p34
-    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
     defb #0C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #3C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#3C,#3C,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#68,#C0,#3C,#68,#3C,#3C
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
 car1_p34_end
     ORG car1_p34_ph+car1_p34_end-car1_p34
     defw #A800,car1_p35_end-car1_p35
@@ -8753,15 +8752,15 @@ car1_p35_end
 car1_p36_ph
     ORG #B000,car1_p36_ph
 car1_p36
-    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
-    defb #11,#00,#01,#A0,#00,#00
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
+    defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
+    defb #33,#33
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
-    defb #01,#03,#06,#06,#11,#FC
+    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
 car1_p36_end
     ORG car1_p36_ph+car1_p36_end-car1_p36
     defw #B800,car1_p37_end-car1_p37
@@ -8769,7 +8768,6 @@ car1_p37_ph
     ORG #B800,car1_p37_ph
 car1_p37
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
@@ -8777,7 +8775,8 @@ car1_p37
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
-    defb #02,#04,#08,#08,#12,#FC
+    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
 car1_p37_end
     ORG car1_p37_ph+car1_p37_end-car1_p37
     defw #0000,car1_p38_end-car1_p38
@@ -8786,15 +8785,14 @@ car1_p38_ph
 car1_p38
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-    defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
-    defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
+    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
+    defb #11,#00,#01,#A0,#00,#00
 car1_p38_end
     ORG car1_p38_ph+car1_p38_end-car1_p38
     defw #003B,car1_p39_end-car1_p39
 car1_p39_ph
     ORG #003B,car1_p39_ph
 car1_p39
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#94,#3C
     defb #3C,#2C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#3C,#9C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
@@ -8802,13 +8800,49 @@ car1_p39
     defb #0C,#0C,#0C,#0C,#3C,#8C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#1C,#8C,#9C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #0C,#1C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
 car1_p39_end
     ORG car1_p39_ph+car1_p39_end-car1_p39
     defw #0800,car1_p40_end-car1_p40
 car1_p40_ph
     ORG #0800,car1_p40_ph
 car1_p40
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
+    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+car1_p40_end
+    ORG car1_p40_ph+car1_p40_end-car1_p40
+    defw #1000,car1_p41_end-car1_p41
+car1_p41_ph
+    ORG #1000,car1_p41_ph
+car1_p41
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
+    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
+    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
+    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
+    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
+    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
+    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
+    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
+car1_p41_end
+    ORG car1_p41_ph+car1_p41_end-car1_p41
+    defw #1800,car1_p42_end-car1_p42
+car1_p42_ph
+    ORG #1800,car1_p42_ph
+car1_p42
     defb #3C,#1C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#1C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#48,#3C,#3C
@@ -8820,40 +8854,52 @@ car1_p40
     defb #0C,#3C,#3C,#3C,#3C,#30,#3C,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#2C,#3C,#3C,#30,#34,#30,#34,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car1_p40_end
-    ORG car1_p40_ph+car1_p40_end-car1_p40
-    defw #1000,car1_p41_end-car1_p41
-car1_p41_ph
-    ORG #1000,car1_p41_ph
-car1_p41
     defb #0C,#0C,#3C,#0C,#3C,#3C,#3C,#3C,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car1_p41_end
-    ORG car1_p41_ph+car1_p41_end-car1_p41
-    defw #2800,car1_p42_end-car1_p42
-car1_p42_ph
-    ORG #2800,car1_p42_ph
-car1_p42
-    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+car1_p42_end
+    ORG car1_p42_ph+car1_p42_end-car1_p42
+    defw #2800,car1_p43_end-car1_p43
+car1_p43_ph
+    ORG #2800,car1_p43_ph
+car1_p43
+    defb #01,#03,#06,#06,#11,#FC
+    defb #02,#04,#08,#08,#12,#FC
     defb #02,#04,#0A,#0A,#12,#FC
     defb #22,#2A,#4B,#4B,#6C,#6C,#8D,#8D,#8E,#8E,#8F,#8F,#70,#70,#51,#51
     defb #2C,#2C,#0D,#2D,#2D,#4E,#4E,#4E,#4F,#4F,#4F,#30,#30,#10,#11,#11
     defb #11,#0C,#2C,#2C,#2C,#2D,#2D,#2D,#0D,#0E,#0E,#0E,#0E,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0A,#0A,#0A,#0A,#FF
-car1_p42_end
-    ORG car1_p42_ph+car1_p42_end-car1_p42
-    defw #3000,car1_p43_end-car1_p43
-car1_p43_ph
-    ORG #3000,car1_p43_ph
-car1_p43
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#84
-    defb #0C,#0C,#2C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#30,#3C,#30,#3C,#8C,#CC,#4C,#4C
 car1_p43_end
     ORG car1_p43_ph+car1_p43_end-car1_p43
+    defw #3000,car1_p44_end-car1_p44
+car1_p44_ph
+    ORG #3000,car1_p44_ph
+car1_p44
+    ld a,(brake_on)
+    or a
+    ret z
+    push de
+    push hl
+    ld bc,#7F00+RAM_C4
+    out (c),c
+    call car_brake
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    pop hl
+    pop de
+    xor a
+    ret
+    defb 0
+    defb 0
+    defs 54,0
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
+car1_p44_end
+    ORG car1_p44_ph+car1_p44_end-car1_p44
+    defw brake_ink,55                 ; (its brake lights: brake_table)
+    defb #0F,#EA,#BB,#03,#F3,#BB,#03,#EB,#BB,#03,#F3,#BB,#03,#EA,#BB,#03
+    defb #F2,#BB,#03,#4A,#8C,#03,#53,#8C,#03,#4B,#8C,#03,#54,#8C,#03,#49
+    defb #8C,#03,#52,#8C,#03,#EA,#AB,#03,#F3,#AB,#03,#EB,#AB,#03,#F3,#AB
+    defb #03,#EA,#AB,#03,#F2,#AB,#03
     defw #FFFF
 car1_blob_end
     ASSERT car1_blob_end <= FRAG7   ; (in place before boot_car)
@@ -8873,12 +8919,12 @@ car2_diff
     defw #83F5,car_code2
     defw #B395,#42A0
     defw #B395,#6AA0
-    defw #B395,#F145
-    defw #93F5,#F3BD
-    defw #93F5,#F571
-    defw #93F5,#F793
-    defw #83F3,#F9B1
-    defw #83F5,#FC7F
+    defw #B395,#F146
+    defw #93F5,#F3B9
+    defw #93F5,#F56A
+    defw #93F5,#F78C
+    defw #83F3,#F9AA
+    defw #83F5,#FC78
     defw #BACD,#8008
     defw #B3F6,#8010
     defw #BB36,#8018
@@ -9001,15 +9047,15 @@ car2_car_code0
     ld hl,#FC33
     di
     push hl
-    ld bc,#1B0F
+    ld bc,#3B3F
     push bc
-    ld bc,#0F6D
+    ld bc,#3F6D
     push bc
     ld bc,#3C3C
     push bc
-    ld hl,#9E0F
+    ld hl,#9E3F
     push hl
-    ld hl,#0F27
+    ld hl,#3F37
     push hl
     ld hl,#33FC
     push hl
@@ -9020,14 +9066,14 @@ car2_car_code0
     ld hl,#7633
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#0F39
+    ld hl,#3F39
     push hl
     push bc
-    ld bc,#360F
+    ld bc,#363F
     push bc
-    ld bc,#0F8F
+    ld bc,#3F9F
     push bc
     ld hl,#33B9
     push hl
@@ -9038,13 +9084,13 @@ car2_car_code0
     ld hl,#7633
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#0F2A
+    ld hl,#3F2A
     push hl
     ld h,#2A
     push hl
-    ld hl,#150F
+    ld hl,#153F
     push hl
     push bc
     ld bc,#33B9
@@ -9169,9 +9215,9 @@ car2_car_code0
     jp bush_spr_done
 car2_p0_end
     ORG car2_p0_ph+car2_p0_end-car2_p0
-    defw #5F1A,car2_p1_end-car2_p1
+    defw #5F16,car2_p1_end-car2_p1
 car2_p1_ph
-    ORG #5F1A,car2_p1_ph
+    ORG #5F16,car2_p1_ph
 car2_p1
 car2_car_code1
     ld de,#0000
@@ -9284,15 +9330,15 @@ car2_car_code1
     ld hl,#769B
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#373C
     push hl
     ld h,#3C
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#CF33
+    ld hl,#3F33
     push hl
     ld hl,#9BED
     push hl
@@ -9303,13 +9349,15 @@ car2_car_code1
     ld hl,#769B
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#373C
     push hl
     ld h,#3C
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
+    push hl
+    ld hl,#3F67
     push hl
     jp #6600
 car2_p1_end
@@ -9318,8 +9366,6 @@ car2_p1_end
 car2_p2_ph
     ORG #6600,car2_p2_ph
 car2_p2
-    ld hl,#0F67
-    push hl
     ld hl,#33ED
     push hl
     ld hl,#080E
@@ -9329,15 +9375,14 @@ car2_p2
     ld hl,#339B
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#1500
     push hl
     ld hl,#2A3F
     push hl
-    ld hl,#0A0F
     push hl
-    ld hl,#0F67
+    ld hl,#3F67
     push hl
     ld hl,#33BD
     push hl
@@ -9601,16 +9646,15 @@ car2_p6_ph
     ORG #9755,car2_p6_ph
 car2_p6
     push hl
-    ld hl,#33CF
+    ld hl,#333F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#3C3C
     push hl
     ld l,#3B
     push hl
-    ld hl,#0F0F
-    push hl
+    push bc
     ld hl,#67B9
     push hl
     ld hl,#C86E
@@ -9620,7 +9664,9 @@ car2_p6
     ld hl,#DE33
     di
     push hl
-    ld hl,#9B0F
+    ld hl,#9B3F
+    push hl
+    ld hl,#3F9F
     push hl
     jp #97D5
 car2_p6_end
@@ -9629,14 +9675,11 @@ car2_p6_end
 car2_p7_ph
     ORG #97D5,car2_p7_ph
 car2_p7
-    ld hl,#0F8F
-    push hl
     ld hl,#3C3C
     push hl
     ld l,#3B
     push hl
-    ld hl,#0F0F
-    push hl
+    push bc
     ld hl,#67B9
     push hl
     ld hl,#080E
@@ -9646,10 +9689,15 @@ car2_p7
     ld hl,#7E33
     di
     push hl
-    ld hl,#9B0F
+    ld hl,#9B3F
     push hl
-    ld hl,#0F05
+    ld hl,#3F15
     push hl
+    push hl
+    ld hl,#002A
+    push hl
+    push bc
+    ld hl,#6733
     jp #9D40
 car2_p7_end
     ORG car2_p7_ph+car2_p7_end-car2_p7
@@ -9657,13 +9705,6 @@ car2_p7_end
 car2_p8_ph
     ORG #9D40,car2_p8_ph
 car2_p8
-    ld hl,#3F15
-    push hl
-    ld hl,#002A
-    push hl
-    ld hl,#0F0F
-    push hl
-    ld hl,#6733
     push hl
     ld hl,#080E
     add hl,sp
@@ -9782,23 +9823,16 @@ car2_p8
     push de
     push de
     push de
-    jp #9E55
-car2_p8_end
-    ORG car2_p8_ph+car2_p8_end-car2_p8
-    defw #9E55,car2_p9_end-car2_p9
-car2_p9_ph
-    ORG #9E55,car2_p9_ph
-car2_p9
     push de
     ld c,#FC
     push bc
     jp bush_spr_done
-car2_p9_end
-    ORG car2_p9_ph+car2_p9_end-car2_p9
-    defw #42A0,car2_p10_end-car2_p10
-car2_p10_ph
-    ORG #42A0,car2_p10_ph
-car2_p10
+car2_p8_end
+    ORG car2_p8_ph+car2_p8_end-car2_p8
+    defw #42A0,car2_p9_end-car2_p9
+car2_p9_ph
+    ORG #42A0,car2_p9_ph
+car2_p9
 car2_view3
     ld de,#0000
     ld ix,#CFCF
@@ -9853,12 +9887,12 @@ car2_view3
     push hl
     push bc
     jp #45A0
-car2_p10_end
-    ORG car2_p10_ph+car2_p10_end-car2_p10
-    defw #45A0,car2_p11_end-car2_p11
-car2_p11_ph
-    ORG #45A0,car2_p11_ph
-car2_p11
+car2_p9_end
+    ORG car2_p9_ph+car2_p9_end-car2_p9
+    defw #45A0,car2_p10_end-car2_p10
+car2_p10_ph
+    ORG #45A0,car2_p10_ph
+car2_p10
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -9913,12 +9947,12 @@ car2_p11
     ld hl,#B9FC
     push hl
     jp #55A0
-car2_p11_end
-    ORG car2_p11_ph+car2_p11_end-car2_p11
-    defw #55A0,car2_p12_end-car2_p12
-car2_p12_ph
-    ORG #55A0,car2_p12_ph
-car2_p12
+car2_p10_end
+    ORG car2_p10_ph+car2_p10_end-car2_p10
+    defw #55A0,car2_p11_end-car2_p11
+car2_p11_ph
+    ORG #55A0,car2_p11_ph
+car2_p11
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -9976,12 +10010,12 @@ car2_p12
     ld hl,#DE33
     di
     jp #5DA0
-car2_p12_end
-    ORG car2_p12_ph+car2_p12_end-car2_p12
-    defw #5DA0,car2_p13_end-car2_p13
-car2_p13_ph
-    ORG #5DA0,car2_p13_ph
-car2_p13
+car2_p11_end
+    ORG car2_p11_ph+car2_p11_end-car2_p11
+    defw #5DA0,car2_p12_end-car2_p12
+car2_p12_ph
+    ORG #5DA0,car2_p12_ph
+car2_p12
     push hl
     ld c,#33
     push bc
@@ -9998,14 +10032,14 @@ car2_p13
     ld hl,#DE33
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#2F67
+    ld hl,#3F67
     push hl
     push bc
-    ld hl,#9B1F
+    ld hl,#9B3F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#33ED
     push hl
@@ -10016,14 +10050,14 @@ car2_p13
     ld hl,#769B
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#2F67
+    ld hl,#3F67
     push hl
     push bc
-    ld bc,#9B1F
+    ld bc,#9B3F
     push bc
-    ld bc,#0F8F
+    ld bc,#3F9F
     push bc
     ld hl,#67B9
     push hl
@@ -10034,19 +10068,19 @@ car2_p13
     ld hl,#769B
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
     jp #62A0
-car2_p13_end
-    ORG car2_p13_ph+car2_p13_end-car2_p13
-    defw #62A0,car2_p14_end-car2_p14
-car2_p14_ph
-    ORG #62A0,car2_p14_ph
-car2_p14
-    ld hl,#2F00
+car2_p12_end
+    ORG car2_p12_ph+car2_p12_end-car2_p12
+    defw #62A0,car2_p13_end-car2_p13
+car2_p13_ph
+    ORG #62A0,car2_p13_ph
+car2_p13
+    ld hl,#3F00
     push hl
     push de
-    ld hl,#001F
+    ld hl,#003F
     push hl
     push bc
     ld bc,#67B9
@@ -10102,12 +10136,12 @@ car2_p14
     ld hl,#DE33
     di
     jp #65A0
-car2_p14_end
-    ORG car2_p14_ph+car2_p14_end-car2_p14
-    defw #65A0,car2_p15_end-car2_p15
-car2_p15_ph
-    ORG #65A0,car2_p15_ph
-car2_p15
+car2_p13_end
+    ORG car2_p13_ph+car2_p13_end-car2_p13
+    defw #65A0,car2_p14_end-car2_p14
+car2_p14_ph
+    ORG #65A0,car2_p14_ph
+car2_p14
     push hl
     ld hl,#33CF
     push hl
@@ -10169,12 +10203,12 @@ car2_p15
     push de
     push de
     jp bush_spr_done
-car2_p15_end
-    ORG car2_p15_ph+car2_p15_end-car2_p15
-    defw #6AA0,car2_p16_end-car2_p16
-car2_p16_ph
-    ORG #6AA0,car2_p16_ph
-car2_p16
+car2_p14_end
+    ORG car2_p14_ph+car2_p14_end-car2_p14
+    defw #6AA0,car2_p15_end-car2_p15
+car2_p15_ph
+    ORG #6AA0,car2_p15_ph
+car2_p15
 car2_view4
     ld de,#0000
     ld sp,hl
@@ -10233,12 +10267,12 @@ car2_view4
     ld hl,#3F33
     push hl
     jp #6DA0
-car2_p16_end
-    ORG car2_p16_ph+car2_p16_end-car2_p16
-    defw #6DA0,car2_p17_end-car2_p17
-car2_p17_ph
-    ORG #6DA0,car2_p17_ph
-car2_p17
+car2_p15_end
+    ORG car2_p15_ph+car2_p15_end-car2_p15
+    defw #6DA0,car2_p16_end-car2_p16
+car2_p16_ph
+    ORG #6DA0,car2_p16_ph
+car2_p16
     ld hl,#CFED
     push hl
     ld hl,#080C
@@ -10295,12 +10329,12 @@ car2_p17
     di
     push hl
     jp #72A0
-car2_p17_end
-    ORG car2_p17_ph+car2_p17_end-car2_p17
-    defw #72A0,car2_p18_end-car2_p18
-car2_p18_ph
-    ORG #72A0,car2_p18_ph
-car2_p18
+car2_p16_end
+    ORG car2_p16_ph+car2_p16_end-car2_p16
+    defw #72A0,car2_p17_end-car2_p17
+car2_p17_ph
+    ORG #72A0,car2_p17_ph
+car2_p17
     ld hl,#9B95
     push hl
     ld hl,#C0C0
@@ -10360,27 +10394,27 @@ car2_p18
     push hl
     ld hl,#080E
     jp #75A0
-car2_p18_end
-    ORG car2_p18_ph+car2_p18_end-car2_p18
-    defw #75A0,car2_p19_end-car2_p19
-car2_p19_ph
-    ORG #75A0,car2_p19_ph
-car2_p19
+car2_p17_end
+    ORG car2_p17_ph+car2_p17_end-car2_p17
+    defw #75A0,car2_p18_end-car2_p18
+car2_p18_ph
+    ORG #75A0,car2_p18_ph
+car2_p18
     add hl,sp
     ld sp,hl
     ei
     ld hl,#769B
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#9F33
     push hl
     ld h,#33
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#8F33
+    ld hl,#3F33
     push hl
     ld hl,#33BD
     push hl
@@ -10391,15 +10425,15 @@ car2_p19
     ld hl,#33CF
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#9F33
     push hl
     ld h,#33
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#0FCF
+    ld hl,#3FCF
     push hl
     ld hl,#33BD
     push hl
@@ -10410,22 +10444,22 @@ car2_p19
     ld hl,#33CF
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#1500
     push hl
     push de
-    ld hl,#0A0F
+    ld hl,#2A3F
     push hl
-    ld hl,#0FCF
+    ld hl,#3FCF
     push hl
     jp #7AA0
-car2_p19_end
-    ORG car2_p19_ph+car2_p19_end-car2_p19
-    defw #7AA0,car2_p20_end-car2_p20
-car2_p20_ph
-    ORG #7AA0,car2_p20_ph
-car2_p20
+car2_p18_end
+    ORG car2_p18_ph+car2_p18_end-car2_p18
+    defw #7AA0,car2_p19_end-car2_p19
+car2_p19_ph
+    ORG #7AA0,car2_p19_ph
+car2_p19
     ld hl,#33BD
     push hl
     ld hl,#080E
@@ -10489,12 +10523,12 @@ car2_p20
     push hl
     ld hl,#C86E
     jp #7DA0
-car2_p20_end
-    ORG car2_p20_ph+car2_p20_end-car2_p20
-    defw #7DA0,car2_p21_end-car2_p21
-car2_p21_ph
-    ORG #7DA0,car2_p21_ph
-car2_p21
+car2_p19_end
+    ORG car2_p19_ph+car2_p19_end-car2_p19
+    defw #7DA0,car2_p20_end-car2_p20
+car2_p20_ph
+    ORG #7DA0,car2_p20_ph
+car2_p20
     add hl,sp
     ld sp,hl
     ei
@@ -10548,12 +10582,12 @@ car2_p21
     push de
     push bc
     jp bush_spr_done
-car2_p21_end
-    ORG car2_p21_ph+car2_p21_end-car2_p21
-    defw #F145,car2_p22_end-car2_p22
-car2_p22_ph
-    ORG #F145,car2_p22_ph
-car2_p22
+car2_p20_end
+    ORG car2_p20_ph+car2_p20_end-car2_p20
+    defw #F146,car2_p21_end-car2_p21
+car2_p21_ph
+    ORG #F146,car2_p21_ph
+car2_p21
 car2_view5
     ld de,#0000
     ld sp,hl
@@ -10729,15 +10763,15 @@ car2_view5
     ld hl,#7E33
     di
     push hl
-    ld hl,#334F
+    ld hl,#333F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#3333
     push hl
     ld l,#6F
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#67B9
     push hl
@@ -10748,15 +10782,15 @@ car2_view5
     ld hl,#7E33
     di
     push hl
-    ld hl,#CF0F
+    ld hl,#CF3F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#3333
     push hl
     ld l,#6F
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#CF33
     push hl
@@ -10767,14 +10801,14 @@ car2_view5
     ld hl,#7E33
     di
     push hl
-    ld hl,#CF0F
+    ld hl,#CF3F
     push hl
-    ld hl,#0F05
+    ld hl,#3F15
     push hl
     push de
     ld hl,#002A
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#CF33
     push hl
@@ -10891,12 +10925,12 @@ car2_view5
     push de
     push bc
     jp bush_spr_done
-car2_p22_end
-    ORG car2_p22_ph+car2_p22_end-car2_p22
-    defw #F3BD,car2_p23_end-car2_p23
-car2_p23_ph
-    ORG #F3BD,car2_p23_ph
-car2_p23
+car2_p21_end
+    ORG car2_p21_ph+car2_p21_end-car2_p21
+    defw #F3B9,car2_p22_end-car2_p22
+car2_p22_ph
+    ORG #F3B9,car2_p22_ph
+car2_p22
 car2_view6
     ld de,#CFCF
     ld ix,#0000
@@ -10949,15 +10983,15 @@ car2_view6
     ld hl,#FC33
     di
     push hl
-    ld hl,#9BCF
+    ld hl,#3B3F
     push hl
-    ld hl,#CF39
+    ld hl,#9F39
     push hl
     ld hl,#3C3C
     push hl
-    ld hl,#36CF
+    ld hl,#366F
     push hl
-    ld hl,#CF67
+    ld hl,#3F37
     push hl
     ld hl,#33FC
     push hl
@@ -10968,15 +11002,15 @@ car2_view6
     ld hl,#FC33
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#0F39
+    ld hl,#3F39
     push hl
     ld hl,#3C3C
     push hl
-    ld hl,#360F
+    ld hl,#363F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#33FC
     push hl
@@ -10987,14 +11021,14 @@ car2_view6
     ld hl,#7633
     di
     push hl
-    ld hl,#4F0F
+    ld hl,#6F3F
     push hl
-    ld hl,#0FCF
+    ld hl,#3FCF
     push hl
     push de
-    ld hl,#CF0F
+    ld hl,#CF3F
     push hl
-    ld hl,#0F8F
+    ld hl,#3F9F
     push hl
     ld hl,#33B9
     push hl
@@ -11156,16 +11190,14 @@ car2_view6
     ld bc,#FC00
     push bc
     jp bush_spr_done
-car2_p23_end
-    ORG car2_p23_ph+car2_p23_end-car2_p23
-    defw #F571,car2_p24_end-car2_p24
-car2_p24_ph
-    ORG #F571,car2_p24_ph
-car2_p24
+car2_p22_end
+    ORG car2_p22_ph+car2_p22_end-car2_p22
+    defw #F56A,car2_p23_end-car2_p23
+car2_p23_ph
+    ORG #F56A,car2_p23_ph
+car2_p23
 car2_view7
     ld de,#CFCF
-    ld ix,#3333
-    ld iy,#0000
     ld sp,hl
     ei
     ld bc,#DE9B
@@ -11186,10 +11218,11 @@ car2_view7
     push hl
     ld bc,#4000
     push bc
-    push iy
-    push iy
-    ld bc,#8067
+    ld b,#00
     push bc
+    push bc
+    ld hl,#8067
+    push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -11197,13 +11230,14 @@ car2_view7
     ld hl,#FC33
     di
     push hl
-    push ix
-    ld bc,#339B
-    push bc
+    ld h,#33
+    push hl
+    ld l,#9B
+    push hl
     push de
     push de
-    ld bc,#CF33
-    push bc
+    ld hl,#CF33
+    push hl
     ld hl,#EDFC
     push hl
     ld hl,#080E
@@ -11213,16 +11247,18 @@ car2_view7
     ld hl,#FC33
     di
     push hl
-    push de
-    ld hl,#673C
+    ld hl,#3F3F
+    push hl
+    ld hl,#373C
     push hl
     ld h,#3C
     push hl
-    ld hl,#9BCF
+    ld hl,#9B3F
     push hl
-    push bc
-    ld bc,#EDFC
-    push bc
+    ld hl,#3F33
+    push hl
+    ld hl,#EDFC
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11230,15 +11266,15 @@ car2_view7
     ld hl,#7633
     di
     push hl
-    ld bc,#0F0F
-    push bc
-    ld hl,#8F3C
+    ld hl,#3F3F
+    push hl
+    ld hl,#9F3C
     push hl
     ld h,#3C
     push hl
-    ld hl,#1B0F
+    ld hl,#3B3F
     push hl
-    ld hl,#0F67
+    ld hl,#3F67
     push hl
     ld hl,#33FC
     push hl
@@ -11249,16 +11285,17 @@ car2_view7
     ld hl,#7633
     di
     push hl
-    push bc
-    ld bc,#8FCF
-    push bc
+    ld hl,#3F3F
+    push hl
+    ld hl,#9FCF
+    push hl
     push de
-    ld bc,#4F0F
-    push bc
-    ld bc,#0F67
-    push bc
-    ld bc,#33FC
-    push bc
+    ld hl,#6F3F
+    push hl
+    ld hl,#3F67
+    push hl
+    ld hl,#33FC
+    push hl
     ld hl,#C86E
     add hl,sp
     ld sp,hl
@@ -11266,13 +11303,14 @@ car2_view7
     ld hl,#7633
     di
     push hl
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld c,#BD
-    push bc
+    ld h,#33
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#BD
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11306,45 +11344,32 @@ car2_view7
     add hl,sp
     ld sp,hl
     ei
-    nop
+    ld hl,#3333
     di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6733
     push hl
-    push bc
+    push de
+    push de
+    push de
+    push de
+    ld h,#67
+    push hl
+    ld hl,#33BD
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    nop
-    di
-    push ix
-    push de
-    push de
-    push de
-    push de
-    ld hl,#6733
-    push hl
-    push bc
-    ld hl,#080E
-    add hl,sp
-    ld sp,hl
-    ei
-    ld hl,#542A
+    ld hl,#3333
     di
     push hl
-    ld bc,#2ACF
-    push bc
     push de
     push de
     push de
     push de
-    ld bc,#6FBD
-    push bc
+    ld h,#67
+    push hl
+    ld hl,#33BD
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11352,14 +11377,29 @@ car2_view7
     ld hl,#542A
     di
     push hl
-    ld bc,#003F
-    push bc
-    ld bc,#9FCF
-    push bc
+    ld hl,#2ACF
+    push hl
     push de
     push de
-    ld bc,#CF45
-    push bc
+    push de
+    push de
+    ld hl,#6FBD
+    push hl
+    ld hl,#080E
+    add hl,sp
+    ld sp,hl
+    ei
+    ld hl,#542A
+    di
+    push hl
+    ld hl,#003F
+    push hl
+    ld hl,#9FCF
+    push hl
+    push de
+    push de
+    ld hl,#CF45
+    push hl
     ld hl,#00A8
     push hl
     ld hl,#080E
@@ -11375,9 +11415,10 @@ car2_view7
     push hl
     push de
     push de
-    push bc
-    ld bc,#00A8
-    push bc
+    ld hl,#CF45
+    push hl
+    ld hl,#00A8
+    push hl
     ld hl,#C86E
     add hl,sp
     ld sp,hl
@@ -11385,7 +11426,7 @@ car2_view7
     ld hl,#5400
     di
     push hl
-    push iy
+    push bc
     ld hl,#002A
     push hl
     ld hl,#3F3F
@@ -11393,7 +11434,8 @@ car2_view7
     push hl
     ld l,#15
     push hl
-    push bc
+    ld hl,#00A8
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11403,10 +11445,11 @@ car2_view7
     push hl
     ld h,#A8
     push hl
-    push iy
-    push iy
-    push iy
-    push iy
+    push bc
+    push bc
+    push bc
+    push bc
+    ld c,#A8
     push bc
     ld hl,#080C
     add hl,sp
@@ -11423,26 +11466,27 @@ car2_view7
     push hl
     push bc
     jp bush_spr_done
-car2_p24_end
-    ORG car2_p24_ph+car2_p24_end-car2_p24
-    defw #F793,car2_p25_end-car2_p25
-car2_p25_ph
-    ORG #F793,car2_p25_ph
-car2_p25
+car2_p23_end
+    ORG car2_p23_ph+car2_p23_end-car2_p23
+    defw #F78C,car2_p24_end-car2_p24
+car2_p24_ph
+    ORG #F78C,car2_p24_ph
+car2_p24
 car2_view8
     ld de,#CFCF
-    ld bc,#3333
+    ld ix,#3333
+    ld iy,#0000
     ld sp,hl
     ei
-    ld hl,#CFC0
+    ld bc,#CFC0
     di
+    push bc
+    ld hl,#C0C0
     push hl
-    ld h,#C0
     push hl
     push hl
-    push hl
-    ld hl,#67ED
-    push hl
+    ld bc,#67ED
+    push bc
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -11450,13 +11494,12 @@ car2_view8
     ld hl,#9B40
     di
     push hl
-    ld hl,#0000
-    push hl
-    push hl
-    ld l,#80
-    push hl
-    ld hl,#CF33
-    push hl
+    push iy
+    push iy
+    ld bc,#0080
+    push bc
+    ld bc,#CF33
+    push bc
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -11464,15 +11507,15 @@ car2_view8
     ld hl,#FCDE
     di
     push hl
-    ld hl,#33CF
-    push hl
-    push de
-    push de
-    ld hl,#6733
-    push hl
+    ld bc,#33CF
     push bc
-    ld hl,#33FC
-    push hl
+    push de
+    push de
+    ld bc,#6733
+    push bc
+    push ix
+    ld bc,#33FC
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11480,17 +11523,17 @@ car2_view8
     ld hl,#FCDE
     di
     push hl
-    ld hl,#33CF
+    ld hl,#333F
     push hl
-    ld hl,#CF67
+    ld hl,#3F67
     push hl
     ld hl,#3C3C
     push hl
-    ld l,#9B
+    ld l,#3B
     push hl
-    push de
-    ld hl,#33FC
+    ld hl,#3F3F
     push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11498,15 +11541,15 @@ car2_view8
     ld hl,#FC33
     di
     push hl
-    ld hl,#9B0F
-    push hl
-    ld hl,#0F27
+    ld bc,#9B3F
+    push bc
+    ld hl,#3F37
     push hl
     ld hl,#3C3C
     push hl
-    ld l,#4F
+    ld l,#6F
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
     ld hl,#33B9
     push hl
@@ -11517,14 +11560,13 @@ car2_view8
     ld hl,#FC33
     di
     push hl
-    ld hl,#9B0F
-    push hl
-    ld hl,#0F8F
-    push hl
+    push bc
+    ld bc,#3F9F
+    push bc
     push de
-    ld hl,#CF4F
-    push hl
-    ld hl,#0F0F
+    ld bc,#CF6F
+    push bc
+    ld hl,#3F3F
     push hl
     ld hl,#33B9
     push hl
@@ -11535,11 +11577,11 @@ car2_view8
     ld hl,#7E33
     di
     push hl
-    push bc
-    push bc
-    push bc
-    push bc
-    push bc
+    push ix
+    push ix
+    push ix
+    push ix
+    push ix
     ld hl,#33B9
     push hl
     ld hl,#080E
@@ -11567,8 +11609,7 @@ car2_view8
     push de
     push de
     push de
-    ld hl,#CF6F
-    push hl
+    push bc
     ld hl,#3F67
     push hl
     ld hl,#080E
@@ -11584,7 +11625,7 @@ car2_view8
     push de
     push de
     push de
-    push bc
+    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11598,7 +11639,7 @@ car2_view8
     push de
     push de
     push de
-    push bc
+    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11625,12 +11666,11 @@ car2_view8
     push hl
     push de
     push de
-    ld hl,#CF6F
-    push hl
-    ld hl,#3F00
-    push hl
-    ld hl,#15A8
-    push hl
+    push bc
+    ld bc,#3F00
+    push bc
+    ld bc,#15A8
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11646,8 +11686,7 @@ car2_view8
     push hl
     ld h,#3F
     push hl
-    ld hl,#15A8
-    push hl
+    push bc
     ld hl,#C86E
     add hl,sp
     ld sp,hl
@@ -11655,17 +11694,16 @@ car2_view8
     ld hl,#5400
     di
     push hl
-    ld hl,#2A3F
-    push hl
-    ld h,#3F
-    push hl
-    push hl
-    ld hl,#1500
-    push hl
-    ld h,#00
-    push hl
-    ld l,#A8
-    push hl
+    ld bc,#2A3F
+    push bc
+    ld b,#3F
+    push bc
+    push bc
+    ld bc,#1500
+    push bc
+    push iy
+    ld bc,#00A8
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11673,15 +11711,14 @@ car2_view8
     ld hl,#5400
     di
     push hl
-    ld h,#00
-    push hl
-    push hl
-    push hl
-    push hl
-    ld l,#54
-    push hl
-    ld l,#FC
-    push hl
+    push iy
+    push iy
+    push iy
+    push iy
+    ld c,#54
+    push bc
+    ld c,#FC
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -11689,21 +11726,21 @@ car2_view8
     ld hl,#5400
     di
     push hl
-    ld hl,#FCFC
-    push hl
-    push hl
-    push hl
-    ld l,#54
-    push hl
-    ld hl,#A8FC
-    push hl
+    ld b,#FC
+    push bc
+    push bc
+    push bc
+    ld c,#54
+    push bc
+    ld bc,#A8FC
+    push bc
     jp bush_spr_done
-car2_p25_end
-    ORG car2_p25_ph+car2_p25_end-car2_p25
-    defw #F9B1,car2_p26_end-car2_p26
-car2_p26_ph
-    ORG #F9B1,car2_p26_ph
-car2_p26
+car2_p24_end
+    ORG car2_p24_ph+car2_p24_end-car2_p24
+    defw #F9AA,car2_p25_end-car2_p25
+car2_p25_ph
+    ORG #F9AA,car2_p25_ph
+car2_p25
 car2_view9
     ld de,#3333
     ld bc,#0000
@@ -12129,12 +12166,12 @@ car2_view9
     push hl
     push hl
     jp bush_spr_done
-car2_p26_end
-    ORG car2_p26_ph+car2_p26_end-car2_p26
-    defw #FC7F,car2_p27_end-car2_p27
-car2_p27_ph
-    ORG #FC7F,car2_p27_ph
-car2_p27
+car2_p25_end
+    ORG car2_p25_ph+car2_p25_end-car2_p25
+    defw #FC78,car2_p26_end-car2_p26
+car2_p26_ph
+    ORG #FC78,car2_p26_ph
+car2_p26
 car2_view10
     ld de,#3333
     ld bc,#0000
@@ -12550,12 +12587,12 @@ car2_view10
     push hl
     push hl
     jp bush_spr_done
-car2_p27_end
-    ORG car2_p27_ph+car2_p27_end-car2_p27
-    defw #8000,car2_p28_end-car2_p28
-car2_p28_ph
-    ORG #8000,car2_p28_ph
-car2_p28
+car2_p26_end
+    ORG car2_p26_ph+car2_p26_end-car2_p26
+    defw #8000,car2_p27_end-car2_p27
+car2_p27_ph
+    ORG #8000,car2_p27_ph
+car2_p27
 car2_roll_done                  ; (RAM_C1 again, for bush.asm)
     ld bc,#7F00+RAM_C1
     out (c),c
@@ -12589,12 +12626,12 @@ car2_roll6_go
     out (c),c
     jp #881C
     ASSERT car2_roll6_go+8 == #8040
-car2_p28_end
-    ORG car2_p28_ph+car2_p28_end-car2_p28
-    defw #8040,car2_p29_end-car2_p29
-car2_p29_ph
-    ORG #8040,car2_p29_ph
-car2_p29
+car2_p27_end
+    ORG car2_p27_ph+car2_p27_end-car2_p27
+    defw #8040,car2_p28_end-car2_p28
+car2_p28_ph
+    ORG #8040,car2_p28_ph
+car2_p28
     push bc
     push de
     push de
@@ -12705,12 +12742,12 @@ car2_p29
     ei
     nop
     jp #8800
-car2_p29_end
-    ORG car2_p29_ph+car2_p29_end-car2_p29
-    defw #8800,car2_p30_end-car2_p30
-car2_p30_ph
-    ORG #8800,car2_p30_ph
-car2_p30
+car2_p28_end
+    ORG car2_p28_ph+car2_p28_end-car2_p28
+    defw #8800,car2_p29_end-car2_p29
+car2_p29_ph
+    ORG #8800,car2_p29_ph
+car2_p29
     di
     push bc
     push bc
@@ -12735,12 +12772,12 @@ car2_p30
     push bc
     push bc
     jp car2_roll_done
-car2_p30_end
-    ORG car2_p30_ph+car2_p30_end-car2_p30
-    defw #881C,car2_p31_end-car2_p31
-car2_p31_ph
-    ORG #881C,car2_p31_ph
-car2_p31
+car2_p29_end
+    ORG car2_p29_ph+car2_p29_end-car2_p29
+    defw #881C,car2_p30_end-car2_p30
+car2_p30_ph
+    ORG #881C,car2_p30_ph
+car2_p30
 car2_roll6
     ld de,#C0C0
     ld sp,hl
@@ -12871,12 +12908,12 @@ car2_roll6
     ld hl,#0814
     add hl,sp
     jp #9000
-car2_p31_end
-    ORG car2_p31_ph+car2_p31_end-car2_p31
-    defw #9000,car2_p32_end-car2_p32
-car2_p32_ph
-    ORG #9000,car2_p32_ph
-car2_p32
+car2_p30_end
+    ORG car2_p30_ph+car2_p30_end-car2_p30
+    defw #9000,car2_p31_end-car2_p31
+car2_p31_ph
+    ORG #9000,car2_p31_ph
+car2_p31
     ld sp,hl
     ei
     nop
@@ -13031,12 +13068,12 @@ car2_p32
     push de
     push de
     jp #9800
-car2_p32_end
-    ORG car2_p32_ph+car2_p32_end-car2_p32
-    defw #9800,car2_p33_end-car2_p33
-car2_p33_ph
-    ORG #9800,car2_p33_ph
-car2_p33
+car2_p31_end
+    ORG car2_p31_ph+car2_p31_end-car2_p31
+    defw #9800,car2_p32_end-car2_p32
+car2_p32_ph
+    ORG #9800,car2_p32_ph
+car2_p32
     push de
     push de
     push de
@@ -13176,12 +13213,12 @@ car2_p33
     ld c,#15
     push bc
     jp #A000
-car2_p33_end
-    ORG car2_p33_ph+car2_p33_end-car2_p33
-    defw #A000,car2_p34_end-car2_p34
-car2_p34_ph
-    ORG #A000,car2_p34_ph
-car2_p34
+car2_p32_end
+    ORG car2_p32_ph+car2_p32_end-car2_p32
+    defw #A000,car2_p33_end-car2_p33
+car2_p33_ph
+    ORG #A000,car2_p33_ph
+car2_p33
     ld bc,#0000
     push bc
     ld c,#3F
@@ -13225,8 +13262,8 @@ car2_p34
     push bc
     push bc
     jp car2_roll_done
-car2_p34_end
-    ORG car2_p34_ph+car2_p34_end-car2_p34
+car2_p33_end
+    ORG car2_p33_ph+car2_p33_end-car2_p33
 car2_pad
     IF car2_pad+5 <= #3060
     defw car2_pad+4,#3060-car2_pad-4
@@ -13239,22 +13276,22 @@ car2_pad
     ENDIF
 car2_traffic
     ASSERT car2_traffic >= #3060   ; (read before they go there)
-    defw #A052,car2_p35_end-car2_p35
-car2_p35_ph
-    ORG #A052,car2_p35_ph
-car2_p35
-    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
+    defw #A052,car2_p34_end-car2_p34
+car2_p34_ph
+    ORG #A052,car2_p34_ph
+car2_p34
     defb #0C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #3C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#3C,#3C,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#68,#C0,#3C,#68,#3C,#3C
-car2_p35_end
-    ORG car2_p35_ph+car2_p35_end-car2_p35
-    defw #A800,car2_p36_end-car2_p36
-car2_p36_ph
-    ORG #A800,car2_p36_ph
-car2_p36
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
+car2_p34_end
+    ORG car2_p34_ph+car2_p34_end-car2_p34
+    defw #A800,car2_p35_end-car2_p35
+car2_p35_ph
+    ORG #A800,car2_p35_ph
+car2_p35
     defb #02,#05,#05,#0D,#12,#FC,#02,#92,#FC,#01,#91,#FC,#02,#11,#FC,#91
     defb #FC,#01,#92,#FC,#01,#A1,#FC,#FC,#01,#A2,#FC,#FC
     defb #01,#03,#04,#0A,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
@@ -13262,29 +13299,28 @@ car2_p36
     defb #01,#03,#06,#0D,#11,#A8,#01,#91,#0F,#02,#B0,#0F,#3C,#0F,#01,#B0
     defb #0F,#00,#0F,#02,#B0,#0F,#3C,#0F,#01,#91,#0F
     defb #03,#06,#0A,#0D,#13,#9F,#02,#B2,#C3,#C3,#C3,#01,#93,#C3
-car2_p36_end
-    ORG car2_p36_ph+car2_p36_end-car2_p36
-    defw #B000,car2_p37_end-car2_p37
-car2_p37_ph
-    ORG #B000,car2_p37_ph
-car2_p37
-    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
-    defb #11,#00,#01,#A0,#00,#00
+car2_p35_end
+    ORG car2_p35_ph+car2_p35_end-car2_p35
+    defw #B000,car2_p36_end-car2_p36
+car2_p36_ph
+    ORG #B000,car2_p36_ph
+car2_p36
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
+    defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
+    defb #33,#33
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
-    defb #01,#03,#06,#06,#11,#FC
-car2_p37_end
-    ORG car2_p37_ph+car2_p37_end-car2_p37
-    defw #B800,car2_p38_end-car2_p38
-car2_p38_ph
-    ORG #B800,car2_p38_ph
-car2_p38
-    defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
     defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
+car2_p36_end
+    ORG car2_p36_ph+car2_p36_end-car2_p36
+    defw #B800,car2_p37_end-car2_p37
+car2_p37_ph
+    ORG #B800,car2_p37_ph
+car2_p37
+    defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
@@ -13292,24 +13328,24 @@ car2_p38
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
-    defb #02,#04,#08,#08,#12,#FC
-car2_p38_end
-    ORG car2_p38_ph+car2_p38_end-car2_p38
-    defw #0000,car2_p39_end-car2_p39
-car2_p39_ph
-    ORG #0000,car2_p39_ph
-car2_p39
+    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
+car2_p37_end
+    ORG car2_p37_ph+car2_p37_end-car2_p37
+    defw #0000,car2_p38_end-car2_p38
+car2_p38_ph
+    ORG #0000,car2_p38_ph
+car2_p38
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-    defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
-    defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
-car2_p39_end
-    ORG car2_p39_ph+car2_p39_end-car2_p39
-    defw #003B,car2_p40_end-car2_p40
-car2_p40_ph
-    ORG #003B,car2_p40_ph
-car2_p40
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
+    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
+    defb #11,#00,#01,#A0,#00,#00
+car2_p38_end
+    ORG car2_p38_ph+car2_p38_end-car2_p38
+    defw #003B,car2_p39_end-car2_p39
+car2_p39_ph
+    ORG #003B,car2_p39_ph
+car2_p39
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#94,#3C
     defb #3C,#2C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#3C,#9C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
@@ -13317,13 +13353,49 @@ car2_p40
     defb #0C,#0C,#0C,#0C,#3C,#8C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#1C,#8C,#9C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #0C,#1C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
+car2_p39_end
+    ORG car2_p39_ph+car2_p39_end-car2_p39
+    defw #0800,car2_p40_end-car2_p40
+car2_p40_ph
+    ORG #0800,car2_p40_ph
+car2_p40
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
+    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
 car2_p40_end
     ORG car2_p40_ph+car2_p40_end-car2_p40
-    defw #0800,car2_p41_end-car2_p41
+    defw #1000,car2_p41_end-car2_p41
 car2_p41_ph
-    ORG #0800,car2_p41_ph
+    ORG #1000,car2_p41_ph
 car2_p41
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
+    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
+    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
+    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
+    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
+    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
+    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
+    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
+car2_p41_end
+    ORG car2_p41_ph+car2_p41_end-car2_p41
+    defw #1800,car2_p42_end-car2_p42
+car2_p42_ph
+    ORG #1800,car2_p42_ph
+car2_p42
     defb #3C,#1C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#1C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#48,#3C,#3C
@@ -13335,12 +13407,6 @@ car2_p41
     defb #0C,#3C,#3C,#3C,#3C,#30,#3C,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#2C,#3C,#3C,#30,#34,#30,#34,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car2_p41_end
-    ORG car2_p41_ph+car2_p41_end-car2_p41
-    defw #1000,car2_p42_end-car2_p42
-car2_p42_ph
-    ORG #1000,car2_p42_ph
-car2_p42
     defb #0C,#0C,#3C,#0C,#3C,#3C,#3C,#3C,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
 car2_p42_end
     ORG car2_p42_ph+car2_p42_end-car2_p42
@@ -13348,7 +13414,8 @@ car2_p42_end
 car2_p43_ph
     ORG #2800,car2_p43_ph
 car2_p43
-    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+    defb #01,#03,#06,#06,#11,#FC
+    defb #02,#04,#08,#08,#12,#FC
     defb #02,#04,#0A,#0A,#12,#FC
     defb #22,#2A,#4B,#4B,#6C,#6C,#8D,#8D,#8E,#8E,#8F,#8F,#70,#70,#51,#51
     defb #2C,#2C,#0D,#2D,#2D,#4E,#4E,#4E,#4F,#4F,#4F,#30,#30,#10,#11,#11
@@ -13361,14 +13428,31 @@ car2_p43_end
 car2_p44_ph
     ORG #3000,car2_p44_ph
 car2_p44
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#84
-    defb #0C,#0C,#2C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#30,#3C,#30,#3C,#8C,#CC,#4C,#4C
+    ld a,(brake_on)
+    or a
+    ret z
+    push de
+    push hl
+    ld bc,#7F00+RAM_C4
+    out (c),c
+    call car_brake
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    pop hl
+    pop de
+    xor a
+    ret
+    defb 0
+    defb 0
+    defs 54,0
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
 car2_p44_end
     ORG car2_p44_ph+car2_p44_end-car2_p44
+    defw brake_ink,55                 ; (its brake lights: brake_table)
+    defb #0F,#EB,#BB,#03,#F2,#BB,#03,#EC,#BB,#03,#F2,#BB,#03,#EB,#BB,#03
+    defb #F1,#BB,#03,#4B,#8C,#03,#52,#8C,#03,#4C,#8C,#03,#52,#8C,#03,#4B
+    defb #8C,#03,#51,#8C,#03,#EB,#AB,#03,#F2,#AB,#03,#EC,#AB,#03,#F2,#AB
+    defb #03,#EB,#AB,#03,#F1,#AB,#03
     defw #FFFF
 car2_blob_end
     ASSERT car2_blob_end <= FRAG7   ; (in place before boot_car)
@@ -13388,12 +13472,12 @@ car3_diff
     defw #AB94,car_code2
     defw #9B94,#42A0
     defw #9B94,#6AA0
-    defw #9B94,#F145
-    defw #A394,#F3BD
-    defw #A396,#F571
-    defw #A394,#F793
-    defw #AB98,#F9B1
-    defw #AB96,#FC7F
+    defw #9B94,#F146
+    defw #A394,#F3B9
+    defw #A396,#F56A
+    defw #A394,#F78C
+    defw #AB98,#F9AA
+    defw #AB96,#FC78
     defw #832D,#8008
     defw #A3F7,#8010
     defw #8398,#8018
@@ -13530,10 +13614,10 @@ car3_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3C0F
+    ld hl,#3C3F
     di
     push hl
-    ld bc,#0F3C
+    ld bc,#3F3C
     push bc
     push de
     push de
@@ -13543,15 +13627,14 @@ car3_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9E2D
+    ld hl,#3E3D
     di
     push hl
     push de
     push de
     push de
     push de
-    ld bc,#1E6D
-    push bc
+    push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -13610,27 +13693,27 @@ car3_car_code0
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#1E38
+    ld hl,#3E38
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#342D
+    ld hl,#343D
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#1A38
+    ld hl,#3A38
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#342D
+    ld hl,#343D
     push hl
     ld hl,#080C
     add hl,sp
@@ -13701,9 +13784,9 @@ car3_car_code0
     jp bush_spr_done
 car3_p0_end
     ORG car3_p0_ph+car3_p0_end-car3_p0
-    defw #5F1A,car3_p1_end-car3_p1
+    defw #5F16,car3_p1_end-car3_p1
 car3_p1_ph
-    ORG #5F1A,car3_p1_ph
+    ORG #5F16,car3_p1_ph
 car3_p1
 car3_car_code1
     ld de,#3C3C
@@ -13827,13 +13910,14 @@ car3_car_code1
     ld hl,#FC7C
     di
     push hl
-    ld bc,#4F0F
+    ld bc,#3F3F
     push bc
-    push de
+    ld hl,#3D3C
+    push hl
     push de
     push de
     push bc
-    ld bc,#6D30
+    ld bc,#3D30
     push bc
     ld hl,#080E
     add hl,sp
@@ -13842,13 +13926,14 @@ car3_car_code1
     ld hl,#FC7C
     di
     push hl
-    ld hl,#8F3C
+    ld hl,#3F3C
     push hl
     push de
     push de
     push de
-    ld hl,#3C9E
+    ld hl,#3C3E
     push hl
+    push bc
     jp #6600
 car3_p1_end
     ORG car3_p1_ph+car3_p1_end-car3_p1
@@ -13856,8 +13941,6 @@ car3_p1_end
 car3_p2_ph
     ORG #6600,car3_p2_ph
 car3_p2
-    ld hl,#2D30
-    push hl
     ld hl,#B8FC
     push hl
     ld hl,#0810
@@ -13939,7 +14022,7 @@ car3_p2
     ld hl,#FC74
     di
     push hl
-    ld hl,#653C
+    ld hl,#353C
     push hl
     push de
     push de
@@ -13956,7 +14039,7 @@ car3_p2
     ld hl,#FC74
     di
     push hl
-    ld hl,#653C
+    ld hl,#353C
     push hl
     push de
     push de
@@ -14188,14 +14271,15 @@ car3_p6
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#309E
+    ld hl,#303E
     di
     push hl
-    ld bc,#0F8F
+    ld bc,#3F3F
     push bc
     push de
     push de
-    push de
+    ld h,#3C
+    push hl
     push bc
     ld bc,#BCFC
     push bc
@@ -14206,7 +14290,6 @@ car3_p6
     ld hl,#FC74
     di
     push hl
-    ld hl,#301E
     jp #97D5
 car3_p6_end
     ORG car3_p6_ph+car3_p6_end-car3_p6
@@ -14214,13 +14297,14 @@ car3_p6_end
 car3_p7_ph
     ORG #97D5,car3_p7_ph
 car3_p7
+    ld hl,#303E
     push hl
-    ld hl,#6D3C
+    ld hl,#3D3C
     push hl
     push de
     push de
     push de
-    ld hl,#3C4F
+    ld hl,#3C3F
     push hl
     push bc
     ld hl,#0810
@@ -14237,8 +14321,6 @@ car3_p7
     push hl
     ld h,#C0
     push hl
-    ld hl,#603C
-    push hl
     jp #9D40
 car3_p7_end
     ORG car3_p7_ph+car3_p7_end-car3_p7
@@ -14246,6 +14328,8 @@ car3_p7_end
 car3_p8_ph
     ORG #9D40,car3_p8_ph
 car3_p8
+    ld hl,#603C
+    push hl
     push de
     push bc
     ld hl,#C870
@@ -14305,14 +14389,14 @@ car3_p8
     ld hl,#FCD4
     di
     push hl
-    ld hl,#309E
+    ld hl,#303E
     push hl
     ld hl,#383C
     push hl
     push de
     push de
     push de
-    ld hl,#3C9A
+    ld hl,#3C3A
     push hl
     ld hl,#B8FC
     push hl
@@ -14323,14 +14407,14 @@ car3_p8
     ld hl,#FCD4
     di
     push hl
-    ld hl,#309E
+    ld hl,#303E
     push hl
     ld hl,#683C
     push hl
     push de
     push de
     push de
-    ld hl,#3C9A
+    ld hl,#3C3A
     push hl
     ld hl,#B8FC
     push hl
@@ -14361,8 +14445,6 @@ car3_p8
     ld hl,#203C
     di
     push hl
-    ld hl,#00C0
-    push hl
     jp #9E55
 car3_p8_end
     ORG car3_p8_ph+car3_p8_end-car3_p8
@@ -14370,6 +14452,8 @@ car3_p8_end
 car3_p9_ph
     ORG #9E55,car3_p9_ph
 car3_p9
+    ld hl,#00C0
+    push hl
     ld hl,#4000
     push hl
     ld h,#00
@@ -14394,8 +14478,6 @@ car3_p9
     ld hl,#C86C
     add hl,sp
     ld sp,hl
-    ei
-    ld hl,#0000
     jp #9ED5
 car3_p9_end
     ORG car3_p9_ph+car3_p9_end-car3_p9
@@ -14403,6 +14485,8 @@ car3_p9_end
 car3_p10_ph
     ORG #9ED5,car3_p10_ph
 car3_p10
+    ei
+    ld hl,#0000
     di
     push hl
     push hl
@@ -14617,13 +14701,13 @@ car3_p13
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3CCF
+    ld hl,#3C3F
     di
     push hl
-    ld bc,#CF3C
-    push bc
-    ld b,#3C
-    push bc
+    ld hl,#9F3C
+    push hl
+    ld h,#3C
+    push hl
     jp #5DA0
 car3_p13_end
     ORG car3_p13_ph+car3_p13_end-car3_p13
@@ -14631,37 +14715,39 @@ car3_p13_end
 car3_p14_ph
     ORG #5DA0,car3_p14_ph
 car3_p14
-    push bc
     push hl
-    ld hl,#CF3C
+    ld l,#6F
+    push hl
+    ld hl,#3F3C
     push hl
     ld hl,#C86C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9E0F
+    ld hl,#3E3F
     di
     push hl
-    ld hl,#8F3C
+    ld hl,#3F3C
     push hl
-    push bc
-    push bc
-    ld hl,#3C4F
+    ld h,#3C
     push hl
-    ld hl,#0F6D
+    push hl
+    ld l,#3F
+    push hl
+    ld hl,#3F3D
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9E2D
+    ld hl,#3E3D
     di
     push hl
+    ld bc,#3C3C
     push bc
     push de
     push de
     push bc
-    ld hl,#1E6D
     push hl
     ld hl,#080C
     add hl,sp
@@ -14692,7 +14778,6 @@ car3_p14
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#383C
     jp #62A0
 car3_p14_end
     ORG car3_p14_ph+car3_p14_end-car3_p14
@@ -14700,6 +14785,7 @@ car3_p14_end
 car3_p15_ph
     ORG #62A0,car3_p15_ph
 car3_p15
+    ld hl,#383C
     di
     push hl
     push bc
@@ -14711,7 +14797,7 @@ car3_p15
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9A38
+    ld hl,#3A38
     di
     push hl
     push bc
@@ -14719,13 +14805,13 @@ car3_p15
     push de
     ld bc,#383C
     push bc
-    ld bc,#3465
+    ld bc,#3435
     push bc
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#1A60
+    ld hl,#3A60
     di
     push hl
     ld bc,#3C3C
@@ -14733,20 +14819,19 @@ car3_p15
     push bc
     push bc
     push bc
-    ld bc,#9025
+    ld bc,#9035
     push bc
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9A60
+    ld hl,#3A60
     di
     push hl
     push de
     push de
     push de
     push de
-    ld c,#65
     push bc
     ld hl,#C86C
     add hl,sp
@@ -14819,14 +14904,11 @@ car3_p17_ph
 car3_p17
 car3_view4
     ld de,#3030
-    ld bc,#0000
-    ld ix,#3C3C
-    ld iy,#3C30
     ld sp,hl
     ei
-    ld hl,#FC74
+    ld bc,#FC74
     di
-    push hl
+    push bc
     push de
     push de
     push de
@@ -14858,9 +14940,9 @@ car3_view4
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FC74
+    nop
     di
-    push hl
+    push bc
     push de
     push de
     push de
@@ -14876,7 +14958,16 @@ car3_view4
     push hl
     ld hl,#4000
     push hl
-    push bc
+    ld h,#00
+    push hl
+    push hl
+    ld l,#60
+    push hl
+    push de
+    ld hl,#C86C
+    add hl,sp
+    ld sp,hl
+    ei
     jp #6DA0
 car3_p17_end
     ORG car3_p17_ph+car3_p17_end-car3_p17
@@ -14884,21 +14975,14 @@ car3_p17_end
 car3_p18_ph
     ORG #6DA0,car3_p18_ph
 car3_p18
-    push bc
-    ld hl,#0060
-    push hl
-    push de
-    ld hl,#C86C
-    add hl,sp
-    ld sp,hl
-    ei
     ld hl,#FC90
     di
     push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#0020
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld l,#20
     push hl
     push de
     ld hl,#080C
@@ -14908,10 +14992,11 @@ car3_p18
     ld hl,#FC94
     di
     push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#0068
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld l,#68
     push hl
     push de
     ld hl,#B8FC
@@ -14923,10 +15008,11 @@ car3_p18
     ld hl,#7C34
     di
     push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#003C
+    ld hl,#0000
+    push hl
+    push hl
+    push hl
+    ld l,#3C
     push hl
     ld hl,#3430
     push hl
@@ -14944,6 +15030,9 @@ car3_p18
     ld h,#C0
     push hl
     push hl
+    ld l,#3C
+    push hl
+    ld hl,#3430
     jp #72A0
 car3_p18_end
     ORG car3_p18_ph+car3_p18_end-car3_p18
@@ -14951,9 +15040,6 @@ car3_p18_end
 car3_p19_ph
     ORG #72A0,car3_p19_ph
 car3_p19
-    ld l,#3C
-    push hl
-    ld hl,#3430
     push hl
     ld hl,#B8FC
     push hl
@@ -14985,7 +15071,8 @@ car3_p19
     push de
     push de
     push hl
-    push iy
+    ld hl,#3C30
+    push hl
     ld hl,#B8FC
     push hl
     ld hl,#0810
@@ -14995,17 +15082,22 @@ car3_p19
     ld hl,#FC7C
     di
     push hl
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    push iy
+    ld hl,#3C3C
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#30
+    push hl
     ld hl,#B8FC
     push hl
     ld hl,#0810
     add hl,sp
     ld sp,hl
+    ei
+    ld hl,#FC7C
+    di
     jp #75A0
 car3_p19_end
     ORG car3_p19_ph+car3_p19_end-car3_p19
@@ -15013,18 +15105,17 @@ car3_p19_end
 car3_p20_ph
     ORG #75A0,car3_p20_ph
 car3_p20
-    ei
-    ld hl,#FC7C
-    di
     push hl
-    ld hl,#CFCF
+    ld hl,#3F3F
     push hl
-    push ix
-    push ix
-    push ix
-    ld h,#9E
+    ld hl,#3C3C
     push hl
-    push iy
+    push hl
+    push hl
+    ld hl,#9ECF
+    push hl
+    ld hl,#3C30
+    push hl
     ld hl,#E8FC
     push hl
     ld hl,#C870
@@ -15034,14 +15125,14 @@ car3_p20
     ld hl,#FC7C
     di
     push hl
-    ld hl,#0F0F
+    ld hl,#3F3F
     push hl
-    push ix
-    push ix
-    push ix
-    ld h,#4F
+    ld bc,#3C3C
+    push bc
+    push bc
+    push bc
     push hl
-    ld hl,#2D30
+    ld hl,#3D30
     push hl
     ld hl,#A8FC
     push hl
@@ -15052,15 +15143,16 @@ car3_p20
     ld hl,#FC74
     di
     push hl
-    ld hl,#653C
+    ld hl,#353C
     push hl
-    push iy
+    ld hl,#3C30
+    push hl
     push de
     ld hl,#3038
     push hl
-    ld hl,#3C9E
+    ld hl,#3C3E
     push hl
-    ld hl,#2D30
+    ld hl,#3D30
     push hl
     ld hl,#080E
     add hl,sp
@@ -15076,14 +15168,15 @@ car3_p21
     ld hl,#FC7C
     di
     push hl
-    push ix
+    push bc
     ld hl,#3C60
     push hl
     push de
     ld hl,#3038
     push hl
-    push ix
-    push iy
+    push bc
+    ld hl,#3C30
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15091,14 +15184,15 @@ car3_p21
     ld hl,#FC7C
     di
     push hl
-    push ix
+    push bc
     ld hl,#3C68
     push hl
-    push ix
+    push bc
     ld hl,#3438
     push hl
-    push ix
-    push iy
+    push bc
+    ld hl,#3C30
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15106,14 +15200,15 @@ car3_p21
     ld hl,#FC7C
     di
     push hl
-    push ix
+    push bc
     ld hl,#3C60
     push hl
     push de
     ld hl,#3038
     push hl
-    push ix
-    push iy
+    push bc
+    ld hl,#3C30
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15123,9 +15218,9 @@ car3_p21
     push hl
     ld hl,#303C
     push hl
-    push iy
+    ld hl,#3C30
+    push hl
     push de
-    ld l,#38
     jp #7DA0
 car3_p21_end
     ORG car3_p21_ph+car3_p21_end-car3_p21
@@ -15133,6 +15228,7 @@ car3_p21_end
 car3_p22_ph
     ORG #7DA0,car3_p22_ph
 car3_p22
+    ld hl,#3038
     push hl
     ld hl,#3C34
     push hl
@@ -15142,18 +15238,18 @@ car3_p22
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#FCDE
+    ld hl,#FC7E
     di
     push hl
     ld hl,#653C
     push hl
-    push ix
-    push ix
-    push ix
-    ld hl,#3C14
-    push hl
-    ld hl,#CF90
-    push hl
+    push bc
+    push bc
+    push bc
+    ld c,#14
+    push bc
+    ld bc,#9F90
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15161,15 +15257,15 @@ car3_p22
     ld hl,#FC74
     di
     push hl
-    ld hl,#9030
-    push hl
+    ld bc,#9030
+    push bc
     push de
     push de
     push de
-    ld hl,#3C10
-    push hl
-    ld h,#65
-    push hl
+    ld bc,#3C10
+    push bc
+    ld b,#65
+    push bc
     ld hl,#C86E
     add hl,sp
     ld sp,hl
@@ -15177,17 +15273,17 @@ car3_p22
     ld hl,#FC74
     di
     push hl
-    ld hl,#1060
-    push hl
-    ld l,#00
-    push hl
+    ld bc,#1060
+    push bc
+    ld c,#00
+    push bc
+    ld b,#00
     push bc
     ld hl,#0080
     push hl
     ld hl,#6000
     push hl
     ld hl,#3810
-    push hl
     jp #F100
 car3_p22_end
     ORG car3_p22_ph+car3_p22_end-car3_p22
@@ -15195,6 +15291,7 @@ car3_p22_end
 car3_p23_ph
     ORG #F100,car3_p23_ph
 car3_p23
+    push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
@@ -15243,9 +15340,9 @@ car3_p23
     jp bush_spr_done
 car3_p23_end
     ORG car3_p23_ph+car3_p23_end-car3_p23
-    defw #F145,car3_p24_end-car3_p24
+    defw #F146,car3_p24_end-car3_p24
 car3_p24_ph
-    ORG #F145,car3_p24_ph
+    ORG #F146,car3_p24_ph
 car3_p24
 car3_view5
     ld de,#3030
@@ -15439,7 +15536,7 @@ car3_view5
     push hl
     push hl
     push hl
-    ld hl,#CFCF
+    ld hl,#3F3F
     push hl
     ld hl,#BCFC
     push hl
@@ -15450,15 +15547,14 @@ car3_view5
     ld hl,#FC54
     di
     push hl
-    ld hl,#301E
+    ld hl,#303E
     push hl
-    ld hl,#0F8F
+    ld hl,#3F3F
     push hl
-    ld hl,#3C3C
-    push hl
-    push hl
-    push hl
-    ld hl,#0F0F
+    ld bc,#3C3C
+    push bc
+    push bc
+    push bc
     push hl
     ld hl,#BCFC
     push hl
@@ -15466,19 +15562,20 @@ car3_view5
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#301E
+    ld hl,#303E
     di
     push hl
-    ld hl,#6D3C
+    ld hl,#3D3C
     push hl
     ld hl,#3430
     push hl
     push de
     ld hl,#303C
     push hl
-    ld hl,#3C9A
+    ld hl,#3C3A
     push hl
-    push bc
+    ld hl,#B8FC
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15486,14 +15583,13 @@ car3_view5
     ld hl,#303C
     di
     push hl
-    ld h,#3C
-    push hl
-    ld bc,#3430
     push bc
+    ld hl,#3430
+    push hl
     push de
-    ld bc,#903C
-    push bc
+    ld hl,#903C
     push hl
+    push bc
     ld hl,#BCFC
     push hl
     ld hl,#080E
@@ -15503,16 +15599,15 @@ car3_view5
     ld hl,#303C
     di
     push hl
-    ld h,#3C
-    push hl
-    ld bc,#3438
     push bc
+    ld hl,#3438
     push hl
-    ld bc,#943C
     push bc
+    ld hl,#943C
     push hl
-    ld bc,#BCFC
     push bc
+    ld hl,#BCFC
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15520,16 +15615,15 @@ car3_view5
     ld hl,#303C
     di
     push hl
-    ld h,#3C
-    push hl
-    ld bc,#3430
     push bc
+    ld hl,#3430
+    push hl
     push de
-    ld bc,#903C
-    push bc
+    ld hl,#903C
     push hl
-    ld bc,#BCFC
     push bc
+    ld hl,#BCFC
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15537,34 +15631,33 @@ car3_view5
     ld hl,#603C
     di
     push hl
-    ld bc,#383C
-    push bc
-    ld bc,#3430
-    push bc
+    ld h,#38
+    push hl
+    ld hl,#3430
+    push hl
     push de
-    ld bc,#303C
-    push bc
-    ld bc,#3C30
-    push bc
-    ld bc,#B8FC
-    push bc
+    ld hl,#303C
+    push hl
+    ld hl,#3C30
+    push hl
+    ld hl,#B8FC
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#60CF
+    ld hl,#606F
     di
     push hl
     ld hl,#283C
     push hl
-    ld h,#3C
-    push hl
-    push hl
-    push hl
-    ld l,#9A
-    push hl
-    ld hl,#EDFC
-    push hl
+    push bc
+    push bc
+    push bc
+    ld c,#9A
+    push bc
+    ld bc,#BDFC
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -15572,13 +15665,14 @@ car3_view5
     ld hl,#209A
     di
     push hl
-    ld l,#3C
-    push hl
+    ld bc,#203C
+    push bc
     push de
     push de
     push de
-    ld hl,#3060
-    push hl
+    ld bc,#3060
+    push bc
+    ld bc,#B8FC
     push bc
     ld hl,#C86E
     add hl,sp
@@ -15648,9 +15742,9 @@ car3_view5
     jp bush_spr_done
 car3_p24_end
     ORG car3_p24_ph+car3_p24_end-car3_p24
-    defw #F3BD,car3_p25_end-car3_p25
+    defw #F3B9,car3_p25_end-car3_p25
 car3_p25_ph
-    ORG #F3BD,car3_p25_ph
+    ORG #F3B9,car3_p25_ph
 car3_p25
 car3_view6
     ld de,#3C3C
@@ -15749,29 +15843,28 @@ car3_view6
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#7C8F
+    ld hl,#7C3F
     di
     push hl
-    ld hl,#CF3C
+    ld hl,#3F3C
     push hl
     push de
     push de
-    ld hl,#3CCF
+    ld hl,#3C3F
     push hl
-    ld hl,#4FBC
+    ld hl,#3FBC
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#3C6D
+    ld hl,#3E3D
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#9E3C
     push hl
     ld hl,#080C
     add hl,sp
@@ -15829,27 +15922,27 @@ car3_view6
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#1E38
+    ld hl,#3E38
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#342D
+    ld hl,#343D
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#9E38
+    ld hl,#3E38
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#346D
+    ld hl,#343D
     push hl
     ld hl,#080C
     add hl,sp
@@ -15950,9 +16043,9 @@ car3_view6
     jp bush_spr_done
 car3_p25_end
     ORG car3_p25_ph+car3_p25_end-car3_p25
-    defw #F571,car3_p26_end-car3_p26
+    defw #F56A,car3_p26_end-car3_p26
 car3_p26_ph
-    ORG #F571,car3_p26_ph
+    ORG #F56A,car3_p26_ph
 car3_p26
 car3_view7
     ld de,#3C3C
@@ -16054,16 +16147,16 @@ car3_view7
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#4FCF
+    ld hl,#3F3F
     di
     push hl
-    ld hl,#6D3C
+    ld hl,#3D3C
     push hl
     push de
     push de
-    ld hl,#9E4F
+    ld hl,#3E3F
     push hl
-    ld hl,#2DB8
+    ld hl,#3DB8
     push hl
     ld hl,#080E
     add hl,sp
@@ -16072,13 +16165,13 @@ car3_view7
     ld hl,#FC7C
     di
     push hl
-    ld hl,#CF3C
+    ld hl,#3F3C
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#2DB8
+    ld hl,#3DB8
     push hl
     ld hl,#080E
     add hl,sp
@@ -16149,7 +16242,7 @@ car3_view7
     ld hl,#FC7C
     di
     push hl
-    ld hl,#653C
+    ld hl,#353C
     push hl
     push de
     push de
@@ -16304,9 +16397,9 @@ car3_view7
     jp bush_spr_done
 car3_p26_end
     ORG car3_p26_ph+car3_p26_end-car3_p26
-    defw #F793,car3_p27_end-car3_p27
+    defw #F78C,car3_p27_end-car3_p27
 car3_p27_ph
-    ORG #F793,car3_p27_ph
+    ORG #F78C,car3_p27_ph
 car3_p27
 car3_view8
     ld de,#3C3C
@@ -16407,29 +16500,29 @@ car3_view8
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#741E
+    ld hl,#743E
     di
     push hl
-    ld hl,#8F6D
+    ld hl,#3F3D
     push hl
     push de
     push de
-    ld hl,#3C9E
+    ld hl,#3C3E
     push hl
-    ld hl,#CF8F
+    ld hl,#3F3F
     push hl
     ld hl,#080C
     add hl,sp
     ld sp,hl
     ei
-    ld hl,#741E
+    ld hl,#743E
     di
     push hl
     push de
     push de
     push de
     push de
-    ld hl,#3CCF
+    ld hl,#3C3F
     push hl
     push iy
     ld hl,#080E
@@ -16502,7 +16595,7 @@ car3_view8
     push de
     push de
     push de
-    ld hl,#3C9A
+    ld hl,#3C3A
     push hl
     push iy
     ld hl,#0810
@@ -16644,9 +16737,9 @@ car3_view8
     jp bush_spr_done
 car3_p27_end
     ORG car3_p27_ph+car3_p27_end-car3_p27
-    defw #F9B1,car3_p28_end-car3_p28
+    defw #F9AA,car3_p28_end-car3_p28
 car3_p28_ph
-    ORG #F9B1,car3_p28_ph
+    ORG #F9AA,car3_p28_ph
 car3_p28
 car3_view9
     ld de,#3C3C
@@ -17098,9 +17191,9 @@ car3_view9
     jp bush_spr_done
 car3_p28_end
     ORG car3_p28_ph+car3_p28_end-car3_p28
-    defw #FC7F,car3_p29_end-car3_p29
+    defw #FC78,car3_p29_end-car3_p29
 car3_p29_ph
-    ORG #FC7F,car3_p29_ph
+    ORG #FC78,car3_p29_ph
 car3_p29
 car3_view10
     ld de,#3C3C
@@ -18254,12 +18347,12 @@ car3_traffic
 car3_p37_ph
     ORG #A052,car3_p37_ph
 car3_p37
-    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
     defb #0C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #3C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#3C,#3C,#3C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#68,#C0,#3C,#68,#3C,#3C
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
 car3_p37_end
     ORG car3_p37_ph+car3_p37_end-car3_p37
     defw #A800,car3_p38_end-car3_p38
@@ -18279,15 +18372,15 @@ car3_p38_end
 car3_p39_ph
     ORG #B000,car3_p39_ph
 car3_p39
-    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
-    defb #11,#00,#01,#A0,#00,#00
     defb #00,#02,#04,#08,#10,#54,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
     defb #00,#22,#01,#A0,#00,#00
+    defb #01,#02,#03,#06,#11,#A8,#01,#A0,#33,#33,#01,#A0,#33,#11,#01,#A0
+    defb #33,#33
     defb #00,#02,#03,#06,#10,#54,#01,#A0,#33,#33,#01,#A0,#22,#33,#01,#A0
     defb #33,#33
     defb #03,#07,#0C,#10,#13,#9F,#03,#B3,#C3,#C3,#C3,#01,#A4,#C3,#C3
     defb #02,#05,#08,#0A,#12,#9F,#01,#A2,#C3,#C3,#01,#93,#C3
-    defb #01,#03,#06,#06,#11,#FC
+    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
 car3_p39_end
     ORG car3_p39_ph+car3_p39_end-car3_p39
     defw #B800,car3_p40_end-car3_p40
@@ -18295,7 +18388,6 @@ car3_p40_ph
     ORG #B800,car3_p40_ph
 car3_p40
     defb #02,#04,#04,#07,#12,#9F,#02,#A1,#C3,#C3,#01,#92,#C3
-    defb #01,#02,#03,#05,#11,#A8,#02,#A0,#33,#33
     defb #00,#02,#02,#04,#10,#54,#02,#A0,#33,#33
     defb #00,#02,#03,#05,#10,#54,#02,#A0,#33,#33
     defb #02,#04,#06,#08,#12,#9F,#02,#92,#C3
@@ -18303,7 +18395,8 @@ car3_p40
     defb #02,#04,#02,#05,#12,#9F,#03,#92,#C3
     defb #01,#03,#02,#05,#11,#A8,#03,#91,#0F
     defb #01,#03,#03,#06,#11,#A8,#03,#91,#0F
-    defb #02,#04,#08,#08,#12,#FC
+    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+    defb #01,#03,#05,#05,#11,#FC
 car3_p40_end
     ORG car3_p40_ph+car3_p40_end-car3_p40
     defw #0000,car3_p41_end-car3_p41
@@ -18312,15 +18405,14 @@ car3_p41_ph
 car3_p41
     defb #01,#03,#07,#0D,#11,#54,#01,#B0,#00,#00,#00,#01,#B0,#00,#33,#22
     defb #02,#B0,#11,#11,#22,#01,#B0,#00,#33,#22,#01,#B0,#00,#00,#00
-    defb #02,#05,#05,#09,#12,#9F,#01,#B1,#C3,#C3,#C3,#01,#A2,#C3,#C3,#01
-    defb #B1,#C3,#C3,#C3,#01,#A2,#C3,#C3
+    defb #01,#02,#04,#08,#11,#A8,#01,#A0,#00,#00,#01,#A0,#11,#22,#01,#A0
+    defb #11,#00,#01,#A0,#00,#00
 car3_p41_end
     ORG car3_p41_ph+car3_p41_end-car3_p41
     defw #003B,car3_p42_end-car3_p42
 car3_p42_ph
     ORG #003B,car3_p42_ph
 car3_p42
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#2C,#84
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#94,#3C
     defb #3C,#2C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#3C,#9C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
@@ -18328,13 +18420,49 @@ car3_p42
     defb #0C,#0C,#0C,#0C,#3C,#8C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     defb #0C,#0C,#0C,#0C,#0C,#8C,#0C,#1C,#8C,#9C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #0C,#1C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
 car3_p42_end
     ORG car3_p42_ph+car3_p42_end-car3_p42
     defw #0800,car3_p43_end-car3_p43
 car3_p43_ph
     ORG #0800,car3_p43_ph
 car3_p43
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
+    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+car3_p43_end
+    ORG car3_p43_ph+car3_p43_end-car3_p43
+    defw #1000,car3_p44_end-car3_p44
+car3_p44_ph
+    ORG #1000,car3_p44_ph
+car3_p44
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
+    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
+    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
+    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
+    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
+    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
+    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
+    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
+    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
+car3_p44_end
+    ORG car3_p44_ph+car3_p44_end-car3_p44
+    defw #1800,car3_p45_end-car3_p45
+car3_p45_ph
+    ORG #1800,car3_p45_ph
+car3_p45
     defb #3C,#1C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C,#8C,#CC,#4C,#4C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#1C,#3C,#3C
     defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#3C,#48,#3C,#3C
@@ -18346,40 +18474,52 @@ car3_p43
     defb #0C,#3C,#3C,#3C,#3C,#30,#3C,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
     defb #3C,#2C,#3C,#3C,#30,#34,#30,#34,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car3_p43_end
-    ORG car3_p43_ph+car3_p43_end-car3_p43
-    defw #1000,car3_p44_end-car3_p44
-car3_p44_ph
-    ORG #1000,car3_p44_ph
-car3_p44
     defb #0C,#0C,#3C,#0C,#3C,#3C,#3C,#3C,#8C,#8C,#4C,#4C,#8C,#CC,#4C,#4C
-car3_p44_end
-    ORG car3_p44_ph+car3_p44_end-car3_p44
-    defw #2800,car3_p45_end-car3_p45
-car3_p45_ph
-    ORG #2800,car3_p45_ph
-car3_p45
-    defb #01,#03,#04,#08,#11,#A8,#04,#91,#0F
+car3_p45_end
+    ORG car3_p45_ph+car3_p45_end-car3_p45
+    defw #2800,car3_p46_end-car3_p46
+car3_p46_ph
+    ORG #2800,car3_p46_ph
+car3_p46
+    defb #01,#03,#06,#06,#11,#FC
+    defb #02,#04,#08,#08,#12,#FC
     defb #02,#04,#0A,#0A,#12,#FC
     defb #22,#2A,#4B,#4B,#6C,#6C,#8D,#8D,#8E,#8E,#8F,#8F,#70,#70,#51,#51
     defb #2C,#2C,#0D,#2D,#2D,#4E,#4E,#4E,#4F,#4F,#4F,#30,#30,#10,#11,#11
     defb #11,#0C,#2C,#2C,#2C,#2D,#2D,#2D,#0D,#0E,#0E,#0E,#0E,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F,#0F
     defb #0F,#0F,#0F,#0F,#0F,#0A,#0A,#0A,#0A,#FF
-car3_p45_end
-    ORG car3_p45_ph+car3_p45_end-car3_p45
-    defw #3000,car3_p46_end-car3_p46
-car3_p46_ph
-    ORG #3000,car3_p46_ph
-car3_p46
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#3C
-    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#84
-    defb #0C,#0C,#2C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
-    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#30,#3C,#30,#3C,#8C,#CC,#4C,#4C
 car3_p46_end
     ORG car3_p46_ph+car3_p46_end-car3_p46
+    defw #3000,car3_p47_end-car3_p47
+car3_p47_ph
+    ORG #3000,car3_p47_ph
+car3_p47
+    ld a,(brake_on)
+    or a
+    ret z
+    push de
+    push hl
+    ld bc,#7F00+RAM_C4
+    out (c),c
+    call car_brake
+    ld bc,#7F00+RAM_C1
+    out (c),c
+    pop hl
+    pop de
+    xor a
+    ret
+    defb 0
+    defb 0
+    defs 54,0
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#0C,#3C,#9C,#3C,#1C,#30,#9C,#30,#4C,#4C
+car3_p47_end
+    ORG car3_p47_ph+car3_p47_end-car3_p47
+    defw brake_ink,55                 ; (its brake lights: brake_table)
+    defb #0F,#EA,#AB,#02,#F3,#AB,#02,#EB,#AB,#02,#F3,#AB,#02,#EA,#AB,#02
+    defb #F2,#AB,#02,#EA,#BB,#03,#F3,#BB,#03,#4B,#84,#02,#F3,#BB,#03,#EA
+    defb #BB,#03,#52,#84,#02,#EA,#9B,#02,#F3,#9B,#02,#EB,#9B,#02,#F3,#9B
+    defb #02,#EA,#9B,#02,#F2,#9B,#02
     defw #FFFF
 car3_blob_end
     ASSERT car3_blob_end <= FRAG7   ; (in place before boot_car)

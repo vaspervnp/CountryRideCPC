@@ -115,6 +115,8 @@ ROLL_FRAMES   EQU 7
 CLOUD_ROWS    EQU 2    ; the sky part's rows over the panorama's: the
 ;; ... clouds' (cloud_col, cloud_map0/1, cloud_tN: in the fragments and the
 ;; hidden lines)
+WIND_PICS     EQU 30   ; pictures a word the wind takes them left
+;; (cloud_wind: scene.CLOUD_WIND)
 ROLL_ABOVE    EQU 13   ; ... its lines this far above CAR_Y at most
 FLIP_T        EQU 73   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)
 FLIP_ROWS     EQU 4    ; ... rows up at most

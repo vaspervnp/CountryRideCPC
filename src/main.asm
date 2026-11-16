@@ -73,6 +73,7 @@ roada_start
     INCLUDE "cache4.asm"
     INCLUDE "lanes.asm"
     INCLUDE "gen/trafcode_4.asm"        ; (traffic sprite pieces: room)
+    INCLUDE "brake.asm"
 roada_end
     ASSERT roada_end <= STAGE_A
     SAVE "build/roada.raw",#4000,roada_end-#4000

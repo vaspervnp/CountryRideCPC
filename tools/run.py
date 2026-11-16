@@ -453,8 +453,15 @@ def road_model(g):
     return (scene.road_area(hill, zcam, curve, x=x, view=view, car_off=off,
                             traffic=traffic_cars(g), prop=prop_in_sight(g),
                             only=bushes_in_reach(g), car_up=g.byte("CAR_UP"),
-                            lanes=lanes, car_blink=car_blink(g, view)),
+                            lanes=lanes, car_blink=car_blink(g, view),
+                            car_brake=car_brake(g, view)),
             hill, zcam, curve, x)
+
+
+def car_brake(g, view):
+    """The car's brake lights lit this picture (src/brake.asm car_brake)."""
+    return bool(g.byte("BRAKE_ON") and not g.game_byte("COLL_T") and not g.byte("CAR_UP")
+                and view < g.sym["SPIN_VIEW"])
 
 
 def car_blink(g, view):
@@ -588,8 +595,7 @@ def cmd_check():
         want = scene.hud(**vals)
         got = hud_pens(g, buf)
         wrong = [y for y in range(scene.HUD_SHOWN) if want[y] != got[y]]
-        sky_want = scene.sky_lines(g.byte("RING_HEAD"))
-        wrong += [SKY_Y + i for i, row in enumerate(sky_pens(g)) if row != sky_want[i]]
+        wrong += [SKY_Y + i for i in sky_wrong(g)]
         if wrong:
             hud_bad += 1
             if hud_bad <= 3:
@@ -623,6 +629,19 @@ def cmd_check():
         got = on_screen(g)
         wrong = [y for y in range(FB_LINES) if want[y] != got[y]]
         if wrong:
+            # the wind's columns of this frame are written after the beam
+            # has shown the clouds (cloud_wind, line ~222): in their rows,
+            # each word as far as the wind has taken them or a word less
+            head, drift = g.byte("RING_HEAD"), g.byte("CC_DRIFT", 1)
+            alts = [[[pen_hw(p) for p in row]
+                     for row in scene.shown(hud_pens(g, buf), scene.sky_lines(head, d),
+                                            road_pens(g, buf), drop)] for d in (drift, drift - 1)]
+            sd = scene.sky_drop(drop)
+            wrong = [y for y in wrong
+                     if not scene.SKY_Y + sd <= y < scene.pano_y0() + sd
+                     or any(got[y][x:x + 4] not in [a[y][x:x + 4] for a in alts]
+                            for x in range(0, len(got[y]), 4))]
+        if wrong:
             scr_bad += 1
             if scr_bad <= 3:
                 print("frame %d (R5 model %d, buffer %d, drop %d): lines %s "
@@ -632,6 +651,23 @@ def cmd_check():
           "split as scene.py says; drops seen %s; %d headings"
           % (scr_bad, sorted(drops), len(heads)))
     return 1 if bad or hud_bad or scr_bad else 0
+
+
+def sky_wrong(g):
+    """The sky part's lines in the ring that differ from scene.py's, looking
+    RING_HEAD's way with the clouds as far as the wind has taken them
+    (cc_drift) - in the middle of the wind's step (dw_p), each word of the
+    clouds' rows as far or a word less (cloud_wind writes the columns over a
+    few frames)."""
+    import scene
+    head, drift = g.byte("RING_HEAD"), g.byte("CC_DRIFT", 1)
+    want = scene.sky_lines(head, drift)
+    was = scene.sky_lines(head, drift - 1) if g.byte("DW_P", 1) != 0xFF else want
+    got = sky_pens(g)
+    return [i for i, row in enumerate(got)
+            if row != want[i] and any(row[x:x + 4] != want[i][x:x + 4] and
+                                      row[x:x + 4] != was[i][x:x + 4]
+                                      for x in range(0, len(row), 4))]
 
 
 def cmd_watch(n):

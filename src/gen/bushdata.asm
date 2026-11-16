@@ -17,12 +17,16 @@ bush_d6   ; sprite 6: 16 lines
     defb #01,#08,#00,#41,#00,#41,#00,#00,#00,#41
 car_code2
     ld de,#0000
-    ld bc,#3F3F
-    ld ix,#0F0F
-    ld iy,#3F1F
     ld sp,hl
     ei
-    ld hl,#FC3F
+    ld bc,#FC3F
+    di
+    push bc
+    ld hl,#3F3F
+    push hl
+    push hl
+    push hl
+    ld hl,#0808
     jp #8F40
 bush_rz1   ; the row a bush zr ahead stands on, zr < 512: zr / 2
     defb #00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00
@@ -120,25 +124,19 @@ bush_rz2   ; ... zr >= 512: (zr - 512) / 8
     defb #09,#09,#09,#09,#09,#09,#09,#09,#08,#08,#08,#08,#08,#08,#08,#08
     defb #08,#08,#08,#08,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07,#07
     defb #07,#07,#07,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06,#06
-    di
-    push hl
-    push bc
-    push bc
-    push bc
-    ld hl,#0808
     add hl,sp
     ld sp,hl
     ei
     ld hl,#9F85
     di
     push hl
-    ld hl,#4000
-    push hl
+    ld bc,#4000
+    push bc
     push de
-    ld hl,#806A
-    push hl
-    ld hl,#ADFC
-    push hl
+    ld bc,#806A
+    push bc
+    ld bc,#ADFC
+    push bc
     ld hl,#080A
     add hl,sp
     ld sp,hl
@@ -148,8 +146,8 @@ bush_rz2   ; ... zr >= 512: (zr - 512) / 8
     push hl
     push de
     push de
-    ld hl,#002A
-    push hl
+    ld bc,#002A
+    push bc
     ld hl,#0FFC
     push hl
     ld hl,#080C
@@ -159,7 +157,12 @@ bush_rz2   ; ... zr >= 512: (zr - 512) / 8
     ld hl,#FC7E
     di
     push hl
+    ld hl,#1F0F
+    push hl
+    push de
+    push de
     jp #959A
+    defs 2,0
 bush_rtop   ; per hill level: the furthest row in sight
     defb #0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0B,#0A,#0A,#0A,#0A,#0A,#0A
     defb #0A,#0A,#0A,#0A,#09,#09,#09,#09,#09,#09,#09,#09,#09,#08,#08,#08
@@ -178,10 +181,6 @@ bush_d4   ; sprite 4: 11 lines
     defb #C3,#41,#82,#C3,#41,#C3,#00,#08,#C3,#41,#82,#00,#82,#C3,#41,#C3
     defb #00,#08,#C3,#82,#41,#41,#00,#82,#41,#C3,#00,#06,#C3,#00,#00,#00
     defb #00,#00,#00,#06,#82,#41,#00,#82,#41,#00
-    ld hl,#1F0F
-    push hl
-    push de
-    push de
     ld hl,#000A
     push hl
     ld hl,#0FFC
@@ -195,9 +194,11 @@ bush_d4   ; sprite 4: 11 lines
     push hl
     ld hl,#1F0F
     push hl
-    push bc
-    push bc
-    push iy
+    ld hl,#3F3F
+    push hl
+    push hl
+    ld l,#1F
+    push hl
     ld hl,#0FAD
     push hl
     ld hl,#080C
@@ -207,12 +208,13 @@ bush_d4   ; sprite 4: 11 lines
     ld hl,#DE4F
     di
     push hl
-    push ix
-    push ix
-    push ix
-    push ix
-    push ix
-    ld hl,#0FAD
+    ld hl,#0F0F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#AD
     push hl
     ld hl,#080E
     add hl,sp
@@ -223,10 +225,11 @@ bush_d4   ; sprite 4: 11 lines
     push hl
     ld hl,#2F3F
     push hl
-    push bc
-    push bc
-    push bc
-    push bc
+    ld h,#3F
+    push hl
+    push hl
+    push hl
+    push hl
     ld hl,#1FAD
     push hl
     ld hl,#080E
@@ -236,8 +239,11 @@ bush_d4   ; sprite 4: 11 lines
     ld hl,#3F8F
     di
     push hl
-    push ix
-    push bc
+    ld l,#3F
+    push hl
+    push hl
+    push hl
+    push hl
     jp #9755
 bush_spr0   ; size class 0, per row: its sprite's record (#FF none)
     defb #FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF,#FF
@@ -270,10 +276,8 @@ bush_spr2   ; size class 2, per row: its sprite's record (#FF none)
     defb #60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60
     defb #60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60,#60
     defb #60,#60,#60,#60,#60
-    push bc
-    push bc
-    push iy
-    ld hl,#0F4F
+    push hl
+    ld l,#4F
     push hl
     ld hl,#C86E
     add hl,sp
@@ -282,13 +286,15 @@ bush_spr2   ; size class 2, per row: its sprite's record (#FF none)
     ld hl,#9F2F
     di
     push hl
-    push bc
-    push de
-    push de
-    push de
-    ld hl,#003F
+    ld hl,#3F3F
     push hl
-    push iy
+    push de
+    push de
+    push de
+    ld h,#00
+    push hl
+    ld hl,#3F1F
+    push hl
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -304,12 +310,13 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     defb #29,#2A,#2A,#2B,#2C,#2D,#2E,#2F,#2F,#30,#31,#32,#33,#34,#34,#35
     defb #36,#37,#38,#39,#39,#3A,#3B,#3C,#3D,#3D,#3E,#3F,#40,#41,#42,#42
     defb #43,#44,#45,#46,#47
-    push ix
-    push bc
-    push bc
-    push bc
-    push iy
-    ld hl,#0FCF
+    ld l,#3F
+    push hl
+    push hl
+    push hl
+    push hl
+    push hl
+    ld l,#CF
     push hl
     ld hl,#080E
     add hl,sp
@@ -318,33 +325,34 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     ld hl,#3F2F
     di
     push hl
-    push bc
+    ld l,#3F
+    push hl
     push de
     push de
     ld l,#15
     push hl
     push de
-    ld hl,#002A
-    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
     ei
+    ld hl,#3F0F
     jp #9D40
     ASSERT $ <= #9800
     ORG #9D40,FRAG_ST11
-    ld hl,#3F0F
     di
     push hl
-    push ix
-    ld hl,#0F3F
+    ld h,#0F
     push hl
-    ld hl,#3C3C
+    ld bc,#0F3F
+    push bc
+    ld bc,#3C3C
+    push bc
+    ld c,#05
+    push bc
     push hl
-    ld l,#05
     push hl
-    push ix
-    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -352,15 +360,16 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     ld hl,#3F0F
     di
     push hl
-    push ix
-    ld hl,#0F3F
+    ld h,#0F
+    push hl
+    ld l,#3F
     push hl
     ld hl,#3C3C
     push hl
-    ld l,#05
-    push hl
-    push ix
-    push ix
+    push bc
+    ld bc,#0F0F
+    push bc
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -368,13 +377,14 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     ld hl,#3F0F
     di
     push hl
-    push ix
+    push bc
     ld hl,#0F2F
     push hl
+    ld hl,#3F3F
+    push hl
+    push hl
     push bc
     push bc
-    push ix
-    push ix
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -382,13 +392,14 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     ld hl,#7E0F
     di
     push hl
-    push ix
+    push bc
     ld hl,#3F15
     push hl
     push de
     push de
-    push iy
-    push ix
+    ld l,#1F
+    push hl
+    push bc
     ld hl,#080E
     add hl,sp
     ld sp,hl
@@ -396,8 +407,8 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     ld hl,#5400
     di
     push hl
-    ld hl,#002A
-    push hl
+    ld bc,#002A
+    push bc
     push de
     push de
     push de
@@ -428,10 +439,10 @@ bush_latR0   ; lateral class 0, right, per row: bytes from the road's centre (si
     push de
     push de
     push de
-    ld hl,#00FC
-    push hl
+    ld c,#FC
+    push bc
     jp bush_spr_done
-    defs 36,0
+    defs 43,0
 bush_latL0   ; lateral class 0, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FD,#FC,#FB,#FA,#F9,#F8,#F8,#F7,#F6,#F5,#F4,#F3,#F3
     defb #F2,#F1,#F0,#EF,#EE,#EE,#ED,#EC,#EB,#EA,#E9,#E9,#E8,#E7,#E6,#E5
@@ -447,12 +458,10 @@ bush_latR1   ; lateral class 1, right, per row: bytes from the road's centre (si
     defb #2F,#30,#31,#32,#33,#34,#35,#36,#37,#38,#39,#3A,#3B,#3C,#3D,#3E
     defb #3F,#40,#41,#42,#43,#44,#45,#46,#47,#48,#49,#49,#4A,#4B,#4C,#4D
     defb #4E,#4F,#50,#51,#52
-    defs 31,0
+    defs 35,0
 tr_s1r_closed
     ld ix,#C0C0
     ld sp,hl
-    call tr_st0
-    ld b,e
     jp tr_s1r_closed_c1
 bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#FA,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F1
@@ -462,6 +471,8 @@ bush_latL1   ; lateral class 1, left, per row: bytes from the road's centre (sig
     defb #C1,#C0,#BF,#BE,#BD,#BC,#BB,#BA,#B9,#B8,#B7,#B7,#B6,#B5,#B4,#B3
     defb #B2,#B1,#B0,#AF,#AE
 tr_s1r_closed_c1
+    call tr_st0
+    ld b,e
     ld c,#C0
     push bc
     push ix
@@ -483,9 +494,6 @@ tr_s1r_closed_c1
     call tr_st0
     push de
     push ix
-    push ix
-    push de
-    ld sp,hl
     jp tr_s1r_closed_c2
 bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (signed, at most 127)
     defb #01,#02,#03,#04,#05,#07,#08,#09,#0A,#0B,#0C,#0D,#0E,#0F,#10,#12
@@ -495,6 +503,9 @@ bush_latR2   ; lateral class 2, right, per row: bytes from the road's centre (si
     defb #48,#49,#4A,#4B,#4C,#4D,#4E,#4F,#51,#52,#53,#54,#55,#56,#57,#58
     defb #59,#5A,#5C,#5D,#5E
 tr_s1r_closed_c2
+    push ix
+    push de
+    ld sp,hl
     call tr_st0
     push iy
     push ix
@@ -513,13 +524,13 @@ tr_s1r_closed_c2
     ld sp,hl
     call tr_st0
     push iy
-    ld b,iyl
-    ld c,#C0
-    push bc
     jp tr_s1r_closed_c3
     ASSERT $ <= #A000
     ORG #A540,FRAG_ST12
 tr_s1r_closed_c3
+    ld b,iyl
+    ld c,#C0
+    push bc
     push ix
     ld c,iyl
     ld b,#C0
@@ -625,9 +636,6 @@ tr_s2_closed
     ld sp,hl
     call tr_st1
     ld b,e
-    ld c,#C0
-    push bc
-    push ix
     jp tr_s2_closed_c4
 bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FD,#FC,#FB,#F9,#F8,#F7,#F6,#F5,#F4,#F3,#F2,#F1,#F0,#EE
@@ -637,6 +645,9 @@ bush_latL2   ; lateral class 2, left, per row: bytes from the road's centre (sig
     defb #B8,#B7,#B6,#B5,#B4,#B3,#B2,#B1,#AF,#AE,#AD,#AC,#AB,#AA,#A9,#A8
     defb #A7,#A6,#A4,#A3,#A2
 tr_s2_closed_c4
+    ld c,#C0
+    push bc
+    push ix
     ld c,e
     ld b,#C0
     push bc
@@ -656,9 +667,6 @@ tr_s2_closed_c4
     call tr_st1
     push iy
     ld b,iyl
-    ld c,#C0
-    push bc
-    ld c,iyl
     jp tr_s2_closed_c5
     defs 1,0
 bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (signed, at most 127)
@@ -669,6 +677,9 @@ bush_latR3   ; lateral class 3, right, per row: bytes from the road's centre (si
     defb #53,#54,#55,#57,#58,#59,#5A,#5C,#5D,#5E,#60,#61,#62,#63,#65,#66
     defb #67,#68,#6A,#6B,#6C
 tr_s2_closed_c5
+    ld c,#C0
+    push bc
+    ld c,iyl
     ld b,#C0
     push bc
     push iy
@@ -689,9 +700,6 @@ tr_s6_closed
     push ix
     ld sp,hl
     call tr_st0
-    ld b,iyl
-    ld c,#C0
-    push bc
     jp tr_s6_closed_c6
     defs 1,0
 bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (signed, at most 127)
@@ -702,6 +710,9 @@ bush_latL3   ; lateral class 3, left, per row: bytes from the road's centre (sig
     defb #AD,#AC,#AB,#A9,#A8,#A7,#A6,#A4,#A3,#A2,#A0,#9F,#9E,#9D,#9B,#9A
     defb #99,#98,#96,#95,#94
 tr_s6_closed_c6
+    ld b,iyl
+    ld c,#C0
+    push bc
     ld c,iyl
     ld b,#C0
     push bc
@@ -720,8 +731,6 @@ tr_s6_closed_c6
     push de
     push de
     ld sp,hl
-    call tr_st0
-    push ix
     jp tr_s6_closed_c7
     defs 1,0
 bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (signed, at most 127)
@@ -732,6 +741,8 @@ bush_latR4   ; lateral class 4, right, per row: bytes from the road's centre (si
     defb #5E,#5F,#61,#62,#64,#65,#67,#68,#69,#6B,#6C,#6E,#6F,#71,#72,#74
     defb #75,#76,#78,#79,#7B
 tr_s6_closed_c7
+    call tr_st0
+    push ix
     push ix
     ld sp,hl
     ld bc,#D4C0
@@ -751,12 +762,12 @@ tr_s7_closed
     ld bc,#0801
     add hl,bc
     bit 6,h
-    call nz,tr_next_row
-    push iy
     jp tr_s7_closed_c8
     ASSERT $ <= #A800
     ORG #AD40,FRAG_ST13
 tr_s7_closed_c8
+    call nz,tr_next_row
+    push iy
     ld de,(tr_cw2)
     ld iy,(tr_cw2+2)
     ld sp,hl
@@ -774,13 +785,18 @@ tr_s7_closed_c8
 cloud_col   ; (ring_col, horizon.asm) the sky rows' tiles, the clouds in them
     ex de,hl
     ld a,(rc_col)
+cc_drift
+    add a,0              ; (self-modified: the wind's columns, cloud_wind)
+    cp PANO_WORDS
+    jr c,$+4
+    sub PANO_WORDS
     ld l,a
     ld h,0
     add hl,hl
     ld bc,cloud_map0
     add hl,bc            ; its first row's tile
     ld (cc_row0+2),hl
-    ld bc,cloud_map1-cloud_map0
+    ld bc,(cloud_map1-cloud_map0)&#FFFF
     add hl,bc
     ld (cc_row1+2),hl
     ex de,hl
@@ -884,11 +900,10 @@ cc_row1
     and hi(RING_BASE)+7
     ld h,a
     ex de,hl
-    jp ring_col_pano0
-    ASSERT $-cloud_col == 138
-cloud_t2
-    defb #0C,#0C,#0C,#0C,#0C,#9C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C
-    defs 8,0
+cc_back
+    jp ring_col_pano0    ; (self-modified: cloud_wind's way back)
+    ASSERT $-cloud_col == 146
+    defs 11,0
 bush_latL4   ; lateral class 4, left, per row: bytes from the road's centre (signed, at most 127)
     defb #FF,#FE,#FC,#FB,#F9,#F8,#F6,#F5,#F3,#F2,#F0,#EF,#EE,#EC,#EB,#E9
     defb #E8,#E6,#E5,#E3,#E2,#E1,#DF,#DE,#DC,#DB,#D9,#D8,#D6,#D5,#D3,#D2
@@ -938,19 +953,107 @@ cloud_t10
     defb #2C,#1C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#4C,#4C
     ASSERT $ <= #B000
     ORG #B540,FRAG_ST14
-cloud_map0   ; per panorama column, the tile of the sky part's row 0: 8 lines of a word
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t5,cloud_t7
-    defw cloud_t8,cloud_t9,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,cloud_t19,cloud_t21,cloud_t23
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw cloud_t30,cloud_t31,cloud_t31,cloud_t32,cloud_t33,cloud_t34,cloud_t21,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,cloud_t43,cloud_t8,cloud_t44,cloud_t33,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
-    defw cloud_t19,cloud_t21,cloud_t23,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0,sky_pairs+0
+cloud_wind  ; (main_spin) the wind takes the clouds left
+dw_wait
+    ld a,WIND_PICS       ; (self-modified: pictures to the next step)
+    dec a
+    jr z,dw_due
+    ld (dw_wait+1),a
+    ret
+dw_due
+    ld (dw_esp+1),sp     ; (dw_abort's way out)
+    ld a,#CD             ; ring_turn calls dw_flip while the wind runs -
+    ld (ring_turn),a
+    ld a,(flip_req)      ; unless the flip came just now
+    or a
+    jr z,dw_stop
+    ld a,RAM_C3
+    ld (main_cfg),a      ; (the flip's interrupt puts it back)
+    ld b,#7F
+    out (c),a
+dw_p
+    ld a,#FF             ; (self-modified: rc_col of the column to go on from; #FF: a step to start)
+    inc a
+    jr nz,dw_on
+    ld a,(ring_head)     ; the step, from the screen's left edge: the
+    ld (dw_p+1),a        ; clouds a word left
+    ld hl,cc_drift+1
+    ld a,(hl)
+    inc a
+    cp PANO_WORDS
+    jr c,$+3
+    xor a
+    ld (hl),a
+    ld a,(dw_p+1)
+    inc a
+dw_on
+    dec a
+    ld hl,ring_head
+    sub (hl)
+    jr nc,$+4
+    add a,PANO_WORDS     ; its column on the screen (0..PANO_WORDS-1)
+    cp PANO_WORDS*3/4    ; (gone off the left as the ring turned: from the edge)
+    jr c,dw_col
+    xor a
+dw_col                  ; A = the column on the screen
+    cp SCR_BYTES/2
+    jr nc,dw_done
+    ld (dw_j+1),a
+    ld hl,ring_head
+    add a,(hl)
+    cp PANO_WORDS
+    jr c,$+4
+    sub PANO_WORDS
+    ld (dw_p+1),a        ; (on from it, if it stops)
+    ld hl,cc_drift+1
+    add a,(hl)
+    cp PANO_WORDS
+    jr c,$+4
+    sub PANO_WORDS
+    add a,a
+    ld (dw_m+1),a        ; its tiles' place in the maps
+    ld hl,cloud_map1+1   ; the last row first: with no cloud there, a
+    ld e,48              ; column has none
+    call dw_char
+    jr c,dw_stop
+    jr z,dw_next
+    ld hl,cloud_map0+1
+    ld e,0
+    call dw_char
+    jr c,dw_stop
+dw_next
+dw_j
+    ld a,0               ; (self-modified: the column on the screen)
+    inc a
+    jr dw_col
+dw_done
+    ld a,#FF
+    ld (dw_p+1),a
+    ld a,WIND_PICS
+    ld (dw_wait+1),a
+dw_abort                ; (dw_flip: the flip came - its interrupt returns here)
+dw_esp
+    ld sp,0              ; (self-modified: SP in cloud_wind)
+dw_stop
+    ld a,#21             ; (ring_turn's LD HL again)
+    ld (ring_turn),a
+    ld a,RAM_C1
+    ld (main_cfg),a
+    ld b,#7F
+    out (c),a
+    ret
+;; dw_flip - (ring_turn: the flip's interrupt, while the wind runs) the
+;; main code sent out of it: its return to dw_abort. Destroys HL.
+dw_flip
+    ld hl,(isr_sp+1)
+    ld (hl),lo(dw_abort)
+    inc hl
+    ld (hl),hi(dw_abort)
+    ret
+    ASSERT hi(sky_pairs) >= #C0 && SCR_BYTES/2+48 < 256
+cloud_t2
+    defb #0C,#0C,#0C,#0C,#0C,#9C,#1C,#3C,#3C,#3C,#38,#30,#38,#30,#4C,#4C
+    defs 5,0
 bush_cx2   ; curve level 2, per row: the road's centre
     defb #42,#42,#41,#41,#41,#40,#40,#3F,#3F,#3F,#3E,#3E,#3D,#3D,#3D,#3C
     defb #3C,#3C,#3B,#3B,#3A,#3A,#3A,#3A,#39,#39,#39,#38,#38,#38,#37,#37
@@ -1000,19 +1103,93 @@ cloud_t18
     defb #0C,#0C,#0C,#0C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
     ASSERT $ <= #B800
     ORG #BD40,FRAG_ST15
-cloud_map1   ; per panorama column, the tile of the sky part's row 1: 8 lines of a word
-    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t2,cloud_t3,cloud_t4,cloud_t6,cloud_t6
-    defw cloud_t6,cloud_t6,cloud_t10,cloud_t6,cloud_t11,cloud_t12,cloud_t13,cloud_t14
-    defw cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
-    defw sky_pairs+16,sky_pairs+16,cloud_t16,cloud_t17,cloud_t18,cloud_t20,cloud_t22,cloud_t22
-    defw cloud_t24,cloud_t25,cloud_t26,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
-    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t27,cloud_t28,cloud_t6,cloud_t29
-    defw cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t6,cloud_t35
-    defw cloud_t36,cloud_t37,cloud_t38,cloud_t15,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16
-    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t39,cloud_t40,cloud_t41
-    defw cloud_t42,cloud_t41,cloud_t41,cloud_t41,cloud_t45,cloud_t46,cloud_t47,sky_pairs+16
-    defw sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,sky_pairs+16,cloud_t48,cloud_t49
-    defw cloud_t50,cloud_t51,cloud_t52,cloud_t49,cloud_t53,sky_pairs+16,sky_pairs+16,sky_pairs+16
+;; dw_char - HL = a row's map + 1, E = the row's characters on in the ring:
+;; its character in the column written again if it or the one left of it
+;; has a cloud (NZ). C: the VSYNC is on - no time.
+dw_char
+dw_m
+    ld bc,0              ; (self-modified: its place in the maps)
+    add hl,bc
+    ld a,(hl)
+    dec hl
+    dec hl
+    and (hl)             ; (left of the first: the byte before the map - the last has none,
+    cp hi(sky_pairs)&#C0 ; written again at worst; the plain sky's tiles in bank 7)
+    jr c,dw_cloud
+    xor a                ; (Z: none, NC)
+    ret
+dw_cloud
+    inc hl
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    ld (dw_t+1),bc       ; its tile
+    ld hl,(ring_w0)      ; its character in the ring
+    ld a,(dw_j+1)
+    add a,e
+    add a,l
+    ld l,a
+    jr nc,$+3
+    inc h
+    ld a,h
+    and hi(RING_WORDS-1)
+    ld h,a
+    add hl,hl
+    ld a,h
+    or hi(RING_BASE)
+    ld h,a
+    ld de,#800
+dw_half
+    ld b,#F5             ; the VSYNC: the flip's interrupt next
+    in a,(c)
+    rra
+    ret c
+    di
+    ld (dw_sp+1),sp
+dw_t
+    ld sp,0              ; (self-modified: the tile's next four lines)
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    pop bc
+    ld (hl),c
+    inc l
+    ld (hl),b
+    add hl,de
+    pop bc
+    ld (hl),b
+    dec l
+    ld (hl),c
+    add hl,de
+    ld (dw_t+1),sp
+dw_sp
+    ld sp,0              ; (self-modified)
+    ei
+    bit 7,h              ; (line 4: #6x, past line 7: #8x)
+    jr z,dw_half
+    or 1                 ; (NZ: written, NC)
+    ret
+    ASSERT hi(RING_BASE) == #40
+cloud_t21
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#3C
+cloud_t22
+    defb #3C,#3C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
+cloud_t23
+    defb #C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#48,#48,#3C,#84
+cloud_t24
+    defb #0C,#0C,#2C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
+cloud_t25
+    defb #0C,#0C,#3C,#3C,#3C,#3C,#3C,#3C,#30,#30,#30,#30,#8C,#CC,#4C,#4C
+cloud_t26
+    defb #0C,#0C,#2C,#0C,#3C,#8C,#3C,#3C,#30,#3C,#30,#3C,#8C,#CC,#4C,#4C
+    defs 1,0
 bush_cx6   ; curve level 6, per row: the road's centre
     defb #68,#66,#65,#64,#63,#61,#60,#5F,#5D,#5D,#5B,#5A,#59,#58,#57,#56
     defb #54,#54,#52,#51,#50,#4F,#4E,#4E,#4C,#4B,#4B,#49,#48,#48,#47,#46
