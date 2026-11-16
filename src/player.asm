@@ -235,5 +235,42 @@ race_keys
     ld (fx_new),a
     ret
 
+;; On the grass past the sand (off_cls 2: speed_player) the tyres hold half
+;; as well (since 2026-11-16; tools/scene.py):
+;; grass_pick - BC = a number on the grass (B) and off it (C): C = the one
+;; where the car is - the wheel's turn a picture (steer: on the grass it
+;; turns slowly, the car sliding on), the brake's (speed_player). Destroys
+;; AF.
+grass_pick
+    ld a,(off_cls)
+    cp 2
+    ret c
+    ld c,b
+    ret
+
+;; grass_half - (steer) HL = the wheel's move: on the grass half of it.
+;; Destroys AF.
+grass_half
+    ld a,(off_cls)
+    cp 2
+    ret c
+    srl h
+    rr l
+    ret
+
+;; step_held - (cache_steps) NZ: no step sideways now - the car is in the
+;; first FLIP_STILL pictures of its flip (jump.asm: at speed still, its
+;; lines drawn whole, its biggest frames) and the track has a hill here or
+;; just ahead (a hill that moves: every line's row compared). The shove
+;; waits in steer_x, CAR_LEAD pairs at most. Destroys AF, B, DE, HL.
+FLIP_STILL  EQU 8
+step_held
+    ld a,(jump_t)
+    dec a
+    cp FLIP_STILL
+    sbc a,a
+    ret z
+    jp hill_near                ; (horizon.asm)
+
 player_end
     ASSERT player_end <= #7740

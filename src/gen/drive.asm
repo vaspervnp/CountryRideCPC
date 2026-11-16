@@ -27,12 +27,12 @@ drag_tab
     defb 2,2,2,3,3,4,5,6,7,8
     ASSERT hi(drag_tab) == hi(drag_tab+9)
 ;; the speed gained a VSYNC faster held, sixteenths of a unit, by speed /
-;; 64, in LOW then in HIGH (speed_acc): the first car's - CARn.BIN puts
-;; the picked one's
+;; 64, in LOW then in HIGH (speed_acc; scene.py ENGINE): the first car's -
+;; CARn.BIN puts the picked one's
 acc_tab
-    defb 132,132,132,132,116,64,59,57,60,58,66,64,63,72,74,79
-    defb 95,104,104,104,104,94,71,31,14,6,0,0,0,0,0,0
-    defb 0,0,0,0,0,0,0,0,132,132,132,132,132,132,50,38
-    defb 38,38,38,38,38,38,38,41,38,41,43,44,45,51,51,53
-    defb 60,66,66,76,66,76,66,66,58,52,38,24,12,8,4,3
+    defb 104,102,99,97,95,93,91,88,86,84,83,83,82,82,81,80
+    defb 80,79,79,75,70,60,48,34,21,10,0,0,0,0,0,0
+    defb 0,0,0,0,0,0,0,0,70,66,63,60,57,56,54,54
+    defb 54,54,54,55,55,55,56,57,58,58,59,60,61,62,63,64
+    defb 65,66,66,66,66,66,65,61,55,45,34,23,14,9,5,4
     ASSERT $-acc_tab == 2*ACC_N

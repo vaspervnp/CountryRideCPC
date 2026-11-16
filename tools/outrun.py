@@ -30,17 +30,23 @@ Ours (25 pictures a second, the steering once a picture, the speed a
 VSYNC): a speed of SPEED_TOP (8.8 depth units a VSYNC, the first car's top)
 is 293 km/h; Out Run's 108 units are OFFROAD_X (20) pairs, so a unit is
 UNIT pairs and a loop's move U pairs a picture times 12 / 25. From Out Run
-the game has its engine and gears (T_LOW, T_HIGH: acc_table), the most the
-pedal gives off the road (CAPS), the wheel's turn and its full lock (the
-user's STEER_SCALE of it) and how fast the pull comes and goes. Its pull
-in the curves, its steering cut in the sharp ones, its lifting off and its
-brake were the game's too from 2026-11-10 to 2026-11-15; since then those
-are a car's (scene.py: the centrifugal push by the speed squared, the
-air's drag, the brake over it, the tyres' slip) - pull_levels and
-sharp_levels stay here as Out Run's.
-The first car (ROSSO) has Out Run's engine; the others are as far from it
-as their bars (scene.py CAR_LEVELS): the speed curve scaled to their top
-and each acceleration bar 15% quicker or slower.
+the game has its gears and their top speeds (GEAR_TOP), the speed to
+change up at (ENGINE_SHIFT), the most the pedal gives off the road (CAPS),
+the wheel's turn and its full lock (the user's STEER_SCALE of it) and how
+fast the pull comes and goes. Its pull in the curves, its steering cut in
+the sharp ones, its lifting off and its brake were the game's too from
+2026-11-10 to 2026-11-15; since then those are a car's (scene.py: the
+centrifugal push by the speed squared, the air's drag, the brake over it,
+the tyres' slip) - pull_levels and sharp_levels stay here as Out Run's.
+Its engine - the revs and the torque curve, T_LOW and T_HIGH, acc_table -
+was the game's till 2026-11-16: in LOW it pulls 21 km/h a second at 50
+km/h and 38 at 140, in HIGH 14 at 100 and 28 at 205. Since then the pull
+is scene.ENGINE's, falling with the speed in LOW and a tall gear's in
+HIGH, and as quick as Out Run's from 150 km/h up; T_LOW, T_HIGH and
+acc_table stay here as Out Run's.
+The first car (ROSSO) has Out Run's top speeds; the others are as far
+from it as their bars (scene.py CAR_LEVELS): the speed curve scaled to
+their top and each acceleration bar 15% quicker or slower.
 
     python3 tools/outrun.py           Out Run's numbers in our units
     python3 tools/outrun.py --check   T_LOW, T_HIGH again from the model (needs
@@ -161,7 +167,8 @@ def acc_table(top, quick, bands, band, gear):
     """The speed gained a VSYNC in the gear, sixteenths of a speed unit (8.8
     depth units a VSYNC), per speed band (speed / band): Out Run's curve
     scaled to this car's top (its top speed Out Run's 293), quick times as
-    quick; 0 past the gear's top."""
+    quick; 0 past the gear's top. (The game's acc_tab till 2026-11-16:
+    scene.acc_table since.)"""
     gtop = top * GEAR_TOP[gear] / V_TOP         # the gear's top, ours
     out = []
     for i in range(bands):
@@ -301,6 +308,10 @@ def main():
     for v in (100, 160, 193, 250, 280, 290, 293):
         print("  %3d km/h at %s s" % (v, " / ".join("%.1f" % time_to(v, g)
                                                 for g in (0, 1) if v <= GEAR_TOP[g])))
+    k = 50 / 16 * V_TOP / 0x09D8        # sixteenths a VSYNC -> km/h a second
+    for g in (0, 1):
+        print("  %s, km/h a second by speed / 64: %s" % (("LOW", "HIGH")[g], " ".join(
+            "%.0f" % (v * k) for v in acc_table(0x09D8, 1, 40, 64, g))))
 
 
 if __name__ == "__main__":

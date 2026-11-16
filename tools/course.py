@@ -46,8 +46,10 @@ def C(n, k):
 
 
 def H(n, a):
-    assert 16 <= abs(a) <= 127 and n <= 128      # (course_entry: 8 bits)
-    return (n, a)
+    assert 16 <= abs(a) <= 127 and n <= 128      # (course_entry: 8 bits; the
+    return (n, a)                                # steepest is scene.HILL_MOST:
+                                                 # what a hill gives the speed,
+                                                 # mkdrive.py checks it)
 
 
 def segment_entries(n, v):

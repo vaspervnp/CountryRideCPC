@@ -14,7 +14,8 @@ press fire; then you race the clock over five stages - at each one's end
 the road forks, nine stages in all - each in its own colours (The race,
 below), to music, the engine's note rising with the speed. You steer: the
 road moves under the car, and a curve carries the car out of it unless
-you steer against it.
+you steer against it; a climb takes speed and a fall gives it, and on the
+grass the tyres hold half as well.
 
 | Crest ahead | In a dip | The sharpest curve |
 |---|---|---|
@@ -269,16 +270,17 @@ drives the car):
 | WEDGE TURBO | 4 | 3 | 5 |
 | TOURING | 3 | 5 | 4 |
 
-The first, the ROSSO GT, has Out Run's engine (Steering, below), and the
-others are as far from it as their bars (`scene.py`; `tools/mkdrive.py`
-writes the numbers, `src/gen/drive.asm`). Speed 5 is the top speed of 9.8
-depth units a VSYNC - Out Run's 293 km/h - 4 is 9.2, 3 is 8.5 (since
-2026-11-07 half as much again as they were: 6.6, 6.1 and 5.7); on the sand,
-3/4 of it, on the grass 2/5. Each car gets there as Out Run's does, scaled
-to its top speed - LOW to 2/3 of it, from a standstill 1/3 in 3.6 s; changed
-up at the best, 2/3 in 6.6 s, 85% in 9 s, 95% in 14 s and all of it in 24 -
-each bar of acceleration from 4 15% quicker or slower (its `acc_tab`, a
-table a gear, in its `CARn.BIN`). Grip is how fast the car is steered
+The first, the ROSSO GT, has Out Run's top speeds and gears and the
+engine of Steering, below, and the others are as far from it as their bars
+(`scene.py`; `tools/mkdrive.py` writes the numbers, `src/gen/drive.asm`).
+Speed 5 is the top speed of 9.8 depth units a VSYNC - Out Run's 293 km/h -
+4 is 9.2, 3 is 8.5 (since 2026-11-07 half as much again as they were: 6.6,
+6.1 and 5.7); on the sand, 3/4 of it, on the grass 2/5. Each car gets there
+as the first does, scaled to its top speed - LOW to 2/3 of it, from a
+standstill 1/3 in 3.1 s; changed up at the best, 2/3 in 6.6 s, 85% in 9.2
+s, 95% in 14 s and all of it in 20 - each bar of acceleration from 4 15%
+quicker or slower (its `acc_tab`, a table a gear, in its `CARn.BIN`). Grip
+is how fast the car is steered
 across - at the full lock 0.8, 0.88, 0.97 or 1.06 pairs a picture with grip
 2, 3, 4 or 5, 55% of Out Run's 1.6 (`scene.STEER_SCALE`: the user's "half
 that speed" of 2026-11-10, then 10% more), 10% more or less a bar -
@@ -671,7 +673,7 @@ on hills: 12 runs of 96 bytes, those BOOT.BIN's own fragments have left
 by then (`tools/mkbush.py` `HUD_ROW7`); the other
 512 bytes of each block hold the bush sprites and the car as code, and most
 of the props' sprites as data - the
-seventh block's first half, at `#7600`, the keys and the player's speed
+seventh block's first half, at `#7600`, the keys and the grass's grip
 (`src/player.asm`), and the last block's first half, at `#7E00`, the part
 of the road cache's work that runs with RAM C1.
 `BOOT.BIN` is unpacked at `#4000`, so it carries that code where it runs, and
@@ -840,23 +842,36 @@ one more picture, so the two never fall on the same picture.
 
 ### Steering
 
-The car's engine is Out Run's - the SMS's, as OutrunOutrunCPC runs it
-(its `tools/native/LOGIC.md`: the engine `L2F6B`, the steering `L264D`):
-`tools/outrun.py` models it and works out ours, the first car's Out Run's
-own (the others: Picking a car, above). Out Run runs 12 loops a second; a
-unit across its road is 20/108 pairs (its road's edge, 108 from the
-middle, our `OFFROAD_X`); its 293 km/h our top speed of 9.8. From
-2026-11-10 the whole driving was Out Run's; since 2026-11-15 ("check
-physics and make car movement more realistic") what its arcade physics
-got wrong for a car is a car's (`tools/scene.py`, `tools/mkdrive.py`):
-the curves' push, lifting off, the brake, the tyres, a car standing.
+The car's gears, its top speeds, its wheel and what the pedal gives off
+the road are Out Run's - the SMS's, as OutrunOutrunCPC runs it (its
+`tools/native/LOGIC.md`: the engine `L2F6B`, the steering `L264D`):
+`tools/outrun.py` models it, the first car's Out Run's own (the others:
+Picking a car, above). Out Run runs 12 loops a second; a unit across its
+road is 20/108 pairs (its road's edge, 108 from the middle, our
+`OFFROAD_X`); its 293 km/h our top speed of 9.8. From 2026-11-10 the whole
+driving was Out Run's; since 2026-11-15 ("check physics and make car
+movement more realistic") what its arcade physics got wrong for a car is
+a car's (`tools/scene.py`, `tools/mkdrive.py`): the curves' push, lifting
+off, the brake, the tyres, a car standing - and since 2026-11-16 the
+engine's pull, the hills and the grass.
 
-- **The engine.** Out Run's revs, torque curve and two gears the player
-  changes (`drive_gear`: up LOW, down HIGH): LOW to 193 km/h - 100 in 3.6
-  s, 160 in 5.4, 193 in 11.4 from a standstill - and HIGH to 293 - 100 in
-  4.8 s, 193 in 10.4, 250 in 12.7; changed up at 160, the best (the demo
-  does: `SHIFT_SPEED`), 193 in 6.6 s, 250 in 9.0, 280 in 13.7 and 293 in
-  23.6. The speed gained a VSYNC by the speed, a table a gear (`acc_tab`,
+- **The engine.** Two gears the player changes (`drive_gear`: up LOW, down
+  HIGH), LOW to 193 km/h and HIGH to 293, as Out Run's. The pull is
+  `scene.ENGINE`'s, km/h a second by the speed in each gear: in LOW the
+  most from a standstill, 38, falling with the speed - 34 at 40 km/h, 30
+  at 70, 28.5 at 140 - then away to the gear's top (25 at 155, 9 at 180);
+  HIGH is a tall gear, two thirds of that - 26 from a standstill, 20 at
+  50-100 km/h - a little more as its revs come up, 24 at 190-225, then
+  away to the top speed (16 at 250, 4 at 275, 1 at 293). The two cross at
+  160 km/h, the best speed to change up (the demo does: `SHIFT_SPEED`).
+  From a standstill: in LOW 100 km/h in 3.1 s, 160 in 5.2, 193 in 9.3; in
+  HIGH 100 in 4.8 s, 193 in 9.1, 250 in 11.6; changed up at 160, 193 in
+  6.6 s, 250 in 9.2, 280 in 13.7 and 293 in 20. Till 2026-11-16 the pull
+  was Out Run's torque curve (`outrun.T_LOW`, `T_HIGH`), which in LOW gave
+  21 km/h a second at 50 km/h and 38 at 140, and in HIGH 14 at 100 and 28
+  at 205 (100 km/h in 3.6 s, 160 in 5.4; changed up at 160, 193 in 6.6 s,
+  250 in 9.0, 280 in 13.7): from 150 km/h up the car is as quick as it
+  was. The speed gained a VSYNC by the speed, a table a gear (`acc_tab`,
   `speed_acc`, sixteenths). Changed down to LOW over its top the car slows
   to it 48 km/h a second. Off the road the pedal gives less: on the sand
   (Out Run's 40 units, 7 pairs) HIGH 221 km/h at most (LOW its 193), on the
@@ -897,6 +912,33 @@ the curves' push, lifting off, the brake, the tyres, a car standing.
   at the full lock's worth of push, 26 at twice that. So a curve entered
   too fast carries the car out and slows it till it grips again, and the
   squeal is the warning (before, it sounded in every curve).
+- **The hills** (since 2026-11-16). Where the road ahead climbs - a dip,
+  the car seen uphill - the hill takes speed, and where it falls away - a
+  crest, the car seen downhill - it gives it: |`hill`| × 13 / 256 units a
+  picture (`hill_speed` in `steer`; `scene.HILL_KMHS`, `HILL_F`), a unit
+  more from a hill of 20, 40, 60 and 79 - on the steepest, four units a
+  picture, 12 km/h a second, 7 on average over a hill of 95 and 5 over one
+  of 70 - whatever the pedal and the brake do. So the car pulls away
+  slower up a dip and quicker over a crest (17 and 31 km/h a second where
+  the flat gives 24, between 100 and 240 km/h), rolls on down a crest off
+  the pedal and stops sooner up a dip; at the top speed a dip takes 8 to
+  13 km/h, which the engine brings back slowly (0.1-0.2 s lost a dip). A
+  car standing stays
+  where it is, and none goes over its top speed for a hill: `speed_player`
+  keeps it under the most the car goes (the pictures keep up with no
+  more). The hill is the road's shape ahead of the car, as the screen
+  shows it - not a slope added up along the track, which the road engine
+  does not have.
+- **The grass** (since 2026-11-16). On the grass past the sand (`off_cls`
+  2) the tyres hold half as well (`grass_pick`, `grass_half` in
+  `src/player.asm`): the wheel moves the car half as far, and turns 10 of
+  127 a picture, not 31 - half a second to the full lock and back - so the
+  car answers late and slides on after the wheel is let go (at 80 km/h a
+  hold of 14 pictures moves it 2.2 pairs and 1.6 more after, where the
+  road gives 6.7 and 0.8); and the brake takes half of its own
+  (`GRASS_BRK`: from 80 km/h to a standstill in 1.3 s for 0.7). The sand
+  holds as the road does. (Over what the pedal gives there the car slows
+  48 km/h a second whatever is held, as before.)
 
 The two moves add up in `steer_x`, where the road - the camera - is to
 go, and its fraction `car_xf` (`steer` in `src/game.asm`), at most 8 pairs
@@ -1398,22 +1440,37 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   share one box, 36 pixels wide and 32-33 lines, each frame at its bottom -
   the line the car's wheels stand on - so whichever way up it is, it comes
   down on the road there. That is `ROLL_ABOVE`, 10 lines over the car's
-  top line, which `cj_mark` draws whole too and the road's top keeps clear
-  of. A frame takes 0.45-1.3 ms (the spun views 1.3-1.4). In the air its
+  top line, which the road's top keeps clear of. A frame takes 0.45-1.3 ms
+  (the spun views 1.3-1.4). In the air its
   shadow is on the road under it, three black lines, smaller the higher it
   is (40 pixels wide a row up, 28 four up: `SHADOW_W`), and a thud as it
   comes down (`car_shadow`). Never higher than the road's top in the picture
   (`car_jump`): over a crest the ground behind it is not drawn again. In
-  each buffer the car's lines where it was shown last are drawn whole -
-  `drawn_up` has `#80` on for a frame of the flip, so on the ground too -
-  the grass's middle line's own template too (`cj_mark`), and the shadow's
-  lines while the flip is on (`car_air`). And while it is on the far
-  lines' road is drawn even where it is as it was (`jump_frame`, as
-  `traffic_pre` has it for a car up there), so nothing of it stays behind.
-  Where it is now, the road is as `road_project` has it, right for the car
-  to be drawn over (`src/jump.asm`). (Until 2026-11-05 those lines were
-  drawn whole too; with the shorter stripes, that made a picture in the air
-  late - 40.3 ms, 1 in 6000.)
+  each buffer the lines the car had where it was shown last are drawn
+  whole, so nothing of it stays behind - `drawn_up` has what the buffer
+  last showed, the view and the rows up - the grass's middle line's own
+  template too, and the shadow's lines while the flip is on (`car_air`).
+  Those are the frame's own lines, from the wheels' line up (`cj_mark` in
+  `src/road15.asm`, `flip_lines`: 12 lines for the car upside down or
+  upright, 24-25 on its flanks, 33 for the first; a view of the car's own
+  26), not the frames' whole box: four rows up, where the road is narrow,
+  a whole line costs three times its road. And no frame reaches a far line
+  (`scene.flip_far_gap`: 3 lines short at the least, on any hill - checked
+  when the tables are made), so the far lines that have not changed stay
+  as they are. Where the car is now, the road is as `road_project` has it,
+  right for the car to be drawn over (`src/jump.asm`). (Till 2026-11-16
+  the whole box was drawn whole, 36 lines, and every far line's road
+  (`jump_frame`): a picture of the flip took 31.5 ms on average and up to
+  39.3; once, 40.5 - the car four rows up in a dip, two cars near. Now
+  28.2 ms and 38.2 at worst. Until 2026-11-05 the lines where the car is now
+  were drawn whole too; with the shorter stripes, that made a picture in
+  the air late - 40.3 ms, 1 in 6000.) And in the flip's first eight
+  pictures - the car still at speed, its biggest frames - the road takes
+  no step sideways while the track has a hill here or just ahead
+  (`step_held`, `FLIP_STILL`): the crash's shove asks for one at once, and
+  the flip's first picture on top of a step and a hill that moves took
+  39.5 ms. The shove waits in `steer_x`, 8 pairs at most (`CAR_LEAD`), and
+  the road follows from the ninth picture on.
 
 All of it is the game's (`coll_start`, `coll_step` in `src/game.asm`): the
 road, the traffic and the bushes are drawn as ever, so the checks hold.
@@ -1721,6 +1778,29 @@ with nothing touching the car 154.6 s on average against 156.0 - the
 driving is as fast as it was; with the traffic and the bushes 255 s
 against 272, its 14 crashes a race costing less.
 
+With the engine's own pull, the hills and the grass (2026-11-16: Steering)
+and the flip's lines taken away exactly (Collisions): 16 races in the four
+cars, 37.2-39.0 ms at worst, none past the flip and none over 39.5 ms,
+every tenth picture as `scene.py` draws it - the 39.0 no crash's but a
+picture on a crest with the road still a level into a curve; the others
+38.5 at most. The jump test at four speeds a car and crashes forced at
+speed, 20 runs of 6000 pictures, some 350 flips, each picture as
+`scene.py` draws it: 28.2 ms on average while flipping and 38.2 at worst,
+none late (the build before, 16 runs: 31.5 and 39.3). The demo 37.3-38.4
+ms; the road, the HUD and the screen in the
+three R5 models as `scene.py` has them, for all four cars. `steer` takes
+0.71 ms off a curve (0.63 before: the grass's tests, the hill's share
+where there is a hill) and 1.10 in one (1.02); the two VSYNC steps a
+picture 0.86 ms (0.89). In the emulator the hill's share is the model's
+picture by picture (`scene.hill_speed`, 986 pictures coasting), the pedal's
+within the table's (2009 pictures), and the road answers the wheel as it
+did (the first step 6 pictures on). The autopilot's races, the clock kept
+going, 16 a build: with nothing touching the car 156.1 s on average
+against 154.7 - the driving is as fast as it was, the car twice as long
+on the grass when it gets there (112 pictures a race for 50); with the
+traffic and the bushes 245.8 s against 255.0, with 13.5 crashes a race
+for 14.8, the car quicker off the mark after each.
+
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from
 `car_x` -18 to 18 and back, 20 times), since the wheel is half as quick
@@ -1881,7 +1961,8 @@ src/            the game
   common.asm    the fragments: variables, interrupts and ruptures, road_draw
   road.asm      road_init, road_project
   road6.asm     road_project's part in bank 6: how lines are drawn
-  road15.asm    road_project's part in fragment 15, the curve level's jobs
+  road15.asm    road_project's part in fragment 15, the curve level's jobs;
+                the flip's lines to draw whole (cj_mark)
   cache.asm     the road's templates: the cache set, steps and curve
                 levels (worked out ahead), jobs
   cache4.asm    ... its part in bank 4 (band A)
@@ -1892,7 +1973,7 @@ src/            the game
   lanes.asm     ... and its band A and band 2 templates (bank 4)
   game.asm      main loop, the race's rules, demo drive, steering, the
                 player's speed
-  player.asm    the keys (M and ESC: race_keys) (page 1)
+  player.asm    the keys (M and ESC: race_keys), the grass's grip (page 1)
   course.asm    the track worked out a few entries ahead, the stages'
                 colours and traffic
   bush.asm      the bushes: projected, drawn, taken away
@@ -1950,8 +2031,9 @@ tools/
                 -> tools/propsart.py
   mksound.py    the race's music -> src/gen/music.asm
   outrun.py     Out Run's driving: its engine modelled (from
-                OutrunOutrunCPC), its steering and curves; what ours make
-                of them
+                OutrunOutrunCPC), its steering and curves; what ours take
+                from them (the engine's pull, the hills and the grass:
+                scene.py)
   mkdrive.py    ... the driving's numbers and tables -> src/gen/driveq.asm,
                 drive.asm
   mkbush.py     the bushes along the track, their sprites (as code and as

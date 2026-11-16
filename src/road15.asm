@@ -232,5 +232,36 @@ lane_road
     ld (sf_off+3),a
     ret
 
+;; ---------------------------------------------------------------------------
+;; cj_mark - (jump.asm car_jump; here for room) A = what a buffer's last
+;; picture showed of the car in a flip - its view and its rows up x 32, 0 a
+;; view on the road: the lines it had there whole (cjm_at) - a view of the
+;; car's own all CAR_TOP of them, a frame of the flip its own from the
+;; wheels' line up (flip_lines: gen/bush.asm, tools/scene.py), not the
+;; whole box, 36 lines - four rows up, where the road is narrow, a whole
+;; line costs three times a line's road.
+cj_mark
+    ld c,a
+    and #E0
+    ld e,a                              ; E = its rows up x 32 (4 bytes an
+    ld a,c                              ; entry, 8 lines a row)
+    and 31
+    sub ROLL_VIEW
+    ld b,CAR_TOP
+    jr c,cj_mark_go
+    add a,lo(flip_lines)
+    ld l,a
+    ld h,hi(flip_lines)
+    ld b,(hl)
+    ld a,e                              ; (its frames end at the wheels' line)
+    add a,4*(CAR_TOP-1-GAME_GROUND)
+    ld e,a
+cj_mark_go
+    ld a,e
+    jp cjm_at
+flip_lines
+    defb FLIP_L0,FLIP_L1,FLIP_L2,FLIP_L3,FLIP_L4,FLIP_L5,FLIP_L6
+    ASSERT hi(flip_lines) == hi(flip_lines+6) && ROLL_FRAMES == 7
+
 road15_end
     ASSERT road15_end <= FRAG15+FRAG_LEN

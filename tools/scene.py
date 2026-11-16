@@ -1121,15 +1121,24 @@ CAR_OFF_MAX = 0                 # car_off at most: the car always in the middle
                                 # since 2026-11-12 (car_lines)
 # per car: (speed, acceleration, grip), 1-5 (the select screen's bars), and
 # what the game makes of them (mkdrive.py: car_stats, CARn.BIN's acc_tab).
-# The engine and the gears are Out Run's (tools/outrun.py), the first car's
-# its own and the others as far from it as their bars: the top speed (8.8
-# depth units a VSYNC; 5 is the most the pictures keep up with; the first
-# car's, SPEED_TOP, is Out Run's 293 km/h); the speed gained a VSYNC,
-# sixteenths, by speed / 64 (acc_tab: a table a gear, LOW and HIGH, the
-# player changing them - scaled to the car's top, each acceleration bar
-# from 4 15% quicker or slower).
+# The gears are Out Run's (tools/outrun.py: LOW to 193 km/h, HIGH to 293, the
+# player changing them), the first car's its own and the others as far from
+# it as their bars: the top speed (8.8 depth units a VSYNC; 5 is the most
+# the pictures keep up with; the first car's, SPEED_TOP, is Out Run's 293
+# km/h); the speed gained a VSYNC, sixteenths, by speed / 64 (acc_tab: a
+# table a gear - scaled to the car's top, each acceleration bar from 4 15%
+# quicker or slower).
 # The rest is a car's, as far as an arcade game's can be (since 2026-11-15:
 # "make car movement more realistic" - Out Run's own till then, git log):
+# - the engine (ENGINE, since 2026-11-16; Out Run's torque curve till then,
+#   outrun.T_LOW and T_HIGH: in LOW it pulled 21 km/h a second at 50 km/h
+#   and 38 at 140): in LOW the pull is the most from a standstill and falls
+#   with the speed, gently to 140 km/h, then away to the gear's top; HIGH
+#   is a tall gear - two thirds of LOW's pull, a little more as its revs
+#   come up (190-225 km/h), then away to the top speed as Out Run's does.
+#   The two cross at 160 km/h (Out Run's best change), and the times with
+#   the gear changed there are Out Run's from 150 km/h up (250 at 9.0 s,
+#   280 at 13.6); from a standstill 100 km/h comes at 3.2 s for 3.6;
 # - the wheel: k, the full lock moving the car 127 x k / 64 / 256 pairs a
 #   picture (0.88: STEER_SCALE of Out Run's 18 units a loop) from
 #   STEER_SPEED on, as much less as it is slower under it - on the road and
@@ -1147,7 +1156,17 @@ CAR_OFF_MAX = 0                 # car_off at most: the car always in the middle
 # - off the pedal the air slows the car, DRAG_KMHS km/h a second standing
 #   and at the top, between them by the speed squared (drag_tab, by speed /
 #   256: Out Run's 48 a second at any speed stopped it like a brake); the
-#   brake BRAKE_KMHS more.
+#   brake BRAKE_KMHS more;
+# - a hill (since 2026-11-16): where the road ahead climbs (a dip: the car
+#   seen uphill) it takes speed, where it falls away (a crest: downhill) it
+#   gives it - |hill| x HILL_F / 256 units a picture, the pedal down or
+#   not, the brake on or not (HILL_KMHS km/h a second on the steepest of
+#   the courses'): a car standing stays, and none goes over its top speed
+#   for it;
+# - on the grass past the sand (since 2026-11-16) the tyres hold half as
+#   well: the wheel moves the car half as far and turns GRASS_RAMP a
+#   picture, not WHEEL_RAMP - the car slides on a while - and the brake
+#   takes GRASS_BRAKE of its own.
 CAR_LEVELS = [(5, 4, 3), (5, 5, 2), (4, 3, 5), (3, 5, 4)]
 SPEED_UP = 1.5
 TOP_SPEED = {k: int(v * SPEED_UP + 0.5) for k, v in {3: 0x05B0, 4: 0x0620, 5: 0x0690}.items()}
@@ -1176,6 +1195,21 @@ STOP_KMHS = 164                 # ... the game's own braking: the time up,
                                 # the demo's, before the start
 BACK_SPEED = 0x0200             # a crash over, the car drives back to the
                                 # road's middle this fast at most (60 km/h)
+# the engine: (km/h, km/h a second gained the pedal down) in each gear, the
+# first car's - straight lines between them (acc_table)
+ENGINE = (
+    [(0, 38), (40, 34), (70, 30.5), (140, 28.5), (155, 25), (170, 16),
+     (180, 9), (193, 2)],
+    [(0, 26), (30, 21), (50, 19.5), (100, 20), (150, 22), (190, 24),
+     (225, 24), (240, 21), (250, 16), (260, 10.5), (268, 6.5), (275, 4),
+     (283, 2.6), (290, 1.5), (293, 1.1)])
+HILL_KMHS = 14                  # km/h a second a hill gives or takes where
+HILL_MOST = 95                  # it is the steepest the courses have (in whole
+                                # units a picture: hill_speed)
+GRASS_RAMP = 10                 # the wheel's turn a picture at most on the
+                                # grass (WHEEL_RAMP 31 on the road: 0.5 s to
+                                # the full lock for 0.17)
+GRASS_BRAKE = 0.5               # the brake's on the grass, of its own
 SAND_W = round(OR.SAND_W * OR.UNIT)                     # pairs of sand
 SHIFT_SPEED = round(OR.ENGINE_SHIFT * SPEED_TOP / OR.V_TOP)  # the demo's
                                 # drive: HIGH from here on, LOW under it
@@ -1199,12 +1233,69 @@ def push_of(car_id, level, speed):
     return ((speed >> 4) ** 2 >> 8) * car_push_m(car_id) * PUSH_K[level - 1] >> 8
 
 
+def engine_pull(gear, kmh):
+    """ENGINE: km/h a second gained in the gear at the speed (the first
+    car's)."""
+    pts = ENGINE[gear]
+    for (v0, a0), (v1, a1) in zip(pts, pts[1:]):
+        if kmh <= v1:
+            return a0 + (a1 - a0) * max(0.0, kmh - v0) / (v1 - v0)
+    return pts[-1][1]
+
+
+def acc_table(top, quick, gear):
+    """The speed gained a VSYNC in the gear, sixteenths of a speed unit (8.8
+    depth units a VSYNC), per speed band (speed / ACC_BAND): ENGINE's curve
+    scaled to this car's top (its top speed the first car's 293 km/h),
+    quick times as quick - each band's as long in passing as the curve is;
+    0 past the gear's top."""
+    gtop = top * OR.GEAR_TOP[gear] / OR.V_TOP       # the gear's top, ours
+    out = []
+    for i in range(ACC_N):
+        s0, s1 = ACC_BAND * i, min(ACC_BAND * (i + 1), gtop)
+        if s0 >= gtop:
+            out.append(0)
+            continue
+        n, t = 16, 0.0                  # the time through it, VSYNCs
+        for j in range(n):
+            kmh = OR.V_TOP * (s0 + (s1 - s0) * (j + 0.5) / n) / top
+            t += (s1 - s0) / n / (per_vsync(engine_pull(gear, kmh)) * top / SPEED_TOP * quick)
+        out.append(max(1, min(255, round(16 * (s1 - s0) / t))))
+    return out
+
+
 def car_acc(car_id):
     """CARn.BIN's acc_tab: sixteenths of a speed unit a VSYNC by speed / 64,
     in LOW, then in HIGH."""
     sp, ac, gr = CAR_LEVELS[car_id]
     return [v for gear in (0, 1) for v in
-            OR.acc_table(TOP_SPEED[sp], 1 + ACC_BAR * (ac - 4), ACC_N, ACC_BAND, gear)]
+            acc_table(TOP_SPEED[sp], 1 + ACC_BAR * (ac - 4), gear)]
+
+
+def time_to(car_id, kmh, shift=None, gear=None, start=0.0):
+    """Seconds the car takes from `start` km/h to `kmh`, the pedal down, as
+    speed_acc counts - in the gear, or changing up at `shift` km/h; None if
+    it never gets there."""
+    acc, top = car_acc(car_id), TOP_SPEED[CAR_LEVELS[car_id][0]]
+    caps = car_caps(car_id)[:2]
+    s, frac, want = round(start * SPEED_TOP / OR.V_TOP), 0, kmh * SPEED_TOP / OR.V_TOP
+    for t in range(1, 60 * OR.VSYNCS):
+        g = gear if gear is not None else int(s >= shift * SPEED_TOP / OR.V_TOP)
+        a = acc[g * ACC_N + (s >> 6)] + frac
+        s, frac = min(s + (a >> 4), caps[g]), a & 15
+        if s >= want - 0.5:
+            return t / OR.VSYNCS
+    return None
+
+
+HILL_F = round(256 * per_vsync(HILL_KMHS) * OR.VSYNCS / OR.PICTURES / HILL_MOST)
+
+
+def hill_speed(hill):
+    """What a hill gives the speed a picture (game.asm hill_speed), units:
+    a crest's (positive) more, a dip's less."""
+    v = abs(hill) * HILL_F >> 8
+    return v if hill >= 0 else -v
 
 
 def car_caps(car_id):
@@ -1258,8 +1349,48 @@ def view_y(view):
 
 
 ROLL_ABOVE = max(-y for y in ROLL_Y.values())   # lines a flipping car reaches
-                                # above CAR_Y at most (jump.asm: its lines
-                                # drawn whole)
+                                # above CAR_Y at most (jump.asm)
+
+
+def flip_lines():
+    """Per frame of the flip: the lines it has from the wheels' line
+    (GAME_GROUND) up, the most of any car's - what jump.asm draws whole of a
+    buffer's last picture, to take the frame away (cj_mark: FLIP_LINES)."""
+    out = []
+    for f in range(ROLL_FRAMES):
+        n = 0
+        for c in CARS:
+            art = ROLL_ART[c][f]
+            first = next(i for i, row in enumerate(art) if any(ch not in ". " for ch in row))
+            n = max(n, GAME_GROUND - (ROLL_Y[c] + first) + 1)
+        out.append(n)
+    return out
+
+
+def flip_far_gap():
+    """The least lines between the top of the car as the flip shows it
+    (flip_seq: its view, its rows up - no higher than the road's top lets
+    it, cj_view) and the lowest far line (a row past FAR_Z), the hill up to
+    16 either way from the one it was shown on (two pictures on, at the top
+    speed). More than 0: the car never covers a far line, and a far line
+    that has not changed can stay as it is while the car flips (road.asm:
+    no rp_dirty for it)."""
+    far = max(r for r in range(1, ROWS + 1) if row_depth(r) > FAR_Z)
+    lowest = {}
+    for h in range(-128, 128, 2):
+        ys = [ROAD_Y + i for i, r in enumerate(project(h)) if r is not None and r <= far]
+        lowest[h] = max(ys) if ys else None
+    lines = flip_lines()
+    gap = SCR_H
+    for h in range(-128, 128, 2):
+        most = max(0, (CAR_Y - ROLL_ABOVE - ROAD_Y - ground_lines(h)) // 8)
+        for view, rows in set(flip_seq()):
+            top = (CAR_Y + GAME_GROUND - lines[view - ROLL_VIEW] + 1 if view >= ROLL_VIEW
+                   else CAR_Y) - 8 * min(rows, most)
+            for h2 in range(max(-128, h - 16), min(126, h + 16) + 1, 2):
+                if lowest[h2] is not None:
+                    gap = min(gap, top - lowest[h2])
+    return gap
 
 
 # The flip, a picture at a time (jump.asm car_jump: FLIP_TAB, CARn.BIN) - Out

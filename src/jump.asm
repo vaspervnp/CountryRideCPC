@@ -12,11 +12,16 @@
 ;; row (8 lines) at a time, as its views' code is made for the lines of its
 ;; rows: car_draw starts it car_up rows higher (car_raise). Never higher than
 ;; the road's top in the picture (car_jump): on a crest the ground behind it
-;; is not drawn again. In each buffer the car's lines where it was drawn
-;; last - up to ROLL_ABOVE over its top line, where a frame reaches - are
-;; drawn whole, so nothing of it stays behind (car_lines), a far line's too
-;; (jump_frame); where it is now the road is right as road_project has it,
-;; and the car is drawn over it. (Since 2026-11-15; a barrel roll seen from
+;; is not drawn again. In each buffer the lines the car had where it was
+;; drawn last - the frame's own, from the wheels' line up (cj_mark:
+;; flip_lines; 12 to 33 of them) - are drawn whole, so nothing of it stays
+;; behind (car_lines); where it is now the road is right as road_project
+;; has it, and the car is drawn over it. No frame reaches a far line (a row
+;; past FAR_Z: tools/scene.py flip_far_gap, 3 lines at the least), so the
+;; far lines that have not changed stay as they are. (Till 2026-11-16 the
+;; whole box, 36 lines, and every far line: up to 3.6 ms a picture more,
+;; with the car four rows up where the road is narrow - 40.5 ms once, in a
+;; dip with two cars near. Since 2026-11-15; a barrel roll seen from
 ;; behind, thrown up and down once, before.)
 ;; ===========================================================================
 
@@ -57,22 +62,25 @@ cj_air
     dec a
     call cj_view                        ; (A = its rows up)
     ld (car_up),a
-    or #80                              ; (a frame of the flip)
+    rrca
+    rrca
+    rrca
+    ld hl,car_vfull                     ; (a frame of the flip: not 0)
+    or (hl)
     jr cj_was
 cj_up
     ld (car_up),a
-cj_was                                  ; A = this picture's: its rows up,
-    ld b,a                              ; #80 on flipping - this buffer's
-    ld hl,drawn_up                      ; lines of it then, whole
-    call buf_entry                      ; (A lost)
+cj_was                                  ; A = this picture's: its view and its
+    ld b,a                              ; rows up x 32, 0 off the flip - this
+    ld hl,drawn_up                      ; buffer's lines of its last one then,
+    call buf_entry                      ; whole (A lost)
     ld c,(hl)
     ld (hl),b
     ld a,b
     or c
     jr z,cj_done
     ld a,c
-    and 7
-    call cj_mark
+    call cj_mark                        ; (road15.asm)
 cj_done
     ld a,(jump_t)
     or a
@@ -103,25 +111,20 @@ crash_brk_set
 ;; ---------------------------------------------------------------------------
     REC_TAIL jump_m2,rec_SND_M2_end
 
-;; cj_mark - A = rows up: the car's lines there whole, ROLL_ABOVE more over
-;; it (their line list entries' flags off; the grass's middle line's,
-;; rp_grass, in rd_mid_t)
-cj_mark
+;; cjm_at - (cj_mark, road15.asm) the car as a buffer last showed it: its
+;; lines whole - B of them, from the line A / 4 above the car's last on the
+;; road upwards (their line list entries' flags off; the grass's middle
+;; line's, rp_grass, in rd_mid_t). cjm_line: HL = the first's entry, E = 4.
+cjm_at
     ld hl,rd_mid_t
     res 0,(hl)
     res 1,(hl)
-    add a,a
-    add a,a
-    add a,a
-    add a,a
-    add a,a                             ; (4 bytes an entry, 8 lines a row)
     add a,4*(LAST_Y-(CAR_Y+CAR_TOP-1-ROAD_AREA_Y))
     ld e,a
     ld d,0
     ld hl,(rp_slot)
     add hl,de                           ; its last line's entry
     ld e,4
-    ld b,CAR_TOP+ROLL_ABOVE             ; (up to where rolling over reaches)
 cjm_line
     ld a,(hl)
     and #FC
@@ -131,24 +134,6 @@ cjm_line
     ret
 
     REC_TAIL_END jump_m2,rec_SND_M2_end,SND_M2+SND_PIECE
-;; ---------------------------------------------------------------------------
-    REC_TAIL jump_m1,rec_SND_M1_end
-
-;; jump_frame - (draw_picture) the road (road_frame); while the car is up,
-;; or one buffer still has it up, every far line's road drawn (rp_dirty, as
-;; traffic_pre has it for a car up there) - a far line the same as last
-;; time is skipped, and car_jump's whole lines would not draw it.
-jump_frame
-    ld a,(jump_t)
-    ld hl,(drawn_up)
-    or l
-    or h
-    jp z,road_frame
-    ld a,#80
-    ld (rp_dirty),a
-    jp road_frame
-
-    REC_TAIL_END jump_m1,rec_SND_M1_end,SND_M1+SND_PIECE
 ;; ---------------------------------------------------------------------------
     REC_TAIL jump_m0,rec_SND_M0_end
 
@@ -223,8 +208,9 @@ cj_view
 
 jump_t      defb 0                      ; the flip's picture + 1 (0: none)
 car_up      defb 0                      ; the car's rows up this picture
-drawn_up    defb 0,0                    ; ... as each buffer last showed it,
-                                        ; #80 on for a frame of the flip
+drawn_up    defb 0,0                    ; what each buffer last showed of the
+                                        ; flip: its view and its rows up x 32
+                                        ; (0: none of it)
     ASSERT CAR_Y-ROLL_ABOVE-ROAD_Y >= 8*FLIP_ROWS   ; (on the level, the
                                         ; highest under the road's top)
     ASSERT FLIP_T+BACK_T < 256 && CRASH_T+BACK_T < 256

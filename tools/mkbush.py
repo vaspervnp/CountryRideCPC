@@ -1276,6 +1276,11 @@ def main():
     emit("FLIP_T        EQU %d   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)"
          % len(S.flip_seq()))
     emit("FLIP_ROWS     EQU %d    ; ... rows up at most" % max(r for v, r in S.flip_seq()))
+    assert S.flip_far_gap() > 0         # (jump.asm: no far line under the car)
+    emit(";; ... per frame, its lines from the wheels' line up (cj_mark: flip_lines)")
+    for f, n in enumerate(S.flip_lines()):
+        emit("FLIP_L%d       EQU %d" % (f, n))
+    emit("GAME_GROUND   EQU %d   ; the wheels' line, from CAR_Y" % S.GAME_GROUND)
     emit(";; per car_view (on the level, uphill, downhill; each straight, turning")
     emit(";; left, turning right; spun left, right; rolling over): where its first")
     emit(";; line's run ends in buffer 0, and its code - the first car's; boot.asm")

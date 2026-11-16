@@ -278,7 +278,7 @@ draw_picture_x
 pic_erased
     pop af
     ld (road_buf),a
-    call jump_frame             ; (jump.asm: road_frame)
+    call road_frame
 pic_road
     call bush_draw              ; this picture's on top of it
 pic_bushes
@@ -347,7 +347,10 @@ draw_picture_hud
 ;; and then, and only if it is sure to be done before the flip
 ;; (STEP_LATE): else the road waits a picture, which then is lighter
 ;; (nothing moved sideways) and leaves the time. A step holds the sky's
-;; turn and the cache's jobs back for a picture.
+;; turn and the cache's jobs back for a picture. None in the first pictures
+;; of a flip on a hill (step_held): the crash's shove asks for one at once,
+;; and the flip's first picture on top of a step and a hill that moves took
+;; 39.5 ms.
 ;; ---------------------------------------------------------------------------
 cache_steps
     ld a,(rp_cmp)               ; a level only if the last picture's hill
@@ -366,6 +369,8 @@ cache_steps
     ld c,a
     jp cache_kstep              ; (cache.asm)
 cache_steps_x
+    call step_held              ; (player.asm: the flip's first pictures on
+    ret nz                      ; a hill)
     ld a,(back_buf)             ; no more than STEP_MAX pairs from where the
     xor 1                       ; next picture's buffer last had it (the
     ld hl,drawn_x               ; margin it draws): two steps in a row would
@@ -427,7 +432,11 @@ cache_steps_gate
 ;; - its turn x the car's k / 64 / 256 pairs a picture (0.8-1.06 at the
 ;; full lock, the first car's 0.88) from STEER_SPEED on (128 km/h), as much
 ;; less as the car is slower under it, none standing still - on the road
-;; and off it. And a curve carries the car out of it, as the centrifugal
+;; and off it. On the grass past the sand (off_cls 2) the tyres hold half
+;; as well (since 2026-11-16; player.asm grass_pick, grass_half): the wheel
+;; turns GRASS_RAMP a picture - half a second to the full lock and back, the
+;; car sliding on - and moves the car half as far. And a curve carries the
+;; car out of it, as the centrifugal
 ;; force does, by the speed squared and the curvature - out of a right
 ;; curve the car goes left, the road right: push_v goes towards (speed /
 ;; 16)^2 / 256 x the car's m x the level's k / 256 pairs a picture
@@ -439,6 +448,8 @@ cache_steps_gate
 ;; From SLIDE_V on - 0.7 of the first car's full lock - the tyres slip:
 ;; they squeal (sndgame.asm) and take speed, what the push is over it / 32
 ;; a picture, so a curve taken too fast slows the car as it carries it out.
+;; And a hill takes speed where the road ahead climbs and gives it where it
+;; falls away (hill_speed, since 2026-11-16).
 ;; Both moves add up in steer_x, where the road is to go, and its fraction
 ;; car_xf, CAR_LEAD pairs at most from where it is; the road follows as
 ;; fast as its steps can. The car is always in the middle of the screen
@@ -542,7 +553,8 @@ steer_both
 steer_keys
     ld (car_view),a
     ld de,(steer_s)
-    ld c,WHEEL_RAMP
+    ld bc,GRASS_RAMP*256+WHEEL_RAMP
+    call grass_pick             ; (player.asm: C = on the grass B)
     call ramp
     ld (steer_s),hl
 
@@ -569,13 +581,12 @@ steer_k
     ld e,CAR_STEER_K            ; (car_setup: the car's)
     jr steer_mul
 steer_slow
-    srl d
-    rr e
-    srl d
-    rr e
-    srl d
-    rr e
-    ld h,e                      ; speed / 8
+    ex de,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl                   ; H = speed / 8
     ld e,SLOW_F
     call mul8
     add hl,hl                   ; H = speed x 256 / STEER_SPEED
@@ -588,6 +599,7 @@ steer_mul
     call mul8
     call shr6
 steer_sign
+    call grass_half             ; (player.asm: on the grass half of it)
     ld a,(steer_s)
     or a
     call m,neg_hl
@@ -644,17 +656,14 @@ steer_pushed
     call nz,neg_hl              ; the push is over it / 32, a picture
     ld de,-SLIDE_V
     add hl,de
+    ld de,0                     ; (the flags kept)
     jr nc,steer_grip
     add hl,hl
     add hl,hl
-    add hl,hl                   ; (no carry: the push is under 8 pairs)
-    ld e,h
-    ld d,0
-    ld hl,(speed)
-    sbc hl,de
-    jr c,steer_grip
-    ld (speed),hl
+    add hl,hl
+    ld e,h                      ; DE = what the slip takes
 steer_grip
+    call hill_speed             ; ... and the hill's
     pop hl
     pop de
     add hl,de                   ; the car's move: the wheel's and the push
@@ -748,6 +757,46 @@ neg_hl
     sbc a,a
     sub h
     ld h,a
+    ret
+
+;; hill_speed - (steer) the speed a picture on: DE = what the tyres' slip
+;; takes of it, and the hill's - where the road ahead falls away (a crest:
+;; the car seen downhill) it gives |hill| x HILL_F / 256 units, where it
+;; climbs (a dip) it takes as much (tools/scene.py HILL_KMHS: 12 km/h a
+;; second on the steepest), whatever the pedal and the brake do. A car
+;; standing stays; one that would stop for it is left to the drag or the
+;; brake; speed_player keeps it under the most it goes. On the flat with
+;; the tyres holding there is nothing to do (most pictures: 0.2 ms less).
+;; Destroys AF, BC, DE, HL.
+hill_speed
+    ld a,(hill)
+    ld c,a
+    or d
+    or e
+    ret z                       ; (flat, the tyres holding: as it is)
+    push de
+    ld a,c
+    or a
+    jp p,$+5
+    neg
+    ld h,a
+    ld e,HILL_F
+    call mul8
+    ld l,h
+    ld h,0                      ; HL = the hill's
+    bit 7,c
+    call nz,neg_hl
+    pop de
+    or a
+    sbc hl,de
+    ld de,(speed)
+    ld a,d
+    or e
+    ret z
+    add hl,de
+    bit 7,h
+    ret nz
+    ld (speed),hl
     ret
 
 ;; ---------------------------------------------------------------------------
@@ -1072,10 +1121,12 @@ demo_cp_set
 ;; speed_player - (demo_step, once the player has pressed faster or slower)
 ;; one VSYNC of the player's speed. The gear first - down (KEY_HIGH) HIGH,
 ;; over up (KEY_LOW) LOW, else as it was; then faster held, speed_acc (the
-;; car's acc_tab for the gear: Out Run's engine, SMS L2F6B, tools/outrun.py);
+;; car's acc_tab for the gear: tools/scene.py ENGINE - Out Run's engine,
+;; SMS L2F6B, till 2026-11-16);
 ;; neither, the air's drag by the speed (drag_tab: little at a crawl, 48
 ;; km/h a second at the top - the car rolls on); slower, the brake's
-;; SPEED_BRK more (both: slower). In a crash CRASH_BRK down (a flip's by its
+;; SPEED_BRK more, on the grass GRASS_BRK (both: slower). The hills' share
+;; is steer's, a picture at a time (hill_speed). In a crash CRASH_BRK down (a flip's by its
 ;; speed), then driving back to the road's middle, up to BACK_SPEED
 ;; (coll_back). No faster than sp_caps says for the gear: on the road,
 ;; LOW's top or HIGH's; off it - a wheel off it, car_x OFFROAD_X (5 a lane)
@@ -1102,10 +1153,9 @@ sp_geared
     or a
     jr nz,sp_crash
     ld a,(keys_now)
-    ld c,SPEED_BRK              ; C = the brake's
-    bit 3,a
-    jr nz,sp_drag               ; slower
     ld c,0
+    bit 3,a
+    jr nz,sp_brake              ; slower
     bit 2,a
     jr z,sp_drag                ; neither: the air's drag alone
 sp_faster
@@ -1121,6 +1171,9 @@ sp_crash
 sp_crash_brk
     ld a,CRASH_BRK              ; (jump.asm jump_start: this crash's)
     jr sp_less
+sp_brake                        ; C = the brake's: on the grass less
+    ld bc,GRASS_BRK*256+SPEED_BRK
+    call grass_pick             ; (player.asm)
 sp_drag                         ; the drag by the speed (drag_tab), and C
     ld a,h
     add a,lo(drag_tab)
@@ -1196,19 +1249,11 @@ sp_caps     defs 12,0
 ;; kept in acc_frac. Destroys AF, DE.
 speed_acc
     push hl
-    ld a,l
-    rlca
-    rlca
-    and 3
-    ld l,a
-    ld a,h
-    add a,a
-    add a,a
-    or l
-    ld l,a
+    add hl,hl
+    add hl,hl                   ; H = speed / 64
     ld a,(drive_gear)
     or a
-    ld a,l
+    ld a,h
     jr z,$+4
     add a,ACC_N                 ; (HIGH's after LOW's)
     ld l,a
@@ -1219,15 +1264,14 @@ speed_acc
     ld hl,acc_frac
     add a,(hl)
     ld e,a
-    rra
-    srl a
-    srl a
-    srl a
-    ld d,a                      ; D = whole units, E's low four bits the rest
-    ld a,e
     and 15
-    ld (hl),a
-    ld e,d
+    ld (hl),a                   ; (the sixteenths left)
+    xor e
+    rrca
+    rrca
+    rrca
+    rrca
+    ld e,a                      ; E = whole units
     ld d,0
     pop hl
     add hl,de
@@ -1265,15 +1309,10 @@ demo_cycle
     ; speed: accelerate for 16 s, then brake, repeat every 20 s
     ld hl,(speed_phase)
     inc hl
-    ld a,h
-    cp hi(1000)
+    ld de,-1000
+    add hl,de                   ; (1000: round to 0)
     jr c,demo_phase_ok
-    jr nz,demo_phase_wrap
-    ld a,l
-    cp lo(1000)
-    jr c,demo_phase_ok
-demo_phase_wrap
-    ld hl,0
+    sbc hl,de
 demo_phase_ok
     ld (speed_phase),hl
     ld de,(speed)

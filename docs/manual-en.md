@@ -54,7 +54,7 @@ The four cars drive differently. The bars on the screen rate each one out of fiv
 - **Accel** is how quickly it gets there: two thirds of its top speed in about 6 to 8 seconds, the last of it slowly, as an engine near its top.
 - **Grip** is how quickly you can steer it across the road, and how little a curve carries it outwards.
 
-The cars have the engine and the gears of the one in Out Run, the ROSSO GT its own. The rest they do as a car does. Off the pedal the air slows them: hard at speed, hardly at all when slow, where the car rolls on. A curve throws the car outwards as hard as its speed squared, so that a little slower is a lot easier: at full speed you can hold only the gentlest curves, at half speed nearly all of them.
+The cars have the gears and the top speeds of the one in Out Run, the ROSSO GT its own. The rest they do as a car does. The engine pulls hardest from a standstill and less the faster you go. A climb takes speed and a fall gives it. Off the pedal the air slows them: hard at speed, hardly at all when slow, where the car rolls on. A curve throws the car outwards as hard as its speed squared, so that a little slower is a lot easier: at full speed you can hold only the gentlest curves, at half speed nearly all of them.
 
 ## Controls
 
@@ -69,7 +69,7 @@ The cars have the engine and the gears of the one in Out Run, the ROSSO GT its o
 | Pause, and go on | **ESC** | |
 | Music off, or on again | **M** | |
 
-You change gear yourself, as in Out Run. You start in LOW, which pulls hard but goes no faster than two thirds of your top speed. HIGH reaches the top speed but pulls weakly from low down: change up at about half of your top speed. Change down again after a crash or a big bump. With neither the pedal nor the brake held, the car loses about a sixth of its top speed a second; the brake stops it from full speed in under two seconds.
+You change gear yourself, as in Out Run. You start in LOW, which pulls hard, hardest of all from a standstill, but goes no faster than two thirds of your top speed. HIGH reaches the top speed but pulls two thirds as hard from low down: change up at about half of your top speed. Change down again after a crash or a big bump. With neither the pedal nor the brake held, the car loses about a sixth of its top speed a second; the brake stops it from full speed in under two seconds.
 
 ## The screen
 
@@ -169,13 +169,17 @@ A curve carries the car towards its outside unless you steer against it. The sha
 | ![A curve sign](sign-curve.png) | **Yellow board with chevrons.** Stands at the start of any curve that is more than gentle, on its outside. The chevrons point the way it bends. |
 | ![A speed limit sign](sign-limit.png) | **Speed limit.** Stands on the right before the sharpest curves. |
 
+### Hills
+
+Where the road climbs ahead of you the car loses speed, and where it falls away it gains it, whatever you hold. Up a climb it pulls away slower, and even at full speed it drops a little, which the engine is slow to bring back. Over a crest it picks up speed quicker, and off the pedal it rolls on. It never goes faster than its top speed for a hill, and a car standing on one stays where it is.
+
 ### Lanes
 
 The road has four, three or two lanes, and it is narrower with fewer. Where the number changes, the road narrows or widens from the horizon towards you, and the traffic moves over before you get there. On two lanes the curves are gentler.
 
 ### The grass
 
-With a wheel on the grass the car goes no faster than three quarters of its top speed, and half a lane further out no faster than two fifths of it. With fewer lanes the grass begins nearer the middle of the road.
+With a wheel on the grass the car goes no faster than three quarters of its top speed, and half a lane further out no faster than two fifths of it. Out there the tyres also hold half as well: the car answers the wheel late and half as much, slides on after you let go, and takes twice as long to brake. With fewer lanes the grass begins nearer the middle of the road.
 
 ### Traffic
 
@@ -196,7 +200,8 @@ Hit a bush, or the trunk of a tree or sign, and you crash. The car spins out of 
 - Watch for the yellow boards, and start steering as the curve starts.
 - Brake before a sharp curve rather than run wide onto the grass: it costs you less. Lifting off alone is enough only for the gentle ones.
 - If the tyres squeal, you are too fast for the curve: slow down.
-- Stay off the grass. It slows you down hard, and it is where the crashes are.
+- Stay off the grass. It slows you down hard, the car slides on it, and it is where the crashes are.
+- Take a climb with all the speed you have, and use the crests to get it back.
 - Move out early when a car is ahead. Do not pass on the side its indicator is flashing.
 - When the two stage names appear, get to that side of the road in good time.
 - After hitting a car off its side, steer against the shove to stay off the grass.

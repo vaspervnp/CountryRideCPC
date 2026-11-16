@@ -115,6 +115,15 @@ ROLL_FRAMES   EQU 7
 ROLL_ABOVE    EQU 10   ; ... its lines this far above CAR_Y at most
 FLIP_T        EQU 73   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)
 FLIP_ROWS     EQU 4    ; ... rows up at most
+;; ... per frame, its lines from the wheels' line up (cj_mark: flip_lines)
+FLIP_L0       EQU 33
+FLIP_L1       EQU 12
+FLIP_L2       EQU 24
+FLIP_L3       EQU 25
+FLIP_L4       EQU 12
+FLIP_L5       EQU 24
+FLIP_L6       EQU 25
+GAME_GROUND   EQU 22   ; the wheels' line, from CAR_Y
 ;; per car_view (on the level, uphill, downhill; each straight, turning
 ;; left, turning right; spun left, right; rolling over): where its first
 ;; line's run ends in buffer 0, and its code - the first car's; boot.asm
