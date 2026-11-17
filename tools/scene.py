@@ -1517,7 +1517,10 @@ FLIP_TURN = 2                   # turning right, on the level
 FLIP_SPUN = SPIN_VIEW + 1       # spun right: its nose to the right
 FLIP_HOLDS = [2] * 8 + [3] * 5 + [4] * 4    # the frame on the way round, then
                                 # every 60 degrees round three times
-FLIP_ROWS = ([1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 3, 3, 2, 2, 1, 1]       # the throw
+# (At the throw's top the frames seen from above or below - 30 lines since
+# they were made taller, 2026-11-17 - are 3 rows up and the upright one, 22,
+# 4: the car's top as high, and they stay under the far lines: flip_far_gap.)
+FLIP_ROWS = ([1, 1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1]       # the throw
              + [0, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 0, 0, 0, 0]              # a bounce
              + [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]           # and another
              + [0] * 20                                                  # side-on

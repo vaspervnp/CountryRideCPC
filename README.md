@@ -667,8 +667,9 @@ first puts the fragments in place - but 3-6, whose places the file lies
 on - then copies the records into place, with bank 7 switched in, and then
 fragments 3-6. The race takes no more memory for four cars than for one.
 
-Each car's seven frames flipping over (since 2026-11-15; 4.0-4.1K a car
-since 2026-11-16, 20% bigger - 3.1-3.2K till then; its six rolling over,
+Each car's seven frames flipping over (since 2026-11-15; 3.7-4.1K a car
+since 2026-11-17, taller, their repeated lines drawn by loops - 4.0-4.1K
+from 2026-11-16, 20% bigger, 3.1-3.2K till then; its six rolling over,
 3.25-3.47K, from 2026-11-12) are in bank 5, which the
 car's code runs with only there (`RAM_C5`): under each of its per group
 arrays but the first three (205 bytes each, under the other 13), and past
@@ -678,12 +679,12 @@ main.asm's bank 5 (`build/roadb.raw`) with that car's frames in that room
 (`build/roll5_<n>.raw`, `gen/roll5.asm`) - `gen/roadbn.asm` in
 `src/pack.asm` puts each together, with `INCBIN`s of each in turn. What
 does not fit there goes on in the hidden lines the views on hills leave in
-pages 0 and 2 (since the frames are 20% bigger, 713-786 bytes a car), with
+pages 0 and 2 (since the frames are taller, 408-761 bytes a car), with
 each frame's way in (`RAM_C5`, then into bank 5) and `roll_done` (`RAM_C1`
 again, for `bush_spr_done`), 64 bytes: `CARn.BIN`'s records
 (`tools/mkbush.py` `roll_place`). The traffic's pieces that go there had
 925 bytes left after them (1711 before); the clouds, their wind and the
-brake lights have taken all but 29.
+brake lights have taken all but 54.
 
 The sound (`SOUND.BIN`, records like a car's file, unpacked at `#98C0` - in
 buffer 0's fourth block, past what the car's records write - and put in
@@ -1224,8 +1225,11 @@ right, a speed limit. The demo has dead trees and the signs.
   bush is in reach - one that would still be in reach then never comes -
   and if the picture is late already (10 interrupts since the flip - or
   9 for one nearer than `PROP_BIG_Z`, 184: the big ones, sizes 6 and 7,
-  up to ~4 ms - 168 till a palm at 174 made a picture late) it is not
-  drawn that time, as the traffic's far car.
+  up to ~4 ms - 168 till a palm at 174 made a picture late - or 9 for
+  any, the car up in the air in a flip, whose frame and shadow are drawn
+  after it and cost ~1.3 ms more: since 2026-11-17, after a flip picture
+  of 39.75 ms with a dead tree at 184, 1.85 ms of it) it is not drawn
+  that time, as the traffic's far car.
 
 The sprites (1.4K) are in page 1 beside the bushes' code and in the hidden
 lines (CARn.BIN), the drawing in bank 7 and fragment 0.
@@ -1478,7 +1482,10 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   (`tools/scene.py` `flip_seq`, placed by `tools/mkbush.py`). The car goes
   up a character row - 8 lines - at a time, as its views' code is made for
   its rows (`car_draw` starts it higher: `car_raise`): up to 4 rows, 32
-  lines, in the first hop, 2 in the second, 1 in the third. At each landing
+  lines, in the first hop, 2 in the second, 1 in the third. (At the first
+  hop's top the frames seen from above or below, 30 lines, are 3 rows up
+  and the one upright 4: the top of the car as high, its middle on an
+  arc - and those two never reach the far lines, below.) At each landing
   a thud, and the shove sideways a quarter of what it was (`car_shadow`):
   1.9 pairs a picture in the first hop, then 0.47, 0.12 and 0.03.
   The frames are seven a car (`tools/rollart.py`, car_view `ROLL_VIEW`
@@ -1488,22 +1495,35 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   (`tools/cars3d.py`, `FLIP=True`) at 0.72 of the car's size, as Out Run
   shows its car smaller - further down the road - in its flight: 44 pixels
   long side-on, against the rear view's 28 across (0.6 and 36 pixels till
-  2026-11-16, when they looked too small). Upright the car is as
-  low as in its other views, but only 0.7 of that squash is the screen's
-  and the rest the car's own height, so seen from above or below it keeps
-  more of its width, chunky as Out Run's. Its underside is blue, as the
+  2026-11-16, when they looked too small). Only 0.7 of the car's views'
+  squash is the screen's and the rest the car's own height, so seen from
+  above or below it keeps more of its width, chunky as Out Run's; and its
+  own height is 1.6 times that (`FLIP_TALL`, since 2026-11-17: the car
+  side-on was lower than the car itself, 12 lines against 18), so side-on
+  it is as tall as from behind - 18 lines, the BMW 22. Its underside is blue, as the
   SMS's: black would not tell from its tyres. `tools/mkroll.py` brings them
   to the car's pens, each line's run widened to whole pairs of bytes from
   any byte (not from the car's pair grid) in the colours at its ends, not
   the asphalt's grey - in the air the grass can be under it - and leaves
   out a frame's first or last line if it has 8 pixels or fewer (`THIN`: a
   tyre's edge, which made the tallest flanks a line too tall to stay under
-  the far lines four rows up). A car's frames
-  share one box, 40-44 pixels wide and 34-36 lines, each frame at its bottom -
+  the far lines four rows up), and on a car that is not white a white run
+  of 4 pixels or fewer is the colour beside it (`SPECK`: a highlight on the
+  flank). A car's frames
+  share one box, 40-44 pixels wide and 36-37 lines, each frame at its bottom -
   the line the car's wheels stand on - so whichever way up it is, it comes
-  down on the road there. That is `ROLL_ABOVE`, 13 lines over the car's
-  top line, which the road's top keeps clear of. A frame takes 0.62-1.75 ms
-  (0.45-1.3 the frames as small as before; the spun views 1.3-1.4). In the air its
+  down on the road there. That is `ROLL_ABOVE`, 14 lines over the car's
+  top line, which the road's top keeps clear of. A frame takes 0.97-1.86 ms
+  (0.62-1.75 before they were taller, 0.45-1.3 before they were bigger;
+  the spun views 1.3-1.4). Their code is the car's views' (`car_code`), but
+  a line the same as the one before it is drawn by a loop round that one's
+  code, A counting (a character row's end on the way: `cp`, another step),
+  and interrupts get their chance at a line once 110 us have gone by
+  without one (`CAR_WIN`: every second or third line, interrupts off ~0.2
+  ms at most, the road's lines' 0.3) - 3.7-4.1K a car, which the taller
+  frames would have made 4.7-4.9K. Taller, they cost the flip's pictures
+  1 ms on average, more lines drawn and drawn whole: 29.9 ms (28.9), 39.0
+  at worst (38.7), none late, in 120000 pictures and 358 flips. In the air its
   shadow is on the road under it, three black lines, smaller the higher it
   is (48 pixels wide a row up, 36 four up: `SHADOW_W`), and a thud as it
   comes down (`car_shadow`). Never higher than the road's top in the picture
@@ -1513,8 +1533,8 @@ As in Out Run (the SMS's `L2B84` and `L39D6`, measured in OutrunOutrunCPC):
   last showed, the view and the rows up - the grass's middle line's own
   template too, and the shadow's lines while the flip is on (`car_air`).
   Those are the frame's own lines, from the wheels' line up (`cj_mark` in
-  `src/road15.asm`, `flip_lines`: 14-15 lines for the car upside down or
-  upright, 28-29 on its flanks, 36 for the first; a view of the car's own
+  `src/road15.asm`, `flip_lines`: 22 lines for the car upside down or
+  upright, 30 on its flanks, 37 for the first; a view of the car's own
   26), not the frames' whole box: four rows up, where the road is narrow,
   a whole line costs three times its road. And no frame reaches a far line
   (`scene.flip_far_gap`: a line short at the least, on any hill - checked
@@ -1893,8 +1913,14 @@ brake lights lit, every view, as `scene.py` has it (200 pictures a car);
 the road, the HUD, the sky and the screen in the three R5 models, for all
 four cars. One run of the jump test on the way, before the last change
 to the wind, met a flip of 39.75 ms (not late): the car two rows up in a
-dip on two lanes, its road 28.9 ms, the traffic and the bushes 4.2 - the
-wind idle, the brake lights not drawn in a crash; the flip as it was.
+dip on two lanes, its road 26.3 ms, a near car 2.6, a dead tree at 184
+1.85, a bush 2.1, the car 2.6 - the wind idle, the brake lights not drawn
+in a crash; the flip as it was. Rebuilt and run again to that picture
+with the tree left out: 38.0 ms. So the prop's late guard leaves out any
+prop from the 9th interrupt while the car is up in the air (Props); the
+jump test then, 120000 pictures, 38.7 ms at worst, all others 38.2 or
+less, none late, none different; the demo 37.6-37.8 ms; the road, the HUD,
+the sky and the screen as `scene.py` has them for all four cars.
 
 Steering across the road (30 runs): 0.89 pairs a picture - 0.545 with
 steps of two pairs only. With the keys (faster held, the car driven from

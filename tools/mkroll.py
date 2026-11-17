@@ -47,6 +47,33 @@ THIN = 8                            # a frame's first or last line of this many
                                     # lines, under the far lines at 4 rows up)
 
 
+SPECK = 4                           # white runs of this many pixels or
+                                    # fewer are the colour beside them, on a
+                                    # car that is not white (a highlight on
+                                    # the flank, since 2026-11-17: the frames
+                                    # taller)
+
+
+def specks(r):
+    """The row without short white runs (SPECK)."""
+    row = list(r)
+    i = 0
+    while i < len(row):
+        if row[i] != "W":
+            i += 1
+            continue
+        j = i
+        while j < len(row) and row[j] == "W":
+            j += 1
+        if j - i <= SPECK:
+            fill = row[i - 1] if i > 0 and row[i - 1] != "." else (
+                row[j] if j < len(row) else ".")
+            if fill != ".":
+                row[i:j] = [fill] * (j - i)
+        i = j
+    return "".join(row)
+
+
 def bytes_run(r):
     """The row's run widened to whole pairs of bytes - from any byte, not
     from the car's pair grid (mkcar.pairs: up to 3 pixels either side) -
@@ -80,6 +107,9 @@ def flip_frames(name):
     (arts, the box's height)."""
     renders = [mkcars.flat_pens(name, os.path.join(mkcars.SRC, "%s_flip%d.png" % (name, k)),
                                 (mkcar.CELLS[0], ROLL_LINES)) for k in range(FRAMES)]
+    up = "".join(mkcars.car_views(name)[0]["flat"]["straight"]).replace(".", "")
+    if max(set(up), key=up.count) != "W":
+        renders = [[specks(r) for r in v] for v in renders]
     rows = [[bytes_run(r) for r in v] for v in renders]
     for v in rows:
         used = [i for i, r in enumerate(v) if r.strip(".")]
@@ -171,7 +201,7 @@ def main():
         ys[name] = carsart.GAME_GROUND + 1 - height
         sizes = []
         for k, a in enumerate(arts):
-            code, us = mkbush.car_code(runs(a), 200, 30)
+            code, us = mkbush.car_code(runs(a), 200, 30, True)
             sizes.append((sum(mkbush.SIZE[mkbush.kind(t)] for t, st in code), us))
         print("%s: %d x %d pixels; code %s bytes, %s us; all %d %d bytes" % (
             name, len(arts[0][0]), height, "/".join(str(b) for b, u in sizes),

@@ -117,17 +117,17 @@ CLOUD_ROWS    EQU 2    ; the sky part's rows over the panorama's: the
 ;; hidden lines)
 WIND_PICS     EQU 30   ; pictures a word the wind takes them left
 ;; (cloud_wind: scene.CLOUD_WIND)
-ROLL_ABOVE    EQU 13   ; ... its lines this far above CAR_Y at most
+ROLL_ABOVE    EQU 14   ; ... its lines this far above CAR_Y at most
 FLIP_T        EQU 73   ; ... pictures (flip_tab, CARn.BIN: scene.flip_seq)
 FLIP_ROWS     EQU 4    ; ... rows up at most
 ;; ... per frame, its lines from the wheels' line up (cj_mark: flip_lines)
-FLIP_L0       EQU 36
-FLIP_L1       EQU 14
-FLIP_L2       EQU 28
-FLIP_L3       EQU 28
-FLIP_L4       EQU 15
-FLIP_L5       EQU 28
-FLIP_L6       EQU 29
+FLIP_L0       EQU 37
+FLIP_L1       EQU 22
+FLIP_L2       EQU 30
+FLIP_L3       EQU 30
+FLIP_L4       EQU 22
+FLIP_L5       EQU 30
+FLIP_L6       EQU 30
 GAME_GROUND   EQU 22   ; the wheels' line, from CAR_Y
 ;; per car_view (on the level, uphill, downhill; each straight, turning
 ;; left, turning right; spun left, right; rolling over): where its first

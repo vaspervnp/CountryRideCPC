@@ -92,12 +92,12 @@ SIZE = {"ld de": 3, "ld ix": 4, "ld iy": 4, "ld sp,hl": 1, "ei": 1, "di": 1,
         "ld bc": 3, "add hl,bc": 1, "bit 6,h": 2, "call nz": 3, "push bc": 1,
         "push de": 1, "push ix": 2, "push iy": 2, "ld b": 2, "ld c": 2, "jp": 3,
         "ld hl": 3, "ld h": 2, "ld l": 2, "ld d": 2, "ld e": 2, "push hl": 1,
-        "add hl,sp": 1, "nop": 1}
+        "add hl,sp": 1, "nop": 1, "ld a": 2, "dec a": 1, "@": 0, "cp": 2, "jr": 2}
 TIME = {"ld de": 3, "ld ix": 4, "ld iy": 4, "ld sp,hl": 2, "ei": 1, "di": 1,
         "ld bc": 3, "add hl,bc": 3, "bit 6,h": 2, "call nz": 3, "push bc": 4,
         "push de": 4, "push ix": 5, "push iy": 5, "ld b": 2, "ld c": 2, "jp": 3,
         "ld hl": 3, "ld h": 2, "ld l": 2, "ld d": 2, "ld e": 2, "push hl": 4,
-        "add hl,sp": 3, "nop": 1}
+        "add hl,sp": 3, "nop": 1, "ld a": 2, "dec a": 1, "@": 0, "cp": 2, "jr": 3}
 
 
 def kind(text):
@@ -156,7 +156,7 @@ def line_addr(y):
     return 0x8000 + (y & 7) * 0x800 + ((y >> 3) - 20) * 96
 
 
-def car_code(spans, y0, x0):
+def car_code(spans, y0, x0, loops=False):
     """The car as code: lines (first byte, bytes) from line y0, byte x0 -
     always there, so each line's step is known, a character row's end and
     all. Entered with HL at the right end of the first line's run (lines
@@ -167,7 +167,11 @@ def car_code(spans, y0, x0):
     needed - the one whose pair is needed again last (HL's is gone at the
     next line); the quickest way of those tried. Interrupts get one
     instruction's chance a line, with SP at the right end of the run:
-    [(instruction, None)], and its time."""
+    [(instruction, None)], and its time. With loops (the flip's frames,
+    since 2026-11-17: they were made taller), lines the same as the one
+    before them and the same step on are drawn by a loop round that one's
+    code, A counting (car_loop): its labels are '@' names, the piece's
+    label goes in front (Runs.code)."""
     lines = []                          # (run's right end, its bytes, pairs
     for i, (a, data) in enumerate(spans):   # right to left)
         n = len(data)
@@ -184,15 +188,25 @@ def car_code(spans, y0, x0):
                        ("de", "bc", "ix"), ("de", "bc", "ix", "iy")):
         fixed = dict(zip(common, fixed_regs))
         dyn = [r for r in ("bc", "de", "hl") if r not in fixed_regs]
-        code = _car_code(lines, fixed, dyn)
-        us = sum(TIME[kind(t)] for t, st in code)
+        code, us = _car_code(lines, fixed, dyn, loops)
         if best is None or us < best[1]:
             best = (code, us)
     return best
 
 
-def _car_code(lines, fixed, dyn):
+CAR_LOOP = 4                            # a loop for lines of this many pairs
+                                        # or more (fewer: the loop's 9 bytes
+                                        # would not be won back)
+CAR_WIN = 110                           # with loops: interrupts get their
+                                        # chance at a line once this many us
+                                        # have gone by without one (every
+                                        # other or third line: DI ~200 us at
+                                        # most, the road's lines ~300)
+
+
+def _car_code(lines, fixed, dyn, loops=False):
     code = [("ld %s,#%04X" % (reg, v), None) for v, reg in fixed.items()]
+    times = [1] * len(code)             # how many times each is run
     flat = [v for e, n, pairs in lines for v in pairs]
     ends = []
     for e, n, pairs in lines:
@@ -200,6 +214,7 @@ def _car_code(lines, fixed, dyn):
             [ends[-1] + len(pairs)] * len(pairs)
     regs = {r: None for r in dyn}
     never = len(flat) + 1
+    since = [CAR_WIN]                   # us since interrupts had a chance
 
     def next_use(w, at, until):
         for j in range(at, until):
@@ -207,23 +222,29 @@ def _car_code(lines, fixed, dyn):
                 return j
         return never
 
-    at = 0
-    for i, (e, n, pairs) in enumerate(lines):
-        if i == 0:
-            code.append(("ld sp,hl", None))
-        else:
-            pe, pn, pp = lines[i - 1]
-            code += [("ld hl,#%04X" % ((e - (pe - pn)) & 0xFFFF), None),
-                     ("add hl,sp", None), ("ld sp,hl", None)]
+    def step(i):
+        pe, pn, pp = lines[i - 1]
+        return (lines[i][0] - (pe - pn)) & 0xFFFF
+
+    def emit(text, m):
+        code.append((text, None))
+        times.append(m)
+        since[0] += TIME[kind(text)]
+
+    def line(pairs, m, win):
+        """A line's pushes, from SP at its run's right end (run m times);
+        win: interrupts get a chance first."""
+        nonlocal at
         if "hl" in regs:
             regs["hl"] = None
-        code.append(("ei", None))
-        window = len(code)              # the next instruction, then DI
+        if win:
+            emit("ei", m)
+            window = len(code)          # the next instruction, then DI
         for v in pairs:
             end = ends[at]
             at += 1
             if v in fixed:
-                code.append(("push " + fixed[v], None))
+                emit("push " + fixed[v], m)
                 continue
             r = next((r for r, w in regs.items() if w == v), None)
             if r is None:
@@ -235,18 +256,75 @@ def _car_code(lines, fixed, dyn):
                 r = max(regs, key=gone)
                 w = regs[r]
                 if w is not None and w >> 8 == v >> 8:
-                    code.append(("ld %s,#%02X" % (r[1], v & 0xFF), None))
+                    emit("ld %s,#%02X" % (r[1], v & 0xFF), m)
                 elif w is not None and w & 0xFF == v & 0xFF:
-                    code.append(("ld %s,#%02X" % (r[0], v >> 8), None))
+                    emit("ld %s,#%02X" % (r[0], v >> 8), m)
                 else:
-                    code.append(("ld %s,#%04X" % (r, v), None))
+                    emit("ld %s,#%04X" % (r, v), m)
                 regs[r] = v
-            code.append(("push " + r, None))
-        if kind(code[window][0]).startswith("push"):
-            code.insert(window, ("nop", None))
-        code.insert(window + 1, ("di", None))
-    code.append(("jp bush_spr_done", None))
-    return code
+            emit("push " + r, m)
+        if win:
+            if kind(code[window][0]).startswith("push"):
+                code.insert(window, ("nop", None))
+                times.insert(window, m)
+            code.insert(window + 1, ("di", None))
+            times.insert(window + 1, m)
+
+    def same(i, j):
+        return lines[i][1:] == lines[j][1:]
+
+    at = 0
+    i, loop = 0, 0
+    while i < len(lines):
+        e, n, pairs = lines[i]
+        j = i
+        if loops and i > 0 and len(pairs) >= CAR_LOOP:
+            while j + 1 < len(lines) and same(j + 1, i):
+                j += 1
+        steps = [step(k) for k in range(i + 1, j + 1)]
+        if j > i:                       # lines i-j the same: a loop, one step
+            m = j - i + 1               # on (a character row's end: another)
+            s0 = collections.Counter(steps).most_common(1)[0][0]
+            odd = [k for k, st in enumerate(steps) if st != s0]
+            if len(odd) > 1:            # (two rows' ends: not that far)
+                j = i + 1 + odd[1] - 1
+                m = j - i + 1
+                steps = steps[:m - 1]
+                s0 = collections.Counter(steps).most_common(1)[0][0]
+                odd = [k for k, st in enumerate(steps) if st != s0]
+            emit("ld a,%d" % m, 1)
+            emit("ld hl,#%04X" % step(i), 1)
+            emit("@L%d" % loop, 0)
+            emit("add hl,sp", m)
+            emit("ld sp,hl", m)
+            for r in regs:              # (whatever the registers held)
+                regs[r] = None
+            line(pairs, m, True)
+            at += (m - 1) * len(pairs)
+            emit("ld hl,#%04X" % s0, m)
+            if odd:                     # after line odd[0] + 1 of the loop's
+                emit("cp %d" % (m - odd[0]), m)
+                emit("jr nz,$+5", m)
+                emit("ld hl,#%04X" % steps[odd[0]], 1)
+            emit("dec a", m)
+            emit("jp nz,@L%d" % loop, m)
+            since[0] = 0
+            loop += 1
+            i = j + 1
+            continue
+        if i == 0:
+            emit("ld sp,hl", 1)
+        else:
+            emit("ld hl,#%04X" % step(i), 1)
+            emit("add hl,sp", 1)
+            emit("ld sp,hl", 1)
+        win = not loops or since[0] >= CAR_WIN
+        if win:
+            since[0] = 0
+        line(pairs, 1, win)
+        i += 1
+    emit("jp bush_spr_done", 1)
+    return code, sum(TIME[kind(t)] * m for (t, st), m in zip(code, times))
 
 
 class Chunks:
@@ -560,6 +638,10 @@ class Runs:
         lines = [label]
         start = self.runs[self.cur][0] + self.used
         for i, (text, step) in enumerate(code):
+            text = text.replace("@", label + "_")   # (car_code's loops)
+            if text.startswith(label + "_"):
+                lines.append(text)
+                continue
             n = SIZE[kind(text)]
             if self.runs[self.cur][1] - self.used < n + 3 and not (
                     i == len(code) - 1 and text.startswith("jp ")
@@ -1226,7 +1308,7 @@ def main():
         S.set_car(c)
         allcars.append([car_code(S.car_runs(v), S.CAR_Y, S.CAR_X // 2)
                         for v in range(S.CAR_VIEWS)])
-        allroll.append([car_code(S.car_runs(v), S.CAR_Y + S.view_y(v), S.CAR_X // 2)
+        allroll.append([car_code(S.car_runs(v), S.CAR_Y + S.view_y(v), S.CAR_X // 2, True)
                         for v in rolls])
         e = []
         for v in list(range(S.CAR_VIEWS)) + list(rolls):

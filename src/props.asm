@@ -291,8 +291,10 @@ pr_free
 ;; sight: stood as a bush is (bush_one, from prp_tab) and drawn (prop_draw) -
 ;; but not if the picture is late already (PROP_LATE interrupts since the
 ;; flip: as the traffic's far car - or one fewer, if it is nearer than
-;; PROP_BIG_Z: a big one, up to ~4 ms), prp_late then not 0. Destroys
-;; everything.
+;; PROP_BIG_Z: a big one, up to ~4 ms - or, the car up in the air in a
+;; flip, any: its frame and shadow, drawn after, cost ~1.3 ms more than the
+;; car on the road; since 2026-11-17, after a 39.75 ms flip picture with a
+;; tree at 184), prp_late then not 0. Destroys everything.
 ;; ---------------------------------------------------------------------------
 PROP_LATE   EQU 10
 PROP_BIG_Z  EQU 184                     ; (size 6 and 7 nearer: cpcgfx
@@ -320,6 +322,9 @@ prop_one
     jr nc,po_late
     cp PROP_LATE-1
     jr c,po_draw
+    ld a,(car_up)                       ; (in the air: any)
+    or a
+    jr nz,po_late
     ld a,h                              ; (big)
     or a
     jr nz,po_draw

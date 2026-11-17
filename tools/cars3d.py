@@ -793,13 +793,18 @@ def spin_render():
 # Upright it is as low as the other views (SQUASH), but only FLIP_WZ of
 # that is the world's (heights on the screen): the rest squashes the car's
 # own height, so seen from above or below it keeps more of its width - as
-# Out Run's chunky tumbling car does.
+# Out Run's chunky tumbling car does. FLIP_TALL then makes the car's own
+# height that much more (since 2026-11-17, the user: the crashed car was
+# lower than the car itself; 1.6 makes it side-on as tall as the car seen
+# from behind), FLIP_HIGH every height on the screen.
 # ---------------------------------------------------------------------------
 FLIP_POSES = globals().get("FLIP_POSES", [(-78, 115), (-90, 180), (-90, 240), (-90, 300),
                                           (-90, 0), (-90, 60), (-90, 120)])
 FLIP_SCALE = globals().get("FLIP_SCALE", 0.72)
 FLIP_LINES = 64
 FLIP_WZ = globals().get("FLIP_WZ", 0.7)
+FLIP_TALL = globals().get("FLIP_TALL", 1.6)    # the car's own height times this
+FLIP_HIGH = globals().get("FLIP_HIGH", 1.0)    # every height on the screen times this
 FLIP_UNDER = globals().get("FLIP_UNDER", (0.03, 0.07, 0.35))   # its underside
                                            # (black on the road: as the SMS's,
                                            # blue, the tyres black on it)
@@ -815,7 +820,7 @@ def flip_render():
         car = MODELS[name]()
         root = bpy.data.objects.new("Squash", None)
         bpy.context.collection.objects.link(root)
-        root.scale = (1, 1, FLIP_WZ)
+        root.scale = (1, 1, FLIP_WZ * FLIP_HIGH)
         car.parent = root
         cam = c3.camera()
         sc.render.resolution_y = FLIP_LINES * c3.CELL_PX[1]   # (the scale as it was)
@@ -838,8 +843,9 @@ def flip_render():
         mid = Vector(((min(p.x for p in pts) + max(p.x for p in pts)) / 2, car["length"] / 2,
                       (min(p.z for p in pts) + max(p.z for p in pts)) / 2))
         px_m = c3.CAR_CELLS * c3.CELL_PX[0] / 2.0
-        zf = (cam.location.z + cam.data.shift_y * sc.render.resolution_x / px_m) / FLIP_WZ
-        scale = (FLIP_SCALE, FLIP_SCALE, FLIP_SCALE * c3.SQUASH / FLIP_WZ)
+        zf = ((cam.location.z + cam.data.shift_y * sc.render.resolution_x / px_m)
+              / (FLIP_WZ * FLIP_HIGH))
+        scale = (FLIP_SCALE, FLIP_SCALE, FLIP_SCALE * c3.SQUASH / FLIP_WZ * FLIP_TALL)
         sq = Matrix.Diagonal(scale)
         car.scale = scale
         for k in FLIP_KS:
